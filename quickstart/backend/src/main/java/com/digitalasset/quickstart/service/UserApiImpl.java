@@ -4,19 +4,18 @@
 package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.UserApi;
-import com.digitalasset.quickstart.oauth.OAuth2ClientRegistrationRepository;
+import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
+import com.digitalasset.quickstart.repository.TenantPropertiesRepository.TenantProperties;
 import org.openapitools.model.AuthenticatedUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Controller
@@ -24,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 public class UserApiImpl implements UserApi {
 
     @Autowired
-    private OAuth2ClientRegistrationRepository clientRegistrationRepository;
+    private TenantPropertiesRepository tenantPropertiesRepository;
 
     @Override
     public CompletableFuture<ResponseEntity<AuthenticatedUser>> getAuthenticatedUser() {
@@ -43,28 +42,30 @@ public class UserApiImpl implements UserApi {
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
-        // Retrieve the ClientRegistration to find the walletUrl
+        // Retrieve the registrationId from the authentication
         String registrationId = auth.getAuthorizedClientRegistrationId();
-        ClientRegistration registration = clientRegistrationRepository.findByRegistrationId(registrationId);
 
-        String walletUrl = "http://localhost/"; // fallback if not found
-        if (registration != null) {
-            Map<String, Object> providerMetadata = registration
-                    .getProviderDetails()
-                    .getConfigurationMetadata();
+        // Default walletUrl fallback if not found
+        String walletUrl = "http://localhost/";
 
-            if (providerMetadata.containsKey("walletUrl")) {
-                walletUrl = (String) providerMetadata.get("walletUrl");
-            }
+        // Lookup wallet URL from tenant properties
+        TenantProperties props = tenantPropertiesRepository.getProperties(registrationId);
+        if (props != null && props.getWalletUrl() != null) {
+            walletUrl = props.getWalletUrl();
         }
 
         // Create the AuthenticatedUser object
         AuthenticatedUser user = new AuthenticatedUser(
-                party.split("::")[0],    // name
-                party,                         // party
-                authorities,                   // roles
-                authorities.contains("ROLE_ADMIN"), // isAdmin
-                walletUrl                      // walletUrl
+                // name
+                party.split("::")[0],
+                // party
+                party,
+                // roles
+                authorities,
+                // isAdmin
+                authorities.contains("ROLE_ADMIN"),
+                // walletUrl
+                walletUrl
         );
 
         // Return the AuthenticatedUser in the response

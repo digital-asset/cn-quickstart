@@ -3,46 +3,47 @@
 
 package com.digitalasset.quickstart.service;
 
-import com.digitalasset.quickstart.oauth.OAuth2ClientRegistrationRepository;
-import org.openapitools.model.AppClientRegistration;
-import org.openapitools.model.OAuth2ClientRegistrationRequest;
+import com.digitalasset.quickstart.api.AdminApi;
+import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
+import com.digitalasset.quickstart.repository.OAuth2ClientRegistrationRepository;
+
+// Updated models from the renamed OpenAPI spec
+import org.openapitools.model.TenantRegistration;
+import org.openapitools.model.TenantRegistrationRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.net.URI;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("${openapi.asset.base-path:}")
-public class AdminApiImpl implements com.digitalasset.quickstart.api.Oauth2Api {
+public class AdminApiImpl implements AdminApi {
 
-    private final OAuth2ClientRegistrationRepository clientRegistrationRepository;
+    private final OAuth2ClientRegistrationRepository tenantRegistrationRepository;
+    private final TenantPropertiesRepository tenantPropertiesRepository;
 
     @Autowired
-    public AdminApiImpl(OAuth2ClientRegistrationRepository clientRegistrationRepository) {
-        this.clientRegistrationRepository = clientRegistrationRepository;
+    public AdminApiImpl(
+            OAuth2ClientRegistrationRepository tenantRegistrationRepository,
+            TenantPropertiesRepository tenantPropertiesRepository
+    ) {
+        this.tenantRegistrationRepository = tenantRegistrationRepository;
+        this.tenantPropertiesRepository = tenantPropertiesRepository;
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<AppClientRegistration>> createClientRegistration(
-            OAuth2ClientRegistrationRequest request
+    public CompletableFuture<ResponseEntity<TenantRegistration>> createTenantRegistration(
+            TenantRegistrationRequest request
     ) {
-        // Build the provider config metadata map
-        Map<String, Object> providerMetadata = new HashMap<>();
-        providerMetadata.put("preconfigured", "false");
-        // Convert from URI to String directly
-        providerMetadata.put("walletUrl", request.getWalletUrl());
-
-        // Build the ClientRegistration
-        ClientRegistration clientRegistration = ClientRegistration
+        // Build the Spring Security OAuth2 ClientRegistration
+        var registration = org.springframework.security.oauth2.client.registration.ClientRegistration
                 .withRegistrationId(request.getClientId())
                 .clientId(request.getClientId())
                 .clientSecret(request.getClientSecret())
@@ -53,72 +54,71 @@ public class AdminApiImpl implements com.digitalasset.quickstart.api.Oauth2Api {
                 .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
                 .scope(request.getScope())
                 .clientName(request.getParty())
-                .providerConfigurationMetadata(providerMetadata)
+                // Mark as preconfigured=false, i.e. added at runtime
+                .providerConfigurationMetadata(java.util.Map.of("preconfigured", "false"))
                 .build();
 
-        // Store it in the repository
-        clientRegistrationRepository.addRegistration(clientRegistration);
+        // Save the registration in your custom repository
+        tenantRegistrationRepository.addRegistration(registration);
 
-        // Build a return object
-        // Convert back from String to URI using URI.create(...)
-        AppClientRegistration result = new AppClientRegistration();
-        result.setClientId(clientRegistration.getClientId());
-        result.setClientSecret(clientRegistration.getClientSecret());
-        result.setScope(String.join(" ", clientRegistration.getScopes()));
-        result.setAuthorizationUri(URI.create(clientRegistration.getProviderDetails().getAuthorizationUri()));
-        result.setTokenUri(URI.create(clientRegistration.getProviderDetails().getTokenUri()));
-        result.setJwkSetUri(URI.create(clientRegistration.getProviderDetails().getJwkSetUri()));
-        result.setParty(clientRegistration.getClientName());
-        result.setPreconfigured(false);
+        // Save extra properties in a separate repository
+        TenantPropertiesRepository.TenantProperties props = new TenantPropertiesRepository.TenantProperties();
+        props.setWalletUrl(request.getWalletUrl());
+        tenantPropertiesRepository.saveProperties(registration.getRegistrationId(), props);
 
-        String storedWalletUrl = (String) clientRegistration
-                .getProviderDetails()
-                .getConfigurationMetadata()
-                .get("walletUrl");
-        result.setWalletUrl(URI.create(storedWalletUrl));
+        // Build the response (OpenAPI model)
+        TenantRegistration response = new TenantRegistration();
+        response.setClientId(registration.getClientId());
+        response.setClientSecret(registration.getClientSecret());
+        response.setScope(String.join(" ", registration.getScopes()));
+        response.setAuthorizationUri(URI.create(registration.getProviderDetails().getAuthorizationUri()));
+        response.setTokenUri(URI.create(registration.getProviderDetails().getTokenUri()));
+        response.setJwkSetUri(URI.create(registration.getProviderDetails().getJwkSetUri()));
+        response.setParty(registration.getClientName());
+        response.setPreconfigured(false);
+        response.setWalletUrl(URI.create(props.getWalletUrl()));
 
-        return CompletableFuture.completedFuture(ResponseEntity.ok(result));
+        return CompletableFuture.completedFuture(ResponseEntity.ok(response));
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Void>> deleteClientRegistration(String clientId) {
-        clientRegistrationRepository.removeRegistration(clientId);
+    public CompletableFuture<ResponseEntity<Void>> deleteTenantRegistration(String tenantId) {
+        tenantRegistrationRepository.removeRegistration(tenantId);
+        tenantPropertiesRepository.removeProperties(tenantId);
         return CompletableFuture.completedFuture(ResponseEntity.ok().build());
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<List<AppClientRegistration>>> listClientRegistrations() {
-        List<AppClientRegistration> registrations = clientRegistrationRepository.getRegistrations().stream()
-                .filter(registration ->
-                        AuthorizationGrantType.AUTHORIZATION_CODE.equals(registration.getAuthorizationGrantType()))
-                .map(registration -> {
-                    AppClientRegistration appClientRegistration = new AppClientRegistration();
-                    appClientRegistration.setClientId(registration.getClientId());
-                    appClientRegistration.setAuthorizationUri(
-                            URI.create(registration.getProviderDetails().getAuthorizationUri())
-                    );
-                    appClientRegistration.setTokenUri(
-                            URI.create(registration.getProviderDetails().getTokenUri())
-                    );
-                    appClientRegistration.setJwkSetUri(
-                            URI.create(registration.getProviderDetails().getJwkSetUri())
-                    );
-                    appClientRegistration.setScope(String.join(" ", registration.getScopes()));
-                    appClientRegistration.setParty(registration.getClientName());
-                    appClientRegistration.setPreconfigured(
-                            registration.getProviderDetails()
-                                    .getConfigurationMetadata()
-                                    .containsKey("preconfigured"));
+    public CompletableFuture<ResponseEntity<List<TenantRegistration>>> listTenantRegistrations() {
+        List<TenantRegistration> result = tenantRegistrationRepository.getRegistrations().stream()
+                // Filter only those using the AUTHORIZATION_CODE grant type
+                .filter(r -> AuthorizationGrantType.AUTHORIZATION_CODE.equals(r.getAuthorizationGrantType()))
+                .map(r -> {
+                    TenantRegistration out = new TenantRegistration();
+                    out.setClientId(r.getClientId());
+                    out.setClientSecret(r.getClientSecret());
+                    out.setScope(String.join(" ", r.getScopes()));
+                    out.setAuthorizationUri(URI.create(r.getProviderDetails().getAuthorizationUri()));
+                    out.setTokenUri(URI.create(r.getProviderDetails().getTokenUri()));
+                    out.setJwkSetUri(URI.create(r.getProviderDetails().getJwkSetUri()));
+                    out.setParty(r.getClientName());
 
-                    String walletUrlStr = (String) registration.getProviderDetails()
+                    // Determine whether it was preconfigured or added at runtime
+                    Object preconfiguredFlag = r.getProviderDetails()
                             .getConfigurationMetadata()
-                            .get("walletUrl");
-                    appClientRegistration.setWalletUrl(URI.create(walletUrlStr));
+                            .get("preconfigured");
+                    out.setPreconfigured("true".equals(preconfiguredFlag));
 
-                    return appClientRegistration;
+                    // Populate walletUrl from your separate repository
+                    TenantPropertiesRepository.TenantProperties props =
+                            tenantPropertiesRepository.getProperties(r.getRegistrationId());
+                    if (props != null && props.getWalletUrl() != null) {
+                        out.setWalletUrl(URI.create(props.getWalletUrl()));
+                    }
+                    return out;
                 })
                 .collect(Collectors.toList());
 
-        return CompletableFuture.completedFuture(ResponseEntity.ok(registrations));
+        return CompletableFuture.completedFuture(ResponseEntity.ok(result));
     }
 }

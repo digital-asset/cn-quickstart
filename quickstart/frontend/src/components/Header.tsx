@@ -86,8 +86,8 @@ const AuthenticatedLinks: React.FC = () => {
                     </li>
                     {user.isAdmin && (
                         <li className="nav-item">
-                            <Link className="nav-link" to="/oauth2">
-                                OAuth2
+                            <Link className="nav-link" to="/tenants">
+                                Tenants
                             </Link>
                         </li>
                     )}
