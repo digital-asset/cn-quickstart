@@ -218,3 +218,5 @@ $(eval $(call open-url-target,open-sv-wallet,http://wallet.localhost:4000))
 $(eval $(call open-url-target,open-sv-interface,http://sv.localhost:4000))
 # open-sv-scan: ## Open the Super Validator Scan UI in the active browser
 $(eval $(call open-url-target,open-sv-scan,http://scan.localhost:4000))
+# open-app-user-wallet: ## Open the App User wallet UI in the active browser
+$(eval $(call open-url-target,open-app-user-wallet,http://wallet.localhost:2000))

@@ -36,6 +36,9 @@ spring:
             authorization-uri: ${AUTH_APP_USER_AUTHORIZATION_URI}
             token-uri: ${AUTH_APP_USER_TOKEN_URI}
             jwk-set-uri: ${AUTH_APP_USER_JWK_SET_URI}
+        walletUrls:
+          AppProvider: ${APP_PROVIDER_WALLET_URL:http://wallet.localhost:3000/}
+          Org1: ${ORG1_WALLET_URL:http://wallet.localhost:2000/}
 
 
 server:

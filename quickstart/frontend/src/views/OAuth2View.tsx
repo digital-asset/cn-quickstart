@@ -14,7 +14,8 @@ const OAuth2View: React.FC = () => {
         tokenUri: '',
         jwkSetUri: '',
         party: '',
-        preconfigured: false
+        preconfigured: false,
+        walletUrl: ''
     })
 
     useEffect(() => {
@@ -40,15 +41,17 @@ const OAuth2View: React.FC = () => {
             tokenUri: '',
             jwkSetUri: '',
             party: '',
-            preconfigured: false
-        });
+            preconfigured: false,
+            walletUrl: ''
+        })
     }
 
     const handleDelete = async (clientId: string) => {
         if (window.confirm('Are you sure you want to delete this registration?')) {
-            await deleteRegistration(clientId);
+            await deleteRegistration(clientId)
         }
     }
+
     return (
         <div>
             <form onSubmit={handleSubmit}>
@@ -135,8 +138,20 @@ const OAuth2View: React.FC = () => {
                         required
                     />
                 </div>
+                <div className="mb-3">
+                    <label htmlFor="walletUrl" className="form-label">Wallet URL:</label>
+                    <input
+                        type="text"
+                        id="walletUrl"
+                        name="walletUrl"
+                        className="form-control"
+                        value={formData.walletUrl}
+                        onChange={handleChange}
+                    />
+                </div>
                 <button type="submit" className="btn btn-primary">Submit</button>
             </form>
+
             <div className="mt-4">
                 <h3>Existing Registrations</h3>
                 <table className="table">
@@ -144,6 +159,7 @@ const OAuth2View: React.FC = () => {
                     <tr>
                         <th>Client ID</th>
                         <th>Party</th>
+                        <th>Wallet URL</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -152,11 +168,15 @@ const OAuth2View: React.FC = () => {
                         <tr key={index}>
                             <td>{registration.clientId}</td>
                             <td>{registration.party}</td>
+                            <td>{registration.walletUrl}</td>
                             <td>
-                                    <button className="btn btn-danger"
-                                            disabled={registration.preconfigured}
-                                            onClick={() => handleDelete(registration.clientId)}>Delete
-                                    </button>
+                                <button
+                                    className="btn btn-danger"
+                                    disabled={registration.preconfigured}
+                                    onClick={() => handleDelete(registration.clientId)}
+                                >
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     ))}

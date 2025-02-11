@@ -3,7 +3,7 @@
 
 import React from 'react';
 import {Link} from 'react-router-dom';
-import {useUser} from '../stores/userStore';
+import {useUserStore} from '../stores/userStore';
 
 const Header: React.FC = () => {
     return (
@@ -34,7 +34,7 @@ const Header: React.FC = () => {
 };
 
 const AuthenticatedLinks: React.FC = () => {
-    const {user, loading, fetchUser, logout} = useUser();
+    const {user, loading, fetchUser, logout} = useUserStore();
 
     React.useEffect(() => {
         fetchUser();

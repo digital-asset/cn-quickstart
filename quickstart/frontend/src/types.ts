@@ -11,6 +11,7 @@ export interface AuthenticatedUser {
     party: string;
     roles: string[];
     isAdmin: boolean;
+    walletUrl: string;
 }
 
 export interface Contract {

@@ -23,6 +23,7 @@ interface OAuth2ClientRegistration {
     jwkSetUri: string
     party: string
     preconfigured: boolean
+    walletUrl: string
 }
 
 interface OAuth2State {

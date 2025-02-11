@@ -52,7 +52,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OAuth2ClientRegistration'
+                $ref: '#/components/schemas/AppClientRegistration'
         '400':
           description: Invalid input
     get:
@@ -66,7 +66,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/OAuth2ClientRegistration'
+                  $ref: '#/components/schemas/AppClientRegistration'
         '400':
           description: Invalid request
 
@@ -444,8 +444,10 @@ components:
           type: string
         party:
           type: string
+        walletUrl:
+          type: string
 
-    OAuth2ClientRegistration:
+    AppClientRegistration:
       type: object
       required:
         - clientId
@@ -454,21 +456,40 @@ components:
         - tokenUri
         - jwkSetUri
         - party
+        - preconfigured
+        - walletUrl
       properties:
         clientId:
           type: string
+          description: OAuth2 client identifier
+        clientSecret:
+          type: string
+          description: OAuth2 client secret
         scope:
           type: string
+          description: Requested scopes
         authorizationUri:
           type: string
+          description: Authorization endpoint URI
+          format: uri
         tokenUri:
           type: string
+          description: Token endpoint URI
+          format: uri
         jwkSetUri:
           type: string
+          description: JSON Web Key Set endpoint URI
+          format: uri
         party:
           type: string
+          description: Party identifier
         preconfigured:
           type: boolean
+          description: Indicates if the registration is preconfigured on server-side
+        walletUrl:
+          type: string
+          description: Wallet URL for payment redirects
+          format: uri
 
     AuthenticatedUser:
       type: object
@@ -477,6 +498,7 @@ components:
         - party
         - roles
         - isAdmin
+        - walletUrl
       properties:
         name:
           type: string
@@ -488,6 +510,9 @@ components:
             type: string
         isAdmin:
           type: boolean
+        walletUrl:
+          type: string
+          # format: uri
 
     LoginLink:
       type: object
