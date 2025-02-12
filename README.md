@@ -2,7 +2,11 @@
 
 ## Engineer Setup
 
-This repository uses `direnv`, `nix`, and `docker-compose` to provide development dependencies.
+This repository uses `direnv`, `nix`, and `docker-compose` to provide development dependencies:
+
+* how to [install direnv](https://direnv.net/docs/installation.html)
+* how to [install nix](https://nix.dev/install-nix.html)
+* how to [install docker-compose](https://docs.docker.com/compose/install/) 
 
 **Important (MacOS only):** Run the following command to download and install the Daml SDK with the correct version:
 ```sh
