@@ -43,6 +43,12 @@ dependencies {
     runtimeOnly(Deps.grpc.netty)
 
     testImplementation(Deps.springBoot.test)
+
+    constraints {
+        // maven-metadata.xml for net.minidev:json-smart now only contains one version 2.5.2 causing a resolution error
+        // TODO: Remove this constraint once the issue is resolved
+        implementation("net.minidev:json-smart:2.4.10")
+    }
 }
 
 repositories {
