@@ -125,6 +125,14 @@ To perform operations such as creating, editing, and archiving assets, users mus
 
 ## User Documentation
 
+### User Guides
+
+There are user guides intended to provide an engineering handover to teams using the Canton Network Quickstart to bootstrap their project.
+
+- [Project Structure](docs/guide/ProjectStructureGuide-20250212.pdf)
+
+### Technical Documentation
+
 - [Observability](docs/user/001-observability.md)
 - [Topology](docs/user/002-topology.md)
 
