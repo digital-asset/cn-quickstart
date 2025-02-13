@@ -65,6 +65,7 @@ public class LedgerApi {
                 .intercept(oAuth2ClientInterceptor)
                 .build();
         logger.info("Connected to ledger at {}:{}", ledgerConfig.getHost(), ledgerConfig.getPort());
+
         submission = CommandSubmissionServiceGrpc.newFutureStub(channel);
         commands = CommandServiceGrpc.newFutureStub(channel);
         userManagement = UserManagementServiceGrpc.newFutureStub(channel);
@@ -76,39 +77,73 @@ public class LedgerApi {
     }
 
     public CompletableFuture<Void> grantRights(String actAs, String readAs) {
-        return toCompletableFuture(userManagement.grantUserRights(
-                UserManagementServiceOuterClass.GrantUserRightsRequest.newBuilder()
-                        .setUserId(APP_PROVIDER_USER_ID)
-                        .addAllRights(
-                                List.of(
-                                        UserManagementServiceOuterClass.Right.newBuilder()
-                                                .setCanReadAs(
-                                                        UserManagementServiceOuterClass.Right.CanReadAs.newBuilder()
-                                                                .setParty(readAs).build()
-                                                ).build(),
-                                        UserManagementServiceOuterClass.Right.newBuilder()
-                                                .setCanActAs(
-                                                        UserManagementServiceOuterClass.Right.CanActAs.newBuilder()
-                                                                .setParty(actAs).build()
-                                                ).build()
-                                )
-                        ).build()
-        )).thenApply(x -> null);
+        logger.debug("Attempting to grant user rights to '{}': actAs='{}', readAs='{}'", APP_PROVIDER_USER_ID, actAs, readAs);
+
+        return toCompletableFuture(
+                userManagement.grantUserRights(
+                        UserManagementServiceOuterClass.GrantUserRightsRequest.newBuilder()
+                                .setUserId(APP_PROVIDER_USER_ID)
+                                .addAllRights(
+                                        List.of(
+                                                UserManagementServiceOuterClass.Right.newBuilder()
+                                                        .setCanReadAs(
+                                                                UserManagementServiceOuterClass.Right.CanReadAs.newBuilder()
+                                                                        .setParty(readAs).build()
+                                                        ).build(),
+                                                UserManagementServiceOuterClass.Right.newBuilder()
+                                                        .setCanActAs(
+                                                                UserManagementServiceOuterClass.Right.CanActAs.newBuilder()
+                                                                        .setParty(actAs).build()
+                                                        ).build()
+                                        )
+                                ).build()
+                ))
+                .<Void>thenApply(x -> null)
+                .whenComplete((res, ex) -> {
+                    if (ex != null) {
+                        logger.error("Failed to grant user rights to '{}': {}", APP_PROVIDER_USER_ID, ex.getMessage(), ex);
+                    } else {
+                        logger.info("Successfully granted user rights (actAs='{}', readAs='{}') to '{}'", actAs, readAs, APP_PROVIDER_USER_ID);
+                    }
+                });
     }
 
     public CompletableFuture<List<UserManagementServiceOuterClass.Right>> fetchUserRights(String userId) {
+        logger.debug("Fetching user rights for '{}'", userId);
+
         CompletableFuture<UserManagementServiceOuterClass.ListUserRightsResponse> response =
-                toCompletableFuture(userManagement.listUserRights(
-                        UserManagementServiceOuterClass.ListUserRightsRequest.newBuilder().setUserId(userId).build()
-                ));
-        return response.thenApply(UserManagementServiceOuterClass.ListUserRightsResponse::getRightsList);
+                toCompletableFuture(
+                        userManagement.listUserRights(
+                                UserManagementServiceOuterClass.ListUserRightsRequest.newBuilder().setUserId(userId).build()
+                        )
+                );
+
+        return response
+                .thenApply(UserManagementServiceOuterClass.ListUserRightsResponse::getRightsList)
+                .whenComplete((rights, ex) -> {
+                    if (ex != null) {
+                        logger.error("Failed to fetch user rights for '{}': {}", userId, ex.getMessage(), ex);
+                    } else {
+                        logger.info("Fetched {} rights for user '{}'", rights.size(), userId);
+                    }
+                });
     }
 
     public CompletableFuture<UserManagementServiceOuterClass.User> fetchUserInfo(String userId) {
+        logger.debug("Fetching user info for '{}'", userId);
+
         UserManagementServiceOuterClass.GetUserRequest request =
                 UserManagementServiceOuterClass.GetUserRequest.newBuilder().setUserId(userId).build();
+
         return toCompletableFuture(userManagement.getUser(request))
-                .thenApply(UserManagementServiceOuterClass.GetUserResponse::getUser);
+                .thenApply(UserManagementServiceOuterClass.GetUserResponse::getUser)
+                .whenComplete((user, ex) -> {
+                    if (ex != null) {
+                        logger.error("Failed to fetch user info for '{}': {}", userId, ex.getMessage(), ex);
+                    } else {
+                        logger.info("Fetched user info for '{}': userId='{}'", userId, user.getId());
+                    }
+                });
     }
 
     @WithSpan
@@ -121,9 +156,10 @@ public class LedgerApi {
         currentSpan.setAttribute("backend.commandId", commandId);
         currentSpan.setAttribute("backend.templateId", entity.templateId().toString());
 
-        CommandsOuterClass.Command.Builder command = CommandsOuterClass.Command.newBuilder();
+        logger.debug("Creating contract for templateId='{}' as party='{}' with commandId='{}'",
+                entity.templateId(), party, commandId);
 
-        // Convert the entity to a ledger create command
+        CommandsOuterClass.Command.Builder command = CommandsOuterClass.Command.newBuilder();
         ValueOuterClass.Value payload = dto2Proto.template(entity.templateId()).convert(entity);
         currentSpan.addEvent("converted payload from DTO to Proto");
 
@@ -133,9 +169,17 @@ public class LedgerApi {
                 .setCreateArguments(payload.getRecord());
         currentSpan.addEvent("built ledger create command");
 
-        // Now submit the command(s) using the user-provided commandId
         return submitCommands(party, List.of(command.build()), commandId)
-                .thenApply(submitResponse -> null);
+                .<Void>thenApply(submitResponse -> null)
+                .whenComplete((res, ex) -> {
+                    if (ex != null) {
+                        logger.error("Failed to create contract for templateId='{}' as party='{}': {}",
+                                entity.templateId(), party, ex.getMessage(), ex);
+                    } else {
+                        logger.info("Successfully submitted create command for templateId='{}' as party='{}' with commandId='{}'",
+                                entity.templateId(), party, commandId);
+                    }
+                });
     }
 
     @WithSpan
@@ -159,12 +203,13 @@ public class LedgerApi {
             List<CommandsOuterClass.DisclosedContract> disclosedContracts
     ) {
         Span currentSpan = Span.current();
-        // Set useful attributes for logging/tracing
         currentSpan.setAttribute("backend.commandId", commandId);
         currentSpan.setAttribute("backend.contractId", contractId.getContractId);
         currentSpan.setAttribute("backend.choiceName", choice.choiceName());
 
-        // Build the single command
+        logger.debug("Exercising choice='{}' on contractId='{}' as party='{}' with commandId='{}'",
+                choice.choiceName(), contractId.getContractId, party, commandId);
+
         CommandsOuterClass.Command.Builder command = CommandsOuterClass.Command.newBuilder();
         ValueOuterClass.Value payload =
                 dto2Proto.choiceArgument(choice.templateId(), choice.choiceName()).convert(choice);
@@ -176,7 +221,6 @@ public class LedgerApi {
                 .setChoiceArgument(payload);
         currentSpan.addEvent("built ledger exercise command");
 
-        // Build the SubmitAndWaitRequest with the given commandId
         CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
                 .setApplicationId(APP_ID)
                 .setCommandId(commandId)
@@ -194,19 +238,26 @@ public class LedgerApi {
                         .build();
         currentSpan.addEvent("built ledger submit request");
 
-        // Submit and decode the exercise result
         return toCompletableFuture(commands.submitAndWaitForTransactionTree(request))
                 .thenApply(response -> {
                     currentSpan.addEvent("received ledger submit response");
 
-                    // The "rootEventIds" should have exactly one root event for a single command
                     String eventId = response.getTransaction().getRootEventIds(0);
                     currentSpan.setAttribute("backend.submit.response.event.id", eventId);
 
                     TransactionOuterClass.TreeEvent event = response.getTransaction().getEventsByIdMap().get(eventId);
                     ValueOuterClass.Value resultPayload = event.getExercised().getExerciseResult();
-                    // Convert the result payload back to the type <Result>
+
                     return (Result) proto2Dto.choiceResult(choice.templateId(), choice.choiceName()).convert(resultPayload);
+                })
+                .whenComplete((res, ex) -> {
+                    if (ex != null) {
+                        logger.error("Failed to exercise choice='{}' on contractId='{}' as party='{}': {}",
+                                choice.choiceName(), contractId.getContractId, party, ex.getMessage(), ex);
+                    } else {
+                        logger.info("Successfully exercised choice='{}' on contractId='{}' as party='{}' with commandId='{}'",
+                                choice.choiceName(), contractId.getContractId, party, commandId);
+                    }
                 });
     }
 
@@ -230,9 +281,8 @@ public class LedgerApi {
         currentSpan.setAttribute("backend.commands.count", commands.size());
         currentSpan.setAttribute("backend.commandId", commandId);
 
-        logger.info("Party {} submits {} commands with commandId={}", party, commands.size(), commandId);
+        logger.info("Party '{}' submits {} commands with commandId='{}'", party, commands.size(), commandId);
 
-        // Use the caller-provided commandId
         CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
                 .setApplicationId(APP_ID)
                 .setCommandId(commandId)
@@ -250,7 +300,16 @@ public class LedgerApi {
                         .build();
         currentSpan.addEvent("built ledger submit request");
 
-        return toCompletableFuture(submission.submit(request));
+        return toCompletableFuture(submission.submit(request))
+                .whenComplete((res, ex) -> {
+                    if (ex != null) {
+                        logger.error("Failed to submit commands for party='{}' with commandId='{}': {}",
+                                party, commandId, ex.getMessage(), ex);
+                    } else {
+                        logger.info("Successfully submitted {} commands for party='{}' with commandId='{}'",
+                                commands.size(), party, commandId);
+                    }
+                });
     }
 
     private static <T> CompletableFuture<T> toCompletableFuture(ListenableFuture<T> listenableFuture) {
@@ -278,3 +337,4 @@ public class LedgerApi {
                 .build();
     }
 }
+

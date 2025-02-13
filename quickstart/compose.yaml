@@ -337,6 +337,7 @@ services:
     command: /app/start.sh
     ports:
       - "${BACKEND_PORT}:8080"
+    logging: *default-logging
     depends_on:
       pqs:
         condition: service_started
