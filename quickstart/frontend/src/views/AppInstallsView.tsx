@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAppInstallStore } from '../stores/appInstallStore';
-import { useUser } from '../stores/userStore';
+import { useUserStore } from '../stores/userStore';
 import { useToast } from '../stores/toastStore';
 
 const AppInstallsView: React.FC = () => {
@@ -15,7 +15,7 @@ const AppInstallsView: React.FC = () => {
         createLicenseFromAppInstall,
     } = useAppInstallStore();
 
-    const { user } = useUser();
+    const { user } = useUserStore();
     const toast = useToast();
 
     const [selectedInstallId, setSelectedInstallId] = useState<string | null>(null);

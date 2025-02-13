@@ -4,7 +4,7 @@
 import React, { useEffect } from 'react';
 import { useLicenseStore } from '../stores/licenseStore';
 import { useLocation } from 'react-router-dom';
-import { useUser } from '../stores/userStore';
+import { useUserStore } from '../stores/userStore';
 
 const LicenseRenewalRequestsView: React.FC = () => {
     const {
@@ -14,7 +14,7 @@ const LicenseRenewalRequestsView: React.FC = () => {
         fetchLicenses,
         completeLicenseRenewal,
     } = useLicenseStore();
-    const { user } = useUser();
+    const { user } = useUserStore();
     const location = useLocation();
 
     useEffect(() => {
@@ -27,6 +27,7 @@ const LicenseRenewalRequestsView: React.FC = () => {
         return () => clearInterval(intervalId);
     }, [fetchLicenseRenewalRequests, fetchLicenses]);
 
+    // Current page URL to pass as a redirect parameter:
     const currentURL = `${window.location.origin}${location.pathname}`;
 
     const handleCompleteRenewal = async (
@@ -57,7 +58,7 @@ const LicenseRenewalRequestsView: React.FC = () => {
         };
 
         await completeLicenseRenewal(requestContractId, requestBody);
-        // After completion, we might refresh lists
+        // After completion, refresh the data
         await fetchLicenseRenewalRequests();
         await fetchLicenses();
     };
@@ -83,7 +84,13 @@ const LicenseRenewalRequestsView: React.FC = () => {
                     </thead>
                     <tbody>
                     {licenseRenewalRequests.map((request) => {
-                        const payURL = `http://wallet.localhost:2000/confirm-payment/${request.reference}?redirect=${encodeURIComponent(currentURL)}`;
+                        // Safely handle the walletUrl (remove trailing slash, etc.)
+                        const baseWalletUrl = user?.walletUrl
+                            ? user.walletUrl.replace(/\/+$/, '') // remove trailing slash
+                            : 'http://wallet.localhost:2000'; // fallback if needed
+
+                        const payURL = `${baseWalletUrl}/confirm-payment/${request.reference}?redirect=${encodeURIComponent(currentURL)}`;
+
                         return (
                             <tr key={request.contractId}>
                                 <td className="ellipsis-cell">{request.contractId}</td>
@@ -94,6 +101,7 @@ const LicenseRenewalRequestsView: React.FC = () => {
                                 <td className="ellipsis-cell">{request.licenseFeeCc}</td>
                                 <td className="ellipsis-cell">{request.licenseExtensionDuration}</td>
                                 <td>
+                                    {/* Render Pay button only if current user is the one who needs to pay */}
                                     {user && request.user === user.party && (
                                         <a
                                             href={payURL}
@@ -104,6 +112,7 @@ const LicenseRenewalRequestsView: React.FC = () => {
                                             Pay
                                         </a>
                                     )}
+                                    {/* Render admin button if user is admin */}
                                     {user && user.isAdmin && (
                                         <button
                                             className="btn btn-success"
