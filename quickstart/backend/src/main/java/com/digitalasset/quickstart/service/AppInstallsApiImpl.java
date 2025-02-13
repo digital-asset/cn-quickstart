@@ -9,12 +9,15 @@ import com.digitalasset.quickstart.oauth.AuthenticatedPartyService;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.transcode.java.ContractId;
 import com.digitalasset.transcode.java.Party;
-import quickstart_licensing.licensing.license.License;
-import quickstart_licensing.licensing.license.LicenseParams;
-import quickstart_licensing.licensing.util.Metadata;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import org.openapitools.model.AppInstallCancel;
 import org.openapitools.model.AppInstallCreateLicenseRequest;
 import org.openapitools.model.AppInstallCreateLicenseResult;
+import org.openapitools.model.Metadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +25,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import quickstart_licensing.licensing.license.License;
+import quickstart_licensing.licensing.license.LicenseParams;
+import quickstart_licensing.licensing.appinstall.AppInstall.AppInstall_Cancel;
+import quickstart_licensing.licensing.appinstall.AppInstall.AppInstall_CreateLicense;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
+import static com.digitalasset.quickstart.utility.ContextAwareCompletableFutures.completeWithin;
 
 @Controller
 @RequestMapping("${openapi.asset.base-path:}")
@@ -34,7 +43,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
     private final LedgerApi ledger;
     private final DamlRepository damlRepository;
     private final AuthenticatedPartyService authenticatedPartyService;
-    private final Logger logger = LoggerFactory.getLogger(AppInstallsApiImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(AppInstallsApiImpl.class);
 
     @Autowired
     public AppInstallsApiImpl(
@@ -51,20 +60,32 @@ public class AppInstallsApiImpl implements AppInstallsApi {
      * List all AppInstall contracts visible to the authenticated party.
      */
     @Override
+    @WithSpan
     public CompletableFuture<ResponseEntity<List<org.openapitools.model.AppInstall>>> listAppInstalls() {
-        logger.info("Listing AppInstalls");
-        String party = authenticatedPartyService.getPartyOrFail();
+        // Capture the current span and context
+        Span methodSpan = Span.current();
+        Context parentContext = Context.current();
 
+        methodSpan.addEvent("Starting listAppInstalls");
+        logger.info("listAppInstalls: retrieving AppInstalls for the requesting party");
+
+        // Record which party is requesting
+        String requestingParty = authenticatedPartyService.getPartyOrFail();
+        methodSpan.setAttribute("requesting.party", requestingParty);
+
+        // Asynchronously retrieve active AppInstalls and filter them
         return damlRepository.findActiveAppInstalls()
                 .thenApply(contracts -> {
+                    methodSpan.addEvent("Filtering results by requesting party");
                     List<org.openapitools.model.AppInstall> result = contracts.stream()
                             .filter(contract -> {
-                                // Filter to those relevant to the requesting party
                                 String dso = contract.payload.getDso.getParty;
                                 String provider = contract.payload.getProvider.getParty;
                                 String user = contract.payload.getUser.getParty;
-                                // The requesting party must be involved
-                                return party.equals(dso) || party.equals(provider) || party.equals(user);
+                                // Return only contracts involving the requesting party
+                                return requestingParty.equals(dso)
+                                        || requestingParty.equals(provider)
+                                        || requestingParty.equals(user);
                             })
                             .map(contract -> {
                                 org.openapitools.model.AppInstall model = new org.openapitools.model.AppInstall();
@@ -73,7 +94,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
                                 model.setProvider(contract.payload.getProvider.getParty);
                                 model.setUser(contract.payload.getUser.getParty);
 
-                                org.openapitools.model.Metadata metaModel = new org.openapitools.model.Metadata();
+                                Metadata metaModel = new Metadata();
                                 metaModel.setData(contract.payload.getMeta.getValues);
                                 model.setMeta(metaModel);
 
@@ -81,108 +102,149 @@ public class AppInstallsApiImpl implements AppInstallsApi {
                                 return model;
                             })
                             .collect(Collectors.toList());
+
                     return ResponseEntity.ok(result);
                 })
-                .exceptionally(ex -> {
-                    logger.error("Error listing AppInstalls", ex);
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-                });
+                .whenComplete(
+                        completeWithin(parentContext, (res, ex) -> {
+                            if (ex == null) {
+                                int count = (res.getBody() != null) ? res.getBody().size() : 0;
+                                logger.info("listAppInstalls: success for party='{}', found {} records", requestingParty, count);
+                            } else {
+                                logger.error("listAppInstalls: failed for party='{}': {}", requestingParty, ex.getMessage(), ex);
+                                methodSpan.recordException(ex);
+                                methodSpan.setStatus(StatusCode.ERROR, ex.getMessage());
+                            }
+                        })
+                );
     }
 
     /**
      * Create a new License contract by exercising the AppInstall_CreateLicense choice.
      */
     @Override
+    @WithSpan
     public CompletableFuture<ResponseEntity<AppInstallCreateLicenseResult>> createLicense(
-            String contractId,
-            String commandId,
+            @SpanAttribute("appInstall.contractId") String contractId,
+            @SpanAttribute("appInstall.commandId") String commandId,
             AppInstallCreateLicenseRequest createLicenseRequest
     ) {
-        logger.info("Creating License from AppInstall with contractId: {}", contractId);
+        Span methodSpan = Span.current();
+        Context parentContext = Context.current();
+
+        methodSpan.addEvent("Starting createLicense");
+        methodSpan.setAttribute("contractId", contractId);
+        methodSpan.setAttribute("commandId", commandId);
+        logger.info("createLicense: contractId='{}', commandId='{}'", contractId, commandId);
+
         String actorParty = authenticatedPartyService.getPartyOrFail();
 
-        // Use DamlRepository instead of pqs.byContractId(...)
-        return damlRepository.findAppInstallById(contractId).thenCompose(contract -> {
-            // Ensure the actor party is the provider of this app install.
-            String providerParty = contract.payload.getProvider.getParty;
-            if (!actorParty.equals(providerParty)) {
-                logger.error("Party {} is not the provider of this AppInstall", actorParty);
-                return CompletableFuture.completedFuture(
-                        ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+        // Fetch the AppInstall contract asynchronously
+        return damlRepository.findAppInstallById(contractId)
+                .thenCompose(contract -> {
+                    methodSpan.addEvent("Fetched contract, verifying provider");
+                    String providerParty = contract.payload.getProvider.getParty;
+
+                    // If the actor is not the provider, return 403 immediately
+                    if (!actorParty.equals(providerParty)) {
+                        logger.error("createLicense: party='{}' is not the provider for contractId='{}'", actorParty, contractId);
+                        return CompletableFuture.completedFuture(
+                                ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+                        );
+                    }
+
+                    // Construct the choice
+                    methodSpan.addEvent("Constructing AppInstall_CreateLicense choice");
+                    quickstart_licensing.licensing.util.Metadata paramsMeta =
+                            new quickstart_licensing.licensing.util.Metadata(
+                                    createLicenseRequest.getParams().getMeta().getData());
+                    LicenseParams params = new LicenseParams(paramsMeta);
+                    AppInstall_CreateLicense choice = new AppInstall_CreateLicense(params);
+
+                    // Exercise the choice on the ledger
+                    return ledger.exerciseAndGetResult(actorParty, contract.contractId, choice, commandId)
+                            .<ResponseEntity<AppInstallCreateLicenseResult>>thenApply(licenseContractId -> {
+                                methodSpan.addEvent("Choice exercised, building response");
+                                ContractId<License> licenseCid = licenseContractId.getLicenseId;
+
+                                AppInstallCreateLicenseResult result = new AppInstallCreateLicenseResult();
+                                result.setInstallId(contractId);
+                                result.setLicenseId(licenseCid.getContractId);
+                                return ResponseEntity.ok(result);
+                            });
+                })
+                .whenComplete(
+                        completeWithin(parentContext, (res, ex) -> {
+                            if (ex == null) {
+                                logger.info("createLicense: success for contractId='{}'", contractId);
+                            } else {
+                                logger.error("createLicense: failed for contractId='{}': {}", contractId, ex.getMessage(), ex);
+                                methodSpan.recordException(ex);
+                                methodSpan.setStatus(StatusCode.ERROR, ex.getMessage());
+                            }
+                        })
                 );
-            }
-
-            // Convert the params meta data
-            Metadata paramsMeta = new Metadata(createLicenseRequest.getParams().getMeta().getData());
-
-            // Create choice instance
-            LicenseParams params = new LicenseParams(paramsMeta);
-            quickstart_licensing.licensing.appinstall.AppInstall.AppInstall_CreateLicense choice =
-                    new quickstart_licensing.licensing.appinstall.AppInstall.AppInstall_CreateLicense(params);
-
-            // Exercise the choice on the ledger
-            return ledger.exerciseAndGetResult(actorParty, contract.contractId, choice, commandId)
-                    .thenApply(licenseContractId -> {
-                        // The result should be ContractId<License>
-                        ContractId<License> licenseCid = licenseContractId.getLicenseId;
-
-                        AppInstallCreateLicenseResult result = new AppInstallCreateLicenseResult();
-                        result.setInstallId(contractId);
-                        result.setLicenseId(licenseCid.getContractId);
-                        return ResponseEntity.ok(result);
-                    })
-                    .exceptionally(ex -> {
-                        logger.error("Error creating License from AppInstall", ex);
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-                    });
-        }).exceptionally(ex -> {
-            logger.error("Error fetching AppInstall with contractId: {}", contractId, ex);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        });
     }
 
     /**
      * Cancel an AppInstall by exercising the AppInstall_Cancel choice.
      */
     @Override
+    @WithSpan
     public CompletableFuture<ResponseEntity<Void>> cancelAppInstall(
-            String contractId,
-            String commandId,
+            @SpanAttribute("appInstall.contractId") String contractId,
+            @SpanAttribute("appInstall.commandId") String commandId,
             AppInstallCancel appInstallCancel
     ) {
-        logger.info("Cancelling AppInstall with contractId: {}", contractId);
+        Span methodSpan = Span.current();
+        Context parentContext = Context.current();
+
+        methodSpan.addEvent("Starting cancelAppInstall");
+        methodSpan.setAttribute("contractId", contractId);
+        methodSpan.setAttribute("commandId", commandId);
+        logger.info("cancelAppInstall: contractId='{}', commandId='{}'", contractId, commandId);
+
         String actorParty = authenticatedPartyService.getPartyOrFail();
 
-        // Use DamlRepository instead of pqs.byContractId(...)
-        return damlRepository.findAppInstallById(contractId).thenCompose(contract -> {
-            // Check if the actor can cancel
-            String user = contract.payload.getUser.getParty;
-            if (!actorParty.equals(user)) {
-                logger.error("Party {} is not the user of this AppInstall", actorParty);
-                return CompletableFuture.completedFuture(
-                        ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+        // Fetch the AppInstall contract asynchronously
+        return damlRepository.findAppInstallById(contractId)
+                .thenCompose(contract -> {
+                    methodSpan.addEvent("Fetched contract, verifying user");
+                    String userParty = contract.payload.getUser.getParty;
+
+                    // If the actor is not the user, return 403 immediately
+                    if (!actorParty.equals(userParty)) {
+                        logger.error("cancelAppInstall: party='{}' is not the user for contractId='{}'", actorParty, contractId);
+                        return CompletableFuture.completedFuture(
+                                ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+                        );
+                    }
+
+                    // Construct the choice
+                    methodSpan.addEvent("Constructing AppInstall_Cancel choice");
+                    quickstart_licensing.licensing.util.Metadata meta =
+                            new quickstart_licensing.licensing.util.Metadata(appInstallCancel.getMeta().getData());
+                    Party actor = new Party(actorParty);
+
+                    AppInstall_Cancel choice = new AppInstall_Cancel(actor, meta);
+
+                    // Exercise the choice on the ledger
+                    return ledger.exerciseAndGetResult(actorParty, contract.contractId, choice, commandId)
+                            .<ResponseEntity<Void>>thenApply(result -> {
+                                methodSpan.addEvent("Choice exercised, returning 200 OK");
+                                return ResponseEntity.ok().build();
+                            });
+                })
+                .whenComplete(
+                        completeWithin(parentContext, (res, ex) -> {
+                            if (ex == null) {
+                                logger.info("cancelAppInstall: success for contractId='{}'", contractId);
+                            } else {
+                                logger.error("cancelAppInstall: failed for contractId='{}': {}", contractId, ex.getMessage(), ex);
+                                methodSpan.recordException(ex);
+                                methodSpan.setStatus(StatusCode.ERROR, ex.getMessage());
+                            }
+                        })
                 );
-            }
-
-            Metadata meta = new Metadata(appInstallCancel.getMeta().getData());
-            Party actor = new Party(actorParty);
-
-            // Create choice instance
-            quickstart_licensing.licensing.appinstall.AppInstall.AppInstall_Cancel choice =
-                    new quickstart_licensing.licensing.appinstall.AppInstall.AppInstall_Cancel(actor, meta);
-
-            return ledger.exerciseAndGetResult(actorParty, contract.contractId, choice, commandId)
-                    .thenApply(result -> {
-                        // Choice returns Unit
-                        return ResponseEntity.ok().<Void>build();
-                    })
-                    .exceptionally(ex -> {
-                        logger.error("Error cancelling AppInstall", ex);
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-                    });
-        }).exceptionally(ex -> {
-            logger.error("Error fetching AppInstall with contractId: {}", contractId, ex);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        });
     }
 }
