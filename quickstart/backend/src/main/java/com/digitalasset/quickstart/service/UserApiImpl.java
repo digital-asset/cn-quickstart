@@ -49,7 +49,7 @@ public class UserApiImpl implements UserApi {
         String walletUrl = "http://localhost/";
 
         // Lookup wallet URL from tenant properties
-        TenantProperties props = tenantPropertiesRepository.getProperties(registrationId);
+        TenantProperties props = tenantPropertiesRepository.getTenant(registrationId);
         if (props != null && props.getWalletUrl() != null) {
             walletUrl = props.getWalletUrl();
         }

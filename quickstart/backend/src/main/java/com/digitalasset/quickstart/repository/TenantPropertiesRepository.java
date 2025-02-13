@@ -25,9 +25,9 @@ public class TenantPropertiesRepository {
     }
 
     /**
-     * Spring will automatically bind the YAML 'tenants.*' to this map.
+     * Spring will automatically bind the YAML 'application.tenants.*' to this map.
      */
-    public Map<String, TenantProperties> getTenants() {
+    public Map<String, TenantProperties> getAllTenants() {
         return tenants;
     }
 
@@ -41,7 +41,7 @@ public class TenantPropertiesRepository {
     /**
      * Retrieve a single tenant's extra properties (like walletUrl).
      */
-    public TenantProperties getProperties(String registrationId) {
+    public TenantProperties getTenant(String registrationId) {
         return tenants.get(registrationId);
     }
 
@@ -49,14 +49,14 @@ public class TenantPropertiesRepository {
      * Save (or overwrite) a tenant's extra properties.
      * Called when we create a new tenant registration at runtime, etc.
      */
-    public void saveProperties(String registrationId, TenantProperties props) {
+    public void addTenant(String registrationId, TenantProperties props) {
         tenants.put(registrationId, props);
     }
 
     /**
      * Remove a tenant’s extra properties
      */
-    public void removeProperties(String registrationId) {
+    public void removeTenant(String registrationId) {
         tenants.remove(registrationId);
     }
 }

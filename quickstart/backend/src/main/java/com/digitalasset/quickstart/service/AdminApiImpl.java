@@ -64,7 +64,7 @@ public class AdminApiImpl implements AdminApi {
         // Save extra properties in a separate repository
         TenantPropertiesRepository.TenantProperties props = new TenantPropertiesRepository.TenantProperties();
         props.setWalletUrl(request.getWalletUrl());
-        tenantPropertiesRepository.saveProperties(registration.getRegistrationId(), props);
+        tenantPropertiesRepository.addTenant(registration.getRegistrationId(), props);
 
         // Build the response (OpenAPI model)
         TenantRegistration response = new TenantRegistration();
@@ -84,7 +84,7 @@ public class AdminApiImpl implements AdminApi {
     @Override
     public CompletableFuture<ResponseEntity<Void>> deleteTenantRegistration(String tenantId) {
         tenantRegistrationRepository.removeRegistration(tenantId);
-        tenantPropertiesRepository.removeProperties(tenantId);
+        tenantPropertiesRepository.removeTenant(tenantId);
         return CompletableFuture.completedFuture(ResponseEntity.ok().build());
     }
 
@@ -111,7 +111,7 @@ public class AdminApiImpl implements AdminApi {
 
                     // Populate walletUrl from your separate repository
                     TenantPropertiesRepository.TenantProperties props =
-                            tenantPropertiesRepository.getProperties(r.getRegistrationId());
+                            tenantPropertiesRepository.getTenant(r.getRegistrationId());
                     if (props != null && props.getWalletUrl() != null) {
                         out.setWalletUrl(URI.create(props.getWalletUrl()));
                     }
