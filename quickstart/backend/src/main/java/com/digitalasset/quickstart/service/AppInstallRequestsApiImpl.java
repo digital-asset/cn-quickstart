@@ -7,22 +7,18 @@ import com.digitalasset.quickstart.api.AppInstallRequestsApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
 import com.digitalasset.quickstart.oauth.AuthenticatedPartyService;
 import com.digitalasset.quickstart.repository.DamlRepository;
-
 import org.openapitools.model.AppInstall;
 import org.openapitools.model.AppInstallRequestAccept;
 import org.openapitools.model.AppInstallRequestCancel;
 import org.openapitools.model.AppInstallRequestReject;
 import org.openapitools.model.AppInstallRequest;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -61,43 +57,40 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
             @SpanAttribute("appInstall.commandId") String commandId,
             AppInstallRequestAccept appInstallRequestAccept
     ) {
-        // Capture the current span and context
         Span methodSpan = Span.current();
         Context parentContext = Context.current();
 
-        // Add some initial log/event
         methodSpan.addEvent("Starting acceptAppInstallRequest");
         methodSpan.setAttribute("contractId", contractId);
         methodSpan.setAttribute("commandId", commandId);
         logger.info("acceptAppInstallRequest: contractId='{}', commandId='{}'", contractId, commandId);
 
-        // Chain the futures directly:
-        return damlRepository
-                .findAppInstallRequestById(contractId)
-                .thenCompose(contract -> {
-                    methodSpan.addEvent("Fetched contract, exercising AppInstallRequest_Accept choice");
-                    String providerParty = authenticatedPartyService.getPartyOrFail();
+        // Capture the provider party asynchronously
+        return authenticatedPartyService.getPartyOrFail()
+                .thenCompose(providerParty ->
+                        damlRepository.findAppInstallRequestById(contractId)
+                                .thenCompose(contract -> {
+                                    methodSpan.addEvent("Fetched contract, exercising AppInstallRequest_Accept choice");
 
-                    // Create the Daml choice
-                    quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Accept choice =
-                            new quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Accept(
-                                    new quickstart_licensing.licensing.util.Metadata(appInstallRequestAccept.getInstallMeta().getData()),
-                                    new quickstart_licensing.licensing.util.Metadata(appInstallRequestAccept.getMeta().getData())
-                            );
+                                    quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Accept choice =
+                                            new quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Accept(
+                                                    new quickstart_licensing.licensing.util.Metadata(appInstallRequestAccept.getInstallMeta().getData()),
+                                                    new quickstart_licensing.licensing.util.Metadata(appInstallRequestAccept.getMeta().getData())
+                                            );
 
-                    // Execute the choice, then build the response
-                    return ledger.exerciseAndGetResult(providerParty, contract.contractId, choice, commandId)
-                            .thenApply(appInstallContractId -> {
-                                methodSpan.addEvent("Choice exercised, building response AppInstall");
-                                AppInstall appInstall = new AppInstall();
-                                appInstall.setDso(contract.payload.getDso.getParty);
-                                appInstall.setProvider(contract.payload.getProvider.getParty);
-                                appInstall.setUser(contract.payload.getUser.getParty);
-                                appInstall.setMeta(appInstallRequestAccept.getInstallMeta());
-                                appInstall.setNumLicensesCreated(0);
-                                return ResponseEntity.ok(appInstall);
-                            });
-                })
+                                    return ledger.exerciseAndGetResult(providerParty, contract.contractId, choice, commandId)
+                                            .thenApply(appInstallContractId -> {
+                                                methodSpan.addEvent("Choice exercised, building response AppInstall");
+                                                AppInstall appInstall = new AppInstall();
+                                                appInstall.setDso(contract.payload.getDso.getParty);
+                                                appInstall.setProvider(contract.payload.getProvider.getParty);
+                                                appInstall.setUser(contract.payload.getUser.getParty);
+                                                appInstall.setMeta(appInstallRequestAccept.getInstallMeta());
+                                                appInstall.setNumLicensesCreated(0);
+                                                return ResponseEntity.ok(appInstall);
+                                            });
+                                })
+                )
                 .whenComplete(
                         completeWithin(parentContext, (res, ex) -> {
                             if (ex == null) {
@@ -126,23 +119,24 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
         methodSpan.setAttribute("commandId", commandId);
         logger.info("cancelAppInstallRequest: contractId='{}', commandId='{}'", contractId, commandId);
 
-        return damlRepository
-                .findAppInstallRequestById(contractId)
-                .thenCompose(contract -> {
-                    methodSpan.addEvent("Fetched contract, exercising AppInstallRequest_Cancel choice");
-                    String userParty = authenticatedPartyService.getPartyOrFail();
+        return authenticatedPartyService.getPartyOrFail()
+                .thenCompose(userParty ->
+                        damlRepository.findAppInstallRequestById(contractId)
+                                .thenCompose(contract -> {
+                                    methodSpan.addEvent("Fetched contract, exercising AppInstallRequest_Cancel choice");
 
-                    quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Cancel choice =
-                            new quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Cancel(
-                                    new quickstart_licensing.licensing.util.Metadata(appInstallRequestCancel.getMeta().getData())
-                            );
+                                    quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Cancel choice =
+                                            new quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Cancel(
+                                                    new quickstart_licensing.licensing.util.Metadata(appInstallRequestCancel.getMeta().getData())
+                                            );
 
-                    return ledger.exerciseAndGetResult(userParty, contract.contractId, choice, commandId)
-                            .thenApply(result -> {
-                                methodSpan.addEvent("Choice exercised, returning 200 OK");
-                                return ResponseEntity.ok().<Void>build();
-                            });
-                })
+                                    return ledger.exerciseAndGetResult(userParty, contract.contractId, choice, commandId)
+                                            .thenApply(result -> {
+                                                methodSpan.addEvent("Choice exercised, returning 200 OK");
+                                                return ResponseEntity.ok().<Void>build();
+                                            });
+                                })
+                )
                 .whenComplete(
                         completeWithin(parentContext, (res, ex) -> {
                             if (ex == null) {
@@ -165,32 +159,33 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
         methodSpan.addEvent("Starting listAppInstallRequests");
         logger.info("listAppInstallRequests: retrieving active requests");
 
-        return damlRepository
-                .findActiveAppInstallRequests()
-                .thenApply(contracts -> {
-                    methodSpan.addEvent("Filtering results by current party");
-                    String party = authenticatedPartyService.getPartyOrFail();
+        return authenticatedPartyService.getPartyOrFail()
+                .thenCompose(party ->
+                        damlRepository.findActiveAppInstallRequests()
+                                .thenApply(contracts -> {
+                                    methodSpan.addEvent("Filtering results by current party");
 
-                    List<AppInstallRequest> result = contracts.stream()
-                            .filter(contract -> {
-                                String user = contract.payload.getUser.getParty;
-                                String provider = contract.payload.getProvider.getParty;
-                                return party.equals(user) || party.equals(provider);
-                            })
-                            .map(contract -> {
-                                AppInstallRequest appInstallRequest = new AppInstallRequest();
-                                appInstallRequest.setContractId(contract.contractId.getContractId);
-                                appInstallRequest.setDso(contract.payload.getDso.getParty);
-                                appInstallRequest.setProvider(contract.payload.getProvider.getParty);
-                                appInstallRequest.setUser(contract.payload.getUser.getParty);
-                                appInstallRequest.setMeta(new org.openapitools.model.Metadata());
-                                appInstallRequest.getMeta().setData(contract.payload.getMeta.getValues);
-                                return appInstallRequest;
-                            })
-                            .toList();
+                                    List<AppInstallRequest> result = contracts.stream()
+                                            .filter(contract -> {
+                                                String user = contract.payload.getUser.getParty;
+                                                String provider = contract.payload.getProvider.getParty;
+                                                return party.equals(user) || party.equals(provider);
+                                            })
+                                            .map(contract -> {
+                                                AppInstallRequest appInstallRequest = new AppInstallRequest();
+                                                appInstallRequest.setContractId(contract.contractId.getContractId);
+                                                appInstallRequest.setDso(contract.payload.getDso.getParty);
+                                                appInstallRequest.setProvider(contract.payload.getProvider.getParty);
+                                                appInstallRequest.setUser(contract.payload.getUser.getParty);
+                                                appInstallRequest.setMeta(new org.openapitools.model.Metadata());
+                                                appInstallRequest.getMeta().setData(contract.payload.getMeta.getValues);
+                                                return appInstallRequest;
+                                            })
+                                            .toList();
 
-                    return ResponseEntity.ok(result);
-                })
+                                    return ResponseEntity.ok(result);
+                                })
+                )
                 .whenComplete(
                         completeWithin(parentContext, (res, ex) -> {
                             if (ex == null) {
@@ -220,23 +215,24 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
         methodSpan.setAttribute("commandId", commandId);
         logger.info("rejectAppInstallRequest: contractId='{}', commandId='{}'", contractId, commandId);
 
-        return damlRepository
-                .findAppInstallRequestById(contractId)
-                .thenCompose(contract -> {
-                    methodSpan.addEvent("Fetched contract, exercising AppInstallRequest_Reject choice");
-                    String providerParty = authenticatedPartyService.getPartyOrFail();
+        return authenticatedPartyService.getPartyOrFail()
+                .thenCompose(providerParty ->
+                        damlRepository.findAppInstallRequestById(contractId)
+                                .thenCompose(contract -> {
+                                    methodSpan.addEvent("Fetched contract, exercising AppInstallRequest_Reject choice");
 
-                    quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Reject choice =
-                            new quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Reject(
-                                    new quickstart_licensing.licensing.util.Metadata(appInstallRequestReject.getMeta().getData())
-                            );
+                                    quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Reject choice =
+                                            new quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Reject(
+                                                    new quickstart_licensing.licensing.util.Metadata(appInstallRequestReject.getMeta().getData())
+                                            );
 
-                    return ledger.exerciseAndGetResult(providerParty, contract.contractId, choice, commandId)
-                            .thenApply(result -> {
-                                methodSpan.addEvent("Choice exercised, returning 200 OK");
-                                return ResponseEntity.ok().<Void>build();
-                            });
-                })
+                                    return ledger.exerciseAndGetResult(providerParty, contract.contractId, choice, commandId)
+                                            .thenApply(result -> {
+                                                methodSpan.addEvent("Choice exercised, returning 200 OK");
+                                                return ResponseEntity.ok().<Void>build();
+                                            });
+                                })
+                )
                 .whenComplete(
                         completeWithin(parentContext, (res, ex) -> {
                             if (ex == null) {
@@ -250,3 +246,4 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
                 );
     }
 }
+

@@ -56,37 +56,41 @@ public class LicenseRenewalRequestsApiImpl implements LicenseRenewalRequestsApi 
     @Override
     public CompletableFuture<ResponseEntity<List<org.openapitools.model.LicenseRenewalRequest>>> listLicenseRenewalRequests() {
         logger.info("Listing LicenseRenewalRequests");
-        String party = authenticatedPartyService.getPartyOrFail();
 
-        return damlRepository.findActiveLicenseRenewalRequests()
-                .thenApply(contracts -> {
-                    List<org.openapitools.model.LicenseRenewalRequest> result = contracts.stream()
-                            .filter(contract -> {
-                                // Only show LicenseRenewalRequests where the requesting party is either the provider or user.
-                                String user = contract.payload.getUser.getParty;
-                                String provider = contract.payload.getProvider.getParty;
-                                return user.equals(party) || provider.equals(party);
-                            })
-                            .map(contract -> {
-                                org.openapitools.model.LicenseRenewalRequest r = new org.openapitools.model.LicenseRenewalRequest();
-                                r.setContractId(contract.contractId.getContractId);
-                                r.setProvider(contract.payload.getProvider.getParty);
-                                r.setUser(contract.payload.getUser.getParty);
-                                r.setDso(contract.payload.getDso.getParty);
-                                r.setLicenseNum(contract.payload.getLicenseNum.intValue());
-                                r.setLicenseFeeCc(contract.payload.getLicenseFeeCc);
+        return authenticatedPartyService.getPartyOrFail()
+                .thenCompose(party ->
+                        damlRepository.findActiveLicenseRenewalRequests()
+                                .thenApply(contracts -> {
+                                    List<org.openapitools.model.LicenseRenewalRequest> result = contracts.stream()
+                                            .filter(contract -> {
+                                                // Only show if current party is user or provider
+                                                String user = contract.payload.getUser.getParty;
+                                                String provider = contract.payload.getProvider.getParty;
+                                                return user.equals(party) || provider.equals(party);
+                                            })
+                                            .map(contract -> {
+                                                org.openapitools.model.LicenseRenewalRequest r =
+                                                        new org.openapitools.model.LicenseRenewalRequest();
+                                                r.setContractId(contract.contractId.getContractId);
+                                                r.setProvider(contract.payload.getProvider.getParty);
+                                                r.setUser(contract.payload.getUser.getParty);
+                                                r.setDso(contract.payload.getDso.getParty);
+                                                r.setLicenseNum(contract.payload.getLicenseNum.intValue());
+                                                r.setLicenseFeeCc(contract.payload.getLicenseFeeCc);
 
-                                String relTimeReadable = (contract.payload.getLicenseExtensionDuration.getMicroseconds
-                                        / 1000 / 1000 / 60 / 60 / 24) + " days";
-                                r.setLicenseExtensionDuration(relTimeReadable);
+                                                String relTimeReadable =
+                                                        (contract.payload.getLicenseExtensionDuration.getMicroseconds
+                                                                / 1000 / 1000 / 60 / 60 / 24) + " days";
+                                                r.setLicenseExtensionDuration(relTimeReadable);
 
-                                r.setReference(contract.payload.getReference.getContractId);
-                                return r;
-                            })
-                            .collect(Collectors.toList());
+                                                r.setReference(contract.payload.getReference.getContractId);
+                                                return r;
+                                            })
+                                            .collect(Collectors.toList());
 
-                    return ResponseEntity.ok(result);
-                })
+                                    return ResponseEntity.ok(result);
+                                })
+                )
                 .exceptionally(ex -> {
                     logger.error("Error listing LicenseRenewalRequests", ex);
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -94,101 +98,104 @@ public class LicenseRenewalRequestsApiImpl implements LicenseRenewalRequestsApi 
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Void>> completeLicenseRenewal(
-            String contractId,
-            String commandId
-    ) {
+    public CompletableFuture<ResponseEntity<Void>> completeLicenseRenewal(String contractId, String commandId) {
         logger.info("Completing License RenewalRequest with contractId: {}", contractId);
-        String actingParty = authenticatedPartyService.getPartyOrFail();
 
-        // 1. Fetch the LicenseRenewalRequest contract from DamlRepository
-        return damlRepository.findLicenseRenewalRequestById(contractId)
-                .thenCompose(lrrContract -> {
-                    String user = lrrContract.payload.getUser.getParty;
-                    String provider = lrrContract.payload.getProvider.getParty;
-                    String dso = lrrContract.payload.getDso.getParty;
-                    Long licenseNum = lrrContract.payload.getLicenseNum;
-                    String referenceCid = lrrContract.payload.getReference.getContractId;
+        return authenticatedPartyService.getPartyOrFail()
+                .thenCompose(actingParty ->
+                        damlRepository.findLicenseRenewalRequestById(contractId)
+                                .thenCompose(lrrContract -> {
+                                    String user = lrrContract.payload.getUser.getParty;
+                                    String provider = lrrContract.payload.getProvider.getParty;
+                                    String dso = lrrContract.payload.getDso.getParty;
+                                    Long licenseNum = lrrContract.payload.getLicenseNum;
+                                    String referenceCid = lrrContract.payload.getReference.getContractId;
 
-                    // Find the AcceptedAppPayment contract that matches the reference/user/provider
-                    return damlRepository.findSingleActiveAcceptedAppPayment(referenceCid, user, provider)
-                            .thenCompose(maybeAcceptedPayment -> {
-                                if (maybeAcceptedPayment.isEmpty()) {
-                                    logger.error("No AcceptedAppPayment found for reference: {}, user: {}, provider: {}",
-                                            referenceCid, user, provider);
-                                    return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-                                }
+                                    // 1. Find the AcceptedAppPayment matching reference/user/provider
+                                    return damlRepository.findSingleActiveAcceptedAppPayment(referenceCid, user, provider)
+                                            .thenCompose(maybeAcceptedPayment -> {
+                                                if (maybeAcceptedPayment.isEmpty()) {
+                                                    logger.error("No AcceptedAppPayment found for reference: {}, user: {}, provider: {}",
+                                                            referenceCid, user, provider);
+                                                    return CompletableFuture.completedFuture(
+                                                            ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+                                                }
 
-                                ContractId<AcceptedAppPayment> acceptedPaymentCid = maybeAcceptedPayment.get().contractId;
-                                Long miningRound = maybeAcceptedPayment.get().payload.getRound.getNumber;
+                                                ContractId<AcceptedAppPayment> acceptedPaymentCid = maybeAcceptedPayment.get().contractId;
+                                                Long miningRound = maybeAcceptedPayment.get().payload.getRound.getNumber;
 
-                                // Find the active License that matches user/provider/dso/licenseNum
-                                return damlRepository.findSingleActiveLicense(user, provider, licenseNum, dso)
-                                        .thenCompose(maybeLicense -> {
-                                            if (maybeLicense.isEmpty()) {
-                                                logger.error("No matching License contract found for user: {}, provider: {}, licenseNum: {}, dso: {}",
-                                                        user, provider, licenseNum, dso);
-                                                return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-                                            }
+                                                // 2. Find the active License
+                                                return damlRepository.findSingleActiveLicense(user, provider, licenseNum, dso)
+                                                        .thenCompose(maybeLicense -> {
+                                                            if (maybeLicense.isEmpty()) {
+                                                                logger.error("No matching License contract found for user: {}, provider: {}, licenseNum: {}, dso: {}",
+                                                                        user, provider, licenseNum, dso);
+                                                                return CompletableFuture.completedFuture(
+                                                                        ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+                                                            }
 
-                                            ContractId<License> licenseCid = maybeLicense.get().contractId;
+                                                            ContractId<License> licenseCid = maybeLicense.get().contractId;
 
-                                            // Fetch the necessary disclosed contracts for the choice
-                                            CompletableFuture<CommandsOuterClass.DisclosedContract> amuletRulesFut =
-                                                    fetchAmuletRulesDisclosedContract();
-                                            CompletableFuture<CommandsOuterClass.DisclosedContract> openMiningRoundFut =
-                                                    fetchOpenMiningRoundDisclosedContract(miningRound);
+                                                            // 3. Fetch necessary disclosed contracts
+                                                            CompletableFuture<CommandsOuterClass.DisclosedContract> amuletRulesFut =
+                                                                    fetchAmuletRulesDisclosedContract();
+                                                            CompletableFuture<CommandsOuterClass.DisclosedContract> openMiningRoundFut =
+                                                                    fetchOpenMiningRoundDisclosedContract(miningRound);
 
-                                            return CompletableFuture.allOf(amuletRulesFut, openMiningRoundFut)
-                                                    .thenCompose(v -> {
-                                                        CommandsOuterClass.DisclosedContract amuletRulesDc = amuletRulesFut.join();
-                                                        CommandsOuterClass.DisclosedContract openMiningRoundDc = openMiningRoundFut.join();
+                                                            return CompletableFuture.allOf(amuletRulesFut, openMiningRoundFut)
+                                                                    .thenCompose(v -> {
+                                                                        CommandsOuterClass.DisclosedContract amuletRulesDc = amuletRulesFut.join();
+                                                                        CommandsOuterClass.DisclosedContract openMiningRoundDc = openMiningRoundFut.join();
 
-                                                        AppTransferContext transferContext = new AppTransferContext(
-                                                                new ContractId<>(amuletRulesDc.getContractId()),
-                                                                new ContractId<>(openMiningRoundDc.getContractId()),
-                                                                Optional.empty()
-                                                        );
+                                                                        AppTransferContext transferContext = new AppTransferContext(
+                                                                                new ContractId<>(amuletRulesDc.getContractId()),
+                                                                                new ContractId<>(openMiningRoundDc.getContractId()),
+                                                                                Optional.empty()
+                                                                        );
 
-                                                        LicenseRenewalRequest.LicenseRenewalRequest_CompleteRenewal choice =
-                                                                new LicenseRenewalRequest.LicenseRenewalRequest_CompleteRenewal(
-                                                                        acceptedPaymentCid,
-                                                                        licenseCid,
-                                                                        transferContext
-                                                                );
+                                                                        // 4. Construct the CompleteRenewal choice
+                                                                        LicenseRenewalRequest.LicenseRenewalRequest_CompleteRenewal choice =
+                                                                                new LicenseRenewalRequest.LicenseRenewalRequest_CompleteRenewal(
+                                                                                        acceptedPaymentCid,
+                                                                                        licenseCid,
+                                                                                        transferContext
+                                                                                );
 
-                                                        // 5. Exercise the choice on the ledger
-                                                        return ledger.exerciseAndGetResult(
-                                                                actingParty,
-                                                                lrrContract.contractId,
-                                                                choice,
-                                                                commandId,
-                                                                List.of(amuletRulesDc, openMiningRoundDc)
-                                                        ).thenApply(newLicenseCid -> {
-                                                            logger.info("License renewed successfully. New License contractId: {}",
-                                                                    newLicenseCid.getContractId);
-                                                            return ResponseEntity.ok().<Void>build();
-                                                        }).exceptionally(ex2 -> {
-                                                            logger.error("Error completing License Renewal", ex2);
-                                                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                                                                        // 5. Exercise the choice
+                                                                        return ledger.exerciseAndGetResult(
+                                                                                actingParty,
+                                                                                lrrContract.contractId,
+                                                                                choice,
+                                                                                commandId,
+                                                                                List.of(amuletRulesDc, openMiningRoundDc)
+                                                                        ).thenApply(newLicenseCid -> {
+                                                                            logger.info("License renewed successfully. New License contractId: {}",
+                                                                                    newLicenseCid.getContractId);
+                                                                            return ResponseEntity.ok().<Void>build();
+                                                                        }).exceptionally(ex2 -> {
+                                                                            logger.error("Error completing License Renewal", ex2);
+                                                                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                                                                        });
+                                                                    });
                                                         });
-                                                    });
-                                        });
-                            });
-                })
+                                            });
+                                })
+                )
                 .exceptionally(ex -> {
                     logger.error("Error fetching LicenseRenewalRequest with contractId: {}", contractId, ex);
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                 });
     }
 
+    // Example helpers for building DisclosedContracts from external data
     private CompletableFuture<CommandsOuterClass.DisclosedContract> fetchAmuletRulesDisclosedContract() {
         return scanProxyService.getAmuletRules().thenApply(resp -> {
             var contract = resp.getAmuletRules().getContract();
             return buildDisclosedContractFromApi(
                     contract.getTemplateId(),
                     contract.getContractId(),
-                    contract.getCreatedEventBlob());
+                    contract.getCreatedEventBlob()
+            );
         });
     }
 
@@ -205,7 +212,8 @@ public class LicenseRenewalRequestsApiImpl implements LicenseRenewalRequestsApi 
             return buildDisclosedContractFromApi(
                     contract.getTemplateId(),
                     contract.getContractId(),
-                    contract.getCreatedEventBlob());
+                    contract.getCreatedEventBlob()
+            );
         });
     }
 
