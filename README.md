@@ -129,6 +129,8 @@ To perform operations such as creating, editing, and archiving assets, users mus
 
 The following user guides provide an engineering handover to teams using the Canton Network Quickstart to bootstrap their project.
 
+- [Quickstart Installation](docs/guide/CantonNetworkQuickstartInstallationGuide-20250213.pdf)
+- [Exploring The Demo](docs/guide/ExploringTheDemo-20250213.pdf)
 - [Project Structure](docs/guide/ProjectStructureGuide-20250212.pdf)
 
 ### Technical Documentation
