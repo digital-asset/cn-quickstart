@@ -1,5 +1,16 @@
 # Canton Network Application Quickstart
 
+This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS).  It is intended that you  clone the repository and incrementally update the solution to match your business operations.   It assumes that you have a Daml Enterprise license to leverage all of its features at runtime. However, an OSS developer can benefit from it by understanding how a CN GS application is structured.  
+
+If you are impatient, then you can jump right in by following the **Engineer Setup** below.  Alternatively, you can peruse the documentation:
+- Detailed installation
+- Exploring the demo application
+- Overview of the [Project Structure](docs/guide/ProjectStructureGuide-20250212.pdf)
+<!---  - Troubleshooting and debugging with Observability --->
+Additional documentation and updates are planned weekly.
+
+This project rapidly being enhanced so please check back often. 
+
 ## Engineer Setup
 
 This repository uses `direnv`, `nix`, and `docker-compose` to provide development dependencies.
