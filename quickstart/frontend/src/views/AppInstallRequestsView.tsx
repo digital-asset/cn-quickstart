@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAppInstallRequestStore } from '../stores/appInstallRequestStore';
-import { useUser } from '../stores/userStore';
+import { useUserStore } from '../stores/userStore';
 
 const AppInstallRequestsView: React.FC = () => {
     const {
@@ -15,7 +15,7 @@ const AppInstallRequestsView: React.FC = () => {
         cancelAppInstallRequest,
     } = useAppInstallRequestStore();
 
-    const { user } = useUser();
+    const { user } = useUserStore();
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
 
     useEffect(() => {

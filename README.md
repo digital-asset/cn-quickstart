@@ -114,8 +114,12 @@ After starting the application with `make start` you can access the following UI
   - **URL**: [http://app-provider.localhost:3000](http://app-provider.localhost:3000)
   - **Description**: The main web interface of the application.
 
-- **Wallet Web UI**
-  - **URL**: [http://wallet.localhost:3000](http://wallet.localhost:3000)
+- **App User (`Org1`) Wallet UI**
+  - **URL**: [http://wallet.localhost:2000](http://wallet.localhost:2000)
+  - **Description**: Interface for managing user wallets.
+
+- **App Provider Wallet UI**
+  - **URL**: [http://wallet.localhost:2000](http://wallet.localhost:3000)
   - **Description**: Interface for managing user wallets.
 
 ### Super Validator UIs (if LocalNet enabled via `make setup`)

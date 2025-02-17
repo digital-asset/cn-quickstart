@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: 0BSD
 
 import React, { useEffect } from 'react';
-import { useUser } from '../stores/userStore';
+import { useUserStore } from '../stores/userStore';
 import { useNavigate } from 'react-router-dom';
 
 const HomeView: React.FC = () => {
-    const { user, loading } = useUser();
+    const { user, loading } = useUserStore();
     const navigate = useNavigate();
 
     useEffect(() => {

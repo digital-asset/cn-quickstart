@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useLicenseStore } from '../stores/licenseStore';
-import { useUser } from '../stores/userStore'; // Importing the user store
+import { useUserStore } from '../stores/userStore';
 
 const LicensesView: React.FC = () => {
     const {
@@ -14,7 +14,7 @@ const LicensesView: React.FC = () => {
         initiateLicenseExpiration,
     } = useLicenseStore();
 
-    const { user } = useUser(); // Getting the current user
+    const { user } = useUserStore(); // Getting the current user
     const isAdmin = !!user?.isAdmin; // Determine if user is admin
 
     const [selectedLicenseId, setSelectedLicenseId] = useState<string | null>(null);

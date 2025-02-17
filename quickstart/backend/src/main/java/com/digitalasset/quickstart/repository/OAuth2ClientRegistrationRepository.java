@@ -1,7 +1,7 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-package com.digitalasset.quickstart.oauth;
+package com.digitalasset.quickstart.repository;
 
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientPropertiesMapper;
@@ -15,18 +15,22 @@ import java.util.stream.Collectors;
 
 @Component
 @Lazy(false)
-public class OAuth2ClientRegistrationRepository implements ClientRegistrationRepository, Iterable<ClientRegistration> {
+public class OAuth2ClientRegistrationRepository
+        implements ClientRegistrationRepository, Iterable<ClientRegistration> {
 
     private final Map<String, ClientRegistration> registrations;
 
     public OAuth2ClientRegistrationRepository(OAuth2ClientProperties properties) {
-        List<ClientRegistration> registrations = new ArrayList<>(new OAuth2ClientPropertiesMapper(properties).asClientRegistrations().values());
-        this.registrations = createRegistrationsMap(registrations);
-    }
 
-    private Map<String, ClientRegistration> createRegistrationsMap(List<ClientRegistration> registrations) {
-        return registrations.stream().collect(
-                Collectors.toMap(ClientRegistration::getRegistrationId,
+        // Map Spring Boot's properties -> standard ClientRegistration
+        List<ClientRegistration> baseRegistrations = new ArrayList<>(
+                new OAuth2ClientPropertiesMapper(properties).asClientRegistrations().values()
+        );
+
+        // Build up the map
+        this.registrations = baseRegistrations.stream()
+                .collect(Collectors.toMap(
+                        ClientRegistration::getRegistrationId,
                         registration -> ClientRegistration.withRegistrationId(registration.getRegistrationId())
                                 .clientId(registration.getClientId())
                                 .clientSecret(registration.getClientSecret())
@@ -37,21 +41,11 @@ public class OAuth2ClientRegistrationRepository implements ClientRegistrationRep
                                 .redirectUri(registration.getRedirectUri())
                                 .scope(registration.getScopes())
                                 .clientName(registration.getClientName())
+                                // Immutable entries from application.yml
                                 .providerConfigurationMetadata(Map.of("preconfigured", "true"))
                                 .build()
-                )
-        );
+                ));
     }
-
-    @Override
-    public Iterator<ClientRegistration> iterator() {
-        return registrations.values().iterator();
-    }
-
-    public Collection<ClientRegistration> getRegistrations() {
-        return registrations.values();
-    }
-
 
     @Override
     public ClientRegistration findByRegistrationId(String registrationId) {
@@ -62,8 +56,18 @@ public class OAuth2ClientRegistrationRepository implements ClientRegistrationRep
         registrations.put(registration.getRegistrationId(), registration);
     }
 
-    public void removeRegistration(String clientId) {
-        registrations.remove(clientId);
+    public void removeRegistration(String registrationId) {
+        registrations.remove(registrationId);
     }
 
+    public Collection<ClientRegistration> getRegistrations() {
+        return registrations.values();
+    }
+
+    @Override
+    public Iterator<ClientRegistration> iterator() {
+        return registrations.values().iterator();
+    }
 }
+
+

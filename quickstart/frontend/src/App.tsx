@@ -5,9 +5,8 @@ import React from 'react';
 import './App.css';
 import { Routes, Route } from 'react-router-dom';
 import { ToastProvider } from './stores/toastStore';
-import { OAuth2Provider } from './stores/oauth2Store';
 import HomeView from './views/HomeView';
-import OAuth2View from './views/OAuth2View';
+import TenantRegistrationView from './views/TenantRegistrationView.tsx';
 import LoginView from './views/LoginView';
 import { UserProvider } from './stores/userStore';
 import Header from './components/Header';
@@ -19,12 +18,13 @@ import LicensesView from './views/LicensesView';
 import { LicenseProvider } from './stores/licenseStore';
 import {AppInstallProvider} from "./stores/appInstallStore.tsx";
 import LicenseRenewalRequestsView from "./views/LicenseRenewalRequestsView.tsx";
+import {TenantRegistrationProvider} from "./stores/tenantRegistrationStore.tsx";
 
 const App: React.FC = () => {
     const AppProviders = composeProviders(
         ToastProvider,
         UserProvider,
-        OAuth2Provider,
+        TenantRegistrationProvider,
         AppInstallRequestProvider,
         AppInstallProvider,
         LicenseProvider
@@ -36,7 +36,7 @@ const App: React.FC = () => {
             <main className="container mt-4">
                 <Routes>
                     <Route path="/" element={<HomeView />} />
-                    <Route path="/oauth2" element={<OAuth2View />} />
+                    <Route path="/tenants" element={<TenantRegistrationView />} />
                     <Route path="/login" element={<LoginView />} />
                     <Route path="/app-install-requests" element={<AppInstallRequestsView />} />
                     <Route path="/app-installs" element={<AppInstallsView />} />
