@@ -1,6 +1,24 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
+import {
+    AppInstall,
+    AppInstall_CreateLicense_Result,
+    AppInstallRequest
+} from "../generated/quickstart_licensing/Licensing/AppInstall";
+import AppInstallRequest_Accept = AppInstallRequest.AppInstallRequest_Accept;
+import AppInstallRequest_Reject = AppInstallRequest.AppInstallRequest_Reject;
+import AppInstallRequest_Cancel = AppInstallRequest.AppInstallRequest_Cancel;
+import AppInstall_CreateLicense = AppInstall.AppInstall_CreateLicense;
+import AppInstall_Cancel = AppInstall.AppInstall_Cancel;
+import {License, LicenseRenewalRequest} from "../generated/quickstart_licensing/Licensing/License";
+import License_Renew = License.License_Renew;
+import License_Expire = License.License_Expire;
+import {AppPaymentRequest} from "../generated/splice_wallet_payments/Splice/Wallet/Payment";
+import {Metadata} from "../generated/quickstart_licensing/Licensing/Util";
+import {RelTime} from "../generated/daml_stdlib_DA_Time_Types/DA/Time/Types";
+import {ContractId, Party} from "../generated/daml";
+
 export interface LoginLink {
     name: string;
     url: string;
@@ -45,44 +63,46 @@ export interface ApiClient {
     ): Promise<void>;
 
     // AppInstallRequests
-    listAppInstallRequests(): Promise<{ data: AppInstallRequest[] }>;
+    listAppInstallRequests(): Promise<{ data: Contract0<AppInstallRequest>[] }>;
     createAppInstallRequest(
         params: { commandId: string }
     ): Promise<{ data: AppInstallRequest }>;
     acceptAppInstallRequest(
         params: { contractId: string; commandId: string },
-        body: AppInstallRequestAccept
+        body: AppInstallRequest_Accept
     ): Promise<{ data: AppInstall }>;
     rejectAppInstallRequest(
         params: { contractId: string; commandId: string },
-        body: AppInstallRequestReject
+        body: AppInstallRequest_Reject
     ): Promise<void>;
     cancelAppInstallRequest(
         params: { contractId: string; commandId: string },
-        body: AppInstallRequestCancel
+        body: AppInstallRequest_Cancel
     ): Promise<void>;
 
     // AppInstalls
     createLicense(
         params: { contractId: string; commandId: string },
-        body: AppInstallCreateLicenseRequest
-    ): Promise<{ data: AppInstallCreateLicenseResult }>;
+        body: AppInstall_CreateLicense
+    ): Promise<{ data: AppInstall_CreateLicense_Result }>;
+
     cancelAppInstall(
         params: { contractId: string; commandId: string },
-        body: AppInstallCancel
+        body: AppInstall_Cancel
     ): Promise<void>;
-    listAppInstalls(): Promise<{ data: AppInstall[] }>;
+
+    listAppInstalls(): Promise<{ data: Contract0<AppInstall>[] }>;
 
     // Licenses
-    listLicenses(): Promise<{ data: License[] }>;
+    listLicenses(): Promise<{ data: Contract0<License>[] }>;
 
     // License renewal-related endpoints
     renewLicense(
         params: { contractId: string; commandId: string },
-        body: LicenseRenewRequest
+        body: License_Renew
     ): Promise<{ data: LicenseRenewResponse }>;
 
-    listLicenseRenewalRequests(): Promise<{ data: LicenseRenewalRequest[] }>;
+    listLicenseRenewalRequests(): Promise<{ data: Contract0<LicenseRenewalRequest>[] }>;
 
     completeLicenseRenewal(
         params: { contractId: string; commandId: string },
@@ -91,94 +111,8 @@ export interface ApiClient {
 
     expireLicense(
         params: { contractId: string; commandId: string },
-        body: LicenseExpireRequest
+        body: License_Expire
     ): Promise<string>;
-}
-
-export interface Metadata {
-    data?: Record<string, string>;
-}
-
-// AppInstallRequest-related interfaces
-export interface AppInstallRequest {
-    contractId: string;
-    dso: string;
-    provider: string;
-    user: string;
-    meta: Metadata;
-}
-
-export interface AppInstallRequestCreation {}
-
-export interface AppInstallRequestAccept {
-    installMeta: Metadata;
-    meta: Metadata;
-}
-
-export interface AppInstallRequestReject {
-    meta: Metadata;
-}
-
-export interface AppInstallRequestCancel {
-    meta: Metadata;
-}
-
-export interface AppInstall {
-    contractId: string;
-    dso: string;
-    provider: string;
-    user: string;
-    meta: Metadata;
-    numLicensesCreated: number;
-    licenseNum: number;
-}
-
-export interface LicenseParams {
-    meta: Metadata;
-}
-
-export interface AppInstallCreateLicenseRequest {
-    params: LicenseParams;
-}
-
-export interface AppInstallCreateLicenseResult {
-    installId: string;
-    licenseId: string;
-}
-
-export interface AppInstallCancel {
-    meta: Metadata;
-}
-
-// License-related interfaces
-export interface License {
-    contractId: string;
-    dso: string;
-    provider: string;
-    user: string;
-    params: LicenseParams;
-    expiresAt: string; // ISO 8601 datetime string
-    licenseNum: number;
-}
-
-// License renewal-related interfaces
-
-export interface LicenseRenewRequest {
-    licenseFeeCc: number;
-    licenseExtensionDuration: string;     // e.g. "P30D"
-    paymentAcceptanceDuration: string;
-    description: string;
-}
-
-export interface LicenseRenewalRequest {
-    contractId: string;
-    provider: string;
-    user: string;
-    dso: string;
-    licenseNum: number;
-    licenseFeeCc: number;
-    licenseExtensionDuration: string; // "RelTime" as a string (e.g. "P30D")
-    reference: string;
 }
 
 export interface LicenseRenewResponse {
@@ -191,28 +125,23 @@ export interface LicenseRenewalRequestComplete {
     reference: string;
 }
 
-export interface LicenseExpireRequest {
-    meta: Metadata;
+export function toMeta(rec: Record<string, any>): Metadata {
+    return { values: Array.from(rec.entries()) }
 }
 
-// Payment-related interfaces
-
-export interface AppPaymentRequest {
-    contractId: string;
-    provider: string;
-    dso: string;
-    sender: string;
-    receiverAmounts: ReceiverAmount[];
-    description: string;
-    expiresAt: string; // ISO 8601 datetime
+export function toRelTime(str: string): RelTime {
+    return { microseconds: 0 } // TODO
 }
 
-export interface ReceiverAmount {
-    receiver: string;
-    amount: PaymentAmount;
-}
-
-export interface PaymentAmount {
-    amount: number;
-    unit: string;
+export type Contract0<a> = {
+    templateFqn: string;
+    payloadType: string;
+    createEventId: string;
+    createdAtOffset: string;
+    archiveEventId: string;
+    archivedAtOffset: string;
+    contractId: ContractId<a>;
+    observers: Party[];
+    signatories: Party[];
+    payload: a;
 }

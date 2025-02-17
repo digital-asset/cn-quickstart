@@ -69,11 +69,11 @@ const AppInstallRequestsView: React.FC = () => {
                     {appInstallRequests.map((request) => (
                         <tr key={request.contractId}>
                             <td className="ellipsis-cell">{request.contractId}</td>
-                            <td className="ellipsis-cell">{request.dso}</td>
-                            <td className="ellipsis-cell">{request.provider}</td>
-                            <td className="ellipsis-cell">{request.user}</td>
+                            <td className="ellipsis-cell">{request.payload.dso}</td>
+                            <td className="ellipsis-cell">{request.payload.provider}</td>
+                            <td className="ellipsis-cell">{request.payload.user}</td>
                             <td className="ellipsis-cell">
-                                {request.meta ? JSON.stringify(request.meta) : '{}'}
+                                {request.payload.meta ? JSON.stringify(request.payload.meta) : '{}'}
                             </td>
                             <td>
                                 {selectedRequestId === request.contractId ? (

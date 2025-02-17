@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
 import { useLicenseStore } from '../stores/licenseStore';
 import { useLocation } from 'react-router-dom';
 import { useUser } from '../stores/userStore';
+import {Int64, Party} from "../../generated/daml";
 
 const LicenseRenewalRequestsView: React.FC = () => {
     const {
@@ -32,18 +33,18 @@ const LicenseRenewalRequestsView: React.FC = () => {
     const handleCompleteRenewal = async (
         requestContractId: string,
         reference: string,
-        dso: string,
-        provider: string,
-        requestUser: string,
-        licenseNum: number
+        dso: Party,
+        provider: Party,
+        requestUser: Party,
+        licenseNum: Int64
     ) => {
         // Find the matching license (assuming it still exists)
         const matchingLicense = licenses.find(
             (l) =>
-                l.dso === dso &&
-                l.provider === provider &&
-                l.user === requestUser &&
-                l.licenseNum === licenseNum
+                l.payload.dso === dso &&
+                l.payload.provider === provider &&
+                l.payload.user === requestUser &&
+                l.payload.licenseNum === licenseNum
         );
 
         if (!matchingLicense) {
@@ -83,18 +84,18 @@ const LicenseRenewalRequestsView: React.FC = () => {
                     </thead>
                     <tbody>
                     {licenseRenewalRequests.map((request) => {
-                        const payURL = `http://wallet.localhost:2000/confirm-payment/${request.reference}?redirect=${encodeURIComponent(currentURL)}`;
+                        const payURL = `http://wallet.localhost:2000/confirm-payment/${request.payload.reference}?redirect=${encodeURIComponent(currentURL)}`;
                         return (
                             <tr key={request.contractId}>
                                 <td className="ellipsis-cell">{request.contractId}</td>
-                                <td className="ellipsis-cell">{request.provider}</td>
-                                <td className="ellipsis-cell">{request.user}</td>
-                                <td className="ellipsis-cell">{request.dso}</td>
-                                <td className="ellipsis-cell">{request.licenseNum}</td>
-                                <td className="ellipsis-cell">{request.licenseFeeCc}</td>
-                                <td className="ellipsis-cell">{request.licenseExtensionDuration}</td>
+                                <td className="ellipsis-cell">{request.payload.provider}</td>
+                                <td className="ellipsis-cell">{request.payload.user}</td>
+                                <td className="ellipsis-cell">{request.payload.dso}</td>
+                                <td className="ellipsis-cell">{request.payload.licenseNum}</td>
+                                <td className="ellipsis-cell">{request.payload.licenseFeeCc}</td>
+                                <td className="ellipsis-cell">{request.payload.licenseExtensionDuration.microseconds}</td>
                                 <td>
-                                    {user && request.user === user.party && (
+                                    {user && request.payload.user === user.party && (
                                         <a
                                             href={payURL}
                                             className="btn btn-primary me-2"
@@ -110,11 +111,11 @@ const LicenseRenewalRequestsView: React.FC = () => {
                                             onClick={() =>
                                                 handleCompleteRenewal(
                                                     request.contractId,
-                                                    request.reference,
-                                                    request.dso,
-                                                    request.provider,
-                                                    request.user,
-                                                    request.licenseNum
+                                                    request.payload.reference,
+                                                    request.payload.dso,
+                                                    request.payload.provider,
+                                                    request.payload.user,
+                                                    request.payload.licenseNum
                                                 )
                                             }
                                         >

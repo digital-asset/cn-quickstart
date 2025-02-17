@@ -72,12 +72,12 @@ const LicensesView: React.FC = () => {
                     {licenses.map((license) => (
                         <tr key={license.contractId}>
                             <td className="ellipsis-cell">{license.contractId}</td>
-                            <td className="ellipsis-cell">{license.dso}</td>
-                            <td className="ellipsis-cell">{license.provider}</td>
-                            <td className="ellipsis-cell">{license.user}</td>
-                            <td className="ellipsis-cell">{JSON.stringify(license.params)}</td>
-                            <td className="ellipsis-cell">{license.expiresAt}</td>
-                            <td className="ellipsis-cell">{license.licenseNum}</td>
+                            <td className="ellipsis-cell">{license.payload.dso}</td>
+                            <td className="ellipsis-cell">{license.payload.provider}</td>
+                            <td className="ellipsis-cell">{license.payload.user}</td>
+                            <td className="ellipsis-cell">{JSON.stringify(license.payload.params)}</td>
+                            <td className="ellipsis-cell">{license.payload.expiresAt}</td>
+                            <td className="ellipsis-cell">{license.payload.licenseNum}</td>
                             {isAdmin && (
                                 <td>
                                     <button

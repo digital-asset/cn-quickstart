@@ -4,24 +4,27 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useToast } from './toastStore';
 import api from '../api';
-import { AuthenticatedUser, ApiClient, AppInstall, AppInstallCancel, AppInstallCreateLicenseRequest, AppInstallCreateLicenseResult } from '../types';
+import {AuthenticatedUser, ApiClient, toMeta, Contract0} from '../types';
 import { generateCommandId } from '../utils/commandId';
+import {AppInstall, AppInstall_CreateLicense_Result} from "../../generated/quickstart_licensing/Licensing/AppInstall";
+import AppInstall_Cancel = AppInstall.AppInstall_Cancel;
+import AppInstall_CreateLicense = AppInstall.AppInstall_CreateLicense;
 
 interface AppInstallState {
-    appInstalls: AppInstall[];
+    appInstalls: Contract0<AppInstall>[];
 }
 
 interface AppInstallContextType extends AppInstallState {
     fetchUserInfo: () => Promise<void>;
     fetchAppInstalls: () => Promise<void>;
     cancelAppInstall: (contractId: string, meta: Record<string, any>) => Promise<void>;
-    createLicenseFromAppInstall: (contractId: string, params: Record<string, any>) => Promise<AppInstallCreateLicenseResult | undefined>;
+    createLicenseFromAppInstall: (contractId: string, params: Record<string, any>) => Promise<AppInstall_CreateLicense_Result | undefined>;
 }
 
 const AppInstallContext = createContext<AppInstallContextType | undefined>(undefined);
 
 export const AppInstallProvider = ({ children }: { children: React.ReactNode }) => {
-    const [appInstalls, setAppInstalls] = useState<AppInstall[]>([]);
+    const [appInstalls, setAppInstalls] = useState<Contract0<AppInstall>[]>([]);
     const [, setUser] = useState<AuthenticatedUser | null>(null);
     const toast = useToast();
 
@@ -49,8 +52,9 @@ export const AppInstallProvider = ({ children }: { children: React.ReactNode }) 
         async (contractId: string, meta: Record<string, any>) => {
             try {
                 const client: ApiClient = await api.getClient();
-                const body: AppInstallCancel = {
-                    meta: { data: meta }
+                const body: AppInstall_Cancel = {
+                    actor: "???",
+                    meta: toMeta(meta)
                 };
                 const commandId = generateCommandId();
                 await client.cancelAppInstall({ contractId, commandId }, body);
@@ -66,8 +70,8 @@ export const AppInstallProvider = ({ children }: { children: React.ReactNode }) 
         async (contractId: string, params: Record<string, any>) => {
             try {
                 const client: ApiClient = await api.getClient();
-                const body: AppInstallCreateLicenseRequest = {
-                    params: { meta: { data: params } }
+                const body: AppInstall_CreateLicense= {
+                    params: { meta: toMeta(params) }
                 };
                 const commandId = generateCommandId();
                 const response = await client.createLicense({ contractId, commandId }, body);

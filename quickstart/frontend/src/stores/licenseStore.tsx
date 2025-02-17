@@ -4,26 +4,21 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useToast } from './toastStore';
 import api from '../api';
-import {
-    ApiClient,
-    License,
-    LicenseRenewRequest,
-    LicenseRenewalRequestComplete,
-    AuthenticatedUser,
-    LicenseRenewalRequest
-} from '../types';
-import { generateCommandId } from '../utils/commandId'; // <-- NEW IMPORT
+import {ApiClient, AuthenticatedUser, Contract0, LicenseRenewalRequestComplete, toRelTime} from '../types';
+import { generateCommandId } from '../utils/commandId';
+import {License, LicenseRenewalRequest} from "../../generated/quickstart_licensing/Licensing/License";
+import License_Renew = License.License_Renew;
 
 interface LicenseState {
-    licenses: License[];
-    licenseRenewalRequests: LicenseRenewalRequest[];
+    licenses: Contract0<License>[];
+    licenseRenewalRequests: Contract0<LicenseRenewalRequest>[];
 }
 
 interface LicenseContextType extends LicenseState {
     fetchUserInfo: () => Promise<void>;
     fetchLicenses: () => Promise<void>;
     fetchLicenseRenewalRequests: () => Promise<void>;
-    renewLicense: (contractId: string, request: LicenseRenewRequest) => Promise<void>;
+    renewLicense: (contractId: string, request: License_Renew) => Promise<void>;
     expireLicense: (contractId: string, meta: Record<string, any>) => Promise<void>;
     completeLicenseRenewal: (contractId: string, request: LicenseRenewalRequestComplete) => Promise<void>;
 
@@ -35,8 +30,8 @@ interface LicenseContextType extends LicenseState {
 const LicenseContext = createContext<LicenseContextType | undefined>(undefined);
 
 export const LicenseProvider = ({ children }: { children: React.ReactNode }) => {
-    const [licenses, setLicenses] = useState<License[]>([]);
-    const [licenseRenewalRequests, setLicenseRenewalRequests] = useState<LicenseRenewalRequest[]>([]);
+    const [licenses, setLicenses] = useState<Contract0<License>[]>([]);
+    const [licenseRenewalRequests, setLicenseRenewalRequests] = useState<Contract0<LicenseRenewalRequest>[]>([]);
     const [, setUser] = useState<AuthenticatedUser | null>(null);
     const toast = useToast();
 
@@ -67,7 +62,7 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
     }, [toast]);
 
     const renewLicense = useCallback(
-        async (contractId: string, request: LicenseRenewRequest) => {
+        async (contractId: string, request: License_Renew) => {
             try {
                 const client: ApiClient = await api.getClient();
                 const commandId = generateCommandId();
@@ -94,7 +89,10 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
 
                 const serverMessage = await client.expireLicense(
                     { contractId, commandId },
-                    { meta }
+                    {
+                        actor: "???",
+                        meta: meta.toMeta
+                    }
                 );
 
                 try {
@@ -139,10 +137,10 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
 
     const initiateLicenseRenewal = useCallback(
         async (contractId: string, description: string) => {
-            const request: LicenseRenewRequest = {
+            const request: License_Renew = {
                 licenseFeeCc: 100,
-                licenseExtensionDuration: 'P30D',
-                paymentAcceptanceDuration: 'P7D',
+                licenseExtensionDuration: toRelTime('P30D'),
+                paymentAcceptanceDuration: toRelTime('P7D'),
                 description: description.trim(),
             };
             await renewLicense(contractId, request);

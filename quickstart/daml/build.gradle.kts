@@ -5,9 +5,11 @@ buildscript {
     repositories {
         mavenCentral()
         maven(Repositories.sonatype)
+        mavenLocal()
     }
     dependencies {
-        classpath(Deps.transcode.plugin)
+        classpath(Deps.transcode.javaCodegen)
+        classpath(Deps.transcode.typescriptCodegen)
         classpath("org.apache.commons:commons-compress:1.27.1")
     }
 }
@@ -21,14 +23,20 @@ tasks.register<Exec>("compileDaml") {
     commandLine("daml", "damlc", "build", "--all")
 }
 
-tasks.register<com.digitalasset.transcode.codegen.java.gradle.JavaCodegenTask>("codeGen") {
+tasks.register<com.digitalasset.transcode.codegen.java.gradle.JavaCodegenTask>("javaCodeGen") {
     dar = file("$projectDir/licensing/.daml/dist/quickstart-licensing-0.0.1.dar")
     destination = file("$rootDir/backend/build/generated-daml-bindings")
     dependsOn("compileDaml")
 }
+tasks.register<com.digitalasset.transcode.codegen.typescript.gradle.TypescriptCodegenTask>("typescriptCodeGen") {
+    dar = file("$projectDir/licensing/.daml/dist/quickstart-licensing-0.0.1.dar")
+    destination = file("$rootDir/frontend/generated")
+    dependsOn("compileDaml")
+}
 
 tasks.named("build") {
-    dependsOn("codeGen")
+    dependsOn("javaCodeGen")
+    dependsOn("typescriptCodeGen")
 }
 
 // Helper function to compute SDK variables

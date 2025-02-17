@@ -4,19 +4,12 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useToast } from './toastStore';
 import api from '../api';
-import { AuthenticatedUser, ApiClient } from '../types';
+import {AuthenticatedUser, ApiClient, toMeta, Contract0} from '../types';
 import { generateCommandId } from '../utils/commandId';
-
-export interface AppInstallRequest {
-    contractId: string;
-    dso: string;
-    provider: string;
-    user: string;
-    meta?: Record<string, any>;
-}
+import {AppInstallRequest} from "../../generated/quickstart_licensing/Licensing/AppInstall";
 
 interface AppInstallRequestState {
-    appInstallRequests: AppInstallRequest[];
+    appInstallRequests: Contract0<AppInstallRequest>[];
 }
 
 interface AppInstallRequestContextType extends AppInstallRequestState {
@@ -30,7 +23,7 @@ interface AppInstallRequestContextType extends AppInstallRequestState {
 const AppInstallRequestContext = createContext<AppInstallRequestContextType | undefined>(undefined);
 
 export const AppInstallRequestProvider = ({ children }: { children: React.ReactNode }) => {
-    const [appInstallRequests, setAppInstallRequests] = useState<AppInstallRequest[]>([]);
+    const [appInstallRequests, setAppInstallRequests] = useState<Contract0<AppInstallRequest>[]>([]);
     const [, setUser] = useState<AuthenticatedUser | null>(null);
     const toast = useToast();
 
@@ -59,7 +52,7 @@ export const AppInstallRequestProvider = ({ children }: { children: React.ReactN
             try {
                 const client: ApiClient = await api.getClient();
                 const commandId = generateCommandId();
-                await client.acceptAppInstallRequest({ contractId, commandId }, { installMeta, meta });
+                await client.acceptAppInstallRequest({ contractId, commandId }, { installMeta: installMeta.toMeta, meta: meta.toMeta });
                 await fetchAppInstallRequests();
             } catch (error) {
                 toast.displayError('Error accepting AppInstallRequest');
@@ -73,7 +66,7 @@ export const AppInstallRequestProvider = ({ children }: { children: React.ReactN
             try {
                 const client: ApiClient = await api.getClient();
                 const commandId = generateCommandId();
-                await client.rejectAppInstallRequest({ contractId, commandId }, { meta });
+                await client.rejectAppInstallRequest({ contractId, commandId }, { meta: meta.toMeta });
                 await fetchAppInstallRequests();
             } catch (error) {
                 toast.displayError('Error rejecting AppInstallRequest');
@@ -87,7 +80,7 @@ export const AppInstallRequestProvider = ({ children }: { children: React.ReactN
             try {
                 const client: ApiClient = await api.getClient();
                 const commandId = generateCommandId();
-                await client.cancelAppInstallRequest({ contractId, commandId }, { meta });
+                await client.cancelAppInstallRequest({ contractId, commandId }, { meta: toMeta(meta) });
                 await fetchAppInstallRequests();
             } catch (error) {
                 toast.displayError('Error canceling AppInstallRequest');
