@@ -548,6 +548,8 @@ services:
       file: docker/compose-super-validator.yaml
       service: participant
     container_name: participant-sv
+    environment:
+      - *canton-metrics-config
     networks:
       - ${DOCKER_NETWORK}
     profiles:
