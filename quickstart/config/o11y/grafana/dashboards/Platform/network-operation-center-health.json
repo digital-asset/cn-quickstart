@@ -584,6 +584,22 @@
                      },
                      "expr": "sum(idelta(jvm_gc_duration_seconds_sum{namespace=\"$namespace\"}[$__rate_interval])) by(jvm_gc_name, job)",
                      "legendFormat": "[{{job}}] {{jvm_gc_name}} (time)"
+                  },
+                  {
+                     "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                     },
+                     "expr": "histogram_count(sum(rate(jvm_gc_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])) by(jvm_gc_name, job))",
+                     "legendFormat": "[{{job}}] {{jvm_gc_name}} (count)"
+                  },
+                  {
+                     "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                     },
+                     "expr": "histogram_sum(sum(rate(jvm_gc_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])) by(jvm_gc_name, job))",
+                     "legendFormat": "[{{job}}] {{jvm_gc_name}} (time)"
                   }
                ],
                "title": "JVM Garbage Collection",
