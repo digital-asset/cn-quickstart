@@ -35,7 +35,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.50, sum by(le, namespace) (rate(daml_db_commit_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.50, sum by(namespace) (rate(daml_db_commit_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p50"
             },
             {
@@ -43,7 +43,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.90, sum by(le, namespace) (rate(daml_db_commit_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.90, sum by(namespace) (rate(daml_db_commit_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p90"
             },
             {
@@ -51,7 +51,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.95, sum by(le, namespace) (rate(daml_db_commit_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.95, sum by(namespace) (rate(daml_db_commit_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p95"
             },
             {
@@ -59,7 +59,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum by(le, namespace) (rate(daml_db_commit_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.99, sum by(namespace) (rate(daml_db_commit_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p99"
             }
          ],
@@ -100,7 +100,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.50, sum by(le, namespace) (rate(daml_db_query_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.50, sum by(namespace) (rate(daml_db_query_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p50"
             },
             {
@@ -108,7 +108,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.90, sum by(le, namespace) (rate(daml_db_query_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.90, sum by(namespace) (rate(daml_db_query_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p90"
             },
             {
@@ -116,7 +116,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.95, sum by(le, namespace) (rate(daml_db_query_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.95, sum by(namespace) (rate(daml_db_query_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p95"
             },
             {
@@ -124,7 +124,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum by(le, namespace) (rate(daml_db_query_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.99, sum by(namespace) (rate(daml_db_query_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p99"
             }
          ],
@@ -165,7 +165,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.50, sum by(le, namespace) (rate(daml_db_exec_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.50, sum by(namespace) (rate(daml_db_exec_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p50"
             },
             {
@@ -173,7 +173,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.90, sum by(le, namespace) (rate(daml_db_exec_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.90, sum by(namespace) (rate(daml_db_exec_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p90"
             },
             {
@@ -181,7 +181,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.95, sum by(le, namespace) (rate(daml_db_exec_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.95, sum by(namespace) (rate(daml_db_exec_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p95"
             },
             {
@@ -189,7 +189,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum by(le, namespace) (rate(daml_db_exec_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.99, sum by(namespace) (rate(daml_db_exec_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p99"
             }
          ],
@@ -230,7 +230,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.50, sum by(le, namespace) (rate(daml_db_wait_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.50, sum by(namespace) (rate(daml_db_wait_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p50"
             },
             {
@@ -238,7 +238,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.90, sum by(le, namespace) (rate(daml_db_wait_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.90, sum by(namespace) (rate(daml_db_wait_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p90"
             },
             {
@@ -246,7 +246,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.95, sum by(le, namespace) (rate(daml_db_wait_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.95, sum by(namespace) (rate(daml_db_wait_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p95"
             },
             {
@@ -254,7 +254,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum by(le, namespace) (rate(daml_db_wait_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.99, sum by(namespace) (rate(daml_db_wait_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p99"
             }
          ],
@@ -283,7 +283,7 @@
                "uid": "${datasource}"
             },
             "name": "namespace",
-            "query": "label_values(daml_db_commit_duration_seconds_count, namespace)",
+            "query": "label_values(daml_db_storage_general_executor_running, namespace)",
             "refresh": 2,
             "type": "query"
          }
