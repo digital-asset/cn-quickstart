@@ -249,7 +249,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by(grpc_server_type, grpc_service_name, grpc_client_type, grpc_method_name) (rate(daml_grpc_server_messages_received_bytes_sum{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", service=\"$component\", grpc_service_name=~\"$service\", grpc_method_name=~\"$method\"}[$__rate_interval])) / sum by(grpc_server_type, grpc_service_name, grpc_client_type, grpc_method_name) (rate(daml_grpc_server_messages_received_bytes_count{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", service=\"$component\", grpc_service_name=~\"$service\", grpc_method_name=~\"$method\"}[$__rate_interval]))",
+               "expr": "histogram_sum(sum by(grpc_server_type, grpc_service_name, grpc_client_type, grpc_method_name) (rate(daml_grpc_server_messages_received_bytes{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", service=\"$component\", grpc_service_name=~\"$service\", grpc_method_name=~\"$method\"}[$__rate_interval]))) / histogram_count(sum by(grpc_server_type, grpc_service_name, grpc_client_type, grpc_method_name) (rate(daml_grpc_server_messages_received_bytes{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", service=\"$component\", grpc_service_name=~\"$service\", grpc_method_name=~\"$method\"}[$__rate_interval])))",
                "legendFormat": "{{grpc_method_name}} - ({{grpc_client_type}} - {{grpc_server_type}})"
             }
          ],
@@ -294,7 +294,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "sum by(grpc_server_type, grpc_service_name, grpc_client_type, grpc_method_name) (rate(daml_grpc_server_messages_received_bytes_sum{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", service=\"$component\", grpc_service_name=~\"$service\", grpc_method_name=~\"$method\"}[$__rate_interval]))",
+               "expr": "histogram_sum(sum by(grpc_server_type, grpc_service_name, grpc_client_type, grpc_method_name) (rate(daml_grpc_server_messages_received_bytes{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", service=\"$component\", grpc_service_name=~\"$service\", grpc_method_name=~\"$method\"}[$__rate_interval])))",
                "legendFormat": "{{grpc_method_name}} - ({{grpc_client_type}} - {{grpc_server_type}})"
             }
          ],
