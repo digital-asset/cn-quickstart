@@ -548,6 +548,7 @@ services:
       file: docker/compose-super-validator.yaml
       service: participant
     container_name: participant-sv
+    logging: *default-logging
     environment:
       - *canton-metrics-config
     networks:
