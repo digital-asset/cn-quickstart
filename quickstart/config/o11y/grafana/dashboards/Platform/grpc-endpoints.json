@@ -35,7 +35,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile($quantile, sum by(grpc_service_name, grpc_client_type, grpc_method_name, grpc_server_type, grpc_code, le) (rate(daml_grpc_server_duration_seconds_bucket{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", service=\"$component\", grpc_service_name=~\"$service\", grpc_method_name=~\"$method\"}[$__rate_interval])))",
+               "expr": "histogram_quantile($quantile, sum by(grpc_service_name, grpc_client_type, grpc_method_name, grpc_server_type, grpc_code) (rate(daml_grpc_server_duration_seconds{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", service=\"$component\", grpc_service_name=~\"$service\", grpc_method_name=~\"$method\"}[$__rate_interval])))",
                "legendFormat": "{{grpc_method_name}} - {{grpc_code}} ({{grpc_client_type}} - {{grpc_server_type}})"
             }
          ],

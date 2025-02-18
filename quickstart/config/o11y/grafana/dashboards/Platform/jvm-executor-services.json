@@ -52,8 +52,8 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                      },
-                     "expr": "histogram_quantile(0.95, sum by(le, namespace, pod, container, name, component, participant) (rate(daml_executor_runtime_duration_seconds_bucket{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}[$__rate_interval])))",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}} / {{component}} {{participant}}"
+                     "expr": "histogram_quantile(0.95, sum by(namespace, pod, container, name, component, participant) (rate(daml_executor_runtime_duration_seconds{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}[$__rate_interval])))",
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}} / {{component}} {{participant}}"
                   }
                ],
                "title": "Task Run Latency (p95)",
@@ -101,8 +101,8 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                      },
-                     "expr": "sum without() (daml_executor_runtime_duration_seconds_sum{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}) / sum without() (daml_executor_runtime_duration_seconds_count{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"})",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}} / {{component}} {{participant}}"
+                     "expr": "histogram_sum(sum without() (daml_executor_runtime_duration_seconds{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"})) / histogram_count(sum without() (daml_executor_runtime_duration_seconds{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}))",
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}} / {{component}} {{participant}}"
                   }
                ],
                "title": "Task Run Latency (average)",
@@ -150,8 +150,8 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                      },
-                     "expr": "histogram_quantile(0.95, sum by(le, namespace, pod, container, name, component, participant) (rate(daml_executor_runtime_idle_duration_seconds_bucket{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}[$__rate_interval])))",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}} / {{component}} {{participant}}"
+                     "expr": "histogram_quantile(0.95, sum by(namespace, pod, container, name, component, participant) (rate(daml_executor_runtime_idle_duration_seconds{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}[$__rate_interval])))",
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}} / {{component}} {{participant}}"
                   }
                ],
                "title": "Task Idle Duration (p95)",
@@ -199,8 +199,8 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                      },
-                     "expr": "sum without() (daml_executor_runtime_idle_duration_seconds_sum{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}) / sum without() (daml_executor_runtime_idle_duration_seconds_count{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"})",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}}"
+                     "expr": "histogram_sum(sum without() (daml_executor_runtime_idle_duration_seconds{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"})) / histogram_count(sum without() (daml_executor_runtime_idle_duration_seconds{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}))",
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}}"
                   }
                ],
                "title": "Task Idle Duration (average)",
@@ -241,7 +241,7 @@
                         "uid": "${datasource}"
                      },
                      "expr": "sum without($group_without) (rate(daml_executor_runtime_submitted_total{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}[$__rate_interval]))",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}}"
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}}"
                   }
                ],
                "title": "Submitted Tasks",
@@ -282,7 +282,7 @@
                         "uid": "${datasource}"
                      },
                      "expr": "sum without($group_without) (rate(daml_executor_runtime_completed_total{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}[$__rate_interval]))",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}}"
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}}"
                   }
                ],
                "title": "Completed Tasks",
@@ -323,7 +323,7 @@
                         "uid": "${datasource}"
                      },
                      "expr": "sum without($group_without) (daml_executor_runtime_running{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"})",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}}"
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}}"
                   }
                ],
                "title": "Running Tasks",
@@ -386,7 +386,7 @@
                         "uid": "${datasource}"
                      },
                      "expr": "daml_executor_pool_size{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}} / {{type}}"
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}} / {{type}}"
                   }
                ],
                "title": "Pool Size",
@@ -436,7 +436,7 @@
                         "uid": "${datasource}"
                      },
                      "expr": "daml_executor_threads_active{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}} / {{type}}"
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}} / {{type}}"
                   }
                ],
                "title": "Active Threads",
@@ -486,7 +486,7 @@
                         "uid": "${datasource}"
                      },
                      "expr": "daml_executor_tasks_queued{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}} / {{type}}"
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}} / {{type}}"
                   }
                ],
                "title": "Queued Tasks",
@@ -548,7 +548,7 @@
                         "uid": "${datasource}"
                      },
                      "expr": "daml_executor_threads_running{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}}"
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}}"
                   }
                ],
                "title": "Pool Size",
@@ -597,7 +597,7 @@
                         "uid": "${datasource}"
                      },
                      "expr": "sum without($group_without) (rate(daml_executor_tasks_stolen{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}[$__rate_interval]))",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}}"
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}}"
                   }
                ],
                "title": "Stolen Tasks",
@@ -646,7 +646,7 @@
                         "uid": "${datasource}"
                      },
                      "expr": "sum without($group_without) (rate(daml_executor_tasks_executing_queued{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}[$__rate_interval]))",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}}"
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}}"
                   }
                ],
                "title": "Task Queuing Rate",
@@ -695,7 +695,7 @@
                         "uid": "${datasource}"
                      },
                      "expr": "daml_executor_tasks_executing_queued{namespace=\"$namespace\", pod=~\"$pod\", container=~\"$container\", name=\"$name\"}",
-                     "legendFormat": "{{pod}} - {{container}} - {{name}}"
+                     "legendFormat": "{{pod}} - {{container}} - {{job}} - {{name}}"
                   }
                ],
                "title": "Queued Tasks",
