@@ -24,15 +24,12 @@ receivers:
         - job_name: cadvisor
           static_configs:
             - targets: [ "cadvisor:${env:CADVISOR_METRICS_PORT}" ]
-        - job_name: participant
-          static_configs:
-            - targets: [ "participant:${env:CANTON_METRICS_PORT}" ]
         - job_name: participant-sv
           static_configs:
             - targets: [ "participant-sv:${env:CANTON_METRICS_PORT}" ]
-        - job_name: validator
+        - job_name: validator-sv
           static_configs:
-            - targets: [ "validator:${env:CANTON_METRICS_PORT}" ]
+            - targets: [ "validator-sv:${env:CANTON_METRICS_PORT}" ]
         - job_name: domain-global
           static_configs:
             - targets: [ "global-synchronizer:${env:CANTON_METRICS_PORT}" ]
@@ -42,17 +39,11 @@ receivers:
         - job_name: sv-app
           static_configs:
             - targets: [ "sv-app:${env:CANTON_METRICS_PORT}" ]
-        - job_name: nginx
-          static_configs:
-            - targets: [ "nginx-metrics:${env:NGINX_EXPORTER_METRICS_PORT}" ]
         - job_name: nginx-sv
           static_configs:
             - targets: [ "nginx-sv-metrics:${env:NGINX_EXPORTER_METRICS_PORT}" ]
         - job_name: postgres
           static_configs:
-            - targets: [ "postgres-splice-metrics:${env:POSTGRES_EXPORTER_METRICS_PORT}" ]
-              labels:
-                role: application
             - targets: [ "postgres-splice-sv-metrics:${env:POSTGRES_EXPORTER_METRICS_PORT}" ]
               labels:
                 role: super-validator
