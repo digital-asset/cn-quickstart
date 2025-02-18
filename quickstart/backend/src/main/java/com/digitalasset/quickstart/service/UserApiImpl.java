@@ -45,10 +45,8 @@ public class UserApiImpl implements UserApi {
         // Retrieve the registrationId from the authentication
         String registrationId = auth.getAuthorizedClientRegistrationId();
 
-        // Default walletUrl fallback if not found
-        String walletUrl = "http://localhost/";
-
         // Lookup wallet URL from tenant properties
+        String walletUrl = null;
         TenantProperties props = tenantPropertiesRepository.getTenant(registrationId);
         if (props != null && props.getWalletUrl() != null) {
             walletUrl = props.getWalletUrl();
