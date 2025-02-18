@@ -3,7 +3,7 @@
 
 package com.digitalasset.quickstart.service;
 
-import com.digitalasset.quickstart.oauth.OAuth2ClientRegistrationRepository;
+import com.digitalasset.quickstart.repository.OAuth2ClientRegistrationRepository;
 import org.openapitools.model.LoginLink;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;

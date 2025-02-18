@@ -3,34 +3,48 @@
 
 package com.digitalasset.quickstart.service;
 
-import com.digitalasset.quickstart.oauth.OAuth2ClientRegistrationRepository;
-import org.openapitools.model.OAuth2ClientRegistration;
-import org.openapitools.model.OAuth2ClientRegistrationRequest;
+import com.digitalasset.quickstart.api.AdminApi;
+import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
+import com.digitalasset.quickstart.repository.OAuth2ClientRegistrationRepository;
+
+// Updated models from the renamed OpenAPI spec
+import org.openapitools.model.TenantRegistration;
+import org.openapitools.model.TenantRegistrationRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("${openapi.asset.base-path:}")
-public class AdminApiImpl implements com.digitalasset.quickstart.api.Oauth2Api {
-    private final OAuth2ClientRegistrationRepository clientRegistrationRepository;
+public class AdminApiImpl implements AdminApi {
 
+    private final OAuth2ClientRegistrationRepository tenantRegistrationRepository;
+    private final TenantPropertiesRepository tenantPropertiesRepository;
 
     @Autowired
-    public AdminApiImpl(OAuth2ClientRegistrationRepository clientRegistrationRepository) {
-        this.clientRegistrationRepository = clientRegistrationRepository;
+    public AdminApiImpl(
+            OAuth2ClientRegistrationRepository tenantRegistrationRepository,
+            TenantPropertiesRepository tenantPropertiesRepository
+    ) {
+        this.tenantRegistrationRepository = tenantRegistrationRepository;
+        this.tenantPropertiesRepository = tenantPropertiesRepository;
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<OAuth2ClientRegistration>> createClientRegistration(OAuth2ClientRegistrationRequest request) {
-        ClientRegistration clientRegistration = ClientRegistration.withRegistrationId(request.getClientId())
+    public CompletableFuture<ResponseEntity<TenantRegistration>> createTenantRegistration(
+            TenantRegistrationRequest request
+    ) {
+        // Build the Spring Security OAuth2 ClientRegistration
+        var registration = org.springframework.security.oauth2.client.registration.ClientRegistration
+                .withRegistrationId(request.getClientId())
                 .clientId(request.getClientId())
                 .clientSecret(request.getClientSecret())
                 .authorizationUri(request.getAuthorizationUri())
@@ -40,42 +54,71 @@ public class AdminApiImpl implements com.digitalasset.quickstart.api.Oauth2Api {
                 .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
                 .scope(request.getScope())
                 .clientName(request.getParty())
+                // Mark as preconfigured=false, i.e. added at runtime
+                .providerConfigurationMetadata(java.util.Map.of("preconfigured", "false"))
                 .build();
 
-        clientRegistrationRepository.addRegistration(clientRegistration);
-        OAuth2ClientRegistration result = new OAuth2ClientRegistration(
-                clientRegistration.getClientId(),
-                clientRegistration.getProviderDetails().getAuthorizationUri(),
-                clientRegistration.getProviderDetails().getTokenUri(),
-                clientRegistration.getProviderDetails().getJwkSetUri(),
-                String.join(" ", clientRegistration.getScopes()),
-                clientRegistration.getClientName());
+        // Save the registration in your custom repository
+        tenantRegistrationRepository.addRegistration(registration);
 
-        return CompletableFuture.completedFuture(ResponseEntity.ok(result));
+        // Save extra properties in a separate repository
+        TenantPropertiesRepository.TenantProperties props = new TenantPropertiesRepository.TenantProperties();
+        props.setWalletUrl(request.getWalletUrl());
+        tenantPropertiesRepository.addTenant(registration.getRegistrationId(), props);
+
+        // Build the response (OpenAPI model)
+        TenantRegistration response = new TenantRegistration();
+        response.setClientId(registration.getClientId());
+        response.setClientSecret(registration.getClientSecret());
+        response.setScope(String.join(" ", registration.getScopes()));
+        response.setAuthorizationUri(URI.create(registration.getProviderDetails().getAuthorizationUri()));
+        response.setTokenUri(URI.create(registration.getProviderDetails().getTokenUri()));
+        response.setJwkSetUri(URI.create(registration.getProviderDetails().getJwkSetUri()));
+        response.setParty(registration.getClientName());
+        response.setPreconfigured(false);
+        response.setWalletUrl(URI.create(props.getWalletUrl()));
+
+        return CompletableFuture.completedFuture(ResponseEntity.ok(response));
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Void>> deleteClientRegistration(String clientId) {
-        clientRegistrationRepository.removeRegistration(clientId);
+    public CompletableFuture<ResponseEntity<Void>> deleteTenantRegistration(String tenantId) {
+        tenantRegistrationRepository.removeRegistration(tenantId);
+        tenantPropertiesRepository.removeTenant(tenantId);
         return CompletableFuture.completedFuture(ResponseEntity.ok().build());
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<List<OAuth2ClientRegistration>>> listClientRegistrations() {
-        List<OAuth2ClientRegistration> registrations = clientRegistrationRepository.getRegistrations().stream()
-                .filter(registration -> AuthorizationGrantType.AUTHORIZATION_CODE.equals(registration.getAuthorizationGrantType()))
-                .map(registration -> {
-                    OAuth2ClientRegistration oauth2ClientRegistration = new OAuth2ClientRegistration();
-                    oauth2ClientRegistration.setClientId(registration.getClientId());
-                    oauth2ClientRegistration.setAuthorizationUri(registration.getProviderDetails().getAuthorizationUri());
-                    oauth2ClientRegistration.setTokenUri(registration.getProviderDetails().getTokenUri());
-                    oauth2ClientRegistration.setJwkSetUri(registration.getProviderDetails().getJwkSetUri());
-                    oauth2ClientRegistration.setScope(String.join(" ", registration.getScopes()));
-                    oauth2ClientRegistration.setParty(registration.getClientName());
-                    oauth2ClientRegistration.setPreconfigured(registration.getProviderDetails().getConfigurationMetadata().containsKey("preconfigured"));
-                    return oauth2ClientRegistration;
+    public CompletableFuture<ResponseEntity<List<TenantRegistration>>> listTenantRegistrations() {
+        List<TenantRegistration> result = tenantRegistrationRepository.getRegistrations().stream()
+                // Filter only those using the AUTHORIZATION_CODE grant type
+                .filter(r -> AuthorizationGrantType.AUTHORIZATION_CODE.equals(r.getAuthorizationGrantType()))
+                .map(r -> {
+                    TenantRegistration out = new TenantRegistration();
+                    out.setClientId(r.getClientId());
+                    out.setClientSecret(r.getClientSecret());
+                    out.setScope(String.join(" ", r.getScopes()));
+                    out.setAuthorizationUri(URI.create(r.getProviderDetails().getAuthorizationUri()));
+                    out.setTokenUri(URI.create(r.getProviderDetails().getTokenUri()));
+                    out.setJwkSetUri(URI.create(r.getProviderDetails().getJwkSetUri()));
+                    out.setParty(r.getClientName());
+
+                    // Determine whether it was preconfigured or added at runtime
+                    Object preconfiguredFlag = r.getProviderDetails()
+                            .getConfigurationMetadata()
+                            .get("preconfigured");
+                    out.setPreconfigured("true".equals(preconfiguredFlag));
+
+                    // Populate walletUrl from your separate repository
+                    TenantPropertiesRepository.TenantProperties props =
+                            tenantPropertiesRepository.getTenant(r.getRegistrationId());
+                    if (props != null && props.getWalletUrl() != null) {
+                        out.setWalletUrl(URI.create(props.getWalletUrl()));
+                    }
+                    return out;
                 })
                 .collect(Collectors.toList());
-        return CompletableFuture.completedFuture(ResponseEntity.ok(registrations));
+
+        return CompletableFuture.completedFuture(ResponseEntity.ok(result));
     }
 }

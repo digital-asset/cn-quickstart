@@ -35,59 +35,60 @@ paths:
         '401':
           description: Not authenticated
 
-  /oauth2/admin/clients:
+  /admin/tenant-registrations:
     post:
-      summary: Create OAuth2 Client Registration
-      operationId: createClientRegistration
+      summary: Create Tenant Registration
+      operationId: createTenantRegistration
       requestBody:
-        description: OAuth2 Client Registration object
+        description: Tenant Registration object
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OAuth2ClientRegistrationRequest'
+              $ref: '#/components/schemas/TenantRegistrationRequest'
       responses:
         '200':
           description: Registration created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OAuth2ClientRegistration'
+                $ref: '#/components/schemas/TenantRegistration'
         '400':
           description: Invalid input
+
     get:
-      summary: List all OAuth2 Client Registrations
-      operationId: listClientRegistrations
+      summary: List all Tenant Registrations
+      operationId: listTenantRegistrations
       responses:
         '200':
-          description: A list of OAuth2 Client Registrations
+          description: A list of Tenant Registrations
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/OAuth2ClientRegistration'
+                  $ref: '#/components/schemas/TenantRegistration'
         '400':
           description: Invalid request
 
-  /oauth2/admin/clients/{clientId}:
+  /admin/tenant-registrations/{tenantId}:
     delete:
-      summary: Delete OAuth2 Client Registration
-      operationId: deleteClientRegistration
+      summary: Delete Tenant Registration
+      operationId: deleteTenantRegistration
       parameters:
-        - name: clientId
+        - name: tenantId
           in: path
           required: true
           schema:
             type: string
-          description: The client ID of the registration to delete
+          description: The tenant ID of the registration to delete
       responses:
         '200':
-          description: OAuth2 Client Registration deleted
+          description: Tenant Registration deleted
         '400':
-          description: Invalid client ID
+          description: Invalid tenant ID
         '404':
-          description: Client Registration not found
+          description: Tenant Registration not found
 
   /app-install-requests:
     get:
@@ -420,7 +421,7 @@ paths:
 
 components:
   schemas:
-    OAuth2ClientRegistrationRequest:
+    TenantRegistrationRequest:
       type: object
       required:
         - clientId
@@ -444,8 +445,10 @@ components:
           type: string
         party:
           type: string
+        walletUrl:
+          type: string
 
-    OAuth2ClientRegistration:
+    TenantRegistration:
       type: object
       required:
         - clientId
@@ -454,21 +457,40 @@ components:
         - tokenUri
         - jwkSetUri
         - party
+        - preconfigured
+        - walletUrl
       properties:
         clientId:
           type: string
+          description: OAuth2 client identifier
+        clientSecret:
+          type: string
+          description: OAuth2 client secret
         scope:
           type: string
+          description: Requested scopes
         authorizationUri:
           type: string
+          description: Authorization endpoint URI
+          format: uri
         tokenUri:
           type: string
+          description: Token endpoint URI
+          format: uri
         jwkSetUri:
           type: string
+          description: JSON Web Key Set endpoint URI
+          format: uri
         party:
           type: string
+          description: Party identifier
         preconfigured:
           type: boolean
+          description: Indicates if the registration is preconfigured on server-side
+        walletUrl:
+          type: string
+          description: Wallet URL for payment redirects
+          format: uri
 
     AuthenticatedUser:
       type: object
@@ -477,6 +499,7 @@ components:
         - party
         - roles
         - isAdmin
+        - walletUrl
       properties:
         name:
           type: string
@@ -488,6 +511,8 @@ components:
             type: string
         isAdmin:
           type: boolean
+        walletUrl:
+          type: string
 
     LoginLink:
       type: object

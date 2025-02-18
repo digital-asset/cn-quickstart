@@ -1,12 +1,21 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates.
 // SPDX-License-Identifier: 0BSD
 
 import React, { useEffect, useState } from 'react'
-import { useOAuth2Store, OAuth2ClientRegistration } from '../stores/oauth2Store'
+import {
+    useTenantRegistrationStore,
+    TenantRegistration,
+} from '../stores/tenantRegistrationStore'
 
-const OAuth2View: React.FC = () => {
-    const { registrations, fetchRegistrations, createRegistration, deleteRegistration } = useOAuth2Store()
-    const [formData, setFormData] = useState<OAuth2ClientRegistration>({
+const TenantRegistrationView: React.FC = () => {
+    const {
+        registrations,
+        fetchTenantRegistrations,
+        createTenantRegistration,
+        deleteTenantRegistration,
+    } = useTenantRegistrationStore()
+
+    const [formData, setFormData] = useState<TenantRegistration>({
         clientId: '',
         clientSecret: '',
         scope: '',
@@ -14,24 +23,25 @@ const OAuth2View: React.FC = () => {
         tokenUri: '',
         jwkSetUri: '',
         party: '',
-        preconfigured: false
+        preconfigured: false,
+        walletUrl: '',
     })
 
     useEffect(() => {
-        fetchRegistrations()
-    }, [fetchRegistrations])
+        fetchTenantRegistrations()
+    }, [fetchTenantRegistrations])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
-        setFormData({
-            ...formData,
-            [name]: value
-        })
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }))
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        await createRegistration(formData)
+        await createTenantRegistration(formData)
         setFormData({
             clientId: '',
             clientSecret: '',
@@ -40,20 +50,24 @@ const OAuth2View: React.FC = () => {
             tokenUri: '',
             jwkSetUri: '',
             party: '',
-            preconfigured: false
-        });
+            preconfigured: false,
+            walletUrl: '',
+        })
     }
 
     const handleDelete = async (clientId: string) => {
-        if (window.confirm('Are you sure you want to delete this registration?')) {
-            await deleteRegistration(clientId);
+        if (window.confirm('Are you sure you want to delete this tenant registration?')) {
+            await deleteTenantRegistration(clientId)
         }
     }
+
     return (
         <div>
             <form onSubmit={handleSubmit}>
                 <div className="mb-3">
-                    <label htmlFor="clientId" className="form-label">Client ID:</label>
+                    <label htmlFor="clientId" className="form-label">
+                        Client ID:
+                    </label>
                     <input
                         type="text"
                         id="clientId"
@@ -65,7 +79,9 @@ const OAuth2View: React.FC = () => {
                     />
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="clientSecret" className="form-label">Client Secret:</label>
+                    <label htmlFor="clientSecret" className="form-label">
+                        Client Secret:
+                    </label>
                     <input
                         type="text"
                         id="clientSecret"
@@ -76,7 +92,9 @@ const OAuth2View: React.FC = () => {
                     />
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="scope" className="form-label">Scope:</label>
+                    <label htmlFor="scope" className="form-label">
+                        Scope:
+                    </label>
                     <input
                         type="text"
                         id="scope"
@@ -88,7 +106,9 @@ const OAuth2View: React.FC = () => {
                     />
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="authorizationUri" className="form-label">Authorization URI:</label>
+                    <label htmlFor="authorizationUri" className="form-label">
+                        Authorization URI:
+                    </label>
                     <input
                         type="text"
                         id="authorizationUri"
@@ -100,7 +120,9 @@ const OAuth2View: React.FC = () => {
                     />
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="tokenUri" className="form-label">Token URI:</label>
+                    <label htmlFor="tokenUri" className="form-label">
+                        Token URI:
+                    </label>
                     <input
                         type="text"
                         id="tokenUri"
@@ -112,7 +134,9 @@ const OAuth2View: React.FC = () => {
                     />
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="jwkSetUri" className="form-label">JWK Set URI:</label>
+                    <label htmlFor="jwkSetUri" className="form-label">
+                        JWK Set URI:
+                    </label>
                     <input
                         type="text"
                         id="jwkSetUri"
@@ -124,7 +148,9 @@ const OAuth2View: React.FC = () => {
                     />
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="party" className="form-label">Party:</label>
+                    <label htmlFor="party" className="form-label">
+                        Party:
+                    </label>
                     <input
                         type="text"
                         id="party"
@@ -135,15 +161,32 @@ const OAuth2View: React.FC = () => {
                         required
                     />
                 </div>
-                <button type="submit" className="btn btn-primary">Submit</button>
+                <div className="mb-3">
+                    <label htmlFor="walletUrl" className="form-label">
+                        Wallet URL:
+                    </label>
+                    <input
+                        type="text"
+                        id="walletUrl"
+                        name="walletUrl"
+                        className="form-control"
+                        value={formData.walletUrl}
+                        onChange={handleChange}
+                    />
+                </div>
+                <button type="submit" className="btn btn-primary">
+                    Submit
+                </button>
             </form>
+
             <div className="mt-4">
-                <h3>Existing Registrations</h3>
+                <h3>Existing Tenant/OAuth2 Registrations</h3>
                 <table className="table">
                     <thead>
                     <tr>
                         <th>Client ID</th>
                         <th>Party</th>
+                        <th>Wallet URL</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -152,11 +195,15 @@ const OAuth2View: React.FC = () => {
                         <tr key={index}>
                             <td>{registration.clientId}</td>
                             <td>{registration.party}</td>
+                            <td>{registration.walletUrl}</td>
                             <td>
-                                    <button className="btn btn-danger"
-                                            disabled={registration.preconfigured}
-                                            onClick={() => handleDelete(registration.clientId)}>Delete
-                                    </button>
+                                <button
+                                    className="btn btn-danger"
+                                    disabled={registration.preconfigured}
+                                    onClick={() => handleDelete(registration.clientId)}
+                                >
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     ))}
@@ -167,4 +214,4 @@ const OAuth2View: React.FC = () => {
     )
 }
 
-export default OAuth2View
+export default TenantRegistrationView

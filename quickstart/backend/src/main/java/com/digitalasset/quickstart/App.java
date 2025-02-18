@@ -6,16 +6,15 @@
  */
 package com.digitalasset.quickstart;
 
-import com.digitalasset.quickstart.config.LedgerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication(exclude = {SecurityAutoConfiguration.class})
-@EnableConfigurationProperties(LedgerConfig.class)
+@ConfigurationPropertiesScan("com.digitalasset.quickstart")
 public class App {
     private static Logger logger = LoggerFactory.getLogger(App.class);
 
