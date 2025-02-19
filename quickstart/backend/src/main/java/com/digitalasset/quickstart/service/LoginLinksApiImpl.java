@@ -44,7 +44,8 @@ public class LoginLinksApiImpl implements LoginLinksApi {
         Context parentContext = Context.current();
 
         methodSpan.addEvent("Starting listLinks");
-        logger.info("listLinks: Retrieving login links asynchronously");
+
+        logger.atInfo().log("Received request, retrieving login links asynchronously");
 
         return CompletableFuture
                 .supplyAsync(
@@ -66,10 +67,13 @@ public class LoginLinksApiImpl implements LoginLinksApi {
                 .whenComplete(
                         completeWithin(parentContext, (response, throwable) -> {
                             if (throwable == null) {
-                                logger.info("listLinks: Completed successfully, found {} items",
-                                        (response.getBody() != null ? response.getBody().size() : 0));
+                                logger.atInfo()
+                                        .addKeyValue("itemsFound", response.getBody() != null ? response.getBody().size() : 0)
+                                        .log("Completed successfully");
                             } else {
-                                logger.error("listLinks: Failed with error: {}", throwable.getMessage(), throwable);
+                                logger.atError()
+                                        .setCause(throwable)
+                                        .log("Failed with error");
                                 methodSpan.recordException(throwable);
                                 methodSpan.setStatus(StatusCode.ERROR, throwable.getMessage());
                             }

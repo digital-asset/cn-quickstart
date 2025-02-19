@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="false">
+
+    <!-- include Spring Boot's defaults to handle profile-coloring etc. -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <springProperty scope="context" name="LOG_FILE" source="logging.file.name"/>
+    <springProperty scope="context" name="LOG_PATH" source="logging.path"/>
+
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <logLevel/>
+                <threadName/>
+                <loggerName/>
+                <message/>
+                <keyValuePairs/>
+                <context/>
+                <version/>
+            </providers>
+        </encoder>
+    </appender>
+
+    <root level="DEBUG">
+        <appender-ref ref="JSON_CONSOLE"/>
+    </root>
+</configuration>

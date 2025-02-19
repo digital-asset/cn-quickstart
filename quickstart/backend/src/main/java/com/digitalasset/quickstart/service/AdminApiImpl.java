@@ -6,6 +6,7 @@ package com.digitalasset.quickstart.service;
 import com.digitalasset.quickstart.api.AdminApi;
 import com.digitalasset.quickstart.repository.OAuth2ClientRegistrationRepository;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
+import com.digitalasset.quickstart.utility.LoggingSpanHelper;
 
 import org.openapitools.model.TenantRegistration;
 import org.openapitools.model.TenantRegistrationRequest;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -56,21 +58,26 @@ public class AdminApiImpl implements AdminApi {
     public CompletableFuture<ResponseEntity<TenantRegistration>> createTenantRegistration(
             @SpanAttribute("tenant.request") TenantRegistrationRequest request
     ) {
-        // Capture the current span and context
         Span methodSpan = Span.current();
         Context parentContext = Context.current();
 
-        methodSpan.setAttribute("tenant.clientId", request.getClientId());
-        methodSpan.setAttribute("tenant.party", request.getParty());
-        logger.info("createTenantRegistration: Starting async creation for clientId='{}', party='{}'",
-                request.getClientId(), request.getParty());
+        Map<String, Object> commonAttrs = Map.of(
+                "tenant.clientId", request.getClientId(),
+                "tenant.party", request.getParty()
+        );
+
+        LoggingSpanHelper.setSpanAttributes(methodSpan, commonAttrs);
+        LoggingSpanHelper.logInfo(logger, "createTenantRegistration: Starting async creation", commonAttrs);
 
         return CompletableFuture
                 .supplyAsync(
                         supplyWithin(parentContext, () -> {
-                            methodSpan.addEvent("Executing asynchronous logic for createTenantRegistration");
+                            LoggingSpanHelper.addEventWithAttributes(
+                                    methodSpan,
+                                    "Executing asynchronous logic for createTenantRegistration",
+                                    null
+                            );
 
-                            // Build the OAuth2 ClientRegistration
                             var registration = org.springframework.security.oauth2.client.registration.ClientRegistration
                                     .withRegistrationId(request.getClientId())
                                     .clientId(request.getClientId())
@@ -82,18 +89,15 @@ public class AdminApiImpl implements AdminApi {
                                     .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
                                     .scope(request.getScope())
                                     .clientName(request.getParty())
-                                    .providerConfigurationMetadata(java.util.Map.of("preconfigured", "false"))
+                                    .providerConfigurationMetadata(Map.of("preconfigured", "false"))
                                     .build();
 
-                            // Save the registration
                             tenantRegistrationRepository.addRegistration(registration);
 
-                            // Save extra tenant properties
                             TenantPropertiesRepository.TenantProperties props = new TenantPropertiesRepository.TenantProperties();
                             props.setWalletUrl(request.getWalletUrl());
                             tenantPropertiesRepository.addTenant(registration.getRegistrationId(), props);
 
-                            // Build response
                             TenantRegistration response = new TenantRegistration();
                             response.setClientId(registration.getClientId());
                             response.setClientSecret(registration.getClientSecret());
@@ -111,13 +115,19 @@ public class AdminApiImpl implements AdminApi {
                 .whenComplete(
                         completeWithin(parentContext, (res, ex) -> {
                             if (ex == null) {
-                                logger.info("createTenantRegistration: Successfully created tenant registration for clientId='{}'",
-                                        request.getClientId());
+                                LoggingSpanHelper.logInfo(
+                                        logger,
+                                        "createTenantRegistration: Successfully created tenant registration",
+                                        commonAttrs
+                                );
                             } else {
-                                logger.error("createTenantRegistration: Failed for clientId='{}': {}",
-                                        request.getClientId(), ex.getMessage(), ex);
-                                methodSpan.recordException(ex);
-                                methodSpan.setStatus(StatusCode.ERROR, ex.getMessage());
+                                LoggingSpanHelper.logError(
+                                        logger,
+                                        "createTenantRegistration: Failed",
+                                        commonAttrs,
+                                        ex
+                                );
+                                LoggingSpanHelper.recordException(methodSpan, ex);
                             }
                         })
                 );
@@ -128,17 +138,21 @@ public class AdminApiImpl implements AdminApi {
     public CompletableFuture<ResponseEntity<Void>> deleteTenantRegistration(
             @SpanAttribute("tenant.tenantId") String tenantId
     ) {
-        // Capture the current span and context
         Span methodSpan = Span.current();
         Context parentContext = Context.current();
 
-        methodSpan.setAttribute("tenant.id", tenantId);
-        logger.info("deleteTenantRegistration: Starting async deletion for tenantId='{}'", tenantId);
+        Map<String, Object> commonAttrs = Map.of("tenant.tenantId", tenantId);
+        LoggingSpanHelper.setSpanAttributes(methodSpan, commonAttrs);
+        LoggingSpanHelper.logInfo(logger, "deleteTenantRegistration: Starting async deletion", commonAttrs);
 
         return CompletableFuture
                 .supplyAsync(
                         supplyWithin(parentContext, () -> {
-                            methodSpan.addEvent("Executing asynchronous logic for deleteTenantRegistration");
+                            LoggingSpanHelper.addEventWithAttributes(
+                                    methodSpan,
+                                    "Executing asynchronous logic for deleteTenantRegistration",
+                                    null
+                            );
                             tenantRegistrationRepository.removeRegistration(tenantId);
                             tenantPropertiesRepository.removeTenant(tenantId);
                             return ResponseEntity.ok().<Void>build();
@@ -147,12 +161,19 @@ public class AdminApiImpl implements AdminApi {
                 .whenComplete(
                         completeWithin(parentContext, (res, ex) -> {
                             if (ex == null) {
-                                logger.info("deleteTenantRegistration: Successfully deleted tenantId='{}'", tenantId);
+                                LoggingSpanHelper.logDebug(
+                                        logger,
+                                        "deleteTenantRegistration: Successfully deleted tenant registration",
+                                        commonAttrs
+                                );
                             } else {
-                                logger.error("deleteTenantRegistration: Failed for tenantId='{}': {}",
-                                        tenantId, ex.getMessage(), ex);
-                                methodSpan.recordException(ex);
-                                methodSpan.setStatus(StatusCode.ERROR, ex.getMessage());
+                                LoggingSpanHelper.logError(
+                                        logger,
+                                        "deleteTenantRegistration: Failed",
+                                        commonAttrs,
+                                        ex
+                                );
+                                LoggingSpanHelper.recordException(methodSpan, ex);
                             }
                         })
                 );
@@ -161,19 +182,22 @@ public class AdminApiImpl implements AdminApi {
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<List<TenantRegistration>>> listTenantRegistrations() {
-        // Capture the current span and context
         Span methodSpan = Span.current();
         Context parentContext = Context.current();
 
-        logger.debug("listTenantRegistrations: Starting async retrieval of tenant registrations");
+        LoggingSpanHelper.logDebug(logger, "listTenantRegistrations: Starting async retrieval");
 
         return CompletableFuture
                 .supplyAsync(
                         supplyWithin(parentContext, () -> {
-                            methodSpan.addEvent("Executing asynchronous logic for listTenantRegistrations");
+                            LoggingSpanHelper.addEventWithAttributes(
+                                    methodSpan,
+                                    "Executing asynchronous logic for listTenantRegistrations",
+                                    null
+                            );
 
-                            // Filter only AuthorizationCode registrations
-                            List<TenantRegistration> result = tenantRegistrationRepository.getRegistrations().stream()
+                            List<TenantRegistration> result = tenantRegistrationRepository
+                                    .getRegistrations().stream()
                                     .filter(r -> AuthorizationGrantType.AUTHORIZATION_CODE.equals(r.getAuthorizationGrantType()))
                                     .map(r -> {
                                         TenantRegistration out = new TenantRegistration();
@@ -184,12 +208,10 @@ public class AdminApiImpl implements AdminApi {
                                         out.setTokenUri(URI.create(r.getProviderDetails().getTokenUri()));
                                         out.setJwkSetUri(URI.create(r.getProviderDetails().getJwkSetUri()));
                                         out.setParty(r.getClientName());
-
                                         Object preconfiguredFlag = r.getProviderDetails()
                                                 .getConfigurationMetadata()
                                                 .get("preconfigured");
                                         out.setPreconfigured("true".equals(preconfiguredFlag));
-
                                         TenantPropertiesRepository.TenantProperties props =
                                                 tenantPropertiesRepository.getTenant(r.getRegistrationId());
                                         if (props != null && props.getWalletUrl() != null) {
@@ -205,13 +227,18 @@ public class AdminApiImpl implements AdminApi {
                 .whenComplete(
                         completeWithin(parentContext, (res, ex) -> {
                             if (ex == null) {
-                                logger.info("listTenantRegistrations: Successfully listed tenant registrations (count={})",
-                                        (res.getBody() != null ? res.getBody().size() : 0));
+                                Map<String, Object> successAttrs = Map.of(
+                                        "list.count", res.getBody() != null ? res.getBody().size() : 0
+                                );
+                                LoggingSpanHelper.logDebug(logger, "listTenantRegistrations: Success", successAttrs);
                             } else {
-                                logger.error("listTenantRegistrations: Failed to list tenant registrations: {}",
-                                        ex.getMessage(), ex);
-                                methodSpan.recordException(ex);
-                                methodSpan.setStatus(StatusCode.ERROR, ex.getMessage());
+                                LoggingSpanHelper.logError(
+                                        logger,
+                                        "listTenantRegistrations: Failed to list tenant registrations",
+                                        null,
+                                        ex
+                                );
+                                LoggingSpanHelper.recordException(methodSpan, ex);
                             }
                         })
                 );

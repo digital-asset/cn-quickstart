@@ -3,6 +3,7 @@
 
 package com.digitalasset.quickstart.ledger;
 
+import com.digitalasset.quickstart.utility.LoggingSpanHelper;
 import com.digitalasset.quickstart.validatorproxy.client.ApiException;
 import com.digitalasset.quickstart.validatorproxy.client.api.ScanProxyApi;
 import com.digitalasset.quickstart.validatorproxy.client.model.GetAmuletRulesProxyResponse;
@@ -14,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -27,75 +29,72 @@ public class ScanProxy {
 
     @WithSpan
     public CompletableFuture<GetDsoPartyIdResponse> getDsoPartyId() {
-        Span currentSpan = Span.current();
-        currentSpan.setAttribute("backend.apiName", "ScanProxy");
-        currentSpan.setAttribute("backend.method", "getDsoPartyId");
-
-        logger.debug("Fetching DSO party id");
-
+        Span span = Span.current();
+        LoggingSpanHelper.logDebug(logger, "Fetching DSO party id");
         try {
             return scanProxyApi.getDsoPartyId()
                     .whenComplete((result, ex) -> {
                         if (ex != null) {
-                            logger.error("Error fetching DSO party id: {}", ex.getMessage(), ex);
-                            currentSpan.recordException(ex);
+                            LoggingSpanHelper.logError(logger, "Error fetching DSO party id", ex);
+                            LoggingSpanHelper.recordException(span, ex);
                         } else {
-                            logger.info("Successfully fetched DSO party id: {}", result.getDsoPartyId());
+                            Map<String, Object> attributes = Map.of("dsoPartyId", result.getDsoPartyId());
+                            LoggingSpanHelper.setSpanAttributes(span, attributes);
+                            LoggingSpanHelper.logInfo(logger, "Successfully fetched DSO party id", attributes);
                         }
                     });
         } catch (ApiException e) {
-            // cannot happen - OpenAPI codegen adds false checked `throws` declaration
-            logger.error("Unexpected ApiException thrown while fetching DSO party id", e);
+            // should not be possible - OpenAPI codegen adds false checked `throws` declaration
+            LoggingSpanHelper.logError(logger, "Unexpected ApiException thrown while fetching DSO party id", e);
+            LoggingSpanHelper.recordException(span, e);
             throw new RuntimeException(e);
         }
     }
 
     @WithSpan
     public CompletableFuture<GetAmuletRulesProxyResponse> getAmuletRules() {
-        Span currentSpan = Span.current();
-        currentSpan.setAttribute("backend.apiName", "ScanProxy");
-        currentSpan.setAttribute("backend.method", "getAmuletRules");
-
-        logger.debug("Fetching AmuletRules");
-
+        Span span = Span.current();
+        LoggingSpanHelper.logDebug(logger, "Fetching AmuletRules");
         try {
             return scanProxyApi.getAmuletRules()
                     .whenComplete((result, ex) -> {
                         if (ex != null) {
-                            logger.error("Error fetching AmuletRules: {}", ex.getMessage(), ex);
-                            currentSpan.recordException(ex);
+                            LoggingSpanHelper.logError(logger, "Error fetching AmuletRules", ex);
+                            LoggingSpanHelper.recordException(span, ex);
                         } else {
-                            logger.info("Successfully fetched AmuletRules: {}", result);
+                            Map<String, Object> attributes = Map.of("amuletRules", result);
+                            LoggingSpanHelper.setSpanAttributes(span, attributes);
+                            LoggingSpanHelper.logInfo(logger, "Successfully fetched AmuletRules", attributes);
                         }
                     });
         } catch (ApiException e) {
-            // cannot happen - OpenAPI codegen adds false checked `throws` declaration
-            logger.error("Unexpected ApiException thrown while fetching AmuletRules", e);
+            // should not be possible - OpenAPI codegen adds false checked `throws` declaration
+            LoggingSpanHelper.logError(logger, "Unexpected ApiException thrown while fetching AmuletRules", e);
+            LoggingSpanHelper.recordException(span, e);
             throw new RuntimeException(e);
         }
     }
 
     @WithSpan
     public CompletableFuture<GetOpenAndIssuingMiningRoundsProxyResponse> getOpenAndIssuingMiningRounds() {
-        Span currentSpan = Span.current();
-        currentSpan.setAttribute("backend.apiName", "ScanProxy");
-        currentSpan.setAttribute("backend.method", "getOpenAndIssuingMiningRounds");
-
-        logger.debug("Fetching Open and Issuing MiningRounds");
-
+        Span span = Span.current();
+        LoggingSpanHelper.logDebug(logger, "Fetching Open and Issuing MiningRounds");
         try {
             return scanProxyApi.getOpenAndIssuingMiningRounds()
                     .whenComplete((result, ex) -> {
                         if (ex != null) {
-                            logger.error("Error fetching Open and Issuing MiningRounds: {}", ex.getMessage(), ex);
-                            currentSpan.recordException(ex);
+                            LoggingSpanHelper.logError(logger, "Error fetching Open and Issuing MiningRounds", ex);
+                            LoggingSpanHelper.recordException(span, ex);
                         } else {
-                            logger.info("Successfully fetched Open and Issuing MiningRounds: {}", result);
+                            Map<String, Object> attributes = Map.of("openAndIssuingMiningRounds", result);
+                            LoggingSpanHelper.setSpanAttributes(span, attributes);
+                            LoggingSpanHelper.logInfo(logger, "Successfully fetched Open and Issuing MiningRounds", attributes);
                         }
                     });
         } catch (ApiException e) {
-            // cannot happen - OpenAPI codegen adds false checked `throws` declaration
-            logger.error("Unexpected ApiException thrown while fetching Open and Issuing MiningRounds", e);
+            // should not be possible - OpenAPI codegen adds false checked `throws` declaration
+            LoggingSpanHelper.logError(logger, "Unexpected ApiException thrown while fetching Open and Issuing MiningRounds", e);
+            LoggingSpanHelper.recordException(span, e);
             throw new RuntimeException(e);
         }
     }

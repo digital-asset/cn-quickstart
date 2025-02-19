@@ -1,6 +1,3 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
-// SPDX-License-Identifier: 0BSD
-
 package com.digitalasset.quickstart.ledger;
 
 import com.daml.ledger.api.v2.*;
@@ -8,6 +5,7 @@ import com.daml.ledger.api.v2.admin.UserManagementServiceGrpc;
 import com.daml.ledger.api.v2.admin.UserManagementServiceOuterClass;
 import com.digitalasset.quickstart.config.LedgerConfig;
 import com.digitalasset.quickstart.oauth.Interceptor;
+import com.digitalasset.quickstart.utility.LoggingSpanHelper;
 import com.digitalasset.transcode.Converter;
 import com.digitalasset.transcode.codec.proto.ProtobufCodec;
 import com.digitalasset.transcode.java.Choice;
@@ -31,7 +29,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -64,7 +64,12 @@ public class LedgerApi {
                 .usePlaintext()
                 .intercept(oAuth2ClientInterceptor)
                 .build();
-        logger.info("Connected to ledger at {}:{}", ledgerConfig.getHost(), ledgerConfig.getPort());
+
+        // Single log statement, not duplicating attributes for spans, so leaving as-is:
+        logger.atInfo()
+                .addKeyValue("host", ledgerConfig.getHost())
+                .addKeyValue("port", ledgerConfig.getPort())
+                .log("Connected to ledger");
 
         submission = CommandSubmissionServiceGrpc.newFutureStub(channel);
         commands = CommandServiceGrpc.newFutureStub(channel);
@@ -77,7 +82,12 @@ public class LedgerApi {
     }
 
     public CompletableFuture<Void> grantRights(String actAs, String readAs) {
-        logger.debug("Attempting to grant user rights to '{}': actAs='{}', readAs='{}'", APP_PROVIDER_USER_ID, actAs, readAs);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("userId", APP_PROVIDER_USER_ID);
+        attrs.put("actAs", actAs);
+        attrs.put("readAs", readAs);
+
+        LoggingSpanHelper.logDebug(logger, "Attempting to grant user rights", attrs);
 
         return toCompletableFuture(
                 userManagement.grantUserRights(
@@ -101,15 +111,18 @@ public class LedgerApi {
                 .<Void>thenApply(x -> null)
                 .whenComplete((res, ex) -> {
                     if (ex != null) {
-                        logger.error("Failed to grant user rights to '{}': {}", APP_PROVIDER_USER_ID, ex.getMessage(), ex);
+                        LoggingSpanHelper.logError(logger, "Failed to grant user rights", attrs, ex);
                     } else {
-                        logger.info("Successfully granted user rights (actAs='{}', readAs='{}') to '{}'", actAs, readAs, APP_PROVIDER_USER_ID);
+                        LoggingSpanHelper.logInfo(logger, "Successfully granted user rights", attrs);
                     }
                 });
     }
 
     public CompletableFuture<List<UserManagementServiceOuterClass.Right>> fetchUserRights(String userId) {
-        logger.debug("Fetching user rights for '{}'", userId);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("userId", userId);
+
+        LoggingSpanHelper.logDebug(logger, "Fetching user rights", attrs);
 
         CompletableFuture<UserManagementServiceOuterClass.ListUserRightsResponse> response =
                 toCompletableFuture(
@@ -122,15 +135,20 @@ public class LedgerApi {
                 .thenApply(UserManagementServiceOuterClass.ListUserRightsResponse::getRightsList)
                 .whenComplete((rights, ex) -> {
                     if (ex != null) {
-                        logger.error("Failed to fetch user rights for '{}': {}", userId, ex.getMessage(), ex);
+                        LoggingSpanHelper.logError(logger, "Failed to fetch user rights", attrs, ex);
                     } else {
-                        logger.info("Fetched {} rights for user '{}'", rights.size(), userId);
+                        Map<String, Object> successAttrs = new HashMap<>(attrs);
+                        successAttrs.put("rights.size", rights.size());
+                        LoggingSpanHelper.logInfo(logger, "Fetched user rights", successAttrs);
                     }
                 });
     }
 
     public CompletableFuture<UserManagementServiceOuterClass.User> fetchUserInfo(String userId) {
-        logger.debug("Fetching user info for '{}'", userId);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("userId", userId);
+
+        LoggingSpanHelper.logDebug(logger, "Fetching user info", attrs);
 
         UserManagementServiceOuterClass.GetUserRequest request =
                 UserManagementServiceOuterClass.GetUserRequest.newBuilder().setUserId(userId).build();
@@ -139,9 +157,11 @@ public class LedgerApi {
                 .thenApply(UserManagementServiceOuterClass.GetUserResponse::getUser)
                 .whenComplete((user, ex) -> {
                     if (ex != null) {
-                        logger.error("Failed to fetch user info for '{}': {}", userId, ex.getMessage(), ex);
+                        LoggingSpanHelper.logError(logger, "Failed to fetch user info", attrs, ex);
                     } else {
-                        logger.info("Fetched user info for '{}': userId='{}'", userId, user.getId());
+                        Map<String, Object> successAttrs = new HashMap<>(attrs);
+                        successAttrs.put("fetchedUserId", user.getId());
+                        LoggingSpanHelper.logInfo(logger, "Fetched user info", successAttrs);
                     }
                 });
     }
@@ -153,31 +173,33 @@ public class LedgerApi {
             String commandId
     ) {
         Span currentSpan = Span.current();
-        currentSpan.setAttribute("backend.commandId", commandId);
-        currentSpan.setAttribute("backend.templateId", entity.templateId().toString());
 
-        logger.debug("Creating contract for templateId='{}' as party='{}' with commandId='{}'",
-                entity.templateId(), party, commandId);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("commandId", commandId);
+        attrs.put("templateId", entity.templateId().toString());
+        attrs.put("applicationId", APP_ID);
+        attrs.put("party", party);
+
+        LoggingSpanHelper.setSpanAttributes(currentSpan, attrs);
+        LoggingSpanHelper.logDebug(logger, "Creating contract", attrs);
 
         CommandsOuterClass.Command.Builder command = CommandsOuterClass.Command.newBuilder();
         ValueOuterClass.Value payload = dto2Proto.template(entity.templateId()).convert(entity);
-        currentSpan.addEvent("converted payload from DTO to Proto");
 
-        command
-                .getCreateBuilder()
+        command.getCreateBuilder()
                 .setTemplateId(toIdentifier(entity.templateId()))
                 .setCreateArguments(payload.getRecord());
-        currentSpan.addEvent("built ledger create command");
+
+        LoggingSpanHelper.addEventWithAttributes(currentSpan, "built ledger create command", attrs);
 
         return submitCommands(party, List.of(command.build()), commandId)
                 .<Void>thenApply(submitResponse -> null)
                 .whenComplete((res, ex) -> {
                     if (ex != null) {
-                        logger.error("Failed to create contract for templateId='{}' as party='{}': {}",
-                                entity.templateId(), party, ex.getMessage(), ex);
+                        LoggingSpanHelper.logError(logger, "Failed to create contract", attrs, ex);
+                        LoggingSpanHelper.recordException(currentSpan, ex);
                     } else {
-                        logger.info("Successfully submitted create command for templateId='{}' as party='{}' with commandId='{}'",
-                                entity.templateId(), party, commandId);
+                        LoggingSpanHelper.logInfo(logger, "Successfully submitted create command", attrs);
                     }
                 });
     }
@@ -203,30 +225,34 @@ public class LedgerApi {
             List<CommandsOuterClass.DisclosedContract> disclosedContracts
     ) {
         Span currentSpan = Span.current();
-        currentSpan.setAttribute("backend.commandId", commandId);
-        currentSpan.setAttribute("backend.contractId", contractId.getContractId);
-        currentSpan.setAttribute("backend.choiceName", choice.choiceName());
 
-        logger.debug("Exercising choice='{}' on contractId='{}' as party='{}' with commandId='{}'",
-                choice.choiceName(), contractId.getContractId, party, commandId);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("commandId", commandId);
+        attrs.put("contractId", contractId.getContractId);
+        attrs.put("choiceName", choice.choiceName());
+        attrs.put("templateId", choice.templateId().toString());
+        attrs.put("applicationId", APP_ID);
+        attrs.put("party", party);
 
-        CommandsOuterClass.Command.Builder command = CommandsOuterClass.Command.newBuilder();
+        LoggingSpanHelper.setSpanAttributes(currentSpan, attrs);
+        LoggingSpanHelper.logDebug(logger, "Exercising choice", attrs);
+
+        CommandsOuterClass.Command.Builder cmdBuilder = CommandsOuterClass.Command.newBuilder();
         ValueOuterClass.Value payload =
                 dto2Proto.choiceArgument(choice.templateId(), choice.choiceName()).convert(choice);
 
-        command.getExerciseBuilder()
+        cmdBuilder.getExerciseBuilder()
                 .setTemplateId(toIdentifier(choice.templateId()))
                 .setContractId(contractId.getContractId)
                 .setChoice(choice.choiceName())
                 .setChoiceArgument(payload);
-        currentSpan.addEvent("built ledger exercise command");
 
         CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
                 .setApplicationId(APP_ID)
                 .setCommandId(commandId)
                 .addActAs(party)
                 .addReadAs(party)
-                .addCommands(command.build());
+                .addCommands(cmdBuilder.build());
 
         if (disclosedContracts != null && !disclosedContracts.isEmpty()) {
             commandsBuilder.addAllDisclosedContracts(disclosedContracts);
@@ -236,27 +262,43 @@ public class LedgerApi {
                 CommandServiceOuterClass.SubmitAndWaitRequest.newBuilder()
                         .setCommands(commandsBuilder.build())
                         .build();
-        currentSpan.addEvent("built ledger submit request");
+
+        LoggingSpanHelper.addEventWithAttributes(currentSpan, "built ledger submit request", attrs);
+        LoggingSpanHelper.logInfo(logger, "Submitting ledger command", attrs);
 
         return toCompletableFuture(commands.submitAndWaitForTransactionTree(request))
                 .thenApply(response -> {
-                    currentSpan.addEvent("received ledger submit response");
+                    TransactionOuterClass.TransactionTree txTree = response.getTransaction();
+                    long offset = txTree.getOffset();
+                    String workflowId = txTree.getWorkflowId();
+                    String rootEventId = txTree.getRootEventIdsCount() > 0 ? txTree.getRootEventIds(0) : "";
+                    TransactionOuterClass.TreeEvent event = txTree.getEventsByIdMap().get(rootEventId);
+                    String eventId = event != null ? rootEventId : null;
 
-                    String eventId = response.getTransaction().getRootEventIds(0);
-                    currentSpan.setAttribute("backend.submit.response.event.id", eventId);
+                    Map<String, Object> completionAttrs = new HashMap<>(attrs);
+                    completionAttrs.put("ledgerOffset", offset);
+                    completionAttrs.put("workflowId", workflowId);
+                    if (eventId != null) {
+                        completionAttrs.put("eventId", eventId);
+                    }
 
-                    TransactionOuterClass.TreeEvent event = response.getTransaction().getEventsByIdMap().get(eventId);
-                    ValueOuterClass.Value resultPayload = event.getExercised().getExerciseResult();
+                    LoggingSpanHelper.setSpanAttributes(currentSpan, completionAttrs);
+                    LoggingSpanHelper.logInfo(logger, "Exercised choice", completionAttrs);
 
-                    return (Result) proto2Dto.choiceResult(choice.templateId(), choice.choiceName()).convert(resultPayload);
+                    ValueOuterClass.Value resultPayload =
+                            event != null ? event.getExercised().getExerciseResult() : ValueOuterClass.Value.getDefaultInstance();
+
+                    @SuppressWarnings("unchecked")
+                    Result result = (Result) proto2Dto.choiceResult(choice.templateId(), choice.choiceName())
+                            .convert(resultPayload);
+                    return result;
                 })
                 .whenComplete((res, ex) -> {
                     if (ex != null) {
-                        logger.error("Failed to exercise choice='{}' on contractId='{}' as party='{}': {}",
-                                choice.choiceName(), contractId.getContractId, party, ex.getMessage(), ex);
+                        LoggingSpanHelper.logError(logger, "Failed to exercise choice", attrs, ex);
+                        LoggingSpanHelper.recordException(currentSpan, ex);
                     } else {
-                        logger.info("Successfully exercised choice='{}' on contractId='{}' as party='{}' with commandId='{}'",
-                                choice.choiceName(), contractId.getContractId, party, commandId);
+                        LoggingSpanHelper.logInfo(logger, "Completed exercising choice", attrs);
                     }
                 });
     }
@@ -264,31 +306,36 @@ public class LedgerApi {
     @WithSpan
     public CompletableFuture<CommandSubmissionServiceOuterClass.SubmitResponse> submitCommands(
             @SpanAttribute("backend.party") String party,
-            List<CommandsOuterClass.Command> commands,
+            List<CommandsOuterClass.Command> cmds,
             String commandId
     ) {
-        return submitCommands(party, commands, commandId, List.of());
+        return submitCommands(party, cmds, commandId, List.of());
     }
 
     @WithSpan
     public CompletableFuture<CommandSubmissionServiceOuterClass.SubmitResponse> submitCommands(
             @SpanAttribute("backend.party") String party,
-            List<CommandsOuterClass.Command> commands,
+            List<CommandsOuterClass.Command> cmds,
             String commandId,
             List<CommandsOuterClass.DisclosedContract> disclosedContracts
     ) {
         Span currentSpan = Span.current();
-        currentSpan.setAttribute("backend.commands.count", commands.size());
-        currentSpan.setAttribute("backend.commandId", commandId);
 
-        logger.info("Party '{}' submits {} commands with commandId='{}'", party, commands.size(), commandId);
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("party", party);
+        attrs.put("commands.count", cmds.size());
+        attrs.put("commandId", commandId);
+        attrs.put("applicationId", APP_ID);
+
+        LoggingSpanHelper.setSpanAttributes(currentSpan, attrs);
+        LoggingSpanHelper.logInfo(logger, "Submitting commands", attrs);
 
         CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
                 .setApplicationId(APP_ID)
                 .setCommandId(commandId)
                 .addActAs(party)
                 .addReadAs(party)
-                .addAllCommands(commands);
+                .addAllCommands(cmds);
 
         if (disclosedContracts != null && !disclosedContracts.isEmpty()) {
             commandsBuilder.addAllDisclosedContracts(disclosedContracts);
@@ -298,16 +345,14 @@ public class LedgerApi {
                 CommandSubmissionServiceOuterClass.SubmitRequest.newBuilder()
                         .setCommands(commandsBuilder.build())
                         .build();
-        currentSpan.addEvent("built ledger submit request");
 
         return toCompletableFuture(submission.submit(request))
                 .whenComplete((res, ex) -> {
                     if (ex != null) {
-                        logger.error("Failed to submit commands for party='{}' with commandId='{}': {}",
-                                party, commandId, ex.getMessage(), ex);
+                        LoggingSpanHelper.logError(logger, "Failed to submit commands", attrs, ex);
+                        LoggingSpanHelper.recordException(currentSpan, ex);
                     } else {
-                        logger.info("Successfully submitted {} commands for party='{}' with commandId='{}'",
-                                commands.size(), party, commandId);
+                        LoggingSpanHelper.logInfo(logger, "Successfully submitted commands", attrs);
                     }
                 });
     }
@@ -325,7 +370,6 @@ public class LedgerApi {
                 completableFuture.completeExceptionally(t);
             }
         }, MoreExecutors.directExecutor());
-
         return completableFuture;
     }
 
@@ -337,4 +381,3 @@ public class LedgerApi {
                 .build();
     }
 }
-
