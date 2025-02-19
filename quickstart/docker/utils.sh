@@ -4,6 +4,201 @@
 
 set -eo pipefail
 
+get_app_provider_user_token() {
+  local user=$1
+  local password=$2
+  echo "get_app_provider_user_token $user" >&2
+
+  curl -f -s -S "${AUTH_APP_PROVIDER_TOKEN_URL}" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'client_id=app-provider-unsafe' \
+    -d 'username='${user} \
+    -d 'password='${password} \
+    -d 'grant_type=password' \
+    -d 'scope=openid' | jq -r .access_token
+}
+
+get_app_user_user_token() {
+  local user=$1
+  local password=$2
+  echo "get_app_user_user_token $user" >&2
+
+  curl -f -s -S "${AUTH_APP_USER_TOKEN_URL}" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'client_id=app-user-unsafe' \
+    -d 'username='${user} \
+    -d 'password='${password} \
+    -d 'grant_type=password' \
+    -d 'scope=openid' | jq -r .access_token
+}
+
+create_admin_user() {
+  local token=$1
+  local userId=$2
+  local userName=$3
+  local participant=$4
+  echo "create_admin_user $userId $userName $participant" >&2
+  curl_check "http://$participant:7575/v2/users" "$token" "application/json" \
+    --data-raw '{
+      "user" : {
+          "id" : "'$userId'",
+          "isDeactivated": false,
+          "primaryParty" : "",
+          "identityProviderId": "",
+          "metadata": {
+             "resourceVersion": "",
+              "annotations": {
+                  "username" : "'$userName'"
+              }
+          }
+      },
+        "rights": [
+          {
+            "kind": { "ParticipantAdmin" : { "value": {}}}
+          }
+        ]
+    }' | jq -r .user.id
+}
+
+create_user() {
+  local token=$1
+  local userId=$2
+  local userName=$3
+  local party=$4
+  local participant=$5
+  echo "create_user $userId $userName $party $participant" >&2
+
+  # KV check whether user exist if not then create
+  curl_check "http://$participant:7575/v2/users" "$token" "application/json" \
+    --data-raw '{
+      "user" : {
+          "id" : "'$userId'",
+          "isDeactivated": false,
+          "primaryParty" : "'$party'",
+          "identityProviderId": "",
+          "metadata": {
+             "resourceVersion": "",
+              "annotations": {
+                  "username" : "'$userName'"
+              }
+          }
+      },
+        "rights": [
+        ]
+    }' | jq -r .user.id
+}
+
+joinByChar() {
+  local IFS="$1"
+  shift
+  echo "$*"
+}
+
+function grant_rights() {
+  local token=$1
+  local userId=$2
+  local partyId=$3
+  local rights=$4
+  local participant=$5
+  echo "grant_rights $userId $partyId $rights $participant" >&2
+  read -ra rightsAsArr <<< "$rights"
+  local rightsArr=()
+  for right in "${rightsAsArr[@]}"; do
+    case "$right" in
+      "ParticipantAdmin")
+        rightsArr+=('{"kind":{"ParticipantAdmin":{"value":{}}}}')
+        ;;
+      "ActAs")
+        rightsArr+=('{"kind":{"CanActAs":{"value":{"party":"'$partyId'"}}}}')
+        ;;
+      "ReadAs")
+        rightsArr+=('{"kind":{"CanReadAs":{"value":{"party":"'$partyId'"}}}}')
+        ;;
+    esac
+  done
+
+  local rightsJson=$(joinByChar "," "${rightsArr[@]}")
+  curl_check "http://$participant:7575/v2/users/$userId/rights" "$token" "application/json" \
+    --data-raw '{
+        "userId": "'$userId'",
+        "identityProviderId": "",
+        "rights": ['$rightsJson']
+    }'
+}
+
+update_user() {
+  local token=$1
+  local userId=$2
+  local userName=$3
+  local party=$4
+  local participant=$5
+  echo "update_user $userId $userName $party $participant" >&2
+  curl_check "http://$participant:7575/v2/users/$userId" "$token" "application/json" \
+    -X PATCH \
+    --data-raw '{
+      "user" : {
+          "id" : "'$userId'",
+          "isDeactivated": false,
+          "primaryParty" : "'$party'",
+          "identityProviderId": "",
+          "metadata": {
+             "resourceVersion": "",
+              "annotations": {
+                  "username" : "'$userName'"
+              }
+          }
+      },
+      "updateMask": {
+          "paths": ["primary_party", "metadata"],
+          "unknownFields": {
+             "fields": {}
+          }
+      }
+    }' | jq -r .user.id
+}
+
+create_user_with_party_rights() {
+  local token=$1
+  local userId=$2
+  local userName=$3
+  local party=$4
+  local participant=$5
+
+  echo "create_user_with_party_rights $userId $party $participant" >&2
+  curl_check "http://$participant:7575/v2/users" "$token" "application/json" \
+    --data-raw '{
+      "user" : {
+          "id" : "'$userId'",
+          "primaryParty" : "'$party'",
+          "isDeactivated": false,
+          "identityProviderId": "",
+          "metadata": {
+             "resourceVersion": "",
+              "annotations": {
+                  "username" : "'$userName'"
+              }
+          }
+      },
+        "rights": [
+            {
+                "kind": {
+                    "CanActAs": {
+                        "value": {
+                            "party": "'$party'"
+                        }
+                    },
+                    "CanReadAs": {
+                        "value": {
+                            "party": "'$party'"
+                        }
+                    }
+                }
+            }
+        ]
+    }' | jq -r .user.primaryParty
+}
+
+
 get_token() {
   local user=$1
   local issuer=$2

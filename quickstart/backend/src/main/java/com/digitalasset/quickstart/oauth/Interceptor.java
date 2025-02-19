@@ -17,7 +17,7 @@ public class Interceptor implements ClientInterceptor {
     @Autowired
     private OAuth2AuthorizedClientManager authorizedClientManager;
     private final Metadata.Key<String> AUTHORIZATION_HEADER = Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER);
-    private final String CLIENT_REGISTRATION_ID = "AppProvider-client-credentials";
+    private final String CLIENT_REGISTRATION_ID = "AppProviderBackend-Participant";
 
     @Override
     public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {

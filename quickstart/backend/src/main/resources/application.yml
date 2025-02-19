@@ -6,37 +6,32 @@ spring:
     oauth2:
       client:
         registration:
-          AppProvider-client-credentials:
-            client-id: ${AUTH_APP_PROVIDER_CLIENT_ID}
-            client-secret: ${AUTH_APP_PROVIDER_CLIENT_SECRET}
+          AppProviderBackend-Participant:
+            client-id: ${AUTH_APP_PROVIDER_BACKEND_TO_PARTICIPANT_CLIENT_ID}
+            client-secret: ${AUTH_APP_PROVIDER_BACKEND_TO_PARTICIPANT_SECRET}
             authorization-grant-type: client_credentials
-            scope: daml_ledger_api
+            provider: AppProviderBackend
           AppProvider:
-            client-id: ${AUTH_APP_PROVIDER_CLIENT_ID}
+            client-id: ${AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID}
             client-name: ${AUTH_APP_PROVIDER_PARTY}
-            client-secret: ${AUTH_APP_PROVIDER_CLIENT_SECRET}
             authorization-grant-type: authorization_code
-            scope: "openid,daml_ledger_api"
+            scope: "openid"
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-          Org1:
-            client-id: ${AUTH_APP_USER_CLIENT_ID}
+            provider: AppProvider
+          AppUser:
+            client-id: ${AUTH_APP_USER_BACKEND_OIDC_CLIENT_ID}
             client-name: ${AUTH_APP_USER_PARTY}
-            client-secret: ${AUTH_APP_USER_CLIENT_SECRET}
             authorization-grant-type: authorization_code
-            scope: "openid,daml_ledger_api"
+            scope: "openid"
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            provider: AppUser
         provider:
-          AppProvider-client-credentials:
-            token-uri: ${AUTH_APP_PROVIDER_TOKEN_URI}
+          AppProviderBackend:
+            issuer-uri: ${AUTH_APP_PROVIDER_ISSUER_URL_BACKEND}
           AppProvider:
-            authorization-uri: ${AUTH_APP_PROVIDER_AUTHORIZATION_URI}
-            token-uri: ${AUTH_APP_PROVIDER_TOKEN_URI}
-            jwk-set-uri: ${AUTH_APP_PROVIDER_JWK_SET_URI}
-          Org1:
-            authorization-uri: ${AUTH_APP_USER_AUTHORIZATION_URI}
-            token-uri: ${AUTH_APP_USER_TOKEN_URI}
-            jwk-set-uri: ${AUTH_APP_USER_JWK_SET_URI}
-
+            issuer-uri: ${AUTH_APP_PROVIDER_ISSUER_URL}
+          AppUser:
+            issuer-uri: ${AUTH_APP_USER_ISSUER_URL}
 application:
   tenants:
     Org1:
@@ -49,6 +44,11 @@ logging:
   level:
     org.apache.coyote.http11.Http11InputBuffer: DEBUG
     com.digitalasset.quickstart.oauth.Interceptor: DEBUG
+#    org.springframework.security.web.FilterChainProxy: TRACE
+#    org.springframework.web.filter: TRACE
+#    org:
+#      springframework:
+#        security: DEBUG
 
 management:
   endpoints:

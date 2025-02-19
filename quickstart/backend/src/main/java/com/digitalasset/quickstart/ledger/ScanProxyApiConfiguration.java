@@ -13,7 +13,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 @Configuration
 public class ScanProxyApiConfiguration {
 
-    private static final String CLIENT_REGISTRATION_ID = "AppProvider-client-credentials";
+    private static final String CLIENT_REGISTRATION_ID = "AppProviderBackend-Participant"; // TODO change to validator when we have different audiences
 
     @Bean
     public ScanProxyApi scanProxyApi(OAuth2AuthorizedClientManager authorizedClientManager) {

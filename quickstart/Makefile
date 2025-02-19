@@ -96,7 +96,7 @@ restart-frontend: build-frontend ## Build and start the application
 .PHONY: start
 ifneq ($(strip $(PARTY_HINT)),)
 start: build ## Start the application, and observability services if enabled
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} up -d)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} up -d --no-recreate)
 else
 start:
 	@echo "#########################################################################"
@@ -140,15 +140,24 @@ setup: ## Configure the local development environment (enable DevNet/LocalNet, O
 	@echo "Starting setup..."
 	$(SETUP_COMMAND)
 
-# Console and shell
-.PHONY: console
-console: ## Start the Canton console
-	docker compose -f docker/canton-console/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm canton-console
+# Console
+.PHONY: console-app-provider
+console-app-provider: ## Start the Canton console
+	docker compose -f docker/canton-console/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm canton-console-app-provider
 
-.PHONY: clean-console
-clean-console: ## Stop and remove the Canton console container
-	docker rm -f quickstart-canton-console 2> /dev/null || true
+.PHONY: clean-console-app-provider
+clean-console-app-provider: ## Stop and remove the Canton console container
+	docker rm -f quickstart-canton-console-app-provider 2> /dev/null || true
 
+.PHONY: console-app-user
+console-app-user: ## Start the Canton console
+	docker compose -f docker/canton-console/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm canton-console-app-user
+
+.PHONY: clean-console-app-user
+clean-console-app-user: ## Stop and remove the Canton console container
+	docker rm -f quickstart-canton-console-app-user 2> /dev/null || true
+
+# Shell
 .PHONY: shell
 shell: ## Start Daml Shell
 	docker compose -f docker/daml-shell/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm daml-shell || true
