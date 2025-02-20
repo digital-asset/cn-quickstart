@@ -151,6 +151,7 @@ The following user guides provide an engineering handover to teams using the Can
 - [Quickstart Installation](docs/guide/CantonNetworkQuickstartInstallationGuide-20250213.pdf)
 - [Exploring The Demo](docs/guide/ExploringTheDemo-20250213.pdf)
 - [Project Structure](docs/guide/ProjectStructureGuide-20250212.pdf)
+- [Observability and Troubleshooting Overview](docs/guide/ObservabilityTroubleshootingOverview-20250220.pdf)
 
 ### Technical Documentation
 
