@@ -41,7 +41,9 @@ endif
 
 # Function to run docker-compose with default files and environment
 define docker-compose
-	docker compose $(DOCKER_COMPOSE_FILES) $(DOCKER_COMPOSE_ENVFILE) $(DOCKER_COMPOSE_PROFILES) $(1)
+  # construct party hint that contains only allowed characters
+  @PARTY_HINT=$(shell echo quick.start-$(or ${USER},${USERNAME})-1 | sed 's/[^A-Za-z0-9:_-]/_/g') \
+  docker compose $(DOCKER_COMPOSE_FILES) $(DOCKER_COMPOSE_ENVFILE) $(DOCKER_COMPOSE_PROFILES) $(1)
 endef
 
 # Helper to generate an "open URL" target
@@ -163,7 +165,7 @@ clean: ## Clean the build artifacts
 	./gradlew clean
 
 .PHONY: clean-docker
-clean-docker: clean-shell clean-console ## Stop and remove application Docker containers and volumes
+clean-docker: clean-shell clean-console-app-provider clean-console-app-user ## Stop and remove application Docker containers and volumes
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} down -v)
 
 .PHONY: clean-application
