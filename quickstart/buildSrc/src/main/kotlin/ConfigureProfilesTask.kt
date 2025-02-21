@@ -87,16 +87,44 @@ open class ConfigureProfilesTask : DefaultTask() {
     }
 
     private fun promptForPartyHint(prompt: String): String {
+        // Regex for valid hint characters
         val pattern = Regex("^[A-Za-z0-9:\\-_]+\$")
+
+        // Grab either $USER or $USERNAME from the environment
+        val rawDefault = System.getenv("USER") ?: System.getenv("USERNAME") ?: ""
+        // Remove any characters that don't match the valid pattern
+        val defaultPartyHint = rawDefault.replace(Regex("[^A-Za-z0-9:\\-_]"), "")
+
+        // If we found a valid default, include it in the prompt in brackets
+        val fullPrompt = if (defaultPartyHint.isNotEmpty()) {
+            "$prompt [$defaultPartyHint]"
+        } else {
+            prompt
+        }
+
         while (true) {
-            print("$prompt: ")
+            print("$fullPrompt: ")
             System.out.flush()
+
+            // User input
             val input = readLine().orEmpty().trim()
-            if (pattern.matches(input)) {
-                return input
+
+            // If user didn't type anything but we have a default, use the default
+            val candidate = if (input.isEmpty() && defaultPartyHint.isNotEmpty()) {
+                defaultPartyHint
+            } else {
+                input
+            }
+
+            // Validate against the pattern
+            if (candidate.isEmpty()) {
+                println("Invalid party hint. You must enter a non-empty string.")
+            } else if (pattern.matches(candidate)) {
+                return candidate
             } else {
                 println("Invalid party hint. Only use letters, digits, ':', '-' and '_'.")
             }
         }
     }
+
 }
