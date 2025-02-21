@@ -120,7 +120,7 @@ open class ConfigureProfilesTask : DefaultTask() {
             if (candidate.isEmpty()) {
                 println("Invalid party hint. You must enter a non-empty string.")
             } else if (pattern.matches(candidate)) {
-                return candidate
+                return "quickstart-$candidate-1"
             } else {
                 println("Invalid party hint. Only use letters, digits, ':', '-' and '_'.")
             }
