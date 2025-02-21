@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates
 // SPDX-License-Identifier: 0BSD
 
 import org.gradle.api.DefaultTask
@@ -7,62 +7,67 @@ import java.io.File
 
 open class ConfigureProfilesTask : DefaultTask() {
 
+    enum class OptionType { BOOLEAN, PARTY_HINT }
+
     data class Option(
         val promptText: String,
         val envVarName: String,
-        var isSelected: Boolean = false,
+        val type: OptionType,
+        var value: String = "",
         var isFound: Boolean = false
     )
 
     init {
-        // Allow the task to read from standard input
         inputs.property("standardInput", System.`in`)
     }
 
     @TaskAction
     fun configure() {
         val options = listOf(
-            Option(promptText = "Enable LocalNet", envVarName = "LOCALNET_ENABLED"),
-            Option(promptText = "Enable Observability", envVarName = "OBSERVABILITY_ENABLED")
+            Option("Enable LocalNet", "LOCALNET_ENABLED", OptionType.BOOLEAN),
+            Option("Enable Observability", "OBSERVABILITY_ENABLED", OptionType.BOOLEAN),
+            Option(
+                "Specify a party hint (this will identify the participant in the network)",
+                "PARTY_HINT",
+                OptionType.PARTY_HINT
+            )
         )
 
-        // Ask yes/no questions for each option, defaulting to yes
         options.forEach { option ->
-            option.isSelected = promptForBoolean(option.promptText, default = true)
-            println("  ${option.envVarName} set to '${option.isSelected}'.")
-            println()
+            when (option.type) {
+                OptionType.BOOLEAN -> {
+                    val boolValue = promptForBoolean(option.promptText, default = true)
+                    option.value = boolValue.toString()
+                    println("  ${option.envVarName} set to '$boolValue'.\n")
+                }
+
+                OptionType.PARTY_HINT -> {
+                    val stringValue = promptForPartyHint(option.promptText)
+                    option.value = stringValue
+                    println("  ${option.envVarName} set to '$stringValue'.\n")
+                }
+            }
             System.out.flush()
         }
 
-        // Update .env file in-place
-        val rootProjectDir = project.rootProject.projectDir
-        val dotEnvFile = File(rootProjectDir, ".env.local")
-
-        if (!dotEnvFile.exists()) {
-            dotEnvFile.createNewFile()
+        val dotEnvFile = File(project.rootProject.projectDir, ".env.local").apply {
+            if (!exists()) createNewFile()
         }
-
         val envLines = dotEnvFile.readLines().toMutableList()
 
-        // Process each line in the .env file
-        for (i in envLines.indices) {
-            val line = envLines[i]
+        envLines.forEachIndexed { i, line ->
             options.forEach { option ->
                 if (line.startsWith("${option.envVarName}=")) {
-                    envLines[i] = "${option.envVarName}=${option.isSelected}"
+                    envLines[i] = "${option.envVarName}=${option.value}"
                     option.isFound = true
                 }
             }
         }
-
-        // Append variables if they were not found
-        options.filter { !it.isFound }.forEach { option ->
-            envLines.add("${option.envVarName}=${option.isSelected}")
+        options.filterNot { it.isFound }.forEach {
+            envLines.add("${it.envVarName}=${it.value}")
         }
 
-        // Write the updated lines back to the .env file
         dotEnvFile.writeText(envLines.joinToString(System.lineSeparator()))
-
         println(".env.local updated successfully.")
     }
 
@@ -70,19 +75,27 @@ open class ConfigureProfilesTask : DefaultTask() {
         val optionsText = if (default) "Y/n" else "y/N"
         while (true) {
             print("$prompt? ($optionsText): ")
-            System.out.flush() // Flush the output to display the prompt immediately
-            val input = readLine()
-            if (input == null || input.trim().isEmpty()) {
-                return default
-            }
-            val normalized = input.trim().lowercase()
-            when (normalized) {
+            System.out.flush()
+            val input = readLine().orEmpty().trim()
+            if (input.isEmpty()) return default
+            when (input.lowercase()) {
                 "y", "yes", "true", "t", "1" -> return true
                 "n", "no", "false", "f", "0" -> return false
-                else -> {
-                    println("Invalid input. Please enter 'yes' or 'no'.")
-                    System.out.flush()
-                }
+                else -> println("Invalid input. Please enter 'yes' or 'no'.")
+            }
+        }
+    }
+
+    private fun promptForPartyHint(prompt: String): String {
+        val pattern = Regex("^[A-Za-z0-9:\\-_]+\$")
+        while (true) {
+            print("$prompt: ")
+            System.out.flush()
+            val input = readLine().orEmpty().trim()
+            if (pattern.matches(input)) {
+                return input
+            } else {
+                println("Invalid party hint. Only use letters, digits, ':', '-' and '_'.")
             }
         }
     }
