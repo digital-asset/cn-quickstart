@@ -53,7 +53,6 @@ export const UserProvider = ({children}: { children: React.ReactNode }) => {
         try {
             const response = await fetch('/api/logout', {
                 method: 'POST',
-                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-XSRF-TOKEN': getCsrfToken(),

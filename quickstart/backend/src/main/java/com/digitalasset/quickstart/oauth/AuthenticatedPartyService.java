@@ -13,14 +13,13 @@ import java.util.Optional;
 public class AuthenticatedPartyService {
 
     public Optional<String> getParty() {
-        OAuth2AuthenticationToken auth = null;
-        if (SecurityContextHolder.getContext().getAuthentication() instanceof OAuth2AuthenticationToken) {
-            auth = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        }
-        if (auth == null || !auth.isAuthenticated())
+        if (!(SecurityContextHolder.getContext().getAuthentication() instanceof OAuth2AuthenticationToken auth) ||
+            !auth.isAuthenticated()
+        ) {
             return Optional.empty();
+        }
 
-        return Optional.of(auth.getPrincipal().getName());
+        return Optional.ofNullable(auth.getPrincipal().getAttribute("party"));
     }
 
     public String getPartyOrFail() {

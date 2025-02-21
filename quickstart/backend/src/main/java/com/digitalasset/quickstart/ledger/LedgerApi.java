@@ -4,8 +4,6 @@
 package com.digitalasset.quickstart.ledger;
 
 import com.daml.ledger.api.v2.*;
-import com.daml.ledger.api.v2.admin.UserManagementServiceGrpc;
-import com.daml.ledger.api.v2.admin.UserManagementServiceOuterClass;
 import com.digitalasset.quickstart.config.LedgerConfig;
 import com.digitalasset.quickstart.oauth.Interceptor;
 import com.digitalasset.transcode.Converter;
@@ -36,22 +34,18 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 public class LedgerApi {
-    private static final String APP_ID;
-    private static final String APP_PROVIDER_USER_ID;
+    private static final String APP_ID ;
 
     static {
-        String appId = System.getenv("AUTH_APP_PROVIDER_CLIENT_ID");
+        String appId = System.getenv("AUTH_APP_PROVIDER_BACKEND_TO_PARTICIPANT_USER_ID");
         if (appId == null || appId.isBlank()) {
-            throw new IllegalStateException("Environment variable AUTH_APP_PROVIDER_CLIENT_ID is not set");
+            throw new IllegalStateException("Environment variable AUTH_APP_PROVIDER_BACKEND_TO_PARTICIPANT_USER_ID is not set");
         }
         APP_ID = appId;
-        APP_PROVIDER_USER_ID = appId;
     }
 
     private final CommandSubmissionServiceGrpc.CommandSubmissionServiceFutureStub submission;
     private final CommandServiceGrpc.CommandServiceFutureStub commands;
-    private final UserManagementServiceGrpc.UserManagementServiceFutureStub userManagement;
-    private final StateServiceGrpc.StateServiceFutureStub stateService;
     private final Dictionary<Converter<Object, ValueOuterClass.Value>> dto2Proto;
     private final Dictionary<Converter<ValueOuterClass.Value, Object>> proto2Dto;
 
@@ -67,48 +61,10 @@ public class LedgerApi {
         logger.info("Connected to ledger at {}:{}", ledgerConfig.getHost(), ledgerConfig.getPort());
         submission = CommandSubmissionServiceGrpc.newFutureStub(channel);
         commands = CommandServiceGrpc.newFutureStub(channel);
-        userManagement = UserManagementServiceGrpc.newFutureStub(channel);
-        stateService = StateServiceGrpc.newFutureStub(channel);
 
         ProtobufCodec protoCodec = new ProtobufCodec();
         dto2Proto = Utils.getConverters(Daml.ENTITIES, protoCodec);
         proto2Dto = Utils.getConverters(protoCodec, Daml.ENTITIES);
-    }
-
-    public CompletableFuture<Void> grantRights(String actAs, String readAs) {
-        return toCompletableFuture(userManagement.grantUserRights(
-                UserManagementServiceOuterClass.GrantUserRightsRequest.newBuilder()
-                        .setUserId(APP_PROVIDER_USER_ID)
-                        .addAllRights(
-                                List.of(
-                                        UserManagementServiceOuterClass.Right.newBuilder()
-                                                .setCanReadAs(
-                                                        UserManagementServiceOuterClass.Right.CanReadAs.newBuilder()
-                                                                .setParty(readAs).build()
-                                                ).build(),
-                                        UserManagementServiceOuterClass.Right.newBuilder()
-                                                .setCanActAs(
-                                                        UserManagementServiceOuterClass.Right.CanActAs.newBuilder()
-                                                                .setParty(actAs).build()
-                                                ).build()
-                                )
-                        ).build()
-        )).thenApply(x -> null);
-    }
-
-    public CompletableFuture<List<UserManagementServiceOuterClass.Right>> fetchUserRights(String userId) {
-        CompletableFuture<UserManagementServiceOuterClass.ListUserRightsResponse> response =
-                toCompletableFuture(userManagement.listUserRights(
-                        UserManagementServiceOuterClass.ListUserRightsRequest.newBuilder().setUserId(userId).build()
-                ));
-        return response.thenApply(UserManagementServiceOuterClass.ListUserRightsResponse::getRightsList);
-    }
-
-    public CompletableFuture<UserManagementServiceOuterClass.User> fetchUserInfo(String userId) {
-        UserManagementServiceOuterClass.GetUserRequest request =
-                UserManagementServiceOuterClass.GetUserRequest.newBuilder().setUserId(userId).build();
-        return toCompletableFuture(userManagement.getUser(request))
-                .thenApply(UserManagementServiceOuterClass.GetUserResponse::getUser);
     }
 
     @WithSpan

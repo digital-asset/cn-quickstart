@@ -30,7 +30,7 @@ public class LoginLinksApiImpl implements com.digitalasset.quickstart.api.LoginL
                 .filter(registration -> AuthorizationGrantType.AUTHORIZATION_CODE.equals(registration.getAuthorizationGrantType()))
                 .map(registration ->
                         new LoginLink()
-                                .name(registration.getClientName().split("::")[0])
+                                .name(registration.getRegistrationId())
                                 .url("/oauth2/authorization/" + registration.getRegistrationId()))
                 .collect(Collectors.toList());
 

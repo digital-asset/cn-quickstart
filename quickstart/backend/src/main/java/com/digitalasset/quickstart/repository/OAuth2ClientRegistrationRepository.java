@@ -31,19 +31,23 @@ public class OAuth2ClientRegistrationRepository
         this.registrations = baseRegistrations.stream()
                 .collect(Collectors.toMap(
                         ClientRegistration::getRegistrationId,
-                        registration -> ClientRegistration.withRegistrationId(registration.getRegistrationId())
-                                .clientId(registration.getClientId())
-                                .clientSecret(registration.getClientSecret())
-                                .authorizationUri(registration.getProviderDetails().getAuthorizationUri())
-                                .authorizationGrantType(registration.getAuthorizationGrantType())
-                                .tokenUri(registration.getProviderDetails().getTokenUri())
-                                .jwkSetUri(registration.getProviderDetails().getJwkSetUri())
-                                .redirectUri(registration.getRedirectUri())
-                                .scope(registration.getScopes())
-                                .clientName(registration.getClientName())
-                                // Immutable entries from application.yml
-                                .providerConfigurationMetadata(Map.of("preconfigured", "true"))
-                                .build()
+                        registration -> {
+                            Map<String, Object> metadata = new HashMap<>(registration.getProviderDetails().getConfigurationMetadata());
+                            metadata.put("preconfigured", "true");
+                            return ClientRegistration.withRegistrationId(registration.getRegistrationId())
+                                    .clientId(registration.getClientId())
+                                    .clientSecret(registration.getClientSecret())
+                                    .authorizationUri(registration.getProviderDetails().getAuthorizationUri())
+                                    .authorizationGrantType(registration.getAuthorizationGrantType())
+                                    .tokenUri(registration.getProviderDetails().getTokenUri())
+                                    .jwkSetUri(registration.getProviderDetails().getJwkSetUri())
+                                    .issuerUri(registration.getProviderDetails().getIssuerUri())
+                                    .redirectUri(registration.getRedirectUri())
+                                    .scope(registration.getScopes())
+                                    .clientName(registration.getClientName())
+                                    .providerConfigurationMetadata(metadata)
+                                    .build();
+                        }
                 ));
     }
 
