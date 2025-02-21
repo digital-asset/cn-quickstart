@@ -17,7 +17,7 @@ export GRADLE_OPTS = -Dorg.gradle.daemon=false
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-DOCKER_COMPOSE_ENVFILE := --env-file .env --env-file .env.local
+DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env
 DOCKER_COMPOSE_FILES := -f compose.yaml
 
 ifeq ($(KERNEL_NAME), Darwin)
@@ -172,7 +172,7 @@ clean: ## Clean the build artifacts
 	./gradlew clean
 
 .PHONY: clean-docker
-clean-docker: clean-shell clean-console ## Stop and remove application Docker containers and volumes
+clean-docker: clean-shell clean-console-app-provider clean-console-app-user ## Stop and remove application Docker containers and volumes
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} down -v)
 
 .PHONY: clean-application

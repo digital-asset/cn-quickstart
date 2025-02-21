@@ -88,6 +88,16 @@ create_user() {
     }' | jq -r .user.id
 }
 
+delete_user() {
+  local token=$1
+  local userId=$2
+  local participant=$3
+  echo "delete_user $userId $participant" >&2
+
+  # KV check whether user exist if so then delete
+  curl_check "http://$participant:7575/v2/users/$userId" "$token" "application/json" -X DELETE
+}
+
 joinByChar() {
   local IFS="$1"
   shift

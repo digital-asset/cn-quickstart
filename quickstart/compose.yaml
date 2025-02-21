@@ -98,11 +98,11 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-#      KC_DB: postgres
-#      KC_DB_USERNAME: keycloak
-#      KC_DB_PASSWORD: password
-#      KC_DB_URL_HOST: postgres
-#      KC_DB_URL_DATABASE: keycloakdb
+      KC_DB: postgres
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: keycloakdb
       KC_HEALTH_ENABLED: true
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'"]
@@ -266,7 +266,7 @@ services:
           }
       - |
         ADDITIONAL_CONFIG_AUTO_INIT=
-        canton.participants.participant.init.auto-init=true
+          canton.participants.participant.init.auto-init=true
     ports:
       - "27575:7575"
     healthcheck: *canton-healthcheck
@@ -300,7 +300,8 @@ services:
       - SPLICE_APP_VALIDATOR_WALLET_USER_NAME=${AUTH_APP_USER_WALLET_ADMIN_USER_ID}
       - SPLICE_APP_VALIDATOR_AUTH_AUDIENCE=${AUTH_APP_USER_VALIDATOR_AUDIENCE}
       - SPLICE_APP_VALIDATOR_AUTH_JWKS_URL=${AUTH_APP_USER_JWK_SET_URL}
-      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_URL=${AUTH_APP_USER_WELLKNOWN_URL}        
+      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_URL=${AUTH_APP_USER_WELLKNOWN_URL}
+      - SPLICE_APP_VALIDATOR_PARTY_HINT=${AUTH_APP_USER_PARTY_HINT}
       - |
         ADDITIONAL_CONFIG_PERSISTENCE=
             canton.validator-apps.validator_backend.storage {
@@ -439,7 +440,6 @@ services:
       AUTH_APP_USER_PARTICIPANT_ADMIN_USER_NAME: "${AUTH_APP_USER_PARTICIPANT_ADMIN_USER_NAME}"
       AUTH_APP_USER_PARTICIPANT_ADMIN_USER_PASSWORD: "${AUTH_APP_USER_PARTICIPANT_ADMIN_USER_PASSWORD}"
       AUTH_APP_USER_VALIDATOR_USER_ID: "${AUTH_APP_USER_VALIDATOR_USER_ID}"
-      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
       JAVA_OPTS: "-javaagent:/otel-agent.jar"
     volumes:
       - ./backend/build/distributions/backend.tar:/backend.tar
@@ -449,7 +449,6 @@ services:
     command: /app/start.sh
     ports:
       - "${BACKEND_PORT}:8080"
-      - "5005:5005"
     depends_on:
       pqs:
         condition: service_started
@@ -505,10 +504,7 @@ services:
           }
       - |
         ADDITIONAL_CONFIG_AUTO_INIT=
-        canton.participants.participant {
-          init.auto-init=true
-        }
-
+          canton.participants.participant.init.auto-init=true
     ports:
       - "37575:7575"
     healthcheck: *canton-healthcheck
@@ -543,6 +539,7 @@ services:
       - SPLICE_APP_VALIDATOR_AUTH_AUDIENCE=${AUTH_APP_PROVIDER_VALIDATOR_AUDIENCE}
       - SPLICE_APP_VALIDATOR_AUTH_JWKS_URL=${AUTH_APP_PROVIDER_JWK_SET_URL}
       - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_URL=${AUTH_APP_PROVIDER_WELLKNOWN_URL}
+      - SPLICE_APP_VALIDATOR_PARTY_HINT=${AUTH_APP_PROVIDER_PARTY_HINT}
       - |
         ADDITIONAL_CONFIG_PERSISTENCE=
             canton.validator-apps.validator_backend.storage {
