@@ -37,6 +37,10 @@ spring:
             token-uri: ${AUTH_APP_USER_TOKEN_URI}
             jwk-set-uri: ${AUTH_APP_USER_JWK_SET_URI}
 
+application:
+  tenants:
+    Org1:
+      walletUrl: ${ORG1_WALLET_URL:http://wallet.localhost:2000/}
 
 server:
   forward-headers-strategy: NATIVE

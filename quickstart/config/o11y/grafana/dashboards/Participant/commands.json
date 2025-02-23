@@ -125,7 +125,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.50, sum by(le, namespace) (rate(daml_participant_api_commands_submissions_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.50, sum by(namespace) (rate(daml_participant_api_commands_submissions_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p50"
             },
             {
@@ -133,7 +133,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.90, sum by(le, namespace) (rate(daml_participant_api_commands_submissions_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.90, sum by(namespace) (rate(daml_participant_api_commands_submissions_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p90"
             },
             {
@@ -141,7 +141,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.95, sum by(le, namespace) (rate(daml_participant_api_commands_submissions_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.95, sum by(namespace) (rate(daml_participant_api_commands_submissions_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p95"
             },
             {
@@ -149,7 +149,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum by(le, namespace) (rate(daml_participant_api_commands_submissions_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.99, sum by(namespace) (rate(daml_participant_api_commands_submissions_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p99"
             }
          ],
@@ -190,7 +190,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.50, sum by(le, namespace) (rate(daml_participant_api_commands_validation_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.50, sum by(namespace) (rate(daml_participant_api_commands_validation_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p50"
             },
             {
@@ -198,7 +198,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.90, sum by(le, namespace) (rate(daml_participant_api_commands_validation_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.90, sum by(namespace) (rate(daml_participant_api_commands_validation_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p90"
             },
             {
@@ -206,7 +206,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.95, sum by(le, namespace) (rate(daml_participant_api_commands_validation_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.95, sum by(namespace) (rate(daml_participant_api_commands_validation_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p95"
             },
             {
@@ -214,7 +214,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "histogram_quantile(0.99, sum by(le, namespace) (rate(daml_participant_api_commands_validation_duration_seconds_bucket{namespace=\"$namespace\"}[$__rate_interval])))",
+               "expr": "histogram_quantile(0.99, sum by(namespace) (rate(daml_participant_api_commands_validation_duration_seconds{namespace=\"$namespace\"}[$__rate_interval])))",
                "legendFormat": "p99"
             }
          ],
@@ -280,7 +280,7 @@
                "uid": "${datasource}"
             },
             "name": "namespace",
-            "query": "label_values(daml_commands_valid_submissions_total, namespace)",
+            "query": "label_values(daml_participant_api_commands_valid_submissions_total, namespace)",
             "refresh": 2,
             "type": "query"
          }

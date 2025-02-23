@@ -15,6 +15,7 @@ services:
       - "${OTEL_COLLECTOR_FLUENTD_PORT}:${OTEL_COLLECTOR_FLUENTD_PORT}"
     command:
       - --config=/etc/otel-collector/config.yaml
+      - --feature-gates=receiver.prometheusreceiver.EnableNativeHistograms
     environment:
       OTLP_LISTEN_PORT: ${OTEL_COLLECTOR_OTLP_PORT}
       FLUENTD_LISTEN_PORT: ${OTEL_COLLECTOR_FLUENTD_PORT}

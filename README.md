@@ -13,7 +13,11 @@ This project will be rapidly enhanced, so please check back often for updates.
 
 ## Engineer Setup
 
-This repository uses `direnv`, `nix`, and `docker-compose` to provide development dependencies.
+This repository uses `direnv`, `nix`, and `docker-compose` to provide development dependencies:
+
+* how to [install direnv](https://direnv.net/docs/installation.html)
+* how to [install nix](https://nix.dev/install-nix.html)
+* how to [install docker-compose](https://docs.docker.com/compose/install/) 
 
 **Important (MacOS only):** Run the following command to download and install the Daml SDK with the correct version:
 ```sh
@@ -110,8 +114,12 @@ After starting the application with `make start` you can access the following UI
   - **URL**: [http://app-provider.localhost:3000](http://app-provider.localhost:3000)
   - **Description**: The main web interface of the application.
 
-- **Wallet Web UI**
-  - **URL**: [http://wallet.localhost:3000](http://wallet.localhost:3000)
+- **App User (`Org1`) Wallet UI**
+  - **URL**: [http://wallet.localhost:2000](http://wallet.localhost:2000)
+  - **Description**: Interface for managing user wallets.
+
+- **App Provider Wallet UI**
+  - **URL**: [http://wallet.localhost:2000](http://wallet.localhost:3000)
   - **Description**: Interface for managing user wallets.
 
 ### Super Validator UIs (if LocalNet enabled via `make setup`)
@@ -143,6 +151,7 @@ The following user guides provide an engineering handover to teams using the Can
 - [Quickstart Installation](docs/guide/CantonNetworkQuickstartInstallationGuide-20250213.pdf)
 - [Exploring The Demo](docs/guide/ExploringTheDemo-20250213.pdf)
 - [Project Structure](docs/guide/ProjectStructureGuide-20250212.pdf)
+- [Observability and Troubleshooting Overview](docs/guide/ObservabilityTroubleshootingOverview-20250220.pdf)
 
 ### Technical Documentation
 

@@ -17,7 +17,7 @@ export GRADLE_OPTS = -Dorg.gradle.daemon=false
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-DOCKER_COMPOSE_ENVFILE := --env-file .env
+DOCKER_COMPOSE_ENVFILE := --env-file .env --env-file .env.local
 DOCKER_COMPOSE_FILES := -f compose.yaml
 
 ifeq ($(KERNEL_NAME), Darwin)
@@ -94,7 +94,7 @@ restart-frontend: build-frontend ## Build and start the application
 
 # Run targets
 .PHONY: start
-ifneq ($(strip $(LOCALNET_ENABLED)),)
+ifneq ($(strip $(PARTY_HINT)),)
 start: build ## Start the application, and observability services if enabled
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} up -d)
 else
@@ -218,3 +218,5 @@ $(eval $(call open-url-target,open-sv-wallet,http://wallet.localhost:4000))
 $(eval $(call open-url-target,open-sv-interface,http://sv.localhost:4000))
 # open-sv-scan: ## Open the Super Validator Scan UI in the active browser
 $(eval $(call open-url-target,open-sv-scan,http://scan.localhost:4000))
+# open-app-user-wallet: ## Open the App User wallet UI in the active browser
+$(eval $(call open-url-target,open-app-user-wallet,http://wallet.localhost:2000))
