@@ -4,14 +4,14 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useToast } from './toastStore';
 import api from '../api';
-import {ApiClient, AuthenticatedUser, Contract0, LicenseRenewalRequestComplete, toRelTime} from '../types';
+import {ApiClient, AuthenticatedUser, Contract, LicenseRenewalRequestComplete, toRelTime, toNumeric} from '../types';
 import { generateCommandId } from '../utils/commandId';
 import {License, LicenseRenewalRequest} from "../../generated/quickstart_licensing/Licensing/License";
 import License_Renew = License.License_Renew;
 
 interface LicenseState {
-    licenses: Contract0<License>[];
-    licenseRenewalRequests: Contract0<LicenseRenewalRequest>[];
+    licenses: Contract<License>[];
+    licenseRenewalRequests: Contract<LicenseRenewalRequest>[];
 }
 
 interface LicenseContextType extends LicenseState {
@@ -30,8 +30,8 @@ interface LicenseContextType extends LicenseState {
 const LicenseContext = createContext<LicenseContextType | undefined>(undefined);
 
 export const LicenseProvider = ({ children }: { children: React.ReactNode }) => {
-    const [licenses, setLicenses] = useState<Contract0<License>[]>([]);
-    const [licenseRenewalRequests, setLicenseRenewalRequests] = useState<Contract0<LicenseRenewalRequest>[]>([]);
+    const [licenses, setLicenses] = useState<Contract<License>[]>([]);
+    const [licenseRenewalRequests, setLicenseRenewalRequests] = useState<Contract<LicenseRenewalRequest>[]>([]);
     const [, setUser] = useState<AuthenticatedUser | null>(null);
     const toast = useToast();
 
@@ -138,7 +138,7 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
     const initiateLicenseRenewal = useCallback(
         async (contractId: string, description: string) => {
             const request: License_Renew = {
-                licenseFeeCc: 100,
+                licenseFeeCc: toNumeric(100),
                 licenseExtensionDuration: toRelTime('P30D'),
                 paymentAcceptanceDuration: toRelTime('P7D'),
                 description: description.trim(),

@@ -41,10 +41,10 @@ const LicenseRenewalRequestsView: React.FC = () => {
         // Find the matching license (assuming it still exists)
         const matchingLicense = licenses.find(
             (l) =>
-                l.payload.dso === dso &&
-                l.payload.provider === provider &&
-                l.payload.user === requestUser &&
-                l.payload.licenseNum === licenseNum
+                l.dso === dso &&
+                l.provider === provider &&
+                l.user === requestUser &&
+                l.licenseNum === licenseNum
         );
 
         if (!matchingLicense) {
@@ -84,18 +84,18 @@ const LicenseRenewalRequestsView: React.FC = () => {
                     </thead>
                     <tbody>
                     {licenseRenewalRequests.map((request) => {
-                        const payURL = `http://wallet.localhost:2000/confirm-payment/${request.payload.reference}?redirect=${encodeURIComponent(currentURL)}`;
+                        const payURL = `http://wallet.localhost:2000/confirm-payment/${request.reference}?redirect=${encodeURIComponent(currentURL)}`;
                         return (
                             <tr key={request.contractId}>
                                 <td className="ellipsis-cell">{request.contractId}</td>
-                                <td className="ellipsis-cell">{request.payload.provider}</td>
-                                <td className="ellipsis-cell">{request.payload.user}</td>
-                                <td className="ellipsis-cell">{request.payload.dso}</td>
-                                <td className="ellipsis-cell">{request.payload.licenseNum}</td>
-                                <td className="ellipsis-cell">{request.payload.licenseFeeCc}</td>
-                                <td className="ellipsis-cell">{request.payload.licenseExtensionDuration.microseconds}</td>
+                                <td className="ellipsis-cell">{request.provider}</td>
+                                <td className="ellipsis-cell">{request.user}</td>
+                                <td className="ellipsis-cell">{request.dso}</td>
+                                <td className="ellipsis-cell">{request.licenseNum}</td>
+                                <td className="ellipsis-cell">{request.licenseFeeCc}</td>
+                                <td className="ellipsis-cell">{request.licenseExtensionDuration.microseconds}</td>
                                 <td>
-                                    {user && request.payload.user === user.party && (
+                                    {user && request.user === user.party && (
                                         <a
                                             href={payURL}
                                             className="btn btn-primary me-2"
@@ -111,11 +111,11 @@ const LicenseRenewalRequestsView: React.FC = () => {
                                             onClick={() =>
                                                 handleCompleteRenewal(
                                                     request.contractId,
-                                                    request.payload.reference,
-                                                    request.payload.dso,
-                                                    request.payload.provider,
-                                                    request.payload.user,
-                                                    request.payload.licenseNum
+                                                    request.reference,
+                                                    request.dso,
+                                                    request.provider,
+                                                    request.user,
+                                                    request.licenseNum
                                                 )
                                             }
                                         >

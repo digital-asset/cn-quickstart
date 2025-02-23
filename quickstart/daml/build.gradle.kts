@@ -28,6 +28,7 @@ tasks.register<com.digitalasset.transcode.codegen.java.gradle.JavaCodegenTask>("
     destination = file("$rootDir/backend/build/generated-daml-bindings")
     dependsOn("compileDaml")
 }
+
 tasks.register<com.digitalasset.transcode.codegen.typescript.gradle.TypescriptCodegenTask>("typescriptCodeGen") {
     dar = file("$projectDir/licensing/.daml/dist/quickstart-licensing-0.0.1.dar")
     destination = file("$rootDir/frontend/generated")

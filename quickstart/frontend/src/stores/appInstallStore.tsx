@@ -4,14 +4,14 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useToast } from './toastStore';
 import api from '../api';
-import {AuthenticatedUser, ApiClient, toMeta, Contract0} from '../types';
+import {AuthenticatedUser, ApiClient, toMeta, Contract} from '../types';
 import { generateCommandId } from '../utils/commandId';
 import {AppInstall, AppInstall_CreateLicense_Result} from "../../generated/quickstart_licensing/Licensing/AppInstall";
 import AppInstall_Cancel = AppInstall.AppInstall_Cancel;
 import AppInstall_CreateLicense = AppInstall.AppInstall_CreateLicense;
 
 interface AppInstallState {
-    appInstalls: Contract0<AppInstall>[];
+    appInstalls: Contract<AppInstall>[];
 }
 
 interface AppInstallContextType extends AppInstallState {
@@ -24,7 +24,7 @@ interface AppInstallContextType extends AppInstallState {
 const AppInstallContext = createContext<AppInstallContextType | undefined>(undefined);
 
 export const AppInstallProvider = ({ children }: { children: React.ReactNode }) => {
-    const [appInstalls, setAppInstalls] = useState<Contract0<AppInstall>[]>([]);
+    const [appInstalls, setAppInstalls] = useState<Contract<AppInstall>[]>([]);
     const [, setUser] = useState<AuthenticatedUser | null>(null);
     const toast = useToast();
 

@@ -67,11 +67,11 @@ const AppInstallsView: React.FC = () => {
                     {appInstalls.map((install) => (
                         <tr key={install.contractId}>
                             <td className="ellipsis-cell">{install.contractId}</td>
-                            <td className="ellipsis-cell">{install.payload.dso}</td>
-                            <td className="ellipsis-cell">{install.payload.provider}</td>
-                            <td className="ellipsis-cell">{install.payload.user}</td>
-                            <td className="ellipsis-cell">{install.payload.meta ? JSON.stringify(install.payload.meta) : '{}'}</td>
-                            <td>{install.payload.numLicensesCreated || 0}</td>
+                            <td className="ellipsis-cell">{install.dso}</td>
+                            <td className="ellipsis-cell">{install.provider}</td>
+                            <td className="ellipsis-cell">{install.user}</td>
+                            <td className="ellipsis-cell">{install.meta ? JSON.stringify(install.meta) : '{}'}</td>
+                            <td>{install.numLicensesCreated || 0}</td>
                             <td>
                                 {selectedInstallId === install.contractId ? (
                                     <div>

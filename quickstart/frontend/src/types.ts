@@ -17,7 +17,7 @@ import License_Expire = License.License_Expire;
 import {AppPaymentRequest} from "../generated/splice_wallet_payments/Splice/Wallet/Payment";
 import {Metadata} from "../generated/quickstart_licensing/Licensing/Util";
 import {RelTime} from "../generated/daml_stdlib_DA_Time_Types/DA/Time/Types";
-import {ContractId, Party} from "../generated/daml";
+import {ContractId, Party, Numeric} from "../generated/daml";
 
 export interface LoginLink {
     name: string;
@@ -31,39 +31,13 @@ export interface AuthenticatedUser {
     isAdmin: boolean;
 }
 
-export interface Contract {
-    templateFqn: string;
-    payloadType: string;
-    createEventId: string;
-    createdAtOffset: string;
-    archiveEventId: string;
-    archivedAtOffset: string;
-    contractId: string;
-    observers: string[];
-    signatories: string[];
-    payload: any;
-    contractKey: any;
-}
-
 export interface ApiClient {
     // User & Auth
     getAuthenticatedUser(): Promise<{ data: AuthenticatedUser }>;
     listLinks(): Promise<{ data: LoginLink[] }>;
 
-    // Assets
-    listAssets(): Promise<{ data: Contract[] }>;
-    createAsset(
-        params: undefined,
-        body: { label: string; owner: string }
-    ): Promise<void>;
-    archiveAsset(params: { contractId: string }): Promise<void>;
-    changeAssetLabel(
-        params: { contractId: string },
-        body: { newLabel: string }
-    ): Promise<void>;
-
     // AppInstallRequests
-    listAppInstallRequests(): Promise<{ data: Contract0<AppInstallRequest>[] }>;
+    listAppInstallRequests(): Promise<{ data: Contract<AppInstallRequest>[] }>;
     createAppInstallRequest(
         params: { commandId: string }
     ): Promise<{ data: AppInstallRequest }>;
@@ -91,10 +65,10 @@ export interface ApiClient {
         body: AppInstall_Cancel
     ): Promise<void>;
 
-    listAppInstalls(): Promise<{ data: Contract0<AppInstall>[] }>;
+    listAppInstalls(): Promise<{ data: Contract<AppInstall>[] }>;
 
     // Licenses
-    listLicenses(): Promise<{ data: Contract0<License>[] }>;
+    listLicenses(): Promise<{ data: Contract<License>[] }>;
 
     // License renewal-related endpoints
     renewLicense(
@@ -102,7 +76,7 @@ export interface ApiClient {
         body: License_Renew
     ): Promise<{ data: LicenseRenewResponse }>;
 
-    listLicenseRenewalRequests(): Promise<{ data: Contract0<LicenseRenewalRequest>[] }>;
+    listLicenseRenewalRequests(): Promise<{ data: Contract<LicenseRenewalRequest>[] }>;
 
     completeLicenseRenewal(
         params: { contractId: string; commandId: string },
@@ -130,18 +104,19 @@ export function toMeta(rec: Record<string, any>): Metadata {
 }
 
 export function toRelTime(str: string): RelTime {
-    return { microseconds: 0 } // TODO
+    return { microseconds: str }
 }
 
-export type Contract0<a> = {
+export function toNumeric(num: number): Numeric { return num.toString()}
+
+export type Contract<A> = A & {
     templateFqn: string;
     payloadType: string;
     createEventId: string;
     createdAtOffset: string;
     archiveEventId: string;
     archivedAtOffset: string;
-    contractId: ContractId<a>;
+    contractId: ContractId<A>;
     observers: Party[];
     signatories: Party[];
-    payload: a;
 }
