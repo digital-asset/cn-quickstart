@@ -27,6 +27,7 @@ public class UserApiImpl implements UserApi {
 
     @Override
     public CompletableFuture<ResponseEntity<AuthenticatedUser>> getAuthenticatedUser() {
+        // TODO this shouldn't be here we need to put authentication/security stuff in one place
         OAuth2AuthenticationToken auth = null;
         if (SecurityContextHolder.getContext().getAuthentication() instanceof OAuth2AuthenticationToken) {
             auth = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
@@ -36,7 +37,6 @@ public class UserApiImpl implements UserApi {
         }
 
         // Extract user and role info
-        String party = auth.getPrincipal().getName();
         List<String> authorities = auth.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)
@@ -55,9 +55,9 @@ public class UserApiImpl implements UserApi {
         // Create the AuthenticatedUser object
         AuthenticatedUser user = new AuthenticatedUser(
                 // name
-                party.split("::")[0],
+                auth.getPrincipal().getAttribute("name"),
                 // party
-                party,
+                auth.getPrincipal().getAttribute("party"),
                 // roles
                 authorities,
                 // isAdmin
