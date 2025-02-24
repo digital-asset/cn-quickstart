@@ -136,28 +136,11 @@ logger.atError()
 
 ---
 
-## 6. Summary of Action Items
-
-1. **Refactor existing log statements** to use `logger.at<Level>()` with `.addKeyValue(...)`, providing `commandId`, `contractId`, and other known fields.  
-
-2. **Adopt a uniform pattern** for method-level logs:
-   - **INFO**: Operation start and success.  
-   - **DEBUG**: Fine-grained details (including count of returned items, etc.).  
-   - **ERROR**: Log the `Throwable` with all relevant fields.  
-
-3. **Update OpenTelemetry usage** so that:
-   - Key fields (`commandId`, `contractId`, `choiceName`, etc.) are set as `span.setAttribute(...)` or via `@SpanAttribute`.  
-   - Any unexpected exception calls `span.recordException(ex)` and sets the span status to `ERROR`.
-
-4. **Maintain security** by omitting or anonymizing any confidential data from both logs and span attributes.
-
----
-
-## 7. Using `LoggingSpanHelper`
+## 6. Using `LoggingSpanHelper`
 
 The `LoggingSpanHelper` (`com.digitalasset.quickstart.utility.LoggingSpanHelper`) utility class helps **reduce code duplication** when you want to (1) log attributes and messages, and (2) set or record those same attributes/events on an OpenTelemetry `Span`. Instead of manually repeating the same set of attributes for both logs and spans, you can pass a single `Map<String, Object>` to `LoggingSpanHelper`. Below are guidelines on when and how to use it:
 
-### 7.1 When to Use `LoggingSpanHelper`
+### 6.1 When to Use `LoggingSpanHelper`
 
 - **You have attributes** (e.g., `commandId`, `contractId`) you want to log **and** set as span attributes or span events.  
   - Example: Common attributes (`contractId`, `commandId`) used in both logs and the current `Span`.
@@ -170,7 +153,7 @@ Using `LoggingSpanHelper` centralizes the logic so that:
 - You avoid repetitive code (e.g. `span.setAttribute`, `span.addEvent`, `logger.atInfo()...`).
 - Your logs and tracing data remain in sync.
 
-### 7.2 When **Not** to Use `LoggingSpanHelper`
+### 6.2 When **Not** to Use `LoggingSpanHelper`
 
 - **No span attributes are needed** (or you do not need to add any events to the span).  
   - If your code does not require correlated attributes between logs and spans, you can **bypass** `LoggingSpanHelper` and use standard logging calls:
@@ -182,7 +165,7 @@ Using `LoggingSpanHelper` centralizes the logic so that:
 - **Minimal or purely local** logging.  
   - If your logging is trivial (e.g., a quick debug statement without relevant attributes), standard logging (`logger.atDebug()`) is fine.
 
-### 7.3 Choosing Between `setSpanAttributes(...)` and `addEventWithAttributes(...)`
+### 6.3 Choosing Between `setSpanAttributes(...)` and `addEventWithAttributes(...)`
 
 `LoggingSpanHelper` exposes two main mechanisms for storing data on a `Span`:
 
@@ -221,7 +204,7 @@ LoggingSpanHelper.addEventWithAttributes(span, "Fetched data from repository", n
 // 4. Further log statements or events as needed...
 ```
 
-### 7.4 Example Usage
+### 6.4 Example Usage
 
 Below is a condensed example from a method that uses `LoggingSpanHelper` to handle logging and span updates together:
 
@@ -259,166 +242,3 @@ public CompletableFuture<ResponseEntity<Void>> cancelAppInstallRequest(
     return CompletableFuture.completedFuture(ResponseEntity.ok().build());
 }
 ```
-
-### 7.5 Key Takeaways
-
-- **Use** `LoggingSpanHelper` when you need **both** span instrumentation **and** structured logging with the **same** attributes.  
-- **Skip** it if you have **no** span correlation or if the logging is trivial.  
-- **Set** top-level, long-lived attributes with `setSpanAttributes(...)`; **add** ephemeral, moment-in-time data (or “bookmarks” in the request lifecycle) with `addEventWithAttributes(...)`.  
-- You can still log at different levels (INFO, DEBUG, ERROR) within the same method, reusing a consistent attribute map for correlation.
-
------
-// file: LoggingSpanHelper.java
-
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
-// SPDX-License-Identifier: 0BSD
-
-package com.digitalasset.quickstart.utility;
-
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
-import org.slf4j.Logger;
-
-import java.util.Map;
-
-public final class LoggingSpanHelper {
-
-    private LoggingSpanHelper() {
-        // Utility class: prevent instantiation
-    }
-
-    /**
-     * Add attributes to the current Span from a map.
-     * If attributes is null, does nothing.
-     */
-    public static void setSpanAttributes(Span span, Map<String, Object> attributes) {
-        if (span == null || attributes == null) {
-            return;
-        }
-        attributes.forEach((key, value) -> {
-            if (value != null) {
-                span.setAttribute(key, value.toString());
-            } else {
-                // Even if value is null, you could store an empty string, or skip it.
-                span.setAttribute(key, "");
-            }
-        });
-    }
-
-    /**
-     * Add an event to the span with optional attributes.
-     * If attributes is null, just add the event name with no extra attributes.
-     */
-    public static void addEventWithAttributes(Span span, String eventName, Map<String, Object> attributes) {
-        if (span == null) {
-            return;
-        }
-        if (attributes == null) {
-            span.addEvent(eventName);
-            return;
-        }
-
-        AttributesBuilder attrBuilder = Attributes.builder();
-        attributes.forEach((k, v) -> {
-            if (v != null) {
-                attrBuilder.put(k, v.toString());
-            }
-        });
-        span.addEvent(eventName, attrBuilder.build());
-    }
-
-    /**
-     * Record an exception in the span and set the Span status to ERROR.
-     */
-    public static void recordException(Span span, Throwable t) {
-        if (span != null && t != null) {
-            span.recordException(t);
-            span.setStatus(StatusCode.ERROR, t.getMessage());
-        }
-    }
-
-    // ---------------------------------------------------------------------------
-    // Overloaded LOGGING methods (with or without attributes)
-    // ---------------------------------------------------------------------------
-
-    // INFO
-
-    public static void logInfo(Logger logger, String message, Map<String, Object> attributes) {
-        if (logger == null) {
-            return;
-        }
-        if (attributes == null) {
-            // no attributes
-            logger.atInfo().log(message);
-        } else {
-            var logBuilder = logger.atInfo();
-            attributes.forEach(logBuilder::addKeyValue);
-            logBuilder.log(message);
-        }
-    }
-
-    public static void logInfo(Logger logger, String message) {
-        if (logger == null) {
-            return;
-        }
-        logger.atInfo().log(message);
-    }
-
-    // DEBUG
-
-    public static void logDebug(Logger logger, String message, Map<String, Object> attributes) {
-        if (logger == null) {
-            return;
-        }
-        if (attributes == null) {
-            logger.atDebug().log(message);
-        } else {
-            var logBuilder = logger.atDebug();
-            attributes.forEach(logBuilder::addKeyValue);
-            logBuilder.log(message);
-        }
-    }
-
-    public static void logDebug(Logger logger, String message) {
-        if (logger == null) {
-            return;
-        }
-        logger.atDebug().log(message);
-    }
-
-    // ERROR
-
-    public static void logError(Logger logger, String message, Map<String, Object> attributes, Throwable t) {
-        if (logger == null) {
-            return;
-        }
-        var logBuilder = logger.atError();
-        if (attributes != null) {
-            attributes.forEach(logBuilder::addKeyValue);
-        }
-        if (t != null) {
-            logBuilder.setCause(t);
-        }
-        logBuilder.log(message);
-    }
-
-    public static void logError(Logger logger, String message, Throwable t) {
-        if (logger == null) {
-            return;
-        }
-        var logBuilder = logger.atError();
-        if (t != null) {
-            logBuilder.setCause(t);
-        }
-        logBuilder.log(message);
-    }
-
-    public static void logError(Logger logger, String message) {
-        if (logger == null) {
-            return;
-        }
-        logger.atError().log(message);
-    }
-}
