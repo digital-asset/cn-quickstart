@@ -62,7 +62,7 @@ SETUP_COMMAND := ./gradlew configureProfiles --no-daemon --console=plain --quiet
 
 # Build targets
 .PHONY: build
-build: build-frontend build-backend build-daml build-docker-images ## Build frontend, backend, Daml model and docker images
+build: build-daml build-frontend build-backend build-docker-images ## Build frontend, backend, Daml model and docker images
 
 .PHONY: build-frontend
 build-frontend: ## Build the frontend application

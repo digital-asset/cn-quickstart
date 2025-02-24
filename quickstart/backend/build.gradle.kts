@@ -48,7 +48,6 @@ dependencies {
 repositories {
     mavenCentral()
     maven(Repositories.sonatype)
-    mavenLocal()
 }
 
 application {

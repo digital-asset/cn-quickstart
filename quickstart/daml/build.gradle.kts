@@ -5,7 +5,6 @@ buildscript {
     repositories {
         mavenCentral()
         maven(Repositories.sonatype)
-        mavenLocal()
     }
     dependencies {
         classpath(Deps.transcode.javaCodegen)
