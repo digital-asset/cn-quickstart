@@ -29,7 +29,6 @@ public final class LoggingSpanHelper {
             if (value != null) {
                 span.setAttribute(key, value.toString());
             } else {
-                // Even if value is null, you could store an empty string, or skip it.
                 span.setAttribute(key, "");
             }
         });

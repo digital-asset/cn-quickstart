@@ -88,10 +88,15 @@ public class UserApiImpl implements UserApi {
                             }
 
                             AuthenticatedUser user = new AuthenticatedUser(
+                                    // name
                                     party.split("::")[0],
+                                    // party
                                     party,
+                                    // roles
                                     authorities,
+                                    // isAdmin
                                     authorities.contains("ROLE_ADMIN"),
+                                    // walletUrl
                                     walletUrl
                             );
 
