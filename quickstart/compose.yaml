@@ -328,7 +328,7 @@ services:
       AUTH_APP_USER_AUTHORIZATION_URI: "${AUTH_APP_USER_AUTHORIZATION_URI}"
       AUTH_APP_USER_JWK_SET_URI: "${AUTH_APP_USER_JWK_SET_URI}"
       LEDGER_API_ADMIN_USER: "${LEDGER_API_ADMIN_USER}"
-      JAVA_OPTS: "-javaagent:/otel-agent.jar"
+      JAVA_OPTS: "-javaagent:/otel-agent.jar -Dotel.instrumentation.logback-appender.experimental-log-attributes=true -Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true"
     volumes:
       - ./backend/build/distributions/backend.tar:/backend.tar
       - ./backend/build/otel-agent/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar:/otel-agent.jar
