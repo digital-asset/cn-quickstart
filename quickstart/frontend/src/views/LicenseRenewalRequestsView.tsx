@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
 import { useLicenseStore } from '../stores/licenseStore';
 import { useLocation } from 'react-router-dom';
 import { useUserStore } from '../stores/userStore';
+import {Int64, Party} from "../../generated/daml";
 
 const LicenseRenewalRequestsView: React.FC = () => {
     const {
@@ -33,10 +34,10 @@ const LicenseRenewalRequestsView: React.FC = () => {
     const handleCompleteRenewal = async (
         requestContractId: string,
         reference: string,
-        dso: string,
-        provider: string,
-        requestUser: string,
-        licenseNum: number
+        dso: Party,
+        provider: Party,
+        requestUser: Party,
+        licenseNum: Int64
     ) => {
         // Find the matching license (assuming it still exists)
         const matchingLicense = licenses.find(
@@ -99,7 +100,7 @@ const LicenseRenewalRequestsView: React.FC = () => {
                                 <td className="ellipsis-cell">{request.dso}</td>
                                 <td className="ellipsis-cell">{request.licenseNum}</td>
                                 <td className="ellipsis-cell">{request.licenseFeeCc}</td>
-                                <td className="ellipsis-cell">{request.licenseExtensionDuration}</td>
+                                <td className="ellipsis-cell">{request.licenseExtensionDuration.microseconds}</td>
                                 <td>
                                     {/* Render Pay button only if current user is the one who needs to pay */}
                                     {user && request.user === user.party && (
