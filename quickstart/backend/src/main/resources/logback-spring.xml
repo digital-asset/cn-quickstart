@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="false">
 
-    <!-- include Spring Boot's defaults to handle profile-coloring etc. -->
+    <!-- Include Spring Boot defaults (for profile-coloring, etc.) -->
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     <springProperty scope="context" name="LOG_FILE" source="logging.file.name"/>
     <springProperty scope="context" name="LOG_PATH" source="logging.path"/>
@@ -21,7 +21,14 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <!-- Root logger set to OFF to prevent logging from any other package -->
+    <root level="OFF">
         <appender-ref ref="JSON_CONSOLE"/>
     </root>
+
+    <!-- Explicitly set logger for desired package(s) -->
+    <logger name="com.digitalasset.quickstart" level="DEBUG" additivity="false">
+        <appender-ref ref="JSON_CONSOLE"/>
+    </logger>
+
 </configuration>
