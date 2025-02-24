@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+SPDX-License-Identifier: 0BSD
+-->
 <configuration scan="false">
 
     <!-- Include Spring Boot defaults (for profile-coloring, etc.) -->
