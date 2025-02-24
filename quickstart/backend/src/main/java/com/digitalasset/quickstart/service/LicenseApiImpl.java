@@ -240,7 +240,7 @@ public class LicenseApiImpl implements LicensesApi {
                                                             Map<String, Object> successAttributes = new HashMap<>(attributes);
                                                             successAttributes.put("renewalRequestCid", result.get_1.getContractId);
                                                             successAttributes.put("paymentRequestCid", result.get_2.getContractId);
-                                                            LoggingSpanHelper.logInfo(logger, "License renewed", successAttributes);
+                                                            LoggingSpanHelper.logInfo(logger, "License renewal request succeeded", successAttributes);
                                                             return ResponseEntity.ok().<Void>build();
                                                         });
                                             });
