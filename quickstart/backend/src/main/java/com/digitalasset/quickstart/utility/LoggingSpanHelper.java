@@ -11,6 +11,35 @@ import org.slf4j.Logger;
 
 import java.util.Map;
 
+/**
+ * The {@code LoggingSpanHelper} is a utility class designed to centralize common logging
+ * and OpenTelemetry trace operations. Its primary purpose is to reduce repetitive code
+ * when adding the same structured attributes to both log statements and the current
+ * OpenTelemetry {@link Span}.
+ *
+ * <p>This helps ensure consistency between logs and tracing data, making it easier to
+ * correlate log entries with specific span attributes and events. By standardizing
+ * attribute handling, you also avoid the risk of typos or mismatched field names in
+ * separate logging vs. tracing code paths.
+ *
+ * <p>Typical usage includes:
+ * <ul>
+ *   <li>Setting top-level attributes on a span via {@link #setSpanAttributes(Span, Map)}.
+ *   <li>Adding events (with attributes) to a span via {@link #addEventWithAttributes(Span, String, Map)}.
+ *   <li>Logging at various levels (INFO, DEBUG, ERROR) with the same structured attributes.
+ *   <li>Recording exceptions on both logs and spans consistently.
+ * </ul>
+ *
+ * <p>The methods in this class should be used when you need to:
+ * <ol>
+ *   <li>Log key contextual data (e.g., commandId, contractId) as structured fields.</li>
+ *   <li>Set or record the same data on the current span for distributed tracing.</li>
+ *   <li>Maintain consistency across your logs and telemetry.</li>
+ * </ol>
+ * <p>
+ * If your code does not require adding attributes to spans or correlating them with logs,
+ * you can bypass this helper and use standard logging calls directly.
+ */
 public final class LoggingSpanHelper {
 
     private LoggingSpanHelper() {
@@ -20,6 +49,9 @@ public final class LoggingSpanHelper {
     /**
      * Add attributes to the current Span from a map.
      * If attributes is null, does nothing.
+     *
+     * @param span       the current OpenTelemetry Span; may be null
+     * @param attributes the map of key-value attributes; may be null
      */
     public static void setSpanAttributes(Span span, Map<String, Object> attributes) {
         if (span == null || attributes == null) {
@@ -37,6 +69,10 @@ public final class LoggingSpanHelper {
     /**
      * Add an event to the span with optional attributes.
      * If attributes is null, just add the event name with no extra attributes.
+     *
+     * @param span       the current OpenTelemetry Span; may be null
+     * @param eventName  the name of the event
+     * @param attributes the map of key-value attributes to attach to the event; may be null
      */
     public static void addEventWithAttributes(Span span, String eventName, Map<String, Object> attributes) {
         if (span == null) {
@@ -58,6 +94,9 @@ public final class LoggingSpanHelper {
 
     /**
      * Record an exception in the span and set the Span status to ERROR.
+     *
+     * @param span the current OpenTelemetry Span; may be null
+     * @param t    the Throwable to record; may be null
      */
     public static void recordException(Span span, Throwable t) {
         if (span != null && t != null) {
@@ -68,6 +107,13 @@ public final class LoggingSpanHelper {
 
     // INFO
 
+    /**
+     * Log an INFO-level message with optional structured attributes.
+     *
+     * @param logger     the SLF4J logger; may be null
+     * @param message    the log message
+     * @param attributes the map of key-value attributes; may be null
+     */
     public static void logInfo(Logger logger, String message, Map<String, Object> attributes) {
         if (logger == null) {
             return;
@@ -82,6 +128,12 @@ public final class LoggingSpanHelper {
         }
     }
 
+    /**
+     * Log an INFO-level message without attributes.
+     *
+     * @param logger  the SLF4J logger; may be null
+     * @param message the log message
+     */
     public static void logInfo(Logger logger, String message) {
         if (logger == null) {
             return;
@@ -91,6 +143,13 @@ public final class LoggingSpanHelper {
 
     // DEBUG
 
+    /**
+     * Log a DEBUG-level message with optional structured attributes.
+     *
+     * @param logger     the SLF4J logger; may be null
+     * @param message    the log message
+     * @param attributes the map of key-value attributes; may be null
+     */
     public static void logDebug(Logger logger, String message, Map<String, Object> attributes) {
         if (logger == null) {
             return;
@@ -104,6 +163,12 @@ public final class LoggingSpanHelper {
         }
     }
 
+    /**
+     * Log a DEBUG-level message without attributes.
+     *
+     * @param logger  the SLF4J logger; may be null
+     * @param message the log message
+     */
     public static void logDebug(Logger logger, String message) {
         if (logger == null) {
             return;
@@ -113,6 +178,14 @@ public final class LoggingSpanHelper {
 
     // ERROR
 
+    /**
+     * Log an ERROR-level message with optional structured attributes and a throwable.
+     *
+     * @param logger     the SLF4J logger; may be null
+     * @param message    the log message
+     * @param attributes the map of key-value attributes; may be null
+     * @param t          the throwable to include in the log; may be null
+     */
     public static void logError(Logger logger, String message, Map<String, Object> attributes, Throwable t) {
         if (logger == null) {
             return;
@@ -127,6 +200,13 @@ public final class LoggingSpanHelper {
         logBuilder.log(message);
     }
 
+    /**
+     * Log an ERROR-level message and a throwable, without additional attributes.
+     *
+     * @param logger  the SLF4J logger; may be null
+     * @param message the log message
+     * @param t       the throwable to include in the log; may be null
+     */
     public static void logError(Logger logger, String message, Throwable t) {
         if (logger == null) {
             return;
@@ -138,6 +218,12 @@ public final class LoggingSpanHelper {
         logBuilder.log(message);
     }
 
+    /**
+     * Log an ERROR-level message without attributes or throwable details.
+     *
+     * @param logger  the SLF4J logger; may be null
+     * @param message the log message
+     */
     public static void logError(Logger logger, String message) {
         if (logger == null) {
             return;
