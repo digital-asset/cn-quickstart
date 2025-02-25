@@ -67,16 +67,16 @@ public class LicenseApiImpl implements LicensesApi {
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<String>> expireLicense(
-            @SpanAttribute("license.contractId") String contractId,
-            @SpanAttribute("license.commandId") String commandId,
+            @SpanAttribute("contractId") String contractId,
+            @SpanAttribute("commandId") String commandId,
             LicenseExpireRequest licenseExpireRequest
     ) {
         Span methodSpan = Span.current();
         Context parentContext = Context.current();
 
         Map<String, Object> attributes = Map.of(
-                "license.contractId", contractId,
-                "license.commandId", commandId,
+                "contractId", contractId,
+                "commandId", commandId,
                 "templateId", quickstart_licensing.licensing.license.License.TEMPLATE_ID.qualifiedName(),
                 "choiceName", "License_Expire"
         );
