@@ -1,0 +1,217 @@
+-- | Test for renewing license
+module Licensing.Scripts.TestLicense where
+
+import DA.Action (unless, void)
+import qualified DA.Map as Map
+import DA.Date
+import DA.Time
+
+import Daml.Script
+
+
+import Splice.Amulet
+
+import Splice.Scripts.Util
+
+import Licensing.AppInstall
+import Licensing.License
+import Licensing.Util
+import Splice.Wallet.Payment
+import Splice.Scripts.TestWallet
+
+test : Script ()
+test = do
+  app@LicensingApp{..} <- setupLicensingApp
+  setupLicensingInstall app alice
+
+  -- start with 200 USD worth of CC
+  void $ tap amuletApp provider 200.0
+  checkProviderBalance app 200.0
+
+  -- setup license expiredAt (now = 2022-01-01T00:00:00Z)
+  licenseId <- setupLicense app alice
+  -- advance time to 2022-01-11T00:00:00Z (10 days) to simulate renewal base is right when renewed
+  passTime (days 10)
+
+  -- First renewal - Initial --
+  -- renew license for a year for fee of 20.0 USD worth of CC
+  (_, paymentRequestId)  <- renewLicense app licenseId 20.0 $ days 365
+
+  checkBalance app alice 1.0
+  amulet <- tap amuletApp alice 64.0
+
+  receipt <- acceptPaymentRequest amuletApp alice provider.primaryParty None paymentRequestId amulet
+
+  completeTransfer amuletApp provider licenseId receipt
+
+  (_, license) <- getLicense alice
+
+  unless (license.expiresAt == time (date 2023 Jan 11) 0 0 0) $
+    fail $ "Expected license to expire on 2023-01-11T00:00:00Z but got " <> show license.expiresAt
+
+  checkProviderBalance app 220.0
+  checkBalance app alice 45.0
+
+  -- Second renewal - Extension --
+  (licenseId, _) <- getLicense alice
+  -- advance time to 2022-07-01T00:00:00Z (171 days) to midyear sale and addition of extension to license
+  passTime (days 171)
+  -- renew license for another year this time for fee of 10.0 USD (midyear) worth of CC
+  (_, paymentRequestId)  <- renewLicense app licenseId 10.0 $ days 365
+
+  amulet <- tap amuletApp alice 50.0
+  receipt <- acceptPaymentRequest amuletApp alice provider.primaryParty None paymentRequestId amulet
+
+  completeTransfer amuletApp provider licenseId receipt
+  
+  checkProviderBalance app 230.0
+  checkBalance app alice 85.0
+
+  (_, license) <- getLicense alice
+
+  unless (license.expiresAt == time (date 2024 Jan 11) 0 0 0) $
+    fail $ "Expected license to expire on 2024-01-11T00:00:00Z but got " <> show license.expiresAt
+
+  -- Thrid renewal - Rejection --
+  (licenseId, _) <- getLicense alice
+  -- advance time to 2022-12-31T00:00:00Z (183 days) to end of year sale and rejection of payment
+  passTime (days 183)
+  -- renew license for another year this time for fee of 10.0 USD (end of year) worth of CC
+  (renewalRequestId, paymentRequestId)  <- renewLicense app licenseId 10.0 $ days 365
+  -- reject the request
+  rejectPaymentRequest app alice renewalRequestId paymentRequestId
+
+  -- ensure the payment and renewal request are archived
+  [] <- query @AppPaymentRequest alice.primaryParty
+  [] <- query @LicenseRenewalRequest alice.primaryParty
+
+  -- balance should remain the same
+  checkProviderBalance app 230.0
+  checkBalance app alice 85.0
+  
+
+-- Testing utilities: setup
+---------------------------
+
+data LicensingApp = LicensingApp with
+  dso : Party
+  amuletApp : AmuletApp
+  provider : AmuletUser
+  alice : AmuletUser
+  bob : AmuletUser
+
+setupLicensingApp : Script LicensingApp
+setupLicensingApp = do
+  DefaultAppWithUsers{..} <- setupDefaultAppWithUsers
+  provider <- setupValidatorParty app "provider"
+  featureApp app provider
+
+  pure $ LicensingApp with
+    dso       = app.dso
+    amuletApp = app
+    provider
+    alice
+    bob
+
+setupLicensingInstall : LicensingApp -> AmuletUser -> Script ()
+setupLicensingInstall app user = do
+  -- User submits the app install request using the curl command displayed on
+  -- provider's Web UI against users' validator node using the JWT token from
+  -- the users' IAM
+  requestId <- submit user.primaryParty do
+    createCmd AppInstallRequest with
+      dso       = app.dso
+      provider  = app.provider.primaryParty
+      user      = user.primaryParty
+      meta      = emptyMetadata
+
+  -- A trigger running on the provider backend will pick up the request and
+  -- accept it provided the user party is known and there is no install yet
+  -- for the party. It also associated the provider user-id with the install
+  -- for disambiguation purposes.
+  void $ submit app.provider.primaryParty do
+    exerciseCmd requestId AppInstallRequest_Accept with
+      meta        = emptyMetadata
+      installMeta = Metadata with
+        values = Map.fromList [("providerUserId", "<user-id>")]
+
+-- | Simulate the setup of the validator party on a self-hosted validator node.
+setupValidatorParty : AmuletApp -> Text -> Script AmuletUser
+setupValidatorParty app name = do
+  party  <- allocatePartyWithHint name $ PartyIdHint name
+  userId <- validateUserId name
+  -- We need 'CanReadAs app.dso' only in tests, as they are not yet setup to simulate explicit disclosure.
+  -- In the actual implementation, the provider backend would provide the DSO published contracts via explicit disclosure.
+  createUser (User userId (Some party)) [CanActAs party, CanReadAs app.dso]
+  -- the validator party is its own validator and can thus claim all its validator rewards
+  recordValidatorOf app party party
+  pure $ AmuletUser userId party
+
+
+setupLicense : LicensingApp -> AmuletUser -> Script (ContractId License)
+setupLicense app user = do
+    installId <- getInstall
+    -- need: readAs dso for explicit disclosure of AmuletRules and OpenMiningRound
+    result <- submitMulti [app.provider.primaryParty] [app.dso] do
+      exerciseCmd installId AppInstall_CreateLicense with
+        params = licenseParams
+    pure result.licenseId
+  where
+    getInstall : Script (ContractId AppInstall)
+    getInstall = do
+      [(installId, _)] <- query @AppInstall user.primaryParty
+      pure installId
+    licenseParams = LicenseParams with
+      meta = Metadata with
+        values = Map.fromList [("licenseId", "<dummy-uuid>")]
+
+renewLicense : LicensingApp -> ContractId License -> Decimal -> RelTime -> Script (ContractId LicenseRenewalRequest, ContractId AppPaymentRequest)
+renewLicense app licenseId licenseFeeCc licenseExtensionDuration = submit app.provider.primaryParty do
+  exerciseCmd licenseId License_Renew with
+    licenseFeeCc
+    licenseExtensionDuration
+    paymentAcceptanceDuration = days 1
+    description = "Renewal of the license"
+
+
+completeTransfer : AmuletApp -> AmuletUser -> ContractId License -> ContractId AcceptedAppPayment -> Script ()
+completeTransfer app provider licenseCid acceptedPaymentCid = do
+  transferContext                     <- getAppTransferContext app provider
+  Some AcceptedAppPayment{reference}  <- queryContractId provider.primaryParty acceptedPaymentCid
+  [(renewalRequestCid, _)]            <- 
+    queryFilter @LicenseRenewalRequest provider.primaryParty $ \c -> c.reference == reference
+  void $ submitUser provider.userId do 
+    exerciseCmd renewalRequestCid LicenseRenewalRequest_CompleteRenewal with ..
+
+rejectPaymentRequest : LicensingApp -> AmuletUser -> ContractId LicenseRenewalRequest -> ContractId AppPaymentRequest -> Script ()
+rejectPaymentRequest app sender renewalRequest paymentRequest = do
+  submit sender.primaryParty do exerciseCmd paymentRequest AppPaymentRequest_Reject
+  void $ submitMulti [app.provider.primaryParty, sender.primaryParty] [] do archiveCmd renewalRequest
+
+
+getLicense : AmuletUser -> Script (ContractId License, License)
+getLicense user = do
+  [license] <- query @License user.primaryParty
+  pure license
+  
+
+-- Testing utilities: assertions
+--------------------------------
+
+checkProviderBalance : LicensingApp -> Decimal -> Script ()
+checkProviderBalance app approximateBalance = do
+  checkBalance app app.provider approximateBalance
+
+checkBalance : LicensingApp -> AmuletUser -> Decimal -> Script ()
+checkBalance app user approximateBalance = do
+    runAmuletDepositBots app.amuletApp
+    [(_, coin)] <- query @Amulet user.primaryParty
+    assertCloseTo coin.amount.initialAmount $ show user.userId <> " balance of "
+  where
+    minBalance = approximateBalance - 1.0
+    maxBalance = approximateBalance + 1.0
+    
+    assertCloseTo : Decimal -> Text  -> Script ()
+    assertCloseTo actualAmount  description =
+      unless (actualAmount >= minBalance && actualAmount <= maxBalance) $
+        fail $ description <> show actualAmount <> " is not within the expected range [" <> show minBalance <> ", " <> show maxBalance <> "]"
