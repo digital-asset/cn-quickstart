@@ -32,34 +32,6 @@ get_app_user_user_token() {
     -d 'scope=openid' | jq -r .access_token
 }
 
-create_admin_user() {
-  local token=$1
-  local userId=$2
-  local userName=$3
-  local participant=$4
-  echo "create_admin_user $userId $userName $participant" >&2
-  curl_check "http://$participant:7575/v2/users" "$token" "application/json" \
-    --data-raw '{
-      "user" : {
-          "id" : "'$userId'",
-          "isDeactivated": false,
-          "primaryParty" : "",
-          "identityProviderId": "",
-          "metadata": {
-             "resourceVersion": "",
-              "annotations": {
-                  "username" : "'$userName'"
-              }
-          }
-      },
-        "rights": [
-          {
-            "kind": { "ParticipantAdmin" : { "value": {}}}
-          }
-        ]
-    }' | jq -r .user.id
-}
-
 create_user() {
   local token=$1
   local userId=$2
