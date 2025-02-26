@@ -4,16 +4,8 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useToast } from './toastStore';
 import api from '../api';
-import { AuthenticatedUser, ApiClient } from '../types';
 import { generateCommandId } from '../utils/commandId';
-
-export interface AppInstallRequest {
-    contractId: string;
-    dso: string;
-    provider: string;
-    user: string;
-    meta?: Record<string, any>;
-}
+import type {AppInstallRequest, AuthenticatedUser, Client, Metadata} from "../openapi.d.ts";
 
 interface AppInstallRequestState {
     appInstallRequests: AppInstallRequest[];
@@ -22,9 +14,9 @@ interface AppInstallRequestState {
 interface AppInstallRequestContextType extends AppInstallRequestState {
     fetchUserInfo: () => Promise<void>;
     fetchAppInstallRequests: () => Promise<void>;
-    acceptAppInstallRequest: (contractId: string, installMeta: Record<string, any>, meta: Record<string, any>) => Promise<void>;
-    rejectAppInstallRequest: (contractId: string, meta: Record<string, any>) => Promise<void>;
-    cancelAppInstallRequest: (contractId: string, meta: Record<string, any>) => Promise<void>;
+    acceptAppInstallRequest: (contractId: string, installMeta: Metadata, meta: Metadata) => Promise<void>;
+    rejectAppInstallRequest: (contractId: string, meta: Metadata) => Promise<void>;
+    cancelAppInstallRequest: (contractId: string, meta: Metadata) => Promise<void>;
 }
 
 const AppInstallRequestContext = createContext<AppInstallRequestContextType | undefined>(undefined);
@@ -36,7 +28,7 @@ export const AppInstallRequestProvider = ({ children }: { children: React.ReactN
 
     const fetchUserInfo = useCallback(async () => {
         try {
-            const client: ApiClient = await api.getClient();
+            const client: Client = await api.getClient();
             const response = await client.getAuthenticatedUser();
             setUser(response.data);
         } catch (error) {
@@ -46,7 +38,7 @@ export const AppInstallRequestProvider = ({ children }: { children: React.ReactN
 
     const fetchAppInstallRequests = useCallback(async () => {
         try {
-            const client: ApiClient = await api.getClient();
+            const client: Client = await api.getClient();
             const response = await client.listAppInstallRequests();
             setAppInstallRequests(response.data);
         } catch (error) {
@@ -55,9 +47,9 @@ export const AppInstallRequestProvider = ({ children }: { children: React.ReactN
     }, [toast]);
 
     const acceptAppInstallRequest = useCallback(
-        async (contractId: string, installMeta: Record<string, any>, meta: Record<string, any>) => {
+        async (contractId: string, installMeta: Metadata, meta: Metadata) => {
             try {
-                const client: ApiClient = await api.getClient();
+                const client: Client = await api.getClient();
                 const commandId = generateCommandId();
                 await client.acceptAppInstallRequest({ contractId, commandId }, { installMeta, meta });
                 await fetchAppInstallRequests();
@@ -69,9 +61,9 @@ export const AppInstallRequestProvider = ({ children }: { children: React.ReactN
     );
 
     const rejectAppInstallRequest = useCallback(
-        async (contractId: string, meta: Record<string, any>) => {
+        async (contractId: string, meta: Metadata) => {
             try {
-                const client: ApiClient = await api.getClient();
+                const client: Client = await api.getClient();
                 const commandId = generateCommandId();
                 await client.rejectAppInstallRequest({ contractId, commandId }, { meta });
                 await fetchAppInstallRequests();
@@ -83,9 +75,9 @@ export const AppInstallRequestProvider = ({ children }: { children: React.ReactN
     );
 
     const cancelAppInstallRequest = useCallback(
-        async (contractId: string, meta: Record<string, any>) => {
+        async (contractId: string, meta: Metadata) => {
             try {
-                const client: ApiClient = await api.getClient();
+                const client: Client = await api.getClient();
                 const commandId = generateCommandId();
                 await client.cancelAppInstallRequest({ contractId, commandId }, { meta });
                 await fetchAppInstallRequests();

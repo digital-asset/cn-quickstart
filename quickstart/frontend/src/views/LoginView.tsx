@@ -4,7 +4,7 @@
 import React, {useEffect, useState} from 'react';
 import {useToast} from '../stores/toastStore';
 import api from '../api';
-import {LoginLink, ApiClient} from '../types';
+import {Client, LoginLink} from "../openapi";
 
 const LoginView: React.FC = () => {
     const [loginLinks, setLoginLinks] = useState<LoginLink[]>([]);
@@ -13,7 +13,7 @@ const LoginView: React.FC = () => {
     useEffect(() => {
         const fetchLoginLinks = async () => {
             try {
-                const client: ApiClient = await api.getClient();
+                const client: Client = await api.getClient();
                 const response = await client.listLinks();
                 setLoginLinks(response.data);
             } catch (error) {

@@ -32,7 +32,6 @@ const LicenseRenewalRequestsView: React.FC = () => {
 
     const handleCompleteRenewal = async (
         requestContractId: string,
-        reference: string,
         dso: string,
         provider: string,
         requestUser: string,
@@ -52,12 +51,7 @@ const LicenseRenewalRequestsView: React.FC = () => {
             return;
         }
 
-        const requestBody = {
-            reference: reference,
-            licenseCid: matchingLicense.contractId,
-        };
-
-        await completeLicenseRenewal(requestContractId, requestBody);
+        await completeLicenseRenewal(requestContractId);
         // After completion, refresh the data
         await fetchLicenseRenewalRequests();
         await fetchLicenses();
@@ -119,7 +113,6 @@ const LicenseRenewalRequestsView: React.FC = () => {
                                             onClick={() =>
                                                 handleCompleteRenewal(
                                                     request.contractId,
-                                                    request.reference,
                                                     request.dso,
                                                     request.provider,
                                                     request.user,

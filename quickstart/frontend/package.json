@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "gen:openapi": "npx --yes openapicmd typegen --client ../common/openapi.yaml >| src/openapi.d.ts",
     "dev": "vite",
-    "build": "tsc -b --noEmit && vite build",
+    "build": "npm run gen:openapi && tsc -b --noEmit && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
