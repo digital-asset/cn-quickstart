@@ -3,7 +3,7 @@
 This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
 
 If you are impatient, then you can start by following the Engineer Setup below. Alternatively, you can peruse the documentation:
-- [Quickstart Installation](docs/guide/CantonNetworkQuickstartInstallationGuide-20250213.pdf)
+- [Quickstart Installation](docs/guide/installation.md)
 - [Exploring The Demo](docs/guide/ExploringTheDemo-20250221.pdf)
 - [Project Structure](docs/guide/ProjectStructureGuide-20250212.pdf)
 - [FAQ](docs/guide/CN-QS-FAQ-20250221.pdf)
