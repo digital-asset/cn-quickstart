@@ -8,13 +8,12 @@ import { useUserStore } from '../stores/userStore';
 const LicensesView: React.FC = () => {
     const {
         licenses,
-        fetchUserInfo,
         fetchLicenses,
         initiateLicenseRenewal,
         initiateLicenseExpiration,
     } = useLicenseStore();
 
-    const { user } = useUserStore(); // Getting the current user
+    const { user, fetchUser } = useUserStore();
     const isAdmin = !!user?.isAdmin; // Determine if user is admin
 
     const [selectedLicenseId, setSelectedLicenseId] = useState<string | null>(null);
@@ -22,13 +21,13 @@ const LicensesView: React.FC = () => {
     const [expireDescription, setExpireDescription] = useState('');
 
     useEffect(() => {
-        fetchUserInfo();
+        fetchUser();
         fetchLicenses();
         const intervalId = setInterval(() => {
             fetchLicenses();
         }, 2000);
         return () => clearInterval(intervalId);
-    }, [fetchUserInfo, fetchLicenses]);
+    }, [fetchUser, fetchLicenses]);
 
     const handleRenew = async () => {
         if (!selectedLicenseId) return;

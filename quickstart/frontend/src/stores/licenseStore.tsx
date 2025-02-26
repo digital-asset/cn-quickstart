@@ -1,18 +1,19 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
+// file: stores/licenseStore.tsx
+
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useToast } from './toastStore';
 import api from '../api';
 import { generateCommandId } from '../utils/commandId';
 import type {
-    AuthenticatedUser,
     Client,
     License,
     LicenseRenewalRequest,
     LicenseRenewRequest,
     Metadata
-} from "../openapi.d.ts";
+} from '../openapi.d.ts';
 
 interface LicenseState {
     licenses: License[];
@@ -20,7 +21,6 @@ interface LicenseState {
 }
 
 interface LicenseContextType extends LicenseState {
-    fetchUserInfo: () => Promise<void>;
     fetchLicenses: () => Promise<void>;
     fetchLicenseRenewalRequests: () => Promise<void>;
     renewLicense: (contractId: string, request: LicenseRenewRequest) => Promise<void>;
@@ -37,18 +37,7 @@ const LicenseContext = createContext<LicenseContextType | undefined>(undefined);
 export const LicenseProvider = ({ children }: { children: React.ReactNode }) => {
     const [licenses, setLicenses] = useState<License[]>([]);
     const [licenseRenewalRequests, setLicenseRenewalRequests] = useState<LicenseRenewalRequest[]>([]);
-    const [, setUser] = useState<AuthenticatedUser | null>(null);
     const toast = useToast();
-
-    const fetchUserInfo = useCallback(async () => {
-        try {
-            const client: Client = await api.getClient();
-            const response = await client.getAuthenticatedUser();
-            setUser(response.data);
-        } catch (error) {
-            toast.displayError('Error fetching user info');
-        }
-    }, [toast]);
 
     const fetchLicenses = useCallback(async () => {
         const client: Client = await api.getClient();
@@ -99,7 +88,6 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
 
                 try {
                     await fetchLicenses();
-
                     toast.displaySuccess(response.data || 'License expired successfully');
                 } catch (e) {
                     toast.displayError('Error refreshing licenses after expiration');
@@ -111,7 +99,6 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
         },
         [toast, fetchLicenses]
     );
-
 
     const completeLicenseRenewal = useCallback(
         async (contractId: string) => {
@@ -167,7 +154,6 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
             value={{
                 licenses,
                 licenseRenewalRequests,
-                fetchUserInfo,
                 fetchLicenses,
                 fetchLicenseRenewalRequests,
                 renewLicense,
