@@ -4,17 +4,22 @@
 import React, { useEffect, useState } from 'react';
 import { useLicenseStore } from '../stores/licenseStore';
 import { useUserStore } from '../stores/userStore';
+import { useLocation } from 'react-router-dom';
 
 const LicensesView: React.FC = () => {
     const {
         licenses,
+        licenseRenewalRequests,
         fetchLicenses,
+        fetchLicenseRenewalRequests,
         initiateLicenseRenewal,
         initiateLicenseExpiration,
+        completeLicenseRenewal
     } = useLicenseStore();
 
     const { user, fetchUser } = useUserStore();
-    const isAdmin = !!user?.isAdmin; // Determine if user is admin
+    const location = useLocation();
+    const isAdmin = !!user?.isAdmin;
 
     const [selectedLicenseId, setSelectedLicenseId] = useState<string | null>(null);
     const [renewDescription, setRenewDescription] = useState('');
@@ -23,11 +28,19 @@ const LicensesView: React.FC = () => {
     useEffect(() => {
         fetchUser();
         fetchLicenses();
+        fetchLicenseRenewalRequests();
         const intervalId = setInterval(() => {
             fetchLicenses();
-        }, 2000);
+            fetchLicenseRenewalRequests();
+        }, 5000);
         return () => clearInterval(intervalId);
-    }, [fetchUser, fetchLicenses]);
+    }, [fetchUser, fetchLicenses, fetchLicenseRenewalRequests]);
+
+    const closeModal = () => {
+        setSelectedLicenseId(null);
+        setRenewDescription('');
+        setExpireDescription('');
+    };
 
     const handleRenew = async () => {
         if (!selectedLicenseId) return;
@@ -41,63 +54,103 @@ const LicensesView: React.FC = () => {
         closeModal();
     };
 
-    const closeModal = () => {
-        setSelectedLicenseId(null);
-        setRenewDescription('');
-        setExpireDescription('');
+    const handleCompleteRenewal = async (renewalContractId: string) => {
+        await completeLicenseRenewal(renewalContractId);
+        await fetchLicenses();
+        await fetchLicenseRenewalRequests();
     };
+
+    const currentURL = `${window.location.origin}${location.pathname}`;
 
     return (
         <div>
             <h2>Licenses</h2>
-            <div className="mt-4">
-                <h3>Existing Licenses</h3>
-                <table className="table table-fixed">
-                    <thead>
-                    <tr>
-                        <th style={{ width: '200px' }}>Contract ID</th>
-                        <th style={{ width: '150px' }}>DSO</th>
-                        <th style={{ width: '150px' }}>Provider</th>
-                        <th style={{ width: '150px' }}>User</th>
-                        <th style={{ width: '200px' }}>Params</th>
-                        <th style={{ width: '200px' }}>Expires At</th>
-                        <th style={{ width: '100px' }}>License Num</th>
-                        {isAdmin && (
-                            <th style={{ width: '200px' }}>Actions</th>
-                        )}
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {licenses.map((license) => (
+            <table className="table table-fixed">
+                <thead>
+                <tr>
+                    <th style={{ width: '220px' }}>License Contract ID</th>
+                    <th style={{ width: '100px' }}>DSO</th>
+                    <th style={{ width: '120px' }}>Provider</th>
+                    <th style={{ width: '120px' }}>User</th>
+                    <th style={{ width: '180px' }}>Expires At</th>
+                    <th style={{ width: '110px' }}>License #</th>
+                    <th style={{ width: '100px' }}>Renew Fee</th>
+                    <th style={{ width: '140px' }}>Extension</th>
+                    <th style={{ width: '300px' }}>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {licenses.map((license) => {
+                    const matchedRequest = licenseRenewalRequests.find(
+                        (req) =>
+                            req.dso === license.dso &&
+                            req.provider === license.provider &&
+                            req.user === license.user &&
+                            req.licenseNum === license.licenseNum
+                    );
+
+                    const fee = matchedRequest?.licenseFeeCc;
+                    const extension = matchedRequest?.licenseExtensionDuration;
+                    const payURL = matchedRequest
+                        ? `${(user?.walletUrl || 'http://wallet.localhost:2000').replace(
+                            /\/+$/,
+                            ''
+                        )}/confirm-payment/${matchedRequest.reference}?redirect=${encodeURIComponent(
+                            currentURL
+                        )}`
+                        : '';
+
+                    return (
                         <tr key={license.contractId}>
                             <td className="ellipsis-cell">{license.contractId}</td>
                             <td className="ellipsis-cell">{license.dso}</td>
                             <td className="ellipsis-cell">{license.provider}</td>
                             <td className="ellipsis-cell">{license.user}</td>
-                            <td className="ellipsis-cell">{JSON.stringify(license.params)}</td>
                             <td className="ellipsis-cell">{license.expiresAt}</td>
                             <td className="ellipsis-cell">{license.licenseNum}</td>
-                            {isAdmin && (
-                                <td>
-                                    <button
-                                        className="btn btn-primary"
-                                        onClick={() => {
-                                            setSelectedLicenseId(license.contractId);
-                                        }}
-                                    >
-                                        Actions
-                                    </button>
-                                </td>
-                            )}
+                            <td className="ellipsis-cell">{fee || ''}</td>
+                            <td className="ellipsis-cell">{extension || ''}</td>
+                            <td>
+                                {matchedRequest ? (
+                                    <>
+                                        {user && matchedRequest.user === user.party && (
+                                            <a
+                                                href={payURL}
+                                                className="btn btn-primary me-2"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                Pay Renewal
+                                            </a>
+                                        )}
+                                        {isAdmin && (
+                                            <button
+                                                className="btn btn-success"
+                                                onClick={() => handleCompleteRenewal(matchedRequest.contractId)}
+                                            >
+                                                Complete Renewal
+                                            </button>
+                                        )}
+                                    </>
+                                ) : (
+                                    isAdmin && (
+                                        <button
+                                            className="btn btn-primary"
+                                            onClick={() => setSelectedLicenseId(license.contractId)}
+                                        >
+                                            Actions
+                                        </button>
+                                    )
+                                )}
+                            </td>
                         </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
+                    );
+                })}
+                </tbody>
+            </table>
 
             {selectedLicenseId && (
                 <>
-                    {/* Backdrop behind the modal */}
                     <div className="modal-backdrop fade show"></div>
                     <div className="modal show d-block" tabIndex={-1}>
                         <div className="modal-dialog modal-lg">

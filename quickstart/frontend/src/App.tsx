@@ -15,7 +15,6 @@ import AppInstallsView from "./views/AppInstallsView.tsx";
 import LicensesView from './views/LicensesView';
 import { LicenseProvider } from './stores/licenseStore';
 import {AppInstallProvider} from "./stores/appInstallStore.tsx";
-import LicenseRenewalRequestsView from "./views/LicenseRenewalRequestsView.tsx";
 import {TenantRegistrationProvider} from "./stores/tenantRegistrationStore.tsx";
 
 const App: React.FC = () => {
@@ -37,7 +36,6 @@ const App: React.FC = () => {
                     <Route path="/login" element={<LoginView />} />
                     <Route path="/app-installs" element={<AppInstallsView />} />
                     <Route path="/licenses" element={<LicensesView />} />
-                    <Route path="/license-renewal-requests" element={<LicenseRenewalRequestsView />} />
                 </Routes>
             </main>
             <ToastNotification />
