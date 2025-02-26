@@ -72,46 +72,6 @@ services:
     networks:
       - ${DOCKER_NETWORK:-splice_validator}
 
-  # It can take significant time for parties to be allocated, which is a prerequisite for other services.
-  # This service acts as a convenience barrier until the parties are allocated to reduce errors and noise in the logs,
-  # and to give meaningful readiness signals to the user, but it is not strictly necessary for the system to function.
-  await-onboarding-done:
-    build: ./docker/await-onboarding-done/
-    container_name: await-onboarding-done
-    volumes:
-      - ./docker/await-onboarding-done/health-check.sh:/app/health-check.sh
-      - ./docker/await-onboarding-done/onboarding.sh:/app/onboarding.sh
-      - ./docker/utils.sh:/app/utils.sh
-      - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
-      - ./daml/assets/.daml/dist/quickstart-assets-0.0.1.dar:/canton/dars/quickstart-assets-0.0.1.dar
-    environment:
-      - LEDGER_API_ADMIN_USER=${LEDGER_API_ADMIN_USER}
-      - WALLET_ADMIN_USER=${WALLET_ADMIN_USER}
-      - APP_PROVIDER_USER_ID=${AUTH_APP_PROVIDER_CLIENT_ID}
-      - APP_USER_USER_ID=${AUTH_APP_USER_CLIENT_ID}
-    healthcheck:
-      test: ["CMD", "bash", "/app/health-check.sh"]
-      interval: 5s
-      timeout: 100s
-      retries: 1000
-      start_period: 300s
-    entrypoint: [ "tail", "-f", "/dev/null" ]
-    stdin_open: true
-    tty: true
-    depends_on:
-      participant-app-user:
-        condition: service_healthy
-      participant-app-provider:
-        condition: service_healthy
-      validator-app-user:
-        condition: service_healthy
-      validator-app-provider:
-        condition: service_healthy
-      oauth:
-        condition: service_started
-    networks:
-      - ${DOCKER_NETWORK}
-
   # This is dummy service just for healthcheck purpose (always healthy)
   # upstream splice-services (participant, validator) depend on it
   # dedicated postgres-splice-app-user and postgres-splice-app-provider are used for real data
@@ -124,131 +84,6 @@ services:
       interval: 3s
       timeout: 2s
       retries: 3
-    networks:
-      - ${DOCKER_NETWORK}
-
-###############################################################################################################
-### Application User
-###############################################################################################################
-  postgres-splice-app-user:
-    extends:
-      file: docker/compose-validator.yaml
-      service: postgres-splice
-    container_name: postgres-splice-app-user
-    volumes:
-      - postgres-splice-app-user:/var/lib/postgresql/data
-      - ./docker/postgres/postgres-entrypoint.sh:/postgres-entrypoint.sh
-    environment:
-      - POSTGRES_USER=${SPLICE_APP_USER_DB_USER}
-      - POSTGRES_PASSWORD=${SPLICE_APP_USER_DB_PASSWORD}
-    healthcheck:
-      test: "pg_isready -U ${SPLICE_APP_USER_DB_USER} -d postgres"
-    command:
-      - postgres
-      - -c
-      - max_connections=8000
-    logging: *default-logging
-
-  participant-app-user:
-    extends:
-      file: docker/compose-validator.yaml
-      service: participant
-    container_name: participant-app-user
-    logging: *default-logging
-    environment:
-      - CANTON_PARTICIPANT_POSTGRES_SERVER=${SPLICE_APP_USER_DB_SERVER}
-      - CANTON_PARTICIPANT_POSTGRES_USER=${SPLICE_APP_USER_DB_USER}
-      - CANTON_PARTICIPANT_POSTGRES_PASSWORD=${SPLICE_APP_USER_DB_PASSWORD}
-      - CANTON_PARTICIPANT_POSTGRES_PORT=${SPLICE_APP_USER_DB_PORT}
-      - AUTH_JWKS_URL=${AUTH_APP_USER_JWK_SET_URI}
-      - *canton-metrics-config
-      - |
-        ADDITIONAL_CONFIG_HEALTHCHECK=
-          canton.participants.participant.monitoring.http-health-server {
-            address = localhost
-            port = ${CANTON_HEALTHCHECK_PORT}
-          }
-      - |
-        ADDITIONAL_CONFIG_AUTO_INIT=
-        canton.participants.participant.init.auto-init=true
-    healthcheck: *canton-healthcheck
-    depends_on:
-      postgres-splice-app-user:
-        condition: service_healthy
-      global-synchronizer:
-        condition: service_healthy
-        required: false
-      oauth:
-        condition: service_started
-
-  validator-app-user:
-    extends:
-      file: docker/compose-validator.yaml
-      service: validator
-    container_name: validator-app-user
-    volumes:
-      - ./docker/validator/entrypoint.sh:/validator-entrypoint.sh
-      - ./docker/validator/bootstrap.sc:/app/bootstrap.sc
-    entrypoint: /validator-entrypoint.sh
-    logging: *default-logging
-    environment:
-      - *canton-metrics-config
-      - ONBOARDING_SECRET_URL=${ONBOARDING_SECRET_URL}
-      - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=participant-app-user
-      - SPLICE_APP_VALIDATOR_AUTH_JWKS_URL=${AUTH_APP_USER_JWK_SET_URI}
-      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_URL=${AUTH_APP_USER_WELLKNOWN_URL}
-      - SPLICE_DB_SERVER=${SPLICE_APP_USER_DB_SERVER}
-      - |
-        ADDITIONAL_CONFIG_PERSISTENCE=
-            canton.validator-apps.validator_backend.storage {
-              type = postgres
-              config {
-                dataSourceClass = "org.postgresql.ds.PGSimpleDataSource"
-                properties = {
-                  databaseName = validator
-                  currentSchema = validator
-                  serverName = ${SPLICE_APP_USER_DB_SERVER}
-                  portNumber = ${SPLICE_APP_USER_DB_PORT}
-                  user = ${SPLICE_APP_USER_DB_USER}
-                  password = ${SPLICE_APP_USER_DB_PASSWORD}
-                }
-              }
-            }
-    depends_on:
-      postgres-splice-app-user:
-        condition: service_healthy
-      sv-app:
-        condition: service_healthy
-        required: false
-      oauth:
-        condition: service_started
-    networks:
-      - ${DOCKER_NETWORK}
-
-  nginx-app-user:
-    image: "nginx:${NGINX_VERSION}"
-    container_name: nginx-app-user
-    volumes:
-      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./config/nginx/app-user/wallet.conf:/etc/nginx/conf.d/wallet.conf
-    ports:
-      - "${APP_USER_UI_PORT}:80"
-    depends_on:
-      - validator-app-user
-      - wallet-web-ui-app-user
-    restart: always
-    logging: *default-logging
-    networks:
-      - ${DOCKER_NETWORK}
-
-  wallet-web-ui-app-user:
-    extends:
-      file: docker/compose-validator.yaml
-      service: wallet-web-ui
-    container_name: wallet-web-ui-app-user
-    logging: *default-logging
-    environment:
-      - SPLICE_APP_UI_AUTH_URL=${AUTH_APP_USER_URL}
     networks:
       - ${DOCKER_NETWORK}
 
@@ -289,8 +124,6 @@ services:
       postgres-splice-app-provider:
         condition: service_healthy
       participant-app-provider:
-        condition: service_healthy
-      await-onboarding-done:
         condition: service_healthy
     restart: on-failure:100
     networks:
@@ -341,8 +174,6 @@ services:
       pqs:
         condition: service_started
       participant-app-provider:
-        condition: service_healthy
-      await-onboarding-done:
         condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
