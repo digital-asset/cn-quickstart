@@ -1,20 +1,20 @@
 # for config file options, refer to
 # https://docs.daml.com/tools/assistant.html#project-config-file-daml-yaml
 
-sdk-version: 3.2.0-snapshot.20241106.0
+sdk-version: 3.3.0-snapshot.20250214.13611.0.v8a5fd608
 name: quickstart-licensing-tests
 source: daml
 version: 0.0.1
 dependencies:
   - daml-prim
   - daml-stdlib
-  - daml3-script
+  - daml-script
 data-dependencies:
   # TODO: fetch as artifacts when integrating gradle-daml-plugin https://github.com/DACH-NY/canton-network-node/issues/16393
 - ../dars/splice-amulet-0.1.8.dar
 - ../dars/splice-wallet-payments-0.1.8.dar
-- ../dars/splice-amulet-test-0.1.8.dar
-- ../dars/splice-wallet-test-0.1.8.dar
+- ../dars/test/splice-amulet-test-0.1.8.dar
+- ../dars/test/splice-wallet-test-0.1.8.dar
 - ../licensing/.daml/dist/quickstart-licensing-0.0.1.dar
 build-options:
   - --ghc-option=-Wunused-binds
