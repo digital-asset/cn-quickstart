@@ -10,6 +10,6 @@ dependencies:
   - daml-stdlib
 data-dependencies:
   # TODO: fetch as artifacts when integrating gradle-daml-plugin https://github.com/DACH-NY/canton-network-node/issues/16393
-- ../dars/splice-amulet-0.1.6.dar
+- ../dars/splice-amulet-0.1.8.dar
 - ../dars/splice-util-0.1.1.dar
-- ../dars/splice-wallet-payments-0.1.6.dar
+- ../dars/splice-wallet-payments-0.1.8.dar

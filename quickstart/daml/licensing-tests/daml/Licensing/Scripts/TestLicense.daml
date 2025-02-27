@@ -7,6 +7,7 @@ import DA.Date
 import DA.Time
 
 import Daml.Script
+import DA.Foldable (mapA_)
 
 
 import Splice.Amulet
@@ -40,11 +41,11 @@ test = do
   checkBalance app alice 1.0
   amulet <- tap amuletApp alice 64.0
 
-  receipt <- acceptPaymentRequest amuletApp alice provider.primaryParty None paymentRequestId amulet
+  acceptPaymentRequest amuletApp alice provider.primaryParty None paymentRequestId amulet
 
-  completeTransfer amuletApp provider licenseId receipt
+  completeAllAcceptedTransfers amuletApp provider
 
-  (_, license) <- getLicense alice
+  (_, license) <- getLicense provider
 
   unless (license.expiresAt == time (date 2023 Jan 11) 0 0 0) $
     fail $ "Expected license to expire on 2023-01-11T00:00:00Z but got " <> show license.expiresAt
@@ -53,30 +54,37 @@ test = do
   checkBalance app alice 45.0
 
   -- Second renewal - Extension --
-  (licenseId, _) <- getLicense alice
+
+  (licenseId, _) <- getLicense provider
   -- advance time to 2022-07-01T00:00:00Z (171 days) to midyear sale and addition of extension to license
   passTime (days 171)
-  -- renew license for another year this time for fee of 10.0 USD (midyear) worth of CC
-  (_, paymentRequestId)  <- renewLicense app licenseId 10.0 $ days 365
+  -- renew license for another year this time for fee of 10.0 USD (midyear sale) worth of CC
+  (_, paymentRequestIdA)  <- renewLicense app licenseId 10.0 $ days 365
+  amuletA <- tap amuletApp alice 20.0
+  -- second concurrent renew license for another year to take advantage of the sale
+  -- 366 days to simulate leap year
+  (_, paymentRequestIdB)  <- renewLicense app licenseId 10.0 $ days 366
+  amuletB <- tap amuletApp alice 20.0
 
-  amulet <- tap amuletApp alice 50.0
-  receipt <- acceptPaymentRequest amuletApp alice provider.primaryParty None paymentRequestId amulet
+  acceptPaymentRequest amuletApp alice provider.primaryParty None paymentRequestIdA amuletA
+  acceptPaymentRequest amuletApp alice provider.primaryParty None paymentRequestIdB amuletB
 
-  completeTransfer amuletApp provider licenseId receipt
+  completeAllAcceptedTransfers amuletApp provider
   
-  checkProviderBalance app 230.0
-  checkBalance app alice 85.0
+  checkProviderBalance app 240.0
+  checkBalance app alice 65.0
 
   (_, license) <- getLicense alice
 
-  unless (license.expiresAt == time (date 2024 Jan 11) 0 0 0) $
-    fail $ "Expected license to expire on 2024-01-11T00:00:00Z but got " <> show license.expiresAt
+  unless (license.expiresAt == time (date 2025 Jan 11) 0 0 0) $
+    fail $ "Expected license to expire on 2025-01-11T00:00:00Z but got " <> show license.expiresAt
 
   -- Thrid renewal - Rejection --
+
   (licenseId, _) <- getLicense alice
   -- advance time to 2022-12-31T00:00:00Z (183 days) to end of year sale and rejection of payment
   passTime (days 183)
-  -- renew license for another year this time for fee of 10.0 USD (end of year) worth of CC
+  -- renew license for another year this time for fee of 10.0 USD (end of year sale) worth of CC
   (renewalRequestId, paymentRequestId)  <- renewLicense app licenseId 10.0 $ days 365
   -- reject the request
   rejectPaymentRequest app alice renewalRequestId paymentRequestId
@@ -86,8 +94,25 @@ test = do
   [] <- query @LicenseRenewalRequest alice.primaryParty
 
   -- balance should remain the same
-  checkProviderBalance app 230.0
-  checkBalance app alice 85.0
+  checkProviderBalance app 240.0
+  checkBalance app alice 65.0
+
+  -- Fourth renewal - payment request expires --
+
+  -- renew license for another year this time for fee of 10.0 USD (end of year sale) worth of CC
+  (renewalRequestId, paymentRequestId) <- renewLicense app licenseId 10.0 $ days 365
+  -- advance time to 2023-01-09T00:00:00Z (10 days) to expire the payment acceptance and reject it
+  passTime (days 10)
+
+  expirePaymentRequest app renewalRequestId paymentRequestId
+
+  -- ensure the payment and renewal request are archived
+  [] <- query @AppPaymentRequest alice.primaryParty
+  [] <- query @LicenseRenewalRequest alice.primaryParty
+
+  -- balance should remain the same
+  checkProviderBalance app 240.0
+  checkBalance app alice 65.0
   
 
 -- Testing utilities: setup
@@ -142,6 +167,7 @@ setupValidatorParty app name = do
   userId <- validateUserId name
   -- We need 'CanReadAs app.dso' only in tests, as they are not yet setup to simulate explicit disclosure.
   -- In the actual implementation, the provider backend would provide the DSO published contracts via explicit disclosure.
+  -- TODO: get rid of this hack as part of the CN token standard integration
   createUser (User userId (Some party)) [CanActAs party, CanReadAs app.dso]
   -- the validator party is its own validator and can thus claim all its validator rewards
   recordValidatorOf app party party
@@ -151,7 +177,7 @@ setupValidatorParty app name = do
 setupLicense : LicensingApp -> AmuletUser -> Script (ContractId License)
 setupLicense app user = do
     installId <- getInstall
-    -- need: readAs dso for explicit disclosure of AmuletRules and OpenMiningRound
+    -- need: readAs dso to simulate explicit disclosure of AmuletRules and OpenMiningRound 
     result <- submitMulti [app.provider.primaryParty] [app.dso] do
       exerciseCmd installId AppInstall_CreateLicense with
         params = licenseParams
@@ -174,20 +200,38 @@ renewLicense app licenseId licenseFeeCc licenseExtensionDuration = submit app.pr
     description = "Renewal of the license"
 
 
-completeTransfer : AmuletApp -> AmuletUser -> ContractId License -> ContractId AcceptedAppPayment -> Script ()
-completeTransfer app provider licenseCid acceptedPaymentCid = do
-  transferContext                     <- getAppTransferContext app provider
-  Some AcceptedAppPayment{reference}  <- queryContractId provider.primaryParty acceptedPaymentCid
-  [(renewalRequestCid, _)]            <- 
-    queryFilter @LicenseRenewalRequest provider.primaryParty $ \c -> c.reference == reference
-  void $ submitUser provider.userId do 
-    exerciseCmd renewalRequestCid LicenseRenewalRequest_CompleteRenewal with ..
+expirePaymentRequest : LicensingApp -> ContractId LicenseRenewalRequest -> ContractId AppPaymentRequest  -> Script ()
+expirePaymentRequest app renewalRequestId paymentRequestId = do
+  -- AppPaymentRequest_Expire is a choice that verifies that the payment request is expired
+  submit app.provider.primaryParty do
+    exerciseCmd paymentRequestId AppPaymentRequest_Expire with actor = app.provider.primaryParty
+  void $ submit app.provider.primaryParty do
+    exerciseCmd renewalRequestId LicenseRenewalRequest_Cancellation with 
+      actor   = app.provider.primaryParty
+      reasons = Metadata with values = Map.fromList [("cancellationReason", "Payment request expired")]
+
+completeAllAcceptedTransfers : AmuletApp -> AmuletUser -> Script ()
+completeAllAcceptedTransfers app provider = do
+    allAccepted <- query @AcceptedAppPayment provider.primaryParty
+    transferContext <- getAppTransferContext app provider
+    mapA_ (consumeAllAcceptedTransfers transferContext) $ fst <$> allAccepted
+  where
+    consumeAllAcceptedTransfers transferContext acceptedPaymentCid = do
+      (licenseCid, _)                     <- getLicense provider
+      Some AcceptedAppPayment{reference}  <- queryContractId provider.primaryParty acceptedPaymentCid
+      [(renewalRequestCid, _)]            <- 
+        queryFilter @LicenseRenewalRequest provider.primaryParty $ \c -> c.reference == reference
+      submitUser provider.userId do 
+        exerciseCmd renewalRequestCid LicenseRenewalRequest_CompleteRenewal with ..
 
 rejectPaymentRequest : LicensingApp -> AmuletUser -> ContractId LicenseRenewalRequest -> ContractId AppPaymentRequest -> Script ()
-rejectPaymentRequest app sender renewalRequest paymentRequest = do
+rejectPaymentRequest app sender renewalRequestId paymentRequest = do
   submit sender.primaryParty do exerciseCmd paymentRequest AppPaymentRequest_Reject
-  void $ submitMulti [app.provider.primaryParty, sender.primaryParty] [] do archiveCmd renewalRequest
-
+  void $ submit app.provider.primaryParty do
+    exerciseCmd renewalRequestId LicenseRenewalRequest_Cancellation with 
+      actor   = app.provider.primaryParty
+      reasons = Metadata with values = Map.fromList [("cancellationReason", "Payment rejected")]
+  
 
 getLicense : AmuletUser -> Script (ContractId License, License)
 getLicense user = do
