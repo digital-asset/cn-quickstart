@@ -2,7 +2,6 @@
 
 set -eou pipefail
 
-# Function to check if Docker is running
 is_docker_running() {
   if ! timeout 5 docker info > /dev/null 2>&1; then
     echo "Docker is not responding within the timeout period."
