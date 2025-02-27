@@ -37,6 +37,7 @@ dependencies {
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:${Deps.opentelemetry.version}")
     implementation(Deps.springBoot.actuator)
     implementation(Deps.springBoot.oauth2Client)
+    implementation(Deps.springBoot.oauth2ResourceServer)
     implementation(Deps.springBoot.security)
     runtimeOnly("org.postgresql:postgresql:42.7.3")
     runtimeOnly(Deps.grpc.api)

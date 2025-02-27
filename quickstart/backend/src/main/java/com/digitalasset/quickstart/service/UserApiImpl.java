@@ -4,18 +4,16 @@
 package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.UserApi;
+import com.digitalasset.quickstart.oauth.AuthenticatedUserProvider;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository.TenantProperties;
 import org.openapitools.model.AuthenticatedUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Controller
@@ -24,49 +22,31 @@ public class UserApiImpl implements UserApi {
 
     @Autowired
     private TenantPropertiesRepository tenantPropertiesRepository;
+    @Autowired
+    private AuthenticatedUserProvider authenticatedUserProvider;
 
     @Override
     public CompletableFuture<ResponseEntity<AuthenticatedUser>> getAuthenticatedUser() {
-        // TODO this shouldn't be here we need to put authentication/security stuff in one place
-        OAuth2AuthenticationToken auth = null;
-        if (SecurityContextHolder.getContext().getAuthentication() instanceof OAuth2AuthenticationToken) {
-            auth = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        }
-        if (auth == null || !auth.isAuthenticated()) {
-            return CompletableFuture.completedFuture(ResponseEntity.status(401).build());
-        }
+        return authenticatedUserProvider.getUser()
+                .map(user -> {
+                    // Lookup wallet URL from tenant properties
+                    String walletUrl = Optional.ofNullable(tenantPropertiesRepository.getTenant(user.getTenantId()))
+                            .map(TenantProperties::getWalletUrl)
+                            .orElse(null);
 
-        // Extract user and role info
-        List<String> authorities = auth.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList();
+                    // Create the AuthenticatedUser object
+                    AuthenticatedUser out = new AuthenticatedUser(
+                            user.getUsername(),
+                            user.getPartyId(),
+                            user.getRoles(),
+                            user.isAdmin(),
+                            walletUrl
+                    );
 
-        // Retrieve the registrationId from the authentication
-        String registrationId = auth.getAuthorizedClientRegistrationId();
-
-        // Lookup wallet URL from tenant properties
-        String walletUrl = null;
-        TenantProperties props = tenantPropertiesRepository.getTenant(registrationId);
-        if (props != null && props.getWalletUrl() != null) {
-            walletUrl = props.getWalletUrl();
-        }
-
-        // Create the AuthenticatedUser object
-        AuthenticatedUser user = new AuthenticatedUser(
-                // name
-                auth.getPrincipal().getAttribute("name"),
-                // party
-                auth.getPrincipal().getAttribute("party"),
-                // roles
-                authorities,
-                // isAdmin
-                authorities.contains("ROLE_ADMIN"),
-                // walletUrl
-                walletUrl
-        );
-
-        // Return the AuthenticatedUser in the response
-        return CompletableFuture.completedFuture(ResponseEntity.ok(user));
+                    // Return the AuthenticatedUser in the response
+                    return ResponseEntity.ok(out);
+                })
+                .map(CompletableFuture::completedFuture)
+                .orElseGet(() -> CompletableFuture.completedFuture(ResponseEntity.status(401).build()));
     }
 }

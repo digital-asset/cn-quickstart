@@ -5,7 +5,7 @@ package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.AppInstallsApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
-import com.digitalasset.quickstart.oauth.AuthenticatedPartyService;
+import com.digitalasset.quickstart.oauth.AuthenticatedPartyProvider;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.transcode.java.ContractId;
 import com.digitalasset.transcode.java.Party;
@@ -33,18 +33,18 @@ public class AppInstallsApiImpl implements AppInstallsApi {
 
     private final LedgerApi ledger;
     private final DamlRepository damlRepository;
-    private final AuthenticatedPartyService authenticatedPartyService;
+    private final AuthenticatedPartyProvider authenticatedPartyProvider;
     private final Logger logger = LoggerFactory.getLogger(AppInstallsApiImpl.class);
 
     @Autowired
     public AppInstallsApiImpl(
             LedgerApi ledger,
             DamlRepository damlRepository,
-            AuthenticatedPartyService authenticatedPartyService
+            AuthenticatedPartyProvider authenticatedPartyProvider
     ) {
         this.ledger = ledger;
         this.damlRepository = damlRepository;
-        this.authenticatedPartyService = authenticatedPartyService;
+        this.authenticatedPartyProvider = authenticatedPartyProvider;
     }
 
     /**
@@ -53,7 +53,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
     @Override
     public CompletableFuture<ResponseEntity<List<org.openapitools.model.AppInstall>>> listAppInstalls() {
         logger.info("Listing AppInstalls");
-        String party = authenticatedPartyService.getPartyOrFail();
+        String party = authenticatedPartyProvider.getPartyOrFail();
 
         return damlRepository.findActiveAppInstalls()
                 .thenApply(contracts -> {
@@ -99,7 +99,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
             AppInstallCreateLicenseRequest createLicenseRequest
     ) {
         logger.info("Creating License from AppInstall with contractId: {}", contractId);
-        String actorParty = authenticatedPartyService.getPartyOrFail();
+        String actorParty = authenticatedPartyProvider.getPartyOrFail();
 
         // Use DamlRepository instead of pqs.byContractId(...)
         return damlRepository.findAppInstallById(contractId).thenCompose(contract -> {
@@ -151,7 +151,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
             AppInstallCancel appInstallCancel
     ) {
         logger.info("Cancelling AppInstall with contractId: {}", contractId);
-        String actorParty = authenticatedPartyService.getPartyOrFail();
+        String actorParty = authenticatedPartyProvider.getPartyOrFail();
 
         // Use DamlRepository instead of pqs.byContractId(...)
         return damlRepository.findAppInstallById(contractId).thenCompose(contract -> {

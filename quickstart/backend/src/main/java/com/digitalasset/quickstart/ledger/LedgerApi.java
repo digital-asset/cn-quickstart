@@ -5,7 +5,7 @@ package com.digitalasset.quickstart.ledger;
 
 import com.daml.ledger.api.v2.*;
 import com.digitalasset.quickstart.config.LedgerConfig;
-import com.digitalasset.quickstart.oauth.Interceptor;
+import com.digitalasset.quickstart.oauth.TokenProvider;
 import com.digitalasset.transcode.Converter;
 import com.digitalasset.transcode.codec.proto.ProtobufCodec;
 import com.digitalasset.transcode.java.Choice;
@@ -19,8 +19,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import daml.Daml;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import io.grpc.*;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
@@ -52,11 +51,11 @@ public class LedgerApi {
     private final Logger logger = LoggerFactory.getLogger(LedgerApi.class);
 
     @Autowired
-    public LedgerApi(LedgerConfig ledgerConfig, Interceptor oAuth2ClientInterceptor) {
+    public LedgerApi(LedgerConfig ledgerConfig, TokenProvider tokenProvider) {
         ManagedChannel channel = ManagedChannelBuilder
                 .forAddress(ledgerConfig.getHost(), ledgerConfig.getPort())
                 .usePlaintext()
-                .intercept(oAuth2ClientInterceptor)
+                .intercept(new Interceptor(tokenProvider))
                 .build();
         logger.info("Connected to ledger at {}:{}", ledgerConfig.getHost(), ledgerConfig.getPort());
         submission = CommandSubmissionServiceGrpc.newFutureStub(channel);
@@ -232,5 +231,27 @@ public class LedgerApi {
                 .setModuleName(id.moduleName())
                 .setEntityName(id.entityName())
                 .build();
+    }
+
+
+    private static class Interceptor implements ClientInterceptor {
+        private final Metadata.Key<String> AUTHORIZATION_HEADER = Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER);
+        private final TokenProvider tokenProvider;
+
+        public Interceptor(TokenProvider tokenProvider) {
+            this.tokenProvider = tokenProvider;
+        }
+
+        @Override
+        public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
+            ClientCall<ReqT, RespT> clientCall = next.newCall(method, callOptions);
+            return new ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(clientCall) {
+                @Override
+                public void start(Listener<RespT> responseListener, Metadata headers) {
+                    headers.put(AUTHORIZATION_HEADER, "Bearer " + tokenProvider.getToken());
+                    super.start(responseListener, headers);
+                }
+            };
+        }
     }
 }

@@ -5,7 +5,7 @@ package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.AppInstallRequestsApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
-import com.digitalasset.quickstart.oauth.AuthenticatedPartyService;
+import com.digitalasset.quickstart.oauth.AuthenticatedPartyProvider;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import org.openapitools.model.AppInstall;
 import org.openapitools.model.AppInstallRequestAccept;
@@ -26,18 +26,18 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping("${openapi.asset.base-path:}")
 public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
     private final LedgerApi ledger;
-    private final AuthenticatedPartyService authenticatedPartyService;
+    private final AuthenticatedPartyProvider authenticatedPartyProvider;
     private final Logger logger = LoggerFactory.getLogger(AppInstallRequestsApiImpl.class);
     private final DamlRepository damlRepository;
 
     @Autowired
     public AppInstallRequestsApiImpl(
             LedgerApi ledger,
-            AuthenticatedPartyService authenticatedPartyService,
+            AuthenticatedPartyProvider authenticatedPartyProvider,
             DamlRepository damlRepository
     ) {
         this.ledger = ledger;
-        this.authenticatedPartyService = authenticatedPartyService;
+        this.authenticatedPartyProvider = authenticatedPartyProvider;
         this.damlRepository = damlRepository;
     }
 
@@ -48,7 +48,7 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
             AppInstallRequestAccept appInstallRequestAccept
     ) {
         logger.info("Accepting AppInstallRequest with contractId: {}", contractId);
-        String providerParty = authenticatedPartyService.getPartyOrFail();
+        String providerParty = authenticatedPartyProvider.getPartyOrFail();
         return damlRepository.findAppInstallRequestById(contractId).thenCompose(contract -> {
             // Create choice instance
             quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Accept choice =
@@ -86,7 +86,7 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
             AppInstallRequestCancel appInstallRequestCancel
     ) {
         logger.info("Cancelling AppInstallRequest with contractId: {}", contractId);
-        String userParty = authenticatedPartyService.getPartyOrFail();
+        String userParty = authenticatedPartyProvider.getPartyOrFail();
         return damlRepository.findAppInstallRequestById(contractId).thenCompose(contract -> {
             // Create choice instance
             quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Cancel choice =
@@ -111,7 +111,7 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
     @Override
     public CompletableFuture<ResponseEntity<List<org.openapitools.model.AppInstallRequest>>> listAppInstallRequests() {
         logger.info("Listing AppInstallRequests");
-        String party = authenticatedPartyService.getPartyOrFail();
+        String party = authenticatedPartyProvider.getPartyOrFail();
         // Use damlRepository instead of pqs.active
         return damlRepository.findActiveAppInstallRequests().thenApply(contracts -> {
             List<org.openapitools.model.AppInstallRequest> result = contracts.stream()
@@ -147,7 +147,7 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
             AppInstallRequestReject appInstallRequestReject
     ) {
         logger.info("Rejecting AppInstallRequest with contractId: {}", contractId);
-        String providerParty = authenticatedPartyService.getPartyOrFail();
+        String providerParty = authenticatedPartyProvider.getPartyOrFail();
         return damlRepository.findAppInstallRequestById(contractId).thenCompose(contract -> {
             // Create choice instance
             quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Reject choice =

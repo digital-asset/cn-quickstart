@@ -3,6 +3,7 @@
 
 package com.digitalasset.quickstart.oauth;
 
+import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,10 +32,12 @@ import java.util.Map;
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     private final OAuth2AuthorizedClientService authorizedClientService;
+    private final TenantPropertiesRepository tenantPropertiesRepository;
     private final String appProviderIssuerURL;
 
-    public OAuth2AuthenticationSuccessHandler(OAuth2AuthorizedClientService authorizedClientService) {
+    public OAuth2AuthenticationSuccessHandler(OAuth2AuthorizedClientService authorizedClientService, TenantPropertiesRepository tenantPropertiesRepository) {
         this.authorizedClientService = authorizedClientService;
+        this.tenantPropertiesRepository = tenantPropertiesRepository;
         appProviderIssuerURL = getVariable("AUTH_APP_PROVIDER_ISSUER_URL");
     }
 
@@ -54,12 +57,13 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         }
 
         Map<String, Object> claimsWithParty = new HashMap<>(oidcUser.getClaims());
-        claimsWithParty.put("party", clientReg.getClientName());
+        claimsWithParty.put(AuthService.VIRTUAL_TENANT_ID_CLAIM, clientReg.getClientName());
+        claimsWithParty.put(AuthService.VIRTUAL_PARTY_ID_CLAIM, tenantPropertiesRepository.getTenant(clientReg.getClientName()).getPartyId());
 
-        OidcIdToken idTokenWithPatry = new OidcIdToken(oidcUser.getIdToken().getTokenValue(), oidcUser.getIssuedAt(), oidcUser.getExpiresAt(), claimsWithParty);
+        OidcIdToken idTokenWithParty = new OidcIdToken(oidcUser.getIdToken().getTokenValue(), oidcUser.getIssuedAt(), oidcUser.getExpiresAt(), claimsWithParty);
 
         OAuth2AuthenticationToken newAuth = new OAuth2AuthenticationToken(
-                new DefaultOidcUser(authorities, idTokenWithPatry, oidcUser.getUserInfo()),
+                new DefaultOidcUser(authorities, idTokenWithParty, oidcUser.getUserInfo()),
                 authorities,
                 auth.getAuthorizedClientRegistrationId()
         );

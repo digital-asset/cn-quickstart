@@ -3,10 +3,9 @@
 
 package com.digitalasset.quickstart.service;
 
-import com.digitalasset.quickstart.repository.OAuth2ClientRegistrationRepository;
+import com.digitalasset.quickstart.oauth.AuthClientRegistrationRepository;
 import org.openapitools.model.LoginLink;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -18,20 +17,22 @@ import java.util.stream.Collectors;
 @RequestMapping("${openapi.asset.base-path:}")
 public class LoginLinksApiImpl implements com.digitalasset.quickstart.api.LoginLinksApi {
 
-    private final OAuth2ClientRegistrationRepository clientRegistrationRepository;
+    private final AuthClientRegistrationRepository clientRegistrationRepository;
 
-    public LoginLinksApiImpl(OAuth2ClientRegistrationRepository clientRegistrationRepository) {
+    public LoginLinksApiImpl(AuthClientRegistrationRepository clientRegistrationRepository) {
         this.clientRegistrationRepository = clientRegistrationRepository;
     }
 
     @Override
     public CompletableFuture<ResponseEntity<List<LoginLink>>> listLinks() {
-        List<LoginLink> links = clientRegistrationRepository.getRegistrations().stream()
-                .filter(registration -> AuthorizationGrantType.AUTHORIZATION_CODE.equals(registration.getAuthorizationGrantType()))
+
+        // TODO when we implement proper login screen based on email of onboarded user
+        List<LoginLink> links = clientRegistrationRepository.getClientRegistrations().stream()
                 .map(registration ->
                         new LoginLink()
-                                .name(registration.getRegistrationId())
-                                .url("/oauth2/authorization/" + registration.getRegistrationId()))
+                                .name(registration.getTenantId())
+                                .url(clientRegistrationRepository.getLoginLink(registration.getRegistrationId()))
+                )
                 .collect(Collectors.toList());
 
         return CompletableFuture.completedFuture(ResponseEntity.ok(links));

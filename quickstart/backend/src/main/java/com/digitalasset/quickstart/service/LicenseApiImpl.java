@@ -5,7 +5,7 @@ package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.LicensesApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
-import com.digitalasset.quickstart.oauth.AuthenticatedPartyService;
+import com.digitalasset.quickstart.oauth.AuthenticatedPartyProvider;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.transcode.java.ContractId;
 import com.digitalasset.transcode.java.Party;
@@ -40,18 +40,18 @@ public class LicenseApiImpl implements LicensesApi {
 
     private final LedgerApi ledger;
     private final DamlRepository damlRepository;
-    private final AuthenticatedPartyService authenticatedPartyService;
+    private final AuthenticatedPartyProvider authenticatedPartyProvider;
     private final Logger logger = LoggerFactory.getLogger(LicenseApiImpl.class);
 
     @Autowired
     public LicenseApiImpl(
             LedgerApi ledger,
             DamlRepository damlRepository,
-            AuthenticatedPartyService authenticatedPartyService
+            AuthenticatedPartyProvider authenticatedPartyProvider
     ) {
         this.ledger = ledger;
         this.damlRepository = damlRepository;
-        this.authenticatedPartyService = authenticatedPartyService;
+        this.authenticatedPartyProvider = authenticatedPartyProvider;
     }
 
     @Override
@@ -61,7 +61,7 @@ public class LicenseApiImpl implements LicensesApi {
             LicenseExpireRequest licenseExpireRequest
     ) {
         logger.info("Expiring License with contractId: {}", contractId);
-        String actingParty = authenticatedPartyService.getPartyOrFail();
+        String actingParty = authenticatedPartyProvider.getPartyOrFail();
 
         return damlRepository.findLicenseById(contractId).thenCompose(contract -> {
             Metadata meta = new Metadata(licenseExpireRequest.getMeta().getData());
@@ -107,7 +107,7 @@ public class LicenseApiImpl implements LicensesApi {
     @Override
     public CompletableFuture<ResponseEntity<List<org.openapitools.model.License>>> listLicenses() {
         logger.info("Listing Licenses");
-        String party = authenticatedPartyService.getPartyOrFail();
+        String party = authenticatedPartyProvider.getPartyOrFail();
 
         return damlRepository.findActiveLicenses().thenApply(contracts -> {
             List<org.openapitools.model.License> result = contracts.stream()
@@ -152,7 +152,7 @@ public class LicenseApiImpl implements LicensesApi {
             org.openapitools.model.LicenseRenewRequest licenseRenewRequest
     ) {
         logger.info("Renewing License with contractId: {}", contractId);
-        String providerParty = authenticatedPartyService.getPartyOrFail();
+        String providerParty = authenticatedPartyProvider.getPartyOrFail();
 
         return damlRepository.findLicenseById(contractId).thenCompose(contract -> {
             Duration extDuration = Duration.parse(licenseRenewRequest.getLicenseExtensionDuration());

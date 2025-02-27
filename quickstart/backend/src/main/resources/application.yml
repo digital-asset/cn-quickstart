@@ -4,6 +4,9 @@
 spring:
   security:
     oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH_APP_PROVIDER_ISSUER_URL}
       client:
         registration:
           AppProviderBackend-Participant:
@@ -13,29 +16,23 @@ spring:
             provider: AppProviderBackend
           AppProvider:
             client-id: ${AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID}
-            client-name: ${AUTH_APP_PROVIDER_PARTY}
+            client-name: AppProvider
             authorization-grant-type: authorization_code
             scope: "openid"
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             provider: AppProvider
-          AppUser:
-            client-id: ${AUTH_APP_USER_BACKEND_OIDC_CLIENT_ID}
-            client-name: ${AUTH_APP_USER_PARTY}
-            authorization-grant-type: authorization_code
-            scope: "openid"
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            provider: AppUser
         provider:
           AppProviderBackend:
             issuer-uri: ${AUTH_APP_PROVIDER_ISSUER_URL_BACKEND}
           AppProvider:
             issuer-uri: ${AUTH_APP_PROVIDER_ISSUER_URL}
-          AppUser:
-            issuer-uri: ${AUTH_APP_USER_ISSUER_URL}
+
 application:
   tenants:
-    Org1:
-      walletUrl: ${ORG1_WALLET_URL:http://wallet.localhost:2000/}
+    AppProvider:
+      tenantId: AppProvider
+      partyId: ${AUTH_APP_PROVIDER_PARTY}
+      internal: true
 
 server:
   forward-headers-strategy: NATIVE
@@ -44,11 +41,6 @@ logging:
   level:
     org.apache.coyote.http11.Http11InputBuffer: DEBUG
     com.digitalasset.quickstart.oauth.Interceptor: DEBUG
-#    org.springframework.security.web.FilterChainProxy: TRACE
-#    org.springframework.web.filter: TRACE
-#    org:
-#      springframework:
-#        security: DEBUG
 
 management:
   endpoints:

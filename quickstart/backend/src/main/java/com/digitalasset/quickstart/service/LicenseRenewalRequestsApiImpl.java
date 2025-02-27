@@ -8,7 +8,7 @@ import com.daml.ledger.api.v2.ValueOuterClass;
 import com.digitalasset.quickstart.api.LicenseRenewalRequestsApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
 import com.digitalasset.quickstart.ledger.ScanProxy;
-import com.digitalasset.quickstart.oauth.AuthenticatedPartyService;
+import com.digitalasset.quickstart.oauth.AuthenticatedPartyProvider;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.transcode.java.ContractId;
 import com.google.protobuf.ByteString;
@@ -36,7 +36,7 @@ public class LicenseRenewalRequestsApiImpl implements LicenseRenewalRequestsApi 
 
     private final LedgerApi ledger;
     private final DamlRepository damlRepository;
-    private final AuthenticatedPartyService authenticatedPartyService;
+    private final AuthenticatedPartyProvider authenticatedPartyProvider;
     private final ScanProxy scanProxyService;
     private final Logger logger = LoggerFactory.getLogger(LicenseRenewalRequestsApiImpl.class);
 
@@ -44,19 +44,19 @@ public class LicenseRenewalRequestsApiImpl implements LicenseRenewalRequestsApi 
     public LicenseRenewalRequestsApiImpl(
             LedgerApi ledger,
             DamlRepository damlRepository,
-            AuthenticatedPartyService authenticatedPartyService,
+            AuthenticatedPartyProvider authenticatedPartyProvider,
             ScanProxy scanProxyService
     ) {
         this.ledger = ledger;
         this.damlRepository = damlRepository;
-        this.authenticatedPartyService = authenticatedPartyService;
+        this.authenticatedPartyProvider = authenticatedPartyProvider;
         this.scanProxyService = scanProxyService;
     }
 
     @Override
     public CompletableFuture<ResponseEntity<List<org.openapitools.model.LicenseRenewalRequest>>> listLicenseRenewalRequests() {
         logger.info("Listing LicenseRenewalRequests");
-        String party = authenticatedPartyService.getPartyOrFail();
+        String party = authenticatedPartyProvider.getPartyOrFail();
 
         return damlRepository.findActiveLicenseRenewalRequests()
                 .thenApply(contracts -> {
@@ -99,7 +99,7 @@ public class LicenseRenewalRequestsApiImpl implements LicenseRenewalRequestsApi 
             String commandId
     ) {
         logger.info("Completing License RenewalRequest with contractId: {}", contractId);
-        String actingParty = authenticatedPartyService.getPartyOrFail();
+        String actingParty = authenticatedPartyProvider.getPartyOrFail();
 
         // 1. Fetch the LicenseRenewalRequest contract from DamlRepository
         return damlRepository.findLicenseRenewalRequestById(contractId)
