@@ -45,7 +45,7 @@ For each realm create clients:
           - Valid redirect URIs: http://wallet.localhost:2000
           - Valid post logout redirect URIs: +
           - Web origins: *
-      - app-user-backend-oidc:
+      - app-provider-backend-oidc:
           - Client authentication: off
           - Authentication flow: Standard Flow
           - Valid redirect URIs: http://app-provider.localhost:3000/*
