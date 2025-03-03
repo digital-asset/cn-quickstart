@@ -5,7 +5,7 @@ package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.LicensesApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
-import com.digitalasset.quickstart.oauth.AuthenticatedPartyProvider;
+import com.digitalasset.quickstart.security.AuthenticatedPartyProvider;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.transcode.java.ContractId;
 import com.digitalasset.transcode.java.Party;

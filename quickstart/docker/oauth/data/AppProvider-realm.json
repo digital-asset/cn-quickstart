@@ -249,7 +249,7 @@
         "attributes" : { }
       } ],
       "app-provider-pqs" : [ ],
-      "app-provider-backend-to-participant" : [ ],
+      "app-provider-backend" : [ ],
       "security-admin-console" : [ ],
       "app-provider-unsafe" : [ ],
       "app-provider-wallet" : [ ],
@@ -497,8 +497,8 @@
     "optionalClientScopes" : [ "address", "phone", "organization", "offline_access", "microprofile-jwt" ]
   }, {
     "id" : "af2c1cd2-d641-430e-a6ee-5b9b9dd03c4f",
-    "clientId" : "app-provider-backend-to-participant",
-    "name" : "client_app-provider-backend-to-participant",
+    "clientId" : "app-provider-backend",
+    "name" : "client_app-provider-backend",
     "description" : "",
     "rootUrl" : "",
     "adminUrl" : "",

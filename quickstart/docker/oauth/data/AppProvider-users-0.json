@@ -48,12 +48,12 @@
     "groups" : [ ]
   }, {
     "id" : "1a36eb86-4ccc-4ec6-b7b7-caa08b354989",
-    "username" : "service-account-app-provider-backend-to-participant",
+    "username" : "service-account-app-provider-backend",
     "emailVerified" : false,
     "createdTimestamp" : 1738819518410,
     "enabled" : true,
     "totp" : false,
-    "serviceAccountClientId" : "app-provider-backend-to-participant",
+    "serviceAccountClientId" : "app-provider-backend",
     "credentials" : [ ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],

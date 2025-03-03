@@ -5,7 +5,7 @@ package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.AppInstallRequestsApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
-import com.digitalasset.quickstart.oauth.AuthenticatedPartyProvider;
+import com.digitalasset.quickstart.security.AuthenticatedPartyProvider;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import org.openapitools.model.AppInstall;
 import org.openapitools.model.AppInstallRequestAccept;

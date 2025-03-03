@@ -3,7 +3,7 @@
 
 package com.digitalasset.quickstart.ledger;
 
-import com.digitalasset.quickstart.oauth.TokenProvider;
+import com.digitalasset.quickstart.security.TokenProvider;
 import com.digitalasset.quickstart.validatorproxy.client.ApiClient;
 import com.digitalasset.quickstart.validatorproxy.client.api.ScanProxyApi;
 import org.springframework.context.annotation.Bean;

@@ -9,9 +9,9 @@ spring:
           issuer-uri: ${AUTH_APP_PROVIDER_ISSUER_URL}
       client:
         registration:
-          AppProviderBackend-Participant:
-            client-id: ${AUTH_APP_PROVIDER_BACKEND_TO_PARTICIPANT_CLIENT_ID}
-            client-secret: ${AUTH_APP_PROVIDER_BACKEND_TO_PARTICIPANT_SECRET}
+          AppProviderBackend:
+            client-id: ${AUTH_APP_PROVIDER_BACKEND_CLIENT_ID}
+            client-secret: ${AUTH_APP_PROVIDER_BACKEND_SECRET}
             authorization-grant-type: client_credentials
             provider: AppProviderBackend
           AppProvider:

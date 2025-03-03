@@ -1,4 +1,4 @@
-package com.digitalasset.quickstart.oauth;
+package com.digitalasset.quickstart.security;
 
 public interface TokenProvider {
     /**

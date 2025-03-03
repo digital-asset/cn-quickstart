@@ -8,7 +8,7 @@ import com.daml.ledger.api.v2.ValueOuterClass;
 import com.digitalasset.quickstart.api.LicenseRenewalRequestsApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
 import com.digitalasset.quickstart.ledger.ScanProxy;
-import com.digitalasset.quickstart.oauth.AuthenticatedPartyProvider;
+import com.digitalasset.quickstart.security.AuthenticatedPartyProvider;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.transcode.java.ContractId;
 import com.google.protobuf.ByteString;

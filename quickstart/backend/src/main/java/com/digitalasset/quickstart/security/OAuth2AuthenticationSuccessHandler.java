@@ -1,7 +1,7 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-package com.digitalasset.quickstart.oauth;
+package com.digitalasset.quickstart.security;
 
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
 import jakarta.servlet.ServletException;

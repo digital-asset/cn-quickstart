@@ -1,4 +1,4 @@
-package com.digitalasset.quickstart.oauth;
+package com.digitalasset.quickstart.security;
 
 import java.util.Optional;
 

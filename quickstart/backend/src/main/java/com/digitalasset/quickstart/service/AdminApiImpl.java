@@ -5,8 +5,8 @@ package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.AdminApi;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
-import com.digitalasset.quickstart.oauth.AuthClientRegistrationRepository;
-import com.digitalasset.quickstart.oauth.AuthClientRegistrationRepository.Client;
+import com.digitalasset.quickstart.security.AuthClientRegistrationRepository;
+import com.digitalasset.quickstart.security.AuthClientRegistrationRepository.Client;
 
 // Updated models from the renamed OpenAPI spec
 import org.openapitools.model.TenantRegistration;

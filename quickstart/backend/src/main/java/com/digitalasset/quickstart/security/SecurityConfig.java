@@ -1,9 +1,8 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-package com.digitalasset.quickstart.config;
+package com.digitalasset.quickstart.security;
 
-import com.digitalasset.quickstart.oauth.OAuth2AuthenticationSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -36,8 +35,15 @@ import java.util.HashSet;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private OAuth2AuthenticationSuccessHandler authenticationSuccessHandler;
+    private final OAuth2AuthenticationSuccessHandler authenticationSuccessHandler;
+    private final ClientRegistrationRepository clientRegistrationRepository;
+    private final OAuth2AuthorizedClientService authorizedClientService;
+
+    public SecurityConfig(OAuth2AuthenticationSuccessHandler authenticationSuccessHandler, ClientRegistrationRepository clientRegistrationRepository, OAuth2AuthorizedClientService authorizedClientService) {
+        this.authenticationSuccessHandler = authenticationSuccessHandler;
+        this.clientRegistrationRepository = clientRegistrationRepository;
+        this.authorizedClientService = authorizedClientService;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -91,19 +97,13 @@ public class SecurityConfig {
         return converter;
     }
 
-    @Autowired
-    private ClientRegistrationRepository clientRegistrationRepository;
-
     private LogoutSuccessHandler oidcLogoutSuccessHandler() {
         return new OidcClientInitiatedLogoutSuccessHandler(this.clientRegistrationRepository);
     }
 
     @Bean
     @Primary
-    public OAuth2AuthorizedClientManager multiGrantTypeClientManager(
-            ClientRegistrationRepository clientRegistrationRepository,
-            OAuth2AuthorizedClientService authorizedClientService) {
-
+    public OAuth2AuthorizedClientManager multiGrantTypeClientManager() {
         OAuth2AuthorizedClientProvider authorizedClientProvider =
                 OAuth2AuthorizedClientProviderBuilder.builder()
                         .clientCredentials()

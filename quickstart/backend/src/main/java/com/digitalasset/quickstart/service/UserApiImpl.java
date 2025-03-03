@@ -4,7 +4,7 @@
 package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.UserApi;
-import com.digitalasset.quickstart.oauth.AuthenticatedUserProvider;
+import com.digitalasset.quickstart.security.AuthenticatedUserProvider;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository.TenantProperties;
 import org.openapitools.model.AuthenticatedUser;

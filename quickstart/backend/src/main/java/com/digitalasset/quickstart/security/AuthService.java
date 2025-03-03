@@ -1,6 +1,5 @@
-package com.digitalasset.quickstart.oauth;
+package com.digitalasset.quickstart.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
@@ -13,14 +12,16 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-public final class AuthService implements AuthenticatedPartyProvider, AuthenticatedUserProvider, TokenProvider {
+final class AuthService implements AuthenticatedPartyProvider, AuthenticatedUserProvider, TokenProvider {
 
-  @Autowired
-  private OAuth2AuthorizedClientManager authorizedClientManager;
-  private final String CLIENT_REGISTRATION_ID = "AppProviderBackend-Participant";
-
+  private final OAuth2AuthorizedClientManager authorizedClientManager;
+  static final String CLIENT_REGISTRATION_ID = "AppProviderBackend";
   static final String VIRTUAL_PARTY_ID_CLAIM = "virtual_partyId";
   static final String VIRTUAL_TENANT_ID_CLAIM = "virtual_tenantId";
+
+  AuthService(OAuth2AuthorizedClientManager authorizedClientManager) {
+    this.authorizedClientManager = authorizedClientManager;
+  }
 
   @Override
   public Optional<String> getParty() {

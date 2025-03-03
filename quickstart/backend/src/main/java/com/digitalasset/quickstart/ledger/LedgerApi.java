@@ -5,7 +5,7 @@ package com.digitalasset.quickstart.ledger;
 
 import com.daml.ledger.api.v2.*;
 import com.digitalasset.quickstart.config.LedgerConfig;
-import com.digitalasset.quickstart.oauth.TokenProvider;
+import com.digitalasset.quickstart.security.TokenProvider;
 import com.digitalasset.transcode.Converter;
 import com.digitalasset.transcode.codec.proto.ProtobufCodec;
 import com.digitalasset.transcode.java.Choice;
@@ -36,9 +36,9 @@ public class LedgerApi {
     private static final String APP_ID ;
 
     static {
-        String appId = System.getenv("AUTH_APP_PROVIDER_BACKEND_TO_PARTICIPANT_USER_ID");
+        String appId = System.getenv("AUTH_APP_PROVIDER_BACKEND_USER_ID");
         if (appId == null || appId.isBlank()) {
-            throw new IllegalStateException("Environment variable AUTH_APP_PROVIDER_BACKEND_TO_PARTICIPANT_USER_ID is not set");
+            throw new IllegalStateException("Environment variable AUTH_APP_PROVIDER_BACKEND_USER_ID is not set");
         }
         APP_ID = appId;
     }
