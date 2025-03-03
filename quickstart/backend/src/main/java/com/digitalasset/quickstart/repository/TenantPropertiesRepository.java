@@ -61,7 +61,7 @@ public class TenantPropertiesRepository {
 
     /**
      * Called by Spring at context startup to set the initial map from YAML
-     *
+     */
     public void setTenants(Map<String, TenantProperties> tenants) {
         this.tenants = new ConcurrentHashMap<>(tenants);
     }
