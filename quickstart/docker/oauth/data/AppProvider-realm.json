@@ -80,6 +80,7 @@
       "attributes" : { }
     } ],
     "client" : {
+      "app-provider-backend-oidc" : [ ],
       "realm-management" : [ {
         "id" : "25597954-3f4c-49dd-8f23-2e25ddfb88e6",
         "name" : "realm-admin",
@@ -249,12 +250,10 @@
         "attributes" : { }
       } ],
       "app-provider-pqs" : [ ],
-      "app-provider-backend" : [ ],
       "security-admin-console" : [ ],
       "app-provider-unsafe" : [ ],
       "app-provider-wallet" : [ ],
       "admin-cli" : [ ],
-      "app-provider-backend-oidc" : [ ],
       "account-console" : [ ],
       "app-provider-validator" : [ ],
       "broker" : [ {
@@ -340,7 +339,8 @@
         "clientRole" : true,
         "containerId" : "81649c15-a3cf-454b-a4b4-34727bdd98da",
         "attributes" : { }
-      } ]
+      } ],
+      "app-provider-backend" : [ ]
     }
   },
   "groups" : [ ],
@@ -534,22 +534,7 @@
     "authenticationFlowBindingOverrides" : { },
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
-    "protocolMappers" : [ {
-      "id" : "3fdc5cfe-bf29-4987-a32f-3c93c3cd0ea7",
-      "name" : "canton_audience",
-      "protocol" : "openid-connect",
-      "protocolMapper" : "oidc-audience-mapper",
-      "consentRequired" : false,
-      "config" : {
-        "id.token.claim" : "false",
-        "lightweight.claim" : "false",
-        "introspection.token.claim" : "true",
-        "access.token.claim" : "true",
-        "included.custom.audience" : "https://canton.network.global",
-        "userinfo.token.claim" : "false"
-      }
-    } ],
-    "defaultClientScopes" : [ "web-origins", "service_account", "acr", "roles", "profile", "basic", "email" ],
+    "defaultClientScopes" : [ "web-origins", "service_account", "audience_canton_network", "acr", "roles", "profile", "basic", "email" ],
     "optionalClientScopes" : [ "address", "phone", "organization", "offline_access", "microprofile-jwt" ]
   }, {
     "id" : "74c12c60-73ae-4be0-b726-d48cbe7fb027",
@@ -588,22 +573,7 @@
     "authenticationFlowBindingOverrides" : { },
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
-    "protocolMappers" : [ {
-      "id" : "91cedb17-0fe7-4fa1-b290-74b9e5becd22",
-      "name" : "canton_audience",
-      "protocol" : "openid-connect",
-      "protocolMapper" : "oidc-audience-mapper",
-      "consentRequired" : false,
-      "config" : {
-        "id.token.claim" : "false",
-        "lightweight.claim" : "false",
-        "introspection.token.claim" : "true",
-        "access.token.claim" : "true",
-        "included.custom.audience" : "https://canton.network.global",
-        "userinfo.token.claim" : "false"
-      }
-    } ],
-    "defaultClientScopes" : [ "web-origins", "acr", "roles", "profile", "basic", "email" ],
+    "defaultClientScopes" : [ "web-origins", "audience_canton_network", "acr", "roles", "profile", "basic", "email" ],
     "optionalClientScopes" : [ "address", "phone", "organization", "offline_access", "microprofile-jwt" ]
   }, {
     "id" : "a39eb68f-0172-4831-9e71-8417abeaaffa",
@@ -644,22 +614,7 @@
     "authenticationFlowBindingOverrides" : { },
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
-    "protocolMappers" : [ {
-      "id" : "5b9c0f4d-40e0-411e-9a8e-597a66ab4591",
-      "name" : "canton_audience",
-      "protocol" : "openid-connect",
-      "protocolMapper" : "oidc-audience-mapper",
-      "consentRequired" : false,
-      "config" : {
-        "id.token.claim" : "false",
-        "lightweight.claim" : "false",
-        "introspection.token.claim" : "true",
-        "access.token.claim" : "true",
-        "included.custom.audience" : "https://canton.network.global",
-        "userinfo.token.claim" : "false"
-      }
-    } ],
-    "defaultClientScopes" : [ "web-origins", "service_account", "acr", "roles", "profile", "basic", "email" ],
+    "defaultClientScopes" : [ "web-origins", "service_account", "audience_canton_network", "acr", "roles", "profile", "basic", "email" ],
     "optionalClientScopes" : [ "address", "phone", "organization", "offline_access", "microprofile-jwt" ]
   }, {
     "id" : "c78e03bb-fbd4-46b0-8f0f-57e32b8fe186",
@@ -698,22 +653,7 @@
     "authenticationFlowBindingOverrides" : { },
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
-    "protocolMappers" : [ {
-      "id" : "1d725088-cdf4-45ae-ab9b-e0d805bd8703",
-      "name" : "canton_audience",
-      "protocol" : "openid-connect",
-      "protocolMapper" : "oidc-audience-mapper",
-      "consentRequired" : false,
-      "config" : {
-        "id.token.claim" : "false",
-        "lightweight.claim" : "false",
-        "introspection.token.claim" : "true",
-        "access.token.claim" : "true",
-        "included.custom.audience" : "https://canton.network.global",
-        "userinfo.token.claim" : "false"
-      }
-    } ],
-    "defaultClientScopes" : [ "web-origins", "acr", "roles", "profile", "basic", "email" ],
+    "defaultClientScopes" : [ "web-origins", "audience_canton_network", "acr", "roles", "profile", "basic", "email" ],
     "optionalClientScopes" : [ "address", "phone", "organization", "offline_access", "microprofile-jwt" ]
   }, {
     "id" : "c5552a41-37a1-46fc-979f-7b99e984e54a",
@@ -754,22 +694,7 @@
     "authenticationFlowBindingOverrides" : { },
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
-    "protocolMappers" : [ {
-      "id" : "71ef4376-5687-4d89-9d7f-65bf56574a15",
-      "name" : "canton_audience",
-      "protocol" : "openid-connect",
-      "protocolMapper" : "oidc-audience-mapper",
-      "consentRequired" : false,
-      "config" : {
-        "id.token.claim" : "false",
-        "lightweight.claim" : "false",
-        "introspection.token.claim" : "true",
-        "access.token.claim" : "true",
-        "included.custom.audience" : "https://canton.network.global",
-        "userinfo.token.claim" : "false"
-      }
-    } ],
-    "defaultClientScopes" : [ "web-origins", "service_account", "acr", "roles", "profile", "basic", "email" ],
+    "defaultClientScopes" : [ "web-origins", "service_account", "audience_canton_network", "acr", "roles", "profile", "basic", "email" ],
     "optionalClientScopes" : [ "address", "phone", "organization", "offline_access", "microprofile-jwt" ]
   }, {
     "id" : "29d6e876-319b-4305-b33c-af9f9d4d46b1",
@@ -808,22 +733,7 @@
     "authenticationFlowBindingOverrides" : { },
     "fullScopeAllowed" : true,
     "nodeReRegistrationTimeout" : -1,
-    "protocolMappers" : [ {
-      "id" : "a98feedd-1dd0-4fcc-b2b9-2cb684899466",
-      "name" : "canton_audience",
-      "protocol" : "openid-connect",
-      "protocolMapper" : "oidc-audience-mapper",
-      "consentRequired" : false,
-      "config" : {
-        "id.token.claim" : "false",
-        "lightweight.claim" : "false",
-        "introspection.token.claim" : "true",
-        "access.token.claim" : "true",
-        "included.custom.audience" : "https://canton.network.global",
-        "userinfo.token.claim" : "false"
-      }
-    } ],
-    "defaultClientScopes" : [ "web-origins", "acr", "roles", "profile", "basic", "email" ],
+    "defaultClientScopes" : [ "web-origins", "audience_canton_network", "acr", "roles", "profile", "basic", "email" ],
     "optionalClientScopes" : [ "address", "phone", "organization", "offline_access", "microprofile-jwt" ]
   }, {
     "id" : "5d151b83-c545-4ae2-903b-756048ebf6f4",
@@ -1018,6 +928,31 @@
       "config" : {
         "introspection.token.claim" : "true",
         "access.token.claim" : "true"
+      }
+    } ]
+  }, {
+    "id" : "1d235067-0368-4324-821c-8fb6eba68758",
+    "name" : "audience_canton_network",
+    "description" : "",
+    "protocol" : "openid-connect",
+    "attributes" : {
+      "include.in.token.scope" : "false",
+      "display.on.consent.screen" : "true",
+      "gui.order" : "",
+      "consent.screen.text" : ""
+    },
+    "protocolMappers" : [ {
+      "id" : "e6223fe6-9608-4322-bb4a-f4e1e846c069",
+      "name" : "canton_network_audience",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-audience-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "id.token.claim" : "false",
+        "lightweight.claim" : "false",
+        "access.token.claim" : "true",
+        "introspection.token.claim" : "true",
+        "included.custom.audience" : "https://canton.network.global"
       }
     } ]
   }, {
@@ -1558,7 +1493,7 @@
       }
     } ]
   } ],
-  "defaultDefaultClientScopes" : [ "role_list", "saml_organization", "profile", "email", "roles", "web-origins", "acr", "basic" ],
+  "defaultDefaultClientScopes" : [ "role_list", "saml_organization", "profile", "email", "roles", "web-origins", "acr", "basic", "audience_canton_network" ],
   "defaultOptionalClientScopes" : [ "offline_access", "address", "phone", "microprofile-jwt", "organization" ],
   "browserSecurityHeaders" : {
     "contentSecurityPolicyReportOnly" : "",
@@ -1602,7 +1537,7 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-usermodel-attribute-mapper", "oidc-usermodel-property-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-property-mapper", "oidc-full-name-mapper", "oidc-address-mapper", "saml-user-attribute-mapper", "saml-role-list-mapper" ]
+        "allowed-protocol-mapper-types" : [ "saml-role-list-mapper", "saml-user-attribute-mapper", "oidc-address-mapper", "oidc-usermodel-attribute-mapper", "oidc-usermodel-property-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-property-mapper", "oidc-full-name-mapper" ]
       }
     }, {
       "id" : "198b7aee-e64b-4907-bc02-4c7f3530d319",
@@ -1627,7 +1562,7 @@
       "subType" : "anonymous",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-full-name-mapper", "saml-user-attribute-mapper", "oidc-usermodel-property-mapper", "saml-role-list-mapper", "oidc-usermodel-attribute-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-address-mapper", "saml-user-property-mapper" ]
+        "allowed-protocol-mapper-types" : [ "saml-user-attribute-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-property-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper", "oidc-address-mapper", "saml-user-property-mapper", "saml-role-list-mapper" ]
       }
     }, {
       "id" : "0f062f15-1864-4b89-826a-c02fbf175286",
