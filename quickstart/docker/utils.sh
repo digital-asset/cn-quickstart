@@ -4,6 +4,30 @@
 
 set -eo pipefail
 
+get_app_provider_admin_token() {
+  local secret=$1
+  echo "get_app_provider_admin_token" >&2
+
+  curl -f -s -S "${AUTH_APP_PROVIDER_TOKEN_URL}" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'client_id=app-provider-validator' \
+    -d 'client_secret='${secret} \
+    -d 'grant_type=client_credentials' \
+    -d 'scope=openid' | jq -r .access_token
+}
+
+get_app_user_admin_token() {
+  local secret=$1
+  echo "get_app_user_admin_token" >&2
+
+  curl -f -s -S "${AUTH_APP_USER_TOKEN_URL}" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'client_id=app-user-validator' \
+    -d 'client_secret='${secret} \
+    -d 'grant_type=client_credentials' \
+    -d 'scope=openid' | jq -r .access_token
+}
+
 get_app_provider_user_token() {
   local user=$1
   local password=$2
@@ -139,60 +163,6 @@ update_user() {
     }' | jq -r .user.id
 }
 
-create_user_with_party_rights() {
-  local token=$1
-  local userId=$2
-  local userName=$3
-  local party=$4
-  local participant=$5
-
-  echo "create_user_with_party_rights $userId $party $participant" >&2
-  curl_check "http://$participant:7575/v2/users" "$token" "application/json" \
-    --data-raw '{
-      "user" : {
-          "id" : "'$userId'",
-          "primaryParty" : "'$party'",
-          "isDeactivated": false,
-          "identityProviderId": "",
-          "metadata": {
-             "resourceVersion": "",
-              "annotations": {
-                  "username" : "'$userName'"
-              }
-          }
-      },
-        "rights": [
-            {
-                "kind": {
-                    "CanActAs": {
-                        "value": {
-                            "party": "'$party'"
-                        }
-                    },
-                    "CanReadAs": {
-                        "value": {
-                            "party": "'$party'"
-                        }
-                    }
-                }
-            }
-        ]
-    }' | jq -r .user.primaryParty
-}
-
-
-get_token() {
-  local user=$1
-  local issuer=$2
-  echo "get_token $user $issuer" >&2
-  curl -f -s -S 'http://oauth:8080/'$issuer'/token' \
-    -H 'Content-Type: application/x-www-form-urlencoded' \
-    -d 'client_id='${user} \
-    -d 'client_secret=secret' \
-    -d 'grant_type=client_credentials' \
-    -d 'scope=daml_ledger_api' | jq -r .access_token
-}
-
 upload_dars() {
   local token=$1
   local participant=$2
@@ -204,52 +174,52 @@ upload_dars() {
   done
 }
 
-allocate_party_and_create_user() {
-  local token=$1
-  local userId=$2
-  local participant=$3
-
-  echo "create_user $userId $participant" >&2
-
-  party=$(get_user_party "$token" "$userId" "$participant")
-  if [ -n "$party" ] && [ "$party" != "null" ]; then
-    echo $party
-    return
-  fi
-
-  party=$(allocate_party "$token" "$userId" "$participant")
-
-  if [ -n "$party" ] && [ "$party" != "null" ]; then
-    curl_check "http://$participant:7575/v2/users" "$token" "application/json" \
-      --data-raw '{
-        "user" : {
-            "id" : "'$userId'",
-            "primaryParty" : "'$party'",
-            "isDeactivated": false,
-            "identityProviderId": ""
-        },
-          "rights": [
-              {
-                  "kind": {
-                      "CanActAs": {
-                          "value": {
-                              "party": "'$party'"
-                          }
-                      },
-                      "CanReadAs": {
-                          "value": {
-                              "party": "'$party'"
-                          }
-                      }
-                  }
-              }
-          ]
-      }' | jq -r .user.primaryParty
-  else
-    echo "Failed to allocate party for user $userId" >&2
-    exit 1
-  fi
-}
+#allocate_party_and_create_user() {
+#  local token=$1
+#  local userId=$2
+#  local participant=$3
+#
+#  echo "create_user $userId $participant" >&2
+#
+#  party=$(get_user_party "$token" "$userId" "$participant")
+#  if [ -n "$party" ] && [ "$party" != "null" ]; then
+#    echo $party
+#    return
+#  fi
+#
+#  party=$(allocate_party "$token" "$userId" "$participant")
+#
+#  if [ -n "$party" ] && [ "$party" != "null" ]; then
+#    curl_check "http://$participant:7575/v2/users" "$token" "application/json" \
+#      --data-raw '{
+#        "user" : {
+#            "id" : "'$userId'",
+#            "primaryParty" : "'$party'",
+#            "isDeactivated": false,
+#            "identityProviderId": ""
+#        },
+#          "rights": [
+#              {
+#                  "kind": {
+#                      "CanActAs": {
+#                          "value": {
+#                              "party": "'$party'"
+#                          }
+#                      },
+#                      "CanReadAs": {
+#                          "value": {
+#                              "party": "'$party'"
+#                          }
+#                      }
+#                  }
+#              }
+#          ]
+#      }' | jq -r .user.primaryParty
+#  else
+#    echo "Failed to allocate party for user $userId" >&2
+#    exit 1
+#  fi
+#}
 
 get_user_party() {
   local token=$1
@@ -259,52 +229,52 @@ get_user_party() {
   curl_check "http://$participant:7575/v2/users/$user" "$token" "application/json" | jq -r .user.primaryParty
 }
 
-allocate_party() {
-  local token=$1
-  local partyIdHint=$2
-  local participant=$3
+#allocate_party() {
+#  local token=$1
+#  local partyIdHint=$2
+#  local participant=$3
+#
+#  echo "allocate_party $partyIdHint $participant" >&2
+#
+#  namespace=$(get_participant_namespace "$token" "$participant")
+#
+#  party=$(curl_check "http://$participant:7575/v2/parties/party?parties=$partyIdHint::$namespace" "$token" "application/json" |
+#    jq -r '.partyDetails[0].party')
+#
+#  if [ -n "$party" ] && [ "$party" != "null" ]; then
+#    echo "party exists $party" >&2
+#    echo $party
+#    return
+#  fi
+#
+#  curl_check "http://$participant:7575/v2/parties" "$token" "application/json" \
+#    --data-raw '{
+#      "partyIdHint": "'$partyIdHint'",
+#      "displayName" : "'$partyIdHint'",
+#      "identityProviderId": ""
+#    }' | jq -r .partyDetails.party
+#}
 
-  echo "allocate_party $partyIdHint $participant" >&2
+#get_participant_namespace() {
+#  local token=$1
+#  local participant=$2
+#  echo "get_participant_namespace $participant" >&2
+#  curl_check "http://$participant:7575/v2/parties/participant-id" "$token" "application/json" |
+#    jq -r .participantId | sed 's/^participant:://'
+#}
 
-  namespace=$(get_participant_namespace "$token" "$participant")
-
-  party=$(curl_check "http://$participant:7575/v2/parties/party?parties=$partyIdHint::$namespace" "$token" "application/json" |
-    jq -r '.partyDetails[0].party')
-
-  if [ -n "$party" ] && [ "$party" != "null" ]; then
-    echo "party exists $party" >&2
-    echo $party
-    return
-  fi
-
-  curl_check "http://$participant:7575/v2/parties" "$token" "application/json" \
-    --data-raw '{
-      "partyIdHint": "'$partyIdHint'",
-      "displayName" : "'$partyIdHint'",
-      "identityProviderId": ""
-    }' | jq -r .partyDetails.party
-}
-
-get_participant_namespace() {
-  local token=$1
-  local participant=$2
-  echo "get_participant_namespace $participant" >&2
-  curl_check "http://$participant:7575/v2/parties/participant-id" "$token" "application/json" |
-    jq -r .participantId | sed 's/^participant:://'
-}
-
-onboard_wallet_user() {
-  local token=$1
-  local user=$2
-  local party=$3
-  local validator=$4
-  echo "onboard_wallet_user $user $party $validator" >&2
-  curl_check "http://$validator:5003/api/validator/v0/admin/users" "$token" "application/json" \
-    --data-raw '{
-      "party_id": "'$party'",
-      "name":"'$user'"
-    }'
-}
+#onboard_wallet_user() {
+#  local token=$1
+#  local user=$2
+#  local party=$3
+#  local validator=$4
+#  echo "onboard_wallet_user $user $party $validator" >&2
+#  curl_check "http://$validator:5003/api/validator/v0/admin/users" "$token" "application/json" \
+#    --data-raw '{
+#      "party_id": "'$party'",
+#      "name":"'$user'"
+#    }'
+#}
 
 get_dso_party_id() {
   local token=$1

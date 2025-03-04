@@ -61,10 +61,8 @@ For each realm create clients:
 For each realm create users:    
   - AppProvider:
     - Bob Doe
-    - Beatris Doe
   - AppUser:
     - Alice Doe
-    - Adrian Doe
 
 ### NOTE: if you make changes to keycloak configuration don't forget to change also .env file in the root directory of the project
 
