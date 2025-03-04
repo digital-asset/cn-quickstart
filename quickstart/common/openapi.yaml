@@ -282,7 +282,7 @@ paths:
 
   /licenses:
     get:
-      summary: List all Licenses
+      summary: List all Licenses (including renewal requests)
       operationId: listLicenses
       responses:
         '200':
@@ -326,28 +326,12 @@ paths:
         '400':
           description: Invalid input
 
-  /license-renewal-requests:
-    get:
-      summary: List all LicenseRenewalRequests
-      operationId: listLicenseRenewalRequests
-      responses:
-        '200':
-          description: A list of LicenseRenewalRequests
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LicenseRenewalRequest'
-        '400':
-          description: Invalid input
-
-  /license-renewal-requests/{contractId}/complete-renewal:
+  /licenses/{renewalRequestId}/complete-renewal:
     post:
       summary: Complete the License Renewal
       operationId: completeLicenseRenewal
       parameters:
-        - name: contractId
+        - name: renewalRequestId
           in: path
           required: true
           schema:
@@ -364,6 +348,8 @@ paths:
           description: License renewed successfully
         '400':
           description: Invalid input
+        '404':
+          description: No matching contract found
 
   /licenses/{contractId}/expire:
     post:
@@ -631,13 +617,13 @@ components:
     License:
       type: object
       required:
-          - contractId
-          - dso
-          - provider
-          - user
-          - params
-          - expiresAt
-          - licenseNum
+        - contractId
+        - dso
+        - provider
+        - user
+        - params
+        - expiresAt
+        - licenseNum
       properties:
         contractId:
           type: string
@@ -654,6 +640,10 @@ components:
           format: date-time
         licenseNum:
           type: integer
+        renewalRequests:
+          type: array
+          items:
+            $ref: '#/components/schemas/LicenseRenewalRequest'
 
     Metadata:
       type: object
