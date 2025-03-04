@@ -181,6 +181,17 @@ install-daml-sdk: ## Install the Daml SDK
 generate-NOTICES: ## Generate the NOTICES.txt file
 	./gradlew generateNotices
 
+.PHONY: start-swagger-ui
+start-swagger-ui:
+	docker compose -f docker/swagger/compose.yaml $(DOCKER_COMPOSE_ENVFILE) up -d || true
+
+.PHONY: stop-swagger-ui
+stop-swagger-ui:
+	docker compose -f docker/swagger/compose.yaml $(DOCKER_COMPOSE_ENVFILE) down || true
+
+.PHONY: restart-swagger-ui
+restart-swagger-ui: stop-swagger-ui start-swagger-ui
+
 # Help target
 .PHONY: help
 help: ## Show this help message
@@ -220,3 +231,5 @@ $(eval $(call open-url-target,open-sv-interface,http://sv.localhost:4000))
 $(eval $(call open-url-target,open-sv-scan,http://scan.localhost:4000))
 # open-app-user-wallet: ## Open the App User wallet UI in the active browser
 $(eval $(call open-url-target,open-app-user-wallet,http://wallet.localhost:2000))
+# open-swagger-ui: ## Open Swagger UI to view Canton JSON API V2 Open API in the active browser
+$(eval $(call open-url-target,open-swagger-ui,http://localhost:9080))

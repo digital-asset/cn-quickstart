@@ -1,0 +1,20 @@
+# Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Description: Docker compose file for running Swagger UI with the cnrc-transfer-instruction OpenAPI specification.
+# Usage: docker-compose up
+---
+networks:
+  quickstart:
+    external: true
+    name: ${DOCKER_NETWORK}
+
+services:
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "9080:8080"
+    environment:
+      - URL=http://swagger.localhost:3000/docs/openapi
+    networks:
+      - ${DOCKER_NETWORK}
