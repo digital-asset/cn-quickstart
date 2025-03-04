@@ -76,8 +76,12 @@ build-backend: ## Build the backend service
 build-daml: ## Build the Daml model
 	./gradlew :daml:build distTar
 
+.PHONY: start-docker-desktop
+start-docker-desktop:
+	./scripts/start-docker-desktop.sh
+
 .PHONY: build-docker-images
-build-docker-images:
+build-docker-images: start-docker-desktop
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} build)
 
 .PHONY: create-app-install-request
