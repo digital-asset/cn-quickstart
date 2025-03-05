@@ -54,7 +54,7 @@ const LicensesView: React.FC = () => {
     };
 
     /**
-     * Executes the final step of the renewal if a request exists for payment.
+     * Executes the final step of the renewal if a request exists and is already paid.
      */
     const handleCompleteRenewal = async (renewalContractId: string) => {
         await completeLicenseRenewal(renewalContractId);
@@ -114,26 +114,35 @@ const LicensesView: React.FC = () => {
                             <td>
                                 {matchedRequest ? (
                                     <>
-                                        {user && matchedRequest.user === user.party && (
-                                            <a
-                                                href={payURL}
-                                                className="btn btn-primary me-2"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                Pay Renewal
-                                            </a>
-                                        )}
-                                        {isAdmin && (
+                                        {/* If the user is NOT an admin: show Pay Renewal only if NOT paid */}
+                                        {!isAdmin &&
+                                            user &&
+                                            matchedRequest.user === user.party &&
+                                            !matchedRequest.isPaid && (
+                                                <a
+                                                    href={payURL}
+                                                    className="btn btn-primary me-2"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    Pay Renewal
+                                                </a>
+                                            )}
+
+                                        {/* If the user IS an admin: show Complete Renewal only if request IS paid */}
+                                        {isAdmin && matchedRequest.isPaid && (
                                             <button
                                                 className="btn btn-success"
-                                                onClick={() => handleCompleteRenewal(matchedRequest.contractId)}
+                                                onClick={() =>
+                                                    handleCompleteRenewal(matchedRequest.contractId)
+                                                }
                                             >
                                                 Complete Renewal
                                             </button>
                                         )}
                                     </>
                                 ) : (
+                                    // If there's no existing renewal, only Admin sees the Actions button
                                     isAdmin && (
                                         <button
                                             className="btn btn-primary"
@@ -150,6 +159,7 @@ const LicensesView: React.FC = () => {
                 </tbody>
             </table>
 
+            {/* Modal for Renew/Expire actions (Admin only) */}
             {selectedLicenseId && (
                 <>
                     <div className="modal-backdrop fade show"></div>
@@ -171,8 +181,9 @@ const LicensesView: React.FC = () => {
                                     <div className="mb-4">
                                         <h6>Renew License</h6>
                                         <p>
-                                            <strong>Extension:</strong> 30 days (P30D), <strong>Payment Acceptance:</strong>{' '}
-                                            7 days (P7D), <strong>Fee:</strong> 100 CC
+                                            <strong>Extension:</strong> 30 days (P30D),{' '}
+                                            <strong>Payment Acceptance:</strong> 7 days (P7D),{' '}
+                                            <strong>Fee:</strong> 100 CC
                                         </p>
                                         <label>Description:</label>
                                         <input
@@ -186,7 +197,7 @@ const LicensesView: React.FC = () => {
                                             onClick={handleRenew}
                                             disabled={!renewDescription.trim()}
                                         >
-                                            Renew
+                                            Issue Renewal Payment Request
                                         </button>
                                     </div>
                                     <hr />
