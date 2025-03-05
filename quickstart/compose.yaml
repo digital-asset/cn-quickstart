@@ -258,7 +258,7 @@ services:
   pqs:
     image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
     container_name: pqs
-    working_dir: /daml3.2
+    working_dir: /daml3.3
     environment:
       SCRIBE_SOURCE_LEDGER_HOST: "participant-app-provider"
       SCRIBE_SOURCE_LEDGER_PORT: "${PARTICIPANT_APP_PROVIDER_LEDGER_API_PORT}"
@@ -296,56 +296,56 @@ services:
     networks:
       - ${DOCKER_NETWORK}
 
-  backend-service:
-    build:
-      context: ./docker/backend-service
-      args:
-        JAVA_VERSION: ${JAVA_VERSION}
-    container_name: backend-service
-    working_dir: /app
-    environment:
-      LEDGER_HOST: "participant-app-provider"
-      LEDGER_PORT: "${PARTICIPANT_APP_PROVIDER_LEDGER_API_PORT}"
-      POSTGRES_HOST: "${SCRIBE_POSTGRES_HOST}"
-      POSTGRES_DATABASE: "${SCRIBE_POSTGRES_DATABASE}"
-      POSTGRES_USERNAME: "${SCRIBE_POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${SCRIBE_POSTGRES_PASSWORD}"
-      OTEL_SERVICE_NAME: backend-service
-      OTEL_TRACES_EXPORTER: otlp
-      OTEL_LOGS_EXPORTER: otlp
-      OTEL_METRICS_EXPORTER: otlp
-      OTEL_METRIC_EXPORT_INTERVAL: 5000
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:${OTEL_COLLECTOR_OTLP_PORT}"
-      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
-      AUTH_APP_PROVIDER_CLIENT_ID: "${AUTH_APP_PROVIDER_CLIENT_ID}"
-      AUTH_APP_PROVIDER_CLIENT_SECRET: "${AUTH_APP_PROVIDER_CLIENT_SECRET}"
-      AUTH_APP_PROVIDER_TOKEN_URI: "${AUTH_APP_PROVIDER_TOKEN_URI}"
-      AUTH_APP_PROVIDER_AUTHORIZATION_URI: "${AUTH_APP_PROVIDER_AUTHORIZATION_URI}"
-      AUTH_APP_PROVIDER_JWK_SET_URI: "${AUTH_APP_PROVIDER_JWK_SET_URI}"
-      AUTH_APP_USER_CLIENT_ID: "${AUTH_APP_USER_CLIENT_ID}"
-      AUTH_APP_USER_CLIENT_SECRET: "${AUTH_APP_USER_CLIENT_SECRET}"
-      AUTH_APP_USER_TOKEN_URI: "${AUTH_APP_USER_TOKEN_URI}"
-      AUTH_APP_USER_AUTHORIZATION_URI: "${AUTH_APP_USER_AUTHORIZATION_URI}"
-      AUTH_APP_USER_JWK_SET_URI: "${AUTH_APP_USER_JWK_SET_URI}"
-      LEDGER_API_ADMIN_USER: "${LEDGER_API_ADMIN_USER}"
-      JAVA_OPTS: "-javaagent:/otel-agent.jar -Dotel.instrumentation.logback-appender.experimental-log-attributes=true -Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true"
-    volumes:
-      - ./backend/build/distributions/backend.tar:/backend.tar
-      - ./backend/build/otel-agent/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar:/otel-agent.jar
-      - ./docker/utils.sh:/app/utils.sh
-      - ./docker/backend-service/start.sh:/app/start.sh
-    command: /app/start.sh
-    ports:
-      - "${BACKEND_PORT}:8080"
-    depends_on:
-      pqs:
-        condition: service_started
-      participant-app-provider:
-        condition: service_healthy
-      await-onboarding-done:
-        condition: service_healthy
-    networks:
-      - ${DOCKER_NETWORK}
+#  backend-service:
+#    build:
+#      context: ./docker/backend-service
+#      args:
+#        JAVA_VERSION: ${JAVA_VERSION}
+#    container_name: backend-service
+#    working_dir: /app
+#    environment:
+#      LEDGER_HOST: "participant-app-provider"
+#      LEDGER_PORT: "${PARTICIPANT_APP_PROVIDER_LEDGER_API_PORT}"
+#      POSTGRES_HOST: "${SCRIBE_POSTGRES_HOST}"
+#      POSTGRES_DATABASE: "${SCRIBE_POSTGRES_DATABASE}"
+#      POSTGRES_USERNAME: "${SCRIBE_POSTGRES_USER}"
+#      POSTGRES_PASSWORD: "${SCRIBE_POSTGRES_PASSWORD}"
+#      OTEL_SERVICE_NAME: backend-service
+#      OTEL_TRACES_EXPORTER: otlp
+#      OTEL_LOGS_EXPORTER: otlp
+#      OTEL_METRICS_EXPORTER: otlp
+#      OTEL_METRIC_EXPORT_INTERVAL: 5000
+#      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:${OTEL_COLLECTOR_OTLP_PORT}"
+#      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+#      AUTH_APP_PROVIDER_CLIENT_ID: "${AUTH_APP_PROVIDER_CLIENT_ID}"
+#      AUTH_APP_PROVIDER_CLIENT_SECRET: "${AUTH_APP_PROVIDER_CLIENT_SECRET}"
+#      AUTH_APP_PROVIDER_TOKEN_URI: "${AUTH_APP_PROVIDER_TOKEN_URI}"
+#      AUTH_APP_PROVIDER_AUTHORIZATION_URI: "${AUTH_APP_PROVIDER_AUTHORIZATION_URI}"
+#      AUTH_APP_PROVIDER_JWK_SET_URI: "${AUTH_APP_PROVIDER_JWK_SET_URI}"
+#      AUTH_APP_USER_CLIENT_ID: "${AUTH_APP_USER_CLIENT_ID}"
+#      AUTH_APP_USER_CLIENT_SECRET: "${AUTH_APP_USER_CLIENT_SECRET}"
+#      AUTH_APP_USER_TOKEN_URI: "${AUTH_APP_USER_TOKEN_URI}"
+#      AUTH_APP_USER_AUTHORIZATION_URI: "${AUTH_APP_USER_AUTHORIZATION_URI}"
+#      AUTH_APP_USER_JWK_SET_URI: "${AUTH_APP_USER_JWK_SET_URI}"
+#      LEDGER_API_ADMIN_USER: "${LEDGER_API_ADMIN_USER}"
+#      JAVA_OPTS: "-javaagent:/otel-agent.jar -Dotel.instrumentation.logback-appender.experimental-log-attributes=true -Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true"
+#    volumes:
+#      - ./backend/build/distributions/backend.tar:/backend.tar
+#      - ./backend/build/otel-agent/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar:/otel-agent.jar
+#      - ./docker/utils.sh:/app/utils.sh
+#      - ./docker/backend-service/start.sh:/app/start.sh
+#    command: /app/start.sh
+#    ports:
+#      - "${BACKEND_PORT}:8080"
+#    depends_on:
+#      pqs:
+#        condition: service_started
+#      participant-app-provider:
+#        condition: service_healthy
+#      await-onboarding-done:
+#        condition: service_healthy
+#    networks:
+#      - ${DOCKER_NETWORK}
 
   postgres-splice-app-provider:
     extends:
@@ -444,35 +444,35 @@ services:
     networks:
       - ${DOCKER_NETWORK}
 
-  nginx-app-provider:
-    image: "nginx:${NGINX_VERSION}"
-    container_name: nginx-app-provider
-    volumes:
-      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./frontend/dist/:/usr/share/nginx/html
-      - ./config/nginx/app-provider/frontend.conf:/etc/nginx/conf.d/default.conf
-      - ./config/nginx/app-provider/common-backend-proxy-settings.conf:/etc/nginx/common-backend-proxy-settings.conf
-      - ./config/nginx/app-provider/wallet.conf:/etc/nginx/conf.d/wallet.conf
-    ports:
-      - "${APP_PROVIDER_UI_PORT}:80"
-    depends_on:
-      - backend-service
-      - wallet-web-ui-app-provider
-    restart: always
-    logging: *default-logging
-    networks:
-      - ${DOCKER_NETWORK}
-
-  wallet-web-ui-app-provider:
-    extends:
-      file: docker/compose-validator.yaml
-      service: wallet-web-ui
-    container_name: wallet-web-ui-app-provider
-    logging: *default-logging
-    environment:
-      - SPLICE_APP_UI_AUTH_URL=${AUTH_APP_PROVIDER_URL}
-    networks:
-      - ${DOCKER_NETWORK}
+#  nginx-app-provider:
+#    image: "nginx:${NGINX_VERSION}"
+#    container_name: nginx-app-provider
+#    volumes:
+#      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+#      - ./frontend/dist/:/usr/share/nginx/html
+#      - ./config/nginx/app-provider/frontend.conf:/etc/nginx/conf.d/default.conf
+#      - ./config/nginx/app-provider/common-backend-proxy-settings.conf:/etc/nginx/common-backend-proxy-settings.conf
+#      - ./config/nginx/app-provider/wallet.conf:/etc/nginx/conf.d/wallet.conf
+#    ports:
+#      - "${APP_PROVIDER_UI_PORT}:80"
+#    depends_on:
+#      - backend-service
+#      - wallet-web-ui-app-provider
+#    restart: always
+#    logging: *default-logging
+#    networks:
+#      - ${DOCKER_NETWORK}
+#
+#  wallet-web-ui-app-provider:
+#    extends:
+#      file: docker/compose-validator.yaml
+#      service: wallet-web-ui
+#    container_name: wallet-web-ui-app-provider
+#    logging: *default-logging
+#    environment:
+#      - SPLICE_APP_UI_AUTH_URL=${AUTH_APP_PROVIDER_URL}
+#    networks:
+#      - ${DOCKER_NETWORK}
 
 ###############################################################################################################
 ### SUPER VALIDATOR

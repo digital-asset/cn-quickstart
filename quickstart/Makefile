@@ -62,19 +62,15 @@ SETUP_COMMAND := ./gradlew configureProfiles --no-daemon --console=plain --quiet
 
 # Build targets
 .PHONY: build
-build: build-frontend build-backend build-daml build-docker-images ## Build frontend, backend, Daml model and docker images
+build: build-frontend build-daml build-docker-images ## Build frontend, backend, Daml model and docker images
 
 .PHONY: build-frontend
 build-frontend: ## Build the frontend application
 	cd frontend && npm install && npm run build
 
-.PHONY: build-backend
-build-backend: ## Build the backend service
-	./gradlew :backend:build
-
 .PHONY: build-daml
 build-daml: ## Build the Daml model
-	./gradlew :daml:build distTar
+	./gradlew :daml:build
 
 .PHONY: build-docker-images
 build-docker-images:
@@ -83,10 +79,6 @@ build-docker-images:
 .PHONY: create-app-install-request
 create-app-install-request: ## Submit an App Install Request from the App User participant node
 	docker compose -f docker/app-user-shell/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm create-app-install-request || true
-
-.PHONY: restart-backend
-restart-backend: build-backend ## Build and start the application
-	$(call docker-compose, restart backend-service)
 
 .PHONY: restart-frontend
 restart-frontend: build-frontend ## Build and start the application

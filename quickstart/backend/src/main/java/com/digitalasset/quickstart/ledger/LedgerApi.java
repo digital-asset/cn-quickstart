@@ -274,22 +274,18 @@ public class LedgerApi {
                     TransactionOuterClass.TransactionTree txTree = response.getTransaction();
                     long offset = txTree.getOffset();
                     String workflowId = txTree.getWorkflowId();
-                    String rootEventId = txTree.getRootEventIdsCount() > 0 ? txTree.getRootEventIds(0) : "";
-                    TransactionOuterClass.TreeEvent event = txTree.getEventsByIdMap().get(rootEventId);
-                    String eventId = event != null ? rootEventId : null;
+                    String eventId =  null;
 
                     Map<String, Object> completionAttrs = new HashMap<>(attrs);
                     completionAttrs.put("ledgerOffset", offset);
                     completionAttrs.put("workflowId", workflowId);
-                    if (eventId != null) {
-                        completionAttrs.put("eventId", eventId);
-                    }
+
 
                     LoggingSpanHelper.setSpanAttributes(currentSpan, completionAttrs);
                     LoggingSpanHelper.logInfo(logger, "Exercised choice", completionAttrs);
 
                     ValueOuterClass.Value resultPayload =
-                            event != null ? event.getExercised().getExerciseResult() : ValueOuterClass.Value.getDefaultInstance();
+                            ValueOuterClass.Value.getDefaultInstance();
 
                     @SuppressWarnings("unchecked")
                     Result result = (Result) proto2Dto.choiceResult(choice.templateId(), choice.choiceName())
