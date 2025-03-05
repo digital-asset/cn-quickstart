@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * A single repository class that wraps PQS queries with typed methods.
+ * Repository for accessing active Daml contracts via PQS.
  */
 @Repository
 public class DamlRepository {
@@ -30,44 +30,47 @@ public class DamlRepository {
         this.pqs = pqs;
     }
 
-    // ------------------------------------------------------------------------
-    // LicenseRenewalRequest queries
-    // ------------------------------------------------------------------------
-
     /**
-     * Find all active LicenseRenewalRequest contracts.
+     * Finds active License contracts where the user or provider matches the given party.
      */
-    public CompletableFuture<List<Contract<LicenseRenewalRequest>>> findActiveLicenseRenewalRequests() {
-        return pqs.active(LicenseRenewalRequest.class);
+    public CompletableFuture<List<Contract<License>>> findActiveLicensesByParty(String party) {
+        String whereClause = "payload->>'user' = ? OR payload->>'provider' = ?";
+        return pqs.activeWhere(License.class, whereClause, party, party);
     }
 
     /**
-     * Fetch a LicenseRenewalRequest contract by contract ID.
+     * Finds active LicenseRenewalRequest contracts where the user or provider matches the given party.
+     */
+    public CompletableFuture<List<Contract<LicenseRenewalRequest>>> findActiveLicenseRenewalRequestsByParty(
+            String party
+    ) {
+        String whereClause = "payload->>'user' = ? OR payload->>'provider' = ?";
+        return pqs.activeWhere(LicenseRenewalRequest.class, whereClause, party, party);
+    }
+
+    /**
+     * Fetches a LicenseRenewalRequest contract by contract ID.
      */
     public CompletableFuture<Contract<LicenseRenewalRequest>> findLicenseRenewalRequestById(String contractId) {
         return pqs.byContractId(LicenseRenewalRequest.class, contractId);
     }
 
-    // ------------------------------------------------------------------------
-    // License queries
-    // ------------------------------------------------------------------------
-
     /**
-     * Find all active License contracts.
+     * Finds all active License contracts (no filters).
      */
-    public CompletableFuture<List<Contract<License>>> findActiveLicenses() {
+    public CompletableFuture<List<Contract<License>>> findAllActiveLicenses() {
         return pqs.active(License.class);
     }
 
     /**
-     * Fetch a License contract by contract ID.
+     * Fetches a License contract by contract ID.
      */
     public CompletableFuture<Contract<License>> findLicenseById(String contractId) {
         return pqs.byContractId(License.class, contractId);
     }
 
     /**
-     * Fetch a single active License that matches user, provider, licenseNum, and dso.
+     * Fetches a single active License matching all given fields.
      */
     public CompletableFuture<Optional<Contract<License>>> findSingleActiveLicense(
             String user,
@@ -80,22 +83,11 @@ public class DamlRepository {
                         + "AND payload->>'provider' = ? "
                         + "AND (payload->>'licenseNum')::int = ? "
                         + "AND payload->>'dso' = ?";
-        return pqs.singleActiveWhere(
-                License.class,
-                whereClause,
-                user,
-                provider,
-                licenseNum,
-                dso
-        );
+        return pqs.singleActiveWhere(License.class, whereClause, user, provider, licenseNum, dso);
     }
 
-    // ------------------------------------------------------------------------
-    // AcceptedAppPayment queries
-    // ------------------------------------------------------------------------
-
     /**
-     * Fetch a single active AcceptedAppPayment matching a given reference, user, and provider.
+     * Fetches a single active AcceptedAppPayment matching the given reference, user, and provider.
      */
     public CompletableFuture<Optional<Contract<AcceptedAppPayment>>> findSingleActiveAcceptedAppPayment(
             String referenceCid,
@@ -106,46 +98,32 @@ public class DamlRepository {
                 "payload->>'reference' = ? "
                         + "AND payload->>'sender' = ? "
                         + "AND payload->>'provider' = ?";
-        return pqs.singleActiveWhere(
-                AcceptedAppPayment.class,
-                whereClause,
-                referenceCid,
-                user,
-                provider
-        );
+        return pqs.singleActiveWhere(AcceptedAppPayment.class, whereClause, referenceCid, user, provider);
     }
 
-    // ------------------------------------------------------------------------
-    // AppInstall queries
-    // ------------------------------------------------------------------------
-
     /**
-     * Fetch all active AppInstall contracts.
+     * Finds all active AppInstall contracts.
      */
     public CompletableFuture<List<Contract<AppInstall>>> findActiveAppInstalls() {
         return pqs.active(AppInstall.class);
     }
 
     /**
-     * Fetch an AppInstall contract by contract ID.
+     * Fetches an AppInstall contract by contract ID.
      */
     public CompletableFuture<Contract<AppInstall>> findAppInstallById(String contractId) {
         return pqs.byContractId(AppInstall.class, contractId);
     }
 
-    // ------------------------------------------------------------------------
-    // AppInstallRequest queries
-    // ------------------------------------------------------------------------
-
     /**
-     * Fetch all active AppInstallRequest contracts.
+     * Finds all active AppInstallRequest contracts.
      */
     public CompletableFuture<List<Contract<AppInstallRequest>>> findActiveAppInstallRequests() {
         return pqs.active(AppInstallRequest.class);
     }
 
     /**
-     * Fetch an AppInstallRequest contract by contract ID.
+     * Fetches an AppInstallRequest contract by contract ID.
      */
     public CompletableFuture<Contract<AppInstallRequest>> findAppInstallRequestById(String contractId) {
         return pqs.byContractId(AppInstallRequest.class, contractId);

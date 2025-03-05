@@ -47,7 +47,7 @@ import static com.digitalasset.quickstart.utility.ContextAwareCompletableFutures
 import static com.digitalasset.quickstart.utility.ContextAwareCompletableFutures.supplyWithin;
 
 /**
- * Implements the License management endpoints.
+ * License management service for handling contract-based operations on Licenses.
  */
 @Controller
 @RequestMapping("${openapi.asset.base-path:}")
@@ -108,24 +108,38 @@ public class LicenseApiImpl implements LicensesApi {
     private CompletableFuture<List<org.openapitools.model.License>> fetchLicensesAndRenewals(String party, Span span) {
         LoggingSpanHelper.addEventWithAttributes(span, "Fetching licenses and renewal requests", Map.of("party", party));
 
-        return damlRepository.findActiveLicenses()
+        return damlRepository.findActiveLicensesByParty(party)
                 .thenCompose(licenseContracts ->
-                        damlRepository.findActiveLicenseRenewalRequests()
-                                .thenApply(renewalContracts -> buildLicenseList(party, licenseContracts, renewalContracts))
+                        damlRepository.findActiveLicenseRenewalRequestsByParty(party)
+                                .thenApply(renewalContracts ->
+                                        buildLicenseList(licenseContracts, renewalContracts)
+                                )
                 );
     }
 
+    // Production-grade key for grouping
+    private static record RenewalKey(String dso, String provider, String user, int licenseNum) {}
+
+    /**
+     * Builds a list of License objects by associating each license contract with its matching renewals.
+     */
     private List<org.openapitools.model.License> buildLicenseList(
-            String party,
             List<Contract<License>> licenseContracts,
             List<Contract<quickstart_licensing.licensing.license.LicenseRenewalRequest>> renewalContracts
     ) {
+        Map<RenewalKey, List<Contract<quickstart_licensing.licensing.license.LicenseRenewalRequest>>> groupedRenewals =
+                renewalContracts.stream().collect(
+                        Collectors.groupingBy(rc ->
+                                new RenewalKey(
+                                        rc.payload.getDso.getParty,
+                                        rc.payload.getProvider.getParty,
+                                        rc.payload.getUser.getParty,
+                                        rc.payload.getLicenseNum.intValue()
+                                )
+                        )
+                );
+
         return licenseContracts.stream()
-                .filter(contract -> {
-                    String user = contract.payload.getUser.getParty;
-                    String provider = contract.payload.getProvider.getParty;
-                    return party.equals(user) || party.equals(provider);
-                })
                 .map(contract -> {
                     org.openapitools.model.License apiLicense = new org.openapitools.model.License();
                     apiLicense.setContractId(contract.contractId.getContractId);
@@ -139,22 +153,23 @@ public class LicenseApiImpl implements LicensesApi {
                     lp.setMeta(meta);
                     apiLicense.setParams(lp);
 
-                    apiLicense.setExpiresAt(OffsetDateTime.ofInstant(contract.payload.getExpiresAt, ZoneOffset.UTC));
+                    apiLicense.setExpiresAt(
+                            OffsetDateTime.ofInstant(contract.payload.getExpiresAt, ZoneOffset.UTC)
+                    );
                     apiLicense.setLicenseNum(contract.payload.getLicenseNum.intValue());
 
-                    String dso = contract.payload.getDso.getParty;
-                    String prov = contract.payload.getProvider.getParty;
-                    String usr = contract.payload.getUser.getParty;
-                    long licNum = contract.payload.getLicenseNum;
+                    RenewalKey key = new RenewalKey(
+                            contract.payload.getDso.getParty,
+                            contract.payload.getProvider.getParty,
+                            contract.payload.getUser.getParty,
+                            contract.payload.getLicenseNum.intValue()
+                    );
 
-                    List<org.openapitools.model.LicenseRenewalRequest> matchingRenewals =
-                            renewalContracts.stream()
-                                    .filter(rc ->
-                                            rc.payload.getDso.getParty.equals(dso)
-                                                    && rc.payload.getProvider.getParty.equals(prov)
-                                                    && rc.payload.getUser.getParty.equals(usr)
-                                                    && rc.payload.getLicenseNum.equals(licNum)
-                                    )
+                    List<Contract<quickstart_licensing.licensing.license.LicenseRenewalRequest>> matchedRenewals =
+                            groupedRenewals.getOrDefault(key, Collections.emptyList());
+
+                    List<org.openapitools.model.LicenseRenewalRequest> apiRenewals =
+                            matchedRenewals.stream()
                                     .map(rc -> {
                                         org.openapitools.model.LicenseRenewalRequest r = new org.openapitools.model.LicenseRenewalRequest();
                                         r.setContractId(rc.contractId.getContractId);
@@ -172,7 +187,7 @@ public class LicenseApiImpl implements LicensesApi {
                                     })
                                     .collect(Collectors.toList());
 
-                    apiLicense.setRenewalRequests(matchingRenewals);
+                    apiLicense.setRenewalRequests(apiRenewals);
                     return apiLicense;
                 })
                 .collect(Collectors.toList());
@@ -203,7 +218,9 @@ public class LicenseApiImpl implements LicensesApi {
         return authenticatedPartyService.getPartyOrFail()
                 .thenCompose(party ->
                         CompletableFuture.supplyAsync(
-                                supplyWithin(parentContext, () -> exerciseLicenseRenewChoice(party, contractId, commandId, licenseRenewRequest, attributes, methodSpan))
+                                supplyWithin(parentContext, () ->
+                                        exerciseLicenseRenewChoice(party, contractId, commandId, licenseRenewRequest, attributes, methodSpan)
+                                )
                         ).thenCompose(cf -> cf)
                 )
                 .whenComplete(
@@ -423,7 +440,9 @@ public class LicenseApiImpl implements LicensesApi {
         return authenticatedPartyService.getPartyOrFail()
                 .thenCompose(actingParty ->
                         CompletableFuture.supplyAsync(
-                                supplyWithin(parentContext, () -> exerciseLicenseExpireChoice(actingParty, contractId, commandId, licenseExpireRequest, attributes, methodSpan))
+                                supplyWithin(parentContext, () ->
+                                        exerciseLicenseExpireChoice(actingParty, contractId, commandId, licenseExpireRequest, attributes, methodSpan)
+                                )
                         ).thenCompose(cf -> cf)
                 )
                 .whenComplete(
@@ -461,9 +480,6 @@ public class LicenseApiImpl implements LicensesApi {
                 });
     }
 
-    /**
-     * Retrieves a disclosed contract for the AmuletRules.
-     */
     private CompletableFuture<CommandsOuterClass.DisclosedContract> fetchAmuletRulesDisclosedContract() {
         return scanProxyService.getAmuletRules().thenApply(resp ->
                 buildDisclosedContractFromApi(
@@ -474,19 +490,19 @@ public class LicenseApiImpl implements LicensesApi {
         );
     }
 
-    /**
-     * Retrieves a disclosed contract for the open mining round matching the provided round number.
-     */
     private CompletableFuture<CommandsOuterClass.DisclosedContract> fetchOpenMiningRoundDisclosedContract(Long roundNumber) {
         return scanProxyService.getOpenAndIssuingMiningRounds().thenCompose(resp -> {
             if (resp.getOpenMiningRounds().isEmpty()) {
                 return CompletableFuture.failedFuture(new RuntimeException("No open mining rounds found"));
             }
             var maybeContract = resp.getOpenMiningRounds().stream()
-                    .filter(round -> Long.valueOf(round.getContract().getPayload().getRound().getNumber()).equals(roundNumber))
+                    .filter(round -> Long.valueOf(round.getContract().getPayload().getRound().getNumber())
+                            .equals(roundNumber))
                     .findFirst();
             if (maybeContract.isEmpty()) {
-                return CompletableFuture.failedFuture(new IllegalStateException("No open mining round found with number: " + roundNumber));
+                return CompletableFuture.failedFuture(
+                        new IllegalStateException("No open mining round found with number: " + roundNumber)
+                );
             }
             var contract = maybeContract.get().getContract();
             return CompletableFuture.completedFuture(
