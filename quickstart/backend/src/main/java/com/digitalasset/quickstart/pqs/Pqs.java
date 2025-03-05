@@ -279,9 +279,6 @@ public class Pqs {
         return combined;
     }
 
-    public JdbcTemplate getJdbcTemplate() {
-        return jdbcTemplate;
-    }
 
     public Dictionary<Converter<String, Object>> getJson2Dto() {
         return json2Dto;
