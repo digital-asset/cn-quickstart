@@ -683,6 +683,7 @@ components:
           - licenseFeeCc
           - licenseExtensionDuration
           - reference
+          - isPaid
       properties:
         contractId:
           type: string
@@ -701,6 +702,8 @@ components:
           description: "RelTime representing how long the license should be extended."
         reference:
           type: string
+        isPaid:
+          type: boolean
 
     LicenseExpireRequest:
       type: object

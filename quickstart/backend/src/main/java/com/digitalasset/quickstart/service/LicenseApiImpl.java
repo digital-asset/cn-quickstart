@@ -11,6 +11,7 @@ import com.digitalasset.quickstart.ledger.ScanProxy;
 import com.digitalasset.quickstart.oauth.AuthenticatedPartyService;
 import com.digitalasset.quickstart.pqs.Contract;
 import com.digitalasset.quickstart.repository.DamlRepository;
+import com.digitalasset.quickstart.repository.DamlRepository.LicenseRenewalRequestData;
 import com.digitalasset.quickstart.utility.LoggingSpanHelper;
 import com.digitalasset.transcode.java.ContractId;
 import com.digitalasset.transcode.java.Party;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import quickstart_licensing.licensing.license.License;
 import quickstart_licensing.licensing.license.License.License_Expire;
 import quickstart_licensing.licensing.license.License.License_Renew;
+import quickstart_licensing.licensing.license.LicenseRenewalRequest;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest.LicenseRenewalRequest_CompleteRenewal;
 import quickstart_licensing.licensing.util.Metadata;
 import splice_amulet.splice.amuletrules.AppTransferContext;
@@ -87,9 +89,11 @@ public class LicenseApiImpl implements LicensesApi {
 
         return authenticatedPartyService.getPartyOrFail()
                 .thenCompose(party ->
-                        CompletableFuture.supplyAsync(
+                        CompletableFuture
+                                .supplyAsync(
                                         supplyWithin(parentContext, () -> fetchLicensesAndRenewals(party, methodSpan))
-                                ).thenCompose(cf -> cf)
+                                )
+                                .thenCompose(cf -> cf)
                                 .thenApply(ResponseEntity::ok)
                 )
                 .whenComplete(
@@ -105,19 +109,21 @@ public class LicenseApiImpl implements LicensesApi {
                 );
     }
 
-    private CompletableFuture<List<org.openapitools.model.License>> fetchLicensesAndRenewals(String party, Span span) {
+    private CompletableFuture<List<org.openapitools.model.License>> fetchLicensesAndRenewals(
+            String party,
+            Span span
+    ) {
         LoggingSpanHelper.addEventWithAttributes(span, "Fetching licenses and renewal requests", Map.of("party", party));
 
         return damlRepository.findActiveLicensesByParty(party)
                 .thenCompose(licenseContracts ->
                         damlRepository.findActiveLicenseRenewalRequestsByParty(party)
-                                .thenApply(renewalContracts ->
-                                        buildLicenseList(licenseContracts, renewalContracts)
+                                .thenApply(renewalRecords ->
+                                        buildLicenseList(licenseContracts, renewalRecords)
                                 )
                 );
     }
 
-    // Production-grade key for grouping
     private static record RenewalKey(String dso, String provider, String user, int licenseNum) {}
 
     /**
@@ -125,16 +131,16 @@ public class LicenseApiImpl implements LicensesApi {
      */
     private List<org.openapitools.model.License> buildLicenseList(
             List<Contract<License>> licenseContracts,
-            List<Contract<quickstart_licensing.licensing.license.LicenseRenewalRequest>> renewalContracts
+            List<LicenseRenewalRequestData> renewalContracts
     ) {
-        Map<RenewalKey, List<Contract<quickstart_licensing.licensing.license.LicenseRenewalRequest>>> groupedRenewals =
+        Map<RenewalKey, List<LicenseRenewalRequestData>> groupedRenewals =
                 renewalContracts.stream().collect(
-                        Collectors.groupingBy(rc ->
+                        Collectors.groupingBy(rcData ->
                                 new RenewalKey(
-                                        rc.payload.getDso.getParty,
-                                        rc.payload.getProvider.getParty,
-                                        rc.payload.getUser.getParty,
-                                        rc.payload.getLicenseNum.intValue()
+                                        rcData.contract().payload.getDso.getParty,
+                                        rcData.contract().payload.getProvider.getParty,
+                                        rcData.contract().payload.getUser.getParty,
+                                        rcData.contract().payload.getLicenseNum.intValue()
                                 )
                         )
                 );
@@ -165,19 +171,22 @@ public class LicenseApiImpl implements LicensesApi {
                             contract.payload.getLicenseNum.intValue()
                     );
 
-                    List<Contract<quickstart_licensing.licensing.license.LicenseRenewalRequest>> matchedRenewals =
+                    List<LicenseRenewalRequestData> matchedRenewals =
                             groupedRenewals.getOrDefault(key, Collections.emptyList());
 
                     List<org.openapitools.model.LicenseRenewalRequest> apiRenewals =
                             matchedRenewals.stream()
-                                    .map(rc -> {
-                                        org.openapitools.model.LicenseRenewalRequest r = new org.openapitools.model.LicenseRenewalRequest();
+                                    .map(rcData -> {
+                                        Contract<LicenseRenewalRequest> rc = rcData.contract();
+                                        org.openapitools.model.LicenseRenewalRequest r =
+                                                new org.openapitools.model.LicenseRenewalRequest();
                                         r.setContractId(rc.contractId.getContractId);
                                         r.setProvider(rc.payload.getProvider.getParty);
                                         r.setUser(rc.payload.getUser.getParty);
                                         r.setDso(rc.payload.getDso.getParty);
                                         r.setLicenseNum(rc.payload.getLicenseNum.intValue());
                                         r.setLicenseFeeCc(rc.payload.getLicenseFeeCc);
+                                        r.setIsPaid(rcData.isPaid());
 
                                         long micros = rc.payload.getLicenseExtensionDuration.getMicroseconds;
                                         String approximateDays = (micros / 1_000_000 / 3600 / 24) + " days";
@@ -193,9 +202,6 @@ public class LicenseApiImpl implements LicensesApi {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Exercises the License_Renew choice on a License.
-     */
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<Void>> renewLicense(
@@ -278,9 +284,6 @@ public class LicenseApiImpl implements LicensesApi {
                 });
     }
 
-    /**
-     * Completes a LicenseRenewalRequest by referencing an AcceptedAppPayment and the existing License.
-     */
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<Void>> completeLicenseRenewal(
@@ -323,7 +326,7 @@ public class LicenseApiImpl implements LicensesApi {
     private CompletableFuture<ResponseEntity<Void>> processLicenseRenewal(
             String actingParty,
             String commandId,
-            Contract<quickstart_licensing.licensing.license.LicenseRenewalRequest> lrrContract,
+            Contract<LicenseRenewalRequest> lrrContract,
             Map<String, Object> initialAttrs,
             Span span
     ) {
@@ -346,7 +349,7 @@ public class LicenseApiImpl implements LicensesApi {
     private CompletableFuture<ResponseEntity<Void>> handleAcceptedAppPayment(
             String actingParty,
             String commandId,
-            Contract<quickstart_licensing.licensing.license.LicenseRenewalRequest> lrrContract,
+            Contract<LicenseRenewalRequest> lrrContract,
             Contract<AcceptedAppPayment> acceptedPayment,
             String dso,
             Long licenseNum,
@@ -366,14 +369,23 @@ public class LicenseApiImpl implements LicensesApi {
                 LoggingSpanHelper.logError(logger, "No matching License found", initialAttrs, null);
                 return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
             }
-            return finalizeLicenseRenewal(actingParty, commandId, lrrContract, maybeLicense.get(), acceptedPaymentCid, miningRound, initialAttrs, span);
+            return finalizeLicenseRenewal(
+                    actingParty,
+                    commandId,
+                    lrrContract,
+                    maybeLicense.get(),
+                    acceptedPaymentCid,
+                    miningRound,
+                    initialAttrs,
+                    span
+            );
         });
     }
 
     private CompletableFuture<ResponseEntity<Void>> finalizeLicenseRenewal(
             String actingParty,
             String commandId,
-            Contract<quickstart_licensing.licensing.license.LicenseRenewalRequest> lrrContract,
+            Contract<LicenseRenewalRequest> lrrContract,
             Contract<License> licenseContract,
             ContractId<AcceptedAppPayment> acceptedPaymentCid,
             Long miningRound,
@@ -381,7 +393,8 @@ public class LicenseApiImpl implements LicensesApi {
             Span span
     ) {
         CompletableFuture<CommandsOuterClass.DisclosedContract> amuletRulesFut = fetchAmuletRulesDisclosedContract();
-        CompletableFuture<CommandsOuterClass.DisclosedContract> openMiningRoundFut = fetchOpenMiningRoundDisclosedContract(miningRound);
+        CompletableFuture<CommandsOuterClass.DisclosedContract> openMiningRoundFut =
+                fetchOpenMiningRoundDisclosedContract(miningRound);
 
         return CompletableFuture.allOf(amuletRulesFut, openMiningRoundFut).thenCompose(ignored -> {
             CommandsOuterClass.DisclosedContract amuletRulesDc = amuletRulesFut.join();
@@ -414,9 +427,6 @@ public class LicenseApiImpl implements LicensesApi {
         });
     }
 
-    /**
-     * Exercises the License_Expire choice on a License.
-     */
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<String>> expireLicense(

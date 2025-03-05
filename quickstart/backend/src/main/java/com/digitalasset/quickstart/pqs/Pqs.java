@@ -215,11 +215,76 @@ public class Pqs {
                 });
     }
 
+    /**
+     * Retrieves joined active contracts based on a join condition and where clause.
+     */
+    @WithSpan
+    public <T extends Template, U extends Template, R> CompletableFuture<List<R>> activeLeftJoinWhere(
+            Class<T> primaryClazz,
+            Class<U> secondaryClazz,
+            String joinCondition,
+            String whereClause,
+            RowMapper<R> mapper,
+            Object... params
+    ) {
+        Identifier primaryId = Utils.getTemplateIdByClass(primaryClazz);
+        Identifier secondaryId = Utils.getTemplateIdByClass(secondaryClazz);
+        Span span = Span.current();
+        Map<String, Object> attrs = Map.of(
+                "primaryTemplateId", primaryId.qualifiedName(),
+                "secondaryTemplateId", secondaryId.qualifiedName(),
+                "joinCondition", joinCondition,
+                "whereClause", whereClause
+        );
+        LoggingSpanHelper.setSpanAttributes(span, attrs);
+        LoggingSpanHelper.logInfo(logger, "Fetching joined active contracts", attrs);
+
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = String.format(
+                    """
+                    SELECT prim.contract_id AS primary_contract_id,
+                           prim.payload     AS primary_payload,
+                           sec.contract_id  AS secondary_contract_id,
+                           sec.payload      AS secondary_payload
+                      FROM active(?) prim
+                 LEFT JOIN active(?) sec ON %s
+                     WHERE %s
+                    """,
+                    joinCondition, whereClause
+            );
+            Object[] mergedParams = combineJoinParams(primaryId.qualifiedName(), secondaryId.qualifiedName(), params);
+            return jdbcTemplate.query(sql, mapper, mergedParams);
+        }).whenComplete((res, ex) -> {
+            if (ex != null) {
+                LoggingSpanHelper.logError(logger, "Error fetching joined contracts", attrs, ex);
+                LoggingSpanHelper.recordException(span, ex);
+            } else {
+                LoggingSpanHelper.logInfo(logger, "Fetched joined contracts", Map.of("resultCount", res.size()));
+            }
+        });
+    }
+
     private Object[] combineParams(String qname, Object... params) {
         Object[] combined = new Object[params.length + 1];
         combined[0] = qname;
         System.arraycopy(params, 0, combined, 1, params.length);
         return combined;
+    }
+
+    private Object[] combineJoinParams(String primaryQname, String secondaryQname, Object... params) {
+        Object[] combined = new Object[params.length + 2];
+        combined[0] = primaryQname;
+        combined[1] = secondaryQname;
+        System.arraycopy(params, 0, combined, 2, params.length);
+        return combined;
+    }
+
+    public JdbcTemplate getJdbcTemplate() {
+        return jdbcTemplate;
+    }
+
+    public Dictionary<Converter<String, Object>> getJson2Dto() {
+        return json2Dto;
     }
 
     private class PqsContractRowMapper<T extends Template> implements RowMapper<Contract<T>> {

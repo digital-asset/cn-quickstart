@@ -5,12 +5,14 @@ package com.digitalasset.quickstart.repository;
 
 import com.digitalasset.quickstart.pqs.Contract;
 import com.digitalasset.quickstart.pqs.Pqs;
-import quickstart_licensing.licensing.appinstall.AppInstall;
-import quickstart_licensing.licensing.appinstall.AppInstallRequest;
-import quickstart_licensing.licensing.license.License;
-import quickstart_licensing.licensing.license.LicenseRenewalRequest;
+import com.digitalasset.transcode.java.ContractId;
+import com.digitalasset.transcode.java.Template;
+import com.digitalasset.transcode.java.Utils;
+import com.digitalasset.transcode.schema.Identifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import quickstart_licensing.licensing.license.License;
+import quickstart_licensing.licensing.license.LicenseRenewalRequest;
 import splice_wallet_payments.splice.wallet.payment.AcceptedAppPayment;
 
 import java.util.List;
@@ -24,6 +26,12 @@ import java.util.concurrent.CompletableFuture;
 public class DamlRepository {
 
     private final Pqs pqs;
+
+    /**
+     * Represents a LicenseRenewalRequest contract paired with a flag indicating whether it is paid.
+     */
+    public static record LicenseRenewalRequestData(Contract<LicenseRenewalRequest> contract, boolean isPaid) {
+    }
 
     @Autowired
     public DamlRepository(Pqs pqs) {
@@ -39,13 +47,34 @@ public class DamlRepository {
     }
 
     /**
-     * Finds active LicenseRenewalRequest contracts where the user or provider matches the given party.
+     * Finds active LicenseRenewalRequest contracts alongside a flag indicating if each request is paid.
      */
-    public CompletableFuture<List<Contract<LicenseRenewalRequest>>> findActiveLicenseRenewalRequestsByParty(
-            String party
-    ) {
-        String whereClause = "payload->>'user' = ? OR payload->>'provider' = ?";
-        return pqs.activeWhere(LicenseRenewalRequest.class, whereClause, party, party);
+    public CompletableFuture<List<LicenseRenewalRequestData>> findActiveLicenseRenewalRequestsByParty(String party) {
+        String joinCondition = """
+            prim.payload->>'reference' = sec.payload->>'reference'
+            AND prim.payload->>'user' = sec.payload->>'sender'
+            AND prim.payload->>'provider' = sec.payload->>'provider'
+        """;
+        String whereClause = "prim.payload->>'user' = ? OR prim.payload->>'provider' = ?";
+
+        return pqs.activeLeftJoinWhere(
+                LicenseRenewalRequest.class,
+                AcceptedAppPayment.class,
+                joinCondition,
+                whereClause,
+                (rs, rowNum) -> {
+                    Contract<LicenseRenewalRequest> contract = new Contract<>(
+                            new ContractId<>(rs.getString("primary_contract_id")),
+                            (LicenseRenewalRequest) pqs.getJson2Dto()
+                                    .template(Utils.getTemplateIdByClass(LicenseRenewalRequest.class))
+                                    .convert(rs.getString("primary_payload"))
+                    );
+                    boolean isPaid = rs.getString("secondary_contract_id") != null;
+                    return new LicenseRenewalRequestData(contract, isPaid);
+                },
+                party,
+                party
+        );
     }
 
     /**
@@ -78,11 +107,12 @@ public class DamlRepository {
             Long licenseNum,
             String dso
     ) {
-        final String whereClause =
+        String whereClause =
                 "payload->>'user' = ? "
                         + "AND payload->>'provider' = ? "
                         + "AND (payload->>'licenseNum')::int = ? "
                         + "AND payload->>'dso' = ?";
+
         return pqs.singleActiveWhere(License.class, whereClause, user, provider, licenseNum, dso);
     }
 
@@ -94,38 +124,39 @@ public class DamlRepository {
             String user,
             String provider
     ) {
-        final String whereClause =
+        String whereClause =
                 "payload->>'reference' = ? "
                         + "AND payload->>'sender' = ? "
                         + "AND payload->>'provider' = ?";
+
         return pqs.singleActiveWhere(AcceptedAppPayment.class, whereClause, referenceCid, user, provider);
     }
 
     /**
      * Finds all active AppInstall contracts.
      */
-    public CompletableFuture<List<Contract<AppInstall>>> findActiveAppInstalls() {
-        return pqs.active(AppInstall.class);
+    public CompletableFuture<List<Contract<quickstart_licensing.licensing.appinstall.AppInstall>>> findActiveAppInstalls() {
+        return pqs.active(quickstart_licensing.licensing.appinstall.AppInstall.class);
     }
 
     /**
      * Fetches an AppInstall contract by contract ID.
      */
-    public CompletableFuture<Contract<AppInstall>> findAppInstallById(String contractId) {
-        return pqs.byContractId(AppInstall.class, contractId);
+    public CompletableFuture<Contract<quickstart_licensing.licensing.appinstall.AppInstall>> findAppInstallById(String contractId) {
+        return pqs.byContractId(quickstart_licensing.licensing.appinstall.AppInstall.class, contractId);
     }
 
     /**
      * Finds all active AppInstallRequest contracts.
      */
-    public CompletableFuture<List<Contract<AppInstallRequest>>> findActiveAppInstallRequests() {
-        return pqs.active(AppInstallRequest.class);
+    public CompletableFuture<List<Contract<quickstart_licensing.licensing.appinstall.AppInstallRequest>>> findActiveAppInstallRequests() {
+        return pqs.active(quickstart_licensing.licensing.appinstall.AppInstallRequest.class);
     }
 
     /**
      * Fetches an AppInstallRequest contract by contract ID.
      */
-    public CompletableFuture<Contract<AppInstallRequest>> findAppInstallRequestById(String contractId) {
-        return pqs.byContractId(AppInstallRequest.class, contractId);
+    public CompletableFuture<Contract<quickstart_licensing.licensing.appinstall.AppInstallRequest>> findAppInstallRequestById(String contractId) {
+        return pqs.byContractId(quickstart_licensing.licensing.appinstall.AppInstallRequest.class, contractId);
     }
 }
