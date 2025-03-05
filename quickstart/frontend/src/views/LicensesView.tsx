@@ -6,15 +6,16 @@ import { useLicenseStore } from '../stores/licenseStore';
 import { useUserStore } from '../stores/userStore';
 import { useLocation } from 'react-router-dom';
 
+/**
+ * Renders a table of Licenses and provides actions to renew or expire them.
+ */
 const LicensesView: React.FC = () => {
     const {
         licenses,
-        licenseRenewalRequests,
         fetchLicenses,
-        fetchLicenseRenewalRequests,
         initiateLicenseRenewal,
         initiateLicenseExpiration,
-        completeLicenseRenewal
+        completeLicenseRenewal,
     } = useLicenseStore();
 
     const { user, fetchUser } = useUserStore();
@@ -28,13 +29,11 @@ const LicensesView: React.FC = () => {
     useEffect(() => {
         fetchUser();
         fetchLicenses();
-        fetchLicenseRenewalRequests();
         const intervalId = setInterval(() => {
             fetchLicenses();
-            fetchLicenseRenewalRequests();
         }, 5000);
         return () => clearInterval(intervalId);
-    }, [fetchUser, fetchLicenses, fetchLicenseRenewalRequests]);
+    }, [fetchUser, fetchLicenses]);
 
     const closeModal = () => {
         setSelectedLicenseId(null);
@@ -54,10 +53,12 @@ const LicensesView: React.FC = () => {
         closeModal();
     };
 
+    /**
+     * Executes the final step of the renewal if a request exists for payment.
+     */
     const handleCompleteRenewal = async (renewalContractId: string) => {
         await completeLicenseRenewal(renewalContractId);
         await fetchLicenses();
-        await fetchLicenseRenewalRequests();
     };
 
     const currentURL = `${window.location.origin}${location.pathname}`;
@@ -81,7 +82,7 @@ const LicensesView: React.FC = () => {
                 </thead>
                 <tbody>
                 {licenses.map((license) => {
-                    const matchedRequest = licenseRenewalRequests.find(
+                    const matchedRequest = license.renewalRequests?.find(
                         (req) =>
                             req.dso === license.dso &&
                             req.provider === license.provider &&
@@ -170,9 +171,8 @@ const LicensesView: React.FC = () => {
                                     <div className="mb-4">
                                         <h6>Renew License</h6>
                                         <p>
-                                            <strong>Extension:</strong> 30 days (P30D),{' '}
-                                            <strong>Payment Acceptance:</strong> 7 days (P7D),{' '}
-                                            <strong>Fee:</strong> 100 CC
+                                            <strong>Extension:</strong> 30 days (P30D), <strong>Payment Acceptance:</strong>{' '}
+                                            7 days (P7D), <strong>Fee:</strong> 100 CC
                                         </p>
                                         <label>Description:</label>
                                         <input

@@ -326,12 +326,12 @@ paths:
         '400':
           description: Invalid input
 
-  /licenses/{renewalRequestId}/complete-renewal:
+  /licenses/{contractId}/complete-renewal:
     post:
       summary: Complete the License Renewal
       operationId: completeLicenseRenewal
       parameters:
-        - name: renewalRequestId
+        - name: contractId
           in: path
           required: true
           schema:

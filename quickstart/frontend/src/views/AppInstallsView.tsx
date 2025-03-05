@@ -131,7 +131,7 @@ const AppInstallsView: React.FC = () => {
 
   return (
     <div>
-      <h2>App Installs (Requests + Installs)</h2>
+      <h2>App Installs</h2>
 
       <div className="alert alert-info" role="alert">
         <strong>Note:</strong> Run <code>make create-app-install-request</code> to submit an AppInstallRequest
