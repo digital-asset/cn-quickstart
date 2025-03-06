@@ -7,6 +7,10 @@ set -eo pipefail
 get_app_provider_admin_token() {
   local secret=$1
   echo "get_app_provider_admin_token" >&2
+  if [ -z "$secret" ]; then
+    echo "Secret is empty" >&2
+    exit 1
+  fi
 
   curl -f -s -S "${AUTH_APP_PROVIDER_TOKEN_URL}" \
     -H 'Content-Type: application/x-www-form-urlencoded' \
@@ -19,6 +23,10 @@ get_app_provider_admin_token() {
 get_app_user_admin_token() {
   local secret=$1
   echo "get_app_user_admin_token" >&2
+  if [ -z "$secret" ]; then
+    echo "Secret is empty" >&2
+    exit 1
+  fi
 
   curl -f -s -S "${AUTH_APP_USER_TOKEN_URL}" \
     -H 'Content-Type: application/x-www-form-urlencoded' \
@@ -32,6 +40,10 @@ get_app_provider_user_token() {
   local user=$1
   local password=$2
   echo "get_app_provider_user_token $user" >&2
+  if [ -z "$password" ]; then
+    echo "Password is empty" >&2
+    exit 1
+  fi
 
   curl -f -s -S "${AUTH_APP_PROVIDER_TOKEN_URL}" \
     -H 'Content-Type: application/x-www-form-urlencoded' \
@@ -46,6 +58,10 @@ get_app_user_user_token() {
   local user=$1
   local password=$2
   echo "get_app_user_user_token $user" >&2
+  if [ -z "$password" ]; then
+    echo "Password is empty" >&2
+    exit 1
+  fi
 
   curl -f -s -S "${AUTH_APP_USER_TOKEN_URL}" \
     -H 'Content-Type: application/x-www-form-urlencoded' \

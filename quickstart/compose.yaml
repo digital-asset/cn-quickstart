@@ -111,61 +111,7 @@ services:
       retries: 50
     networks:
       - ${DOCKER_NETWORK:-splice_validator}
-    command: ["start-dev", "--import-realm", "--http-port=8082", "--health-enabled=true"]
-
-  # It can take significant time for parties to be allocated, which is a prerequisite for other services.
-  # This service acts as a convenience barrier until the parties are allocated to reduce errors and noise in the logs,
-  # and to give meaningful readiness signals to the user, but it is not strictly necessary for the system to function.
-  await-onboarding-done:
-    build: ./docker/await-onboarding-done/
-    container_name: await-onboarding-done
-    volumes:
-      - ./docker/await-onboarding-done/health-check.sh:/app/health-check.sh
-      - ./docker/await-onboarding-done/onboarding.sh:/app/onboarding.sh
-      - ./docker/utils.sh:/app/utils.sh
-      - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
-      - ./daml/assets/.daml/dist/quickstart-assets-0.0.1.dar:/canton/dars/quickstart-assets-0.0.1.dar
-    environment:
-      - AUTH_APP_PROVIDER_VALIDATOR_USER_ID=${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}
-      - AUTH_APP_PROVIDER_VALIDATOR_USER_NAME=${AUTH_APP_PROVIDER_VALIDATOR_USER_NAME}
-      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
-      - AUTH_APP_PROVIDER_PQS_USER_ID=${AUTH_APP_PROVIDER_PQS_USER_ID}
-      - AUTH_APP_PROVIDER_PQS_USER_NAME=${AUTH_APP_PROVIDER_PQS_USER_NAME}
-      - AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID}
-      - AUTH_APP_PROVIDER_WALLET_ADMIN_USER_NAME=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_NAME}
-      - AUTH_APP_PROVIDER_WALLET_ADMIN_USER_PASSWORD=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_PASSWORD}
-      - AUTH_APP_PROVIDER_BACKEND_USER_ID=${AUTH_APP_PROVIDER_BACKEND_USER_ID}
-      - AUTH_APP_PROVIDER_BACKEND_USER_NAME=${AUTH_APP_PROVIDER_BACKEND_USER_NAME}
-      - AUTH_APP_PROVIDER_TOKEN_URL=${AUTH_APP_PROVIDER_TOKEN_URL}
-      - AUTH_APP_USER_VALIDATOR_USER_ID=${AUTH_APP_USER_VALIDATOR_USER_ID}
-      - AUTH_APP_USER_VALIDATOR_USER_NAME=${AUTH_APP_USER_VALIDATOR_USER_NAME}
-      - AUTH_APP_USER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
-      - AUTH_APP_USER_WALLET_ADMIN_USER_ID=${AUTH_APP_USER_WALLET_ADMIN_USER_ID}
-      - AUTH_APP_USER_WALLET_ADMIN_USER_NAME=${AUTH_APP_USER_WALLET_ADMIN_USER_NAME}
-      - AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD=${AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD}
-      - AUTH_APP_USER_TOKEN_URL=${AUTH_APP_USER_TOKEN_URL}        
-    healthcheck:
-      test: ["CMD", "bash", "/app/health-check.sh"]
-      interval: 5s
-      timeout: 100s
-      retries: 1000
-      start_period: 300s
-    entrypoint: [ "tail", "-f", "/dev/null" ]
-    stdin_open: true
-    tty: true
-    depends_on:
-      participant-app-user:
-        condition: service_healthy
-      participant-app-provider:
-        condition: service_healthy
-      validator-app-user:
-        condition: service_healthy
-      validator-app-provider:
-        condition: service_healthy
-      keycloak:
-        condition: service_healthy
-    networks:
-      - ${DOCKER_NETWORK}
+    command: ["start-dev", "--import-realm", "--http-port=8082", "--health-enabled=true", "--hostname-strict=false", "--proxy-headers=forwarded"]
 
   # This is dummy service just for healthcheck purpose (always healthy)
   # upstream splice-services (participant, validator) depend on it
@@ -244,7 +190,6 @@ services:
     container_name: validator-app-user
     volumes:
       - ./docker/validator/entrypoint.sh:/validator-entrypoint.sh
-      - ./docker/validator/bootstrap.sc:/app/bootstrap.sc
     entrypoint: /validator-entrypoint.sh
     logging: *default-logging
     environment:
@@ -318,6 +263,42 @@ services:
     networks:
       - ${DOCKER_NETWORK}
 
+  validator-app-user-auto-config:
+    build: ./docker/validator-app-user-auto-config/
+    container_name: validator-app-user-auto-config
+    volumes:
+      - ./docker/validator-app-user-auto-config/health-check.sh:/app/health-check.sh
+      - ./docker/validator-app-user-auto-config/onboarding.sh:/app/onboarding.sh
+      - ./docker/utils.sh:/app/utils.sh
+      - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
+      - ./daml/assets/.daml/dist/quickstart-assets-0.0.1.dar:/canton/dars/quickstart-assets-0.0.1.dar
+    environment:
+      - AUTH_APP_USER_VALIDATOR_USER_ID=${AUTH_APP_USER_VALIDATOR_USER_ID}
+      - AUTH_APP_USER_VALIDATOR_USER_NAME=${AUTH_APP_USER_VALIDATOR_USER_NAME}
+      - AUTH_APP_USER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
+      - AUTH_APP_USER_WALLET_ADMIN_USER_ID=${AUTH_APP_USER_WALLET_ADMIN_USER_ID}
+      - AUTH_APP_USER_WALLET_ADMIN_USER_NAME=${AUTH_APP_USER_WALLET_ADMIN_USER_NAME}
+      - AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD=${AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD}
+      - AUTH_APP_USER_TOKEN_URL=${AUTH_APP_USER_TOKEN_URL}
+    healthcheck:
+      test: ["CMD", "bash", "/app/health-check.sh"]
+      interval: 5s
+      timeout: 100s
+      retries: 1000
+      start_period: 300s
+    entrypoint: [ "tail", "-f", "/dev/null" ]
+    stdin_open: true
+    tty: true
+    depends_on:
+      participant-app-user:
+        condition: service_healthy
+      validator-app-user:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+
 ###############################################################################################################
 ### Application Provider
 ###############################################################################################################
@@ -357,7 +338,7 @@ services:
         condition: service_healthy
       participant-app-provider:
         condition: service_healthy
-      await-onboarding-done:
+      validator-app-provider-auto-config:
         condition: service_healthy
     restart: on-failure:100
     networks:
@@ -389,15 +370,9 @@ services:
       AUTH_APP_PROVIDER_BACKEND_USER_ID: "${AUTH_APP_PROVIDER_BACKEND_USER_ID}"
       AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID: "${AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID}"
       AUTH_APP_PROVIDER_ISSUER_URL: "${AUTH_APP_PROVIDER_ISSUER_URL}"
-      AUTH_APP_PROVIDER_ISSUER_URL_BACKEND: "${AUTH_APP_PROVIDER_ISSUER_URL_BACKEND}"
       AUTH_APP_PROVIDER_TOKEN_URL: "${AUTH_APP_PROVIDER_TOKEN_URL}"
       AUTH_APP_PROVIDER_VALIDATOR_USER_ID: "${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}"
-      AUTH_APP_USER_BACKEND_OIDC_CLIENT_ID: "${AUTH_APP_USER_BACKEND_OIDC_CLIENT_ID}"
-      AUTH_APP_USER_ISSUER_URL: "${AUTH_APP_USER_ISSUER_URL}"
-      AUTH_APP_USER_TOKEN_URL: "${AUTH_APP_USER_TOKEN_URL}"
-      AUTH_APP_USER_VALIDATOR_USER_ID: "${AUTH_APP_USER_VALIDATOR_USER_ID}"
       AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET: "${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}"
-      AUTH_APP_USER_VALIDATOR_CLIENT_SECRET: "${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}"
       JAVA_OPTS: "-javaagent:/otel-agent.jar"
     volumes:
       - ./backend/build/distributions/backend.tar:/backend.tar
@@ -407,12 +382,18 @@ services:
     command: /app/start.sh
     ports:
       - "${BACKEND_PORT}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 300000
+      start_period: 10s
     depends_on:
       pqs:
         condition: service_started
       participant-app-provider:
         condition: service_healthy
-      await-onboarding-done:
+      validator-app-provider-auto-config:
         condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
@@ -479,7 +460,6 @@ services:
     container_name: validator-app-provider
     volumes:
       - ./docker/validator/entrypoint.sh:/validator-entrypoint.sh
-      - ./docker/validator/bootstrap.sc:/app/bootstrap.sc
     entrypoint: /validator-entrypoint.sh
     logging: *default-logging
     environment:
@@ -556,6 +536,79 @@ services:
     networks:
       - ${DOCKER_NETWORK}
 
+  validator-app-provider-auto-config:
+    build: ./docker/validator-app-provider-auto-config/
+    container_name: validator-app-provider-auto-config
+    volumes:
+      - ./docker/validator-app-provider-auto-config/health-check.sh:/app/health-check.sh
+      - ./docker/validator-app-provider-auto-config/onboarding.sh:/app/onboarding.sh
+      - ./docker/utils.sh:/app/utils.sh
+      - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
+      - ./daml/assets/.daml/dist/quickstart-assets-0.0.1.dar:/canton/dars/quickstart-assets-0.0.1.dar
+    environment:
+      - AUTH_APP_PROVIDER_VALIDATOR_USER_ID=${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}
+      - AUTH_APP_PROVIDER_VALIDATOR_USER_NAME=${AUTH_APP_PROVIDER_VALIDATOR_USER_NAME}
+      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
+      - AUTH_APP_PROVIDER_PQS_USER_ID=${AUTH_APP_PROVIDER_PQS_USER_ID}
+      - AUTH_APP_PROVIDER_PQS_USER_NAME=${AUTH_APP_PROVIDER_PQS_USER_NAME}
+      - AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID}
+      - AUTH_APP_PROVIDER_WALLET_ADMIN_USER_NAME=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_NAME}
+      - AUTH_APP_PROVIDER_WALLET_ADMIN_USER_PASSWORD=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_PASSWORD}
+      - AUTH_APP_PROVIDER_BACKEND_USER_ID=${AUTH_APP_PROVIDER_BACKEND_USER_ID}
+      - AUTH_APP_PROVIDER_BACKEND_USER_NAME=${AUTH_APP_PROVIDER_BACKEND_USER_NAME}
+      - AUTH_APP_PROVIDER_TOKEN_URL=${AUTH_APP_PROVIDER_TOKEN_URL}
+    healthcheck:
+      test: ["CMD", "bash", "/app/health-check.sh"]
+      interval: 5s
+      timeout: 100s
+      retries: 1000
+      start_period: 300s
+    entrypoint: [ "tail", "-f", "/dev/null" ]
+    stdin_open: true
+    tty: true
+    depends_on:
+      participant-app-provider:
+        condition: service_healthy
+      validator-app-provider:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+
+  backend-service-auto-config:
+    build: ./docker/backend-service-auto-config/
+    container_name: backend-service-auto-config
+    volumes:
+      - ./docker/backend-service-auto-config/health-check.sh:/app/health-check.sh
+      - ./docker/backend-service-auto-config/onboarding.sh:/app/onboarding.sh
+      - ./docker/utils.sh:/app/utils.sh
+    environment:
+      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
+      - AUTH_APP_PROVIDER_TOKEN_URL=${AUTH_APP_PROVIDER_TOKEN_URL}
+      - AUTH_APP_PROVIDER_ISSUER_URL=${AUTH_APP_PROVIDER_ISSUER_URL}
+      - AUTH_APP_USER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
+      - AUTH_APP_USER_TOKEN_URL=${AUTH_APP_USER_TOKEN_URL}
+      - AUTH_APP_USER_VALIDATOR_USER_ID=${AUTH_APP_USER_VALIDATOR_USER_ID}
+      - AUTH_APP_USER_BACKEND_OIDC_CLIENT_ID=${AUTH_APP_USER_BACKEND_OIDC_CLIENT_ID}
+      - AUTH_APP_USER_TOKEN_URL=${AUTH_APP_USER_TOKEN_URL}
+      - AUTH_APP_USER_ISSUER_URL=${AUTH_APP_USER_ISSUER_URL}
+    healthcheck:
+      test: ["CMD", "bash", "/app/health-check.sh"]
+      interval: 5s
+      timeout: 100s
+      retries: 1000
+      start_period: 300s
+    entrypoint: [ "tail", "-f", "/dev/null" ]
+    stdin_open: true
+    tty: true
+    depends_on:
+      backend-service:
+        condition: service_started
+      validator-app-user-auto-config:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
 ###############################################################################################################
 ### SUPER VALIDATOR
 ###############################################################################################################

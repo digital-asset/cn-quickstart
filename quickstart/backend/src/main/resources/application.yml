@@ -23,7 +23,7 @@ spring:
             provider: AppProvider
         provider:
           AppProviderBackend:
-            issuer-uri: ${AUTH_APP_PROVIDER_ISSUER_URL_BACKEND}
+            issuer-uri: ${AUTH_APP_PROVIDER_ISSUER_URL}
           AppProvider:
             issuer-uri: ${AUTH_APP_PROVIDER_ISSUER_URL}
 
