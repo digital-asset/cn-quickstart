@@ -1,0 +1,59 @@
+module Utility.Bootstrap.Bootstrap where 
+
+import Daml.Script
+import Utility.Bootstrap.Credential
+import Utility.Bootstrap.Registry
+import Utility.Bootstrap.Util
+import Utility.Credential.V0.Credential 
+
+data UtilitySpec = UtilitySpec
+  with
+    credentialAppSpec : CredentialAppSpec
+    registryAppSpec : RegistryAppSpec
+
+bootstrapUtility : UtilitySpec -> Script ()
+bootstrapUtility  UtilitySpec{credentialAppSpec; registryAppSpec} = do
+    debug "Bootstrapping utility..."
+    bootstrapCredentialApp credentialAppSpec
+    bootstrapRegistryApp registryAppSpec
+    debug "Bootstrapped utility."
+
+bootstrapUtilityDefault : Script () 
+bootstrapUtilityDefault = do
+    debug "Assigning default parties..."
+    UtilityParties{..} <- findOrCreateUtilityParties 
+    let 
+      instrument = "USD"
+      registrarSpec = RegistrarSpec with
+        registrar
+        instrumentSpecs = [InstrumentSpec with
+          instrumentId = instrument
+          additionalIdentifiers = []
+          issuerRequirements = [PartyCredentialRequirement registrar [("isIssuerOf", instrument)]]
+          holderRequirements = [PartyCredentialRequirement registrar [("isHolderOf", instrument)]]
+           ]
+      [holder] = holders 
+      utilitySpec = UtilitySpec with
+        credentialAppSpec = CredentialAppSpec with
+          operator 
+          dso 
+          users = operator :: provider :: registrar :: issuer :: holders
+          credentialSpecs =
+            [ CredentialSpec operator provider  "RegistryProvider" "RegistryProvider" ([Claim (partyToText provider) "hasRegistryRole" "Provider"])
+            , CredentialSpec provider registrar "RegistryRegistrar" "RegistryRegistrar" ([Claim (partyToText registrar) "hasRegistryRole" "Registrar"])
+            , CredentialSpec provider issuer "RegistryHolder" "RegistryHolder" ([Claim (partyToText issuer) "hasRegistryRole" "Holder"])
+            , CredentialSpec provider holder "RegistryHolder" "RegistryHolder" ([Claim (partyToText holder) "hasRegistryRole" "Holder"])
+            , CredentialSpec registrar issuer (instrument <> "_Issuer") (instrument <> "_Issuer") ([Claim (partyToText issuer) "isIssuerOf" instrument])
+            , CredentialSpec registrar issuer (instrument <> "_Holder") (instrument <> "_Holder") ([Claim (partyToText issuer) "isHolderOf" instrument])
+            , CredentialSpec registrar holder (instrument <> "_Holder") (instrument <> "_Holder") ([Claim (partyToText holder) "isHolderOf" instrument])
+            ]
+          packageId = "packageId"
+        registryAppSpec = RegistryAppSpec with
+          operator 
+          providerRequirements = 
+            [PartyCredentialRequirement operator [("hasRegistryRole", "Provider")]]
+          providerSpecs = 
+            [ProviderSpec provider [PartyCredentialRequirement provider [("hasRegistryRole", "Registrar")]] [PartyCredentialRequirement provider [("hasRegistryRole", "Holder")]] [registrarSpec] (issuer :: holders)]
+    debug "Bootstrapping utility with default specs..."
+    bootstrapUtility utilitySpec
+    debug "Bootstrapped utility with default specs."

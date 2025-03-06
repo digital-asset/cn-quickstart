@@ -1,0 +1,198 @@
+module Utility.Bootstrap.Registry where
+
+import DA.Foldable (forA_)
+import Daml.Script
+import Utility.Bootstrap.Util (queryFilterOrExecuteCid, waitForCid)
+import Utility.Credential.V0.Credential (Credential, PartyCredentialRequirement)
+import Utility.Registry.App.V0.Configuration.Operator (OperatorConfiguration(..))
+import Utility.Registry.App.V0.Service.Holder (HolderServiceRequest(..), HolderServiceRequest_Accept(..))
+import Utility.Registry.App.V0.Service.Provider (ProviderServiceRequest(..), ProviderServiceRequest_Accept(..), ProviderService_AcceptHolderServiceRequest(..), ProviderService_AcceptRegistrarServiceRequest(..), ProviderService_CreateProviderConfiguration(..))
+import Utility.Registry.App.V0.Service.Registrar (RegistrarServiceRequest(..), RegistrarServiceRequest_Accept(..), RegistrarService_CreateInstrumentConfiguration(..))
+import Utility.Registry.Holding.V0.Types (InstrumentIdentifier(..))
+import Utility.Registry.Operator.V0.Service.Operator (OperatorService(..))
+
+-- | Specifications for onboarding of a user in a provider role.
+data ProviderSpec = ProviderSpec
+  with
+    provider : Party
+      -- ^ Provider party.
+    registrarRequirements : [PartyCredentialRequirement]
+      -- ^ Requirements for onboarding of a registrar under this provider.
+    holderRequirements :[PartyCredentialRequirement]
+      -- ^ Requirements for onboarding of a holder under this provider.
+    registrarSpecs : [RegistrarSpec]
+      -- ^ Specifications for the registrars to onboard under this provider.
+    holders : [Party]
+      -- ^ Holders to onboard under this provider.
+  deriving (Eq, Show)
+
+-- | Specifications for a single instrument.
+data InstrumentSpec = InstrumentSpec
+  with
+    instrumentId : Text
+      -- ^ Instrument id.
+    additionalIdentifiers : [InstrumentIdentifier]
+      -- ^ Additional identifiers for the instrument.
+    issuerRequirements : [PartyCredentialRequirement]
+      -- ^ Credentials required to issue units of the instrument.
+    holderRequirements : [PartyCredentialRequirement]
+      -- ^ Credentials required to hold units of the instrument.
+  deriving (Eq, Show)
+
+-- | Specifications for onboarding of a user in a registrar role.
+data RegistrarSpec = RegistrarSpec
+  with
+    registrar : Party
+      -- ^ Registrar party.
+    instrumentSpecs : [InstrumentSpec]
+      -- ^ Specifications for the instruments registered under this registrar.
+  deriving (Eq, Show)
+
+-- | Specifications for the registry app.
+data RegistryAppSpec = RegistryAppSpec
+  with
+    operator : Party
+      -- ^ Operator party.
+    providerRequirements : [PartyCredentialRequirement]
+      -- ^ Requirements for onboarding of a provider.
+    providerSpecs : [ProviderSpec]
+      -- ^ Specifications for the providers to onboard.
+  deriving (Eq, Show)
+
+-- | Bootstrap the registry app.
+bootstrapRegistryApp : RegistryAppSpec -> Script ()
+bootstrapRegistryApp RegistryAppSpec{operator; providerRequirements; providerSpecs} = do
+  debug "Bootstrapping registry app..."
+
+  debug $ "Creating operator service for " <> partyToText operator
+  queryFilterOrExecuteCid operator (\c -> c.operator == operator) do
+    submit operator do createCmd OperatorService with operator
+
+  debug $ "Creating operator configuration for " <> partyToText operator
+  operatorConfigurationCid <- queryFilterOrExecuteCid operator (\c -> c.operator == operator) do
+    submit operator do
+      createCmd OperatorConfiguration with
+        operator
+        providerRequirements
+
+  -- Create provider services
+  let
+    createProviderService ProviderSpec{provider; registrarRequirements; holderRequirements;
+      registrarSpecs; holders} = do
+      debug $ "Creating provider service for " <> partyToText provider
+      credentialCids <- fmap fst <$> queryFilter @Credential operator (\c -> c.holder == provider)
+      forA_ credentialCids (waitForCid operator)
+
+      providerServiceRequestCid <- queryFilterOrExecuteCid provider
+        (\c -> c.operator == operator && c.provider == provider)
+        do
+          submit provider do createCmd ProviderServiceRequest with operator; provider
+      waitForCid operator providerServiceRequestCid
+
+      providerServiceCid <- queryFilterOrExecuteCid operator
+        (\c -> c.operator == operator && c.provider == provider)
+        do
+          (.providerServiceCid) <$> submit operator do
+            exerciseCmd providerServiceRequestCid ProviderServiceRequest_Accept with
+              operatorConfigurationCid
+              credentialCids
+      waitForCid provider providerServiceCid
+
+      debug $ "Creating provider configuration for " <> partyToText provider
+      providerConfigurationCid <- queryFilterOrExecuteCid provider
+        ( \c -> c.operator == operator &&
+                c.provider == provider &&
+                c.registrarRequirements == registrarRequirements &&
+                c.holderRequirements == holderRequirements
+        )
+        do
+          (.providerConfigurationCid) <$> submit provider do
+            exerciseCmd providerServiceCid ProviderService_CreateProviderConfiguration with
+              registrarRequirements
+              holderRequirements
+
+      -- Create registrar services
+      let
+        createRegistrarService RegistrarSpec{registrar; instrumentSpecs}  = do
+          debug $ "Creating registrar service for " <> partyToText registrar
+          credentialCids <- fmap fst <$> queryFilter @Credential provider
+            (\c -> c.holder == registrar)
+          forA_ credentialCids (waitForCid provider)
+
+          registrarServiceRequestCid <- queryFilterOrExecuteCid registrar
+            (\c -> c.operator == operator && c.provider == provider && c.registrar == registrar)
+            do
+              submit registrar do
+                createCmd RegistrarServiceRequest with operator; provider; registrar
+          waitForCid provider registrarServiceRequestCid
+
+          registrarServiceCid <- queryFilterOrExecuteCid provider
+            (\c -> c.operator == operator && c.provider == provider && c.registrar == registrar)
+            do
+              (.registrarServiceCid) <$> submit provider do
+                exerciseCmd providerServiceCid ProviderService_AcceptRegistrarServiceRequest with
+                  cid = registrarServiceRequestCid
+                  payload = RegistrarServiceRequest_Accept with
+                    providerConfigurationCid
+                    credentialCids
+          waitForCid registrar registrarServiceCid
+
+          let
+            createInstrumentConfiguration InstrumentSpec{instrumentId; additionalIdentifiers;
+              issuerRequirements; holderRequirements} = do
+              debug $ "Creating instrument configuration for " <> instrumentId <> "@"
+                <> partyToText registrar
+              let
+                defaultIdentifier = InstrumentIdentifier with
+                  source = registrar
+                  id = instrumentId
+                  scheme = "RegistrarInternalScheme"
+              queryFilterOrExecuteCid registrar
+                ( \c -> c.operator == operator &&
+                        c.provider == provider &&
+                        c.registrar == registrar &&
+                        c.defaultIdentifier == defaultIdentifier &&
+                        c.issuerRequirements == issuerRequirements &&
+                        c.holderRequirements == holderRequirements
+                )
+                do
+                  (.instrumentConfigurationCid) <$> submit registrar do
+                    exerciseCmd registrarServiceCid
+                      RegistrarService_CreateInstrumentConfiguration with
+                        instrumentId
+                        additionalIdentifiers
+                        issuerRequirements
+                        holderRequirements
+          forA_ instrumentSpecs createInstrumentConfiguration
+
+          pure registrarServiceCid
+
+      forA_ registrarSpecs createRegistrarService
+
+      -- Create holder services
+      let
+        createHolderService holder = do
+          debug $ "Creating holder service for " <> partyToText holder
+          credentialCids <- fmap fst <$> queryFilter @Credential provider (\c -> c.holder == holder)
+          forA_ credentialCids (waitForCid provider)
+
+          holderServiceRequestCid <- queryFilterOrExecuteCid holder
+            (\c -> c.operator == operator && c.provider == provider && c.holder == holder)
+            do
+              submit holder do createCmd HolderServiceRequest with operator; provider; holder
+          waitForCid provider holderServiceRequestCid
+
+          holderServiceCid <- queryFilterOrExecuteCid provider
+            (\c -> c.operator == operator && c.provider == provider && c.holder == holder)
+            do
+              (.holderServiceCid) <$> submit provider do
+                exerciseCmd providerServiceCid ProviderService_AcceptHolderServiceRequest with
+                  cid = holderServiceRequestCid
+                  payload = HolderServiceRequest_Accept with
+                    providerConfigurationCid; credentialCids
+          waitForCid holder holderServiceCid
+          pure holderServiceCid
+
+      forA_ holders createHolderService
+
+  forA_ providerSpecs createProviderService

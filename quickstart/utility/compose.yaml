@@ -1,0 +1,90 @@
+# Copyright (c) 2024, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+networks:
+  quickstart:
+    external: true
+    name: ${DOCKER_NETWORK}
+
+services:
+  get-participant-config:
+    image: "${IMAGE_REPO}canton:${IMAGE_TAG}"
+    volumes:
+      - type: bind
+        source: ./canton-console
+        read_only: true
+        target: /app/env
+      - type: bind
+        source: ./dars
+        read_only: true
+        target: /dars
+      - type: bind
+        source: ./output
+        read_only: false
+        target: /output
+    environment:
+      UTILITY_DARS: >
+          utility-version-v0-0.0.1.dar,
+          utility-credential-v0-0.0.1.dar,
+          utility-credential-app-v0-0.0.2.dar,
+          utility-credential-app-v0-0.1.0.dar,
+          utility-registry-holding-v0-0.0.1.dar,
+          utility-registry-v0-0.0.1.dar,
+          utility-registry-v0-0.1.0.dar,
+          utility-registry-app-v0-0.0.1.dar,
+          utility-registry-app-v0-0.1.0.dar,
+          utility-registry-operator-v0-0.0.1.dar,
+          utility-registry-operator-v0-0.0.2.dar
+      LEDGER_API_PROVIDER_ADDRESS: participant-app-provider
+      LEDGER_API_USER_ADDRESS: participant-app-user
+      LEDGER_API_SV_ADDRESS: participant-sv
+      PARTICIPANT_APP_PROVIDER_LEDGER_API_PORT: ${PARTICIPANT_APP_PROVIDER_LEDGER_API_PORT}
+      PARTICIPANT_APP_PROVIDER_ADMIN_API_PORT: ${PARTICIPANT_APP_PROVIDER_ADMIN_API_PORT}
+      LEDGER_API_ADMIN_USER: ${LEDGER_API_ADMIN_USER}
+      LEDGER_API_ADMIN_SECRET: ${LEDGER_API_ADMIN_SECRET}
+      AUTH_APP_PROVIDER_TOKEN_URI: ${AUTH_APP_PROVIDER_TOKEN_URI}
+      PROVIDER_ACCESS_TOKEN: ${PROVIDER_ACCESS_TOKEN}
+      USER_ACCESS_TOKEN: ${USER_ACCESS_TOKEN}
+      UTILITY_ADMIN_USER: ${UTILITY_ADMIN_USER}
+      UTILITY_OPERATOR: utility-operator 
+      UTILITY_USERS: utility-registrar,utility-provider,utility-issuer,utility-holder-1
+    entrypoint: /app/env/entrypoint.sh
+    stdin_open: true
+    tty: true
+    networks:
+      - ${DOCKER_NETWORK}
+
+  bootstrap-daml:
+    image: digitalasset-docker.jfrog.io/daml-script:3.2.0-snapshot.20250206.13406.0.ve23b19ba-debug
+    command: [
+      "--dar", "/dars/utility-bootstrap-0.0.1.dar",
+      "--script-name", "Utility.Bootstrap.Bootstrap:bootstrapUtilityDefault",
+      "--participant-config", "/output/participant-config.json"
+      ]
+    volumes:
+      - type: bind
+        source: ./dars
+        read_only: true
+        target: /dars
+      - type: bind
+        source: ./output
+        read_only: false
+        target: /output
+    environment: 
+      PROVIDER_ACCESS_TOKEN: ${PROVIDER_ACCESS_TOKEN}
+      USER_ACCESS_TOKEN: ${USER_ACCESS_TOKEN}
+    networks:
+      - ${DOCKER_NETWORK}
+
+  utility-ui: 
+    image: "${UTILITY_IMAGE_REPO}frontend:${UTILITY_VERSION}"
+    environment:
+      AUTH_AUTHORITY: ${AUTH_APP_USER_CLIENT_ID}
+      AUTH_CLIENT_ID: ${AUTH_APP_USER_CLIENT_ID}
+      AUTH_AUDIENCE: https://canton.network.global
+      UTILITY_APP_OPERATOR_PARTY_ID: ${UTILITY_APP_OPERATOR_PARTY_ID}
+    networks:
+      - ${DOCKER_NETWORK}
+    ports: 
+      - "8002:8080"

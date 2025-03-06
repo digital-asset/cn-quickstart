@@ -1,0 +1,92 @@
+module Utility.Bootstrap.Util where
+
+import DA.Time qualified as T
+import DA.Text (isPrefixOf)
+import Daml.Script
+
+-- | Executes a script only when no contract is found on the ledger for the provided party.
+-- Otherwise it will return the contract id of the queried contract. If multiple contracts are
+-- found, throw an error.
+queryOrExecuteCid : forall t. (Template t, HasEnsure t) => Party -> Script (ContractId t)
+  -> Script (ContractId t)
+queryOrExecuteCid party f = query @t party >>= processQuery f
+
+-- | Same as `queryOrExecuteCid`, but can additionally pass a predicate used to filter contracts.
+queryFilterOrExecuteCid : forall t. (Template t, HasEnsure t) => Party -> (t -> Bool)
+  -> Script (ContractId t) -> Script (ContractId t)
+queryFilterOrExecuteCid party predicate f = queryFilter @t party predicate >>= processQuery f
+
+-- | HIDE
+processQuery : Script (ContractId t) -> [(ContractId t, x)] -> Script (ContractId t)
+processQuery f = \case
+  [(cid, _)] -> pure cid
+  [] -> f
+  _ -> abort "Multiple contracts found."
+
+-- | Wait until `party` can query the target template `contractId`. Abort after `n` retries.
+-- This is used when a script requires synchronization across participant nodes.
+waitForCid : (Template t, HasEnsure t) => Party -> ContractId t -> Script ()
+waitForCid = queryWithRetries queryContractId tries
+
+-- | HIDE
+queryWithRetries : (Party -> ContractId t -> Script (Optional x)) -> Int -> Party -> ContractId t
+  -> Script ()
+queryWithRetries query tries p cid
+  | tries <= 0 = abort $ "Cid " <> show cid <> " did not appear"
+  | otherwise = do
+    debug $ "Attempting to query for contract id " <> show cid
+    r <- query p cid
+    case r of
+      None -> do
+        sleep delay
+        queryWithRetries query (tries - 1) p cid
+      Some _ ->
+        debug $ "Contract id found!"
+  where
+    delay = T.seconds 1
+
+-- | Default number of tries.
+tries : Int
+tries = 20
+
+findPartyInDetails : [PartyDetails] -> Text -> Optional PartyDetails
+findPartyInDetails partyDetails roleName = do
+  let rolePartyOptional pd = pd.displayName == Some (roleName) || isPrefixOf ("'" <> roleName <> "::") (show pd.party)
+  find rolePartyOptional partyDetails 
+
+findPartyOnParticipant : Text -> Text -> Script (Optional PartyDetails)
+findPartyOnParticipant participantName roleName = do
+  partyDetails <- filter (.isLocal) <$> listKnownPartiesOn (ParticipantName participantName)
+  pure $ findPartyInDetails partyDetails roleName
+
+findOrCreateParty : Text -> Text -> Script Party
+findOrCreateParty participantName roleName = do
+  result <- findPartyOnParticipant participantName roleName
+  case result of
+    Some pd -> pure pd.party
+    None -> do
+      let roleNameLocal = participantName <> "-" <> roleName
+      partyDetails <- filter (.isLocal) <$> listKnownParties
+      case findPartyInDetails partyDetails roleNameLocal of
+        Some pd -> pure pd.party
+        None -> do
+          debug $ "Creating party: " <> roleNameLocal
+          allocatePartyWithHint roleNameLocal (PartyIdHint roleNameLocal)
+
+data UtilityParties = UtilityParties with 
+  dso : Party
+  operator : Party
+  provider : Party
+  registrar : Party
+  issuer : Party
+  holders : [Party]
+
+findOrCreateUtilityParties : Script UtilityParties
+findOrCreateUtilityParties = do
+  dso <- findOrCreateParty "svParticipant" "DSO"
+  operator <- findOrCreateParty "providerParticipant" "utility-operator"
+  provider <- findOrCreateParty "userParticipant" "utility-provider"
+  registrar <- findOrCreateParty "userParticipant" "utility-registrar"
+  issuer <- findOrCreateParty "userParticipant" "utility-issuer"
+  holders <- mapA (\i -> findOrCreateParty "userParticipant" ("utility-holder-" <> show i)) [1]
+  pure UtilityParties with ..
