@@ -6,7 +6,6 @@ import com.digitalasset.quickstart.api.UserApi;
 import com.digitalasset.quickstart.security.AuthenticatedUserProvider;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository.TenantProperties;
-import com.digitalasset.quickstart.utility.ContextAwareCompletableFutures;
 import com.digitalasset.quickstart.utility.LoggingSpanHelper;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -21,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -47,13 +47,12 @@ public class UserApiImpl implements UserApi {
         methodSpan.addEvent("Starting getAuthenticatedUser");
         logger.atInfo().log("Received request, retrieving authenticated user asynchronously");
 
-        SecurityContext securityContext = SecurityContextHolder.getContext();
-
-        return CompletableFuture
-                .supplyAsync(
+        return CompletableFuture.completedFuture(authenticatedUserProvider.getUser())
+                .thenCompose(maybeUser ->
+                    CompletableFuture.supplyAsync(
                         supplyWithin(parentContext, () -> {
                             methodSpan.addEvent("Performing authentication checks");
-                            return authenticatedUserProvider.getUser()
+                            return maybeUser
                                     .map(user -> {
                                         // Lookup wallet URL from tenant properties
                                         String walletUrl = Optional.ofNullable(tenantPropertiesRepository.getTenant(user.getTenantId()))
@@ -68,59 +67,23 @@ public class UserApiImpl implements UserApi {
                                                 user.isAdmin(),
                                                 walletUrl
                                         );
+//
+                                        Map<String, Object> userDetailsAttrs = Map.of(
+                                                "authenticated.party", user.getPartyId(),
+                                                "authorities", user.getRoles()
+                                        );
+                                        LoggingSpanHelper.setSpanAttributes(methodSpan, userDetailsAttrs);
+                                        LoggingSpanHelper.logDebug(logger, "Resolved user details", userDetailsAttrs);
+
+                                        LoggingSpanHelper.addEventWithAttributes(methodSpan, "Constructed AuthenticatedUser object (200 OK)", null);
 
                                         // Return the AuthenticatedUser in the response
                                         return ResponseEntity.ok(out);
                                     })
-                                    .map(CompletableFuture::completedFuture)
-                                    .orElseGet(() -> CompletableFuture.completedFuture(ResponseEntity.status(401).build()));
-
-
-
-                            if (auth == null || !auth.isAuthenticated()) {
-                                methodSpan.addEvent("User not authenticated");
-                                LoggingSpanHelper.logInfo(logger, "User is not authenticated");
-                                throw new SecurityException("User is not authenticated");
-                            }
-
-                            String party = auth.getPrincipal().getName();
-                            List<String> authorities = auth.getAuthorities()
-                                    .stream()
-                                    .map(GrantedAuthority::getAuthority)
-                                    .toList();
-
-                            Map<String, Object> userDetailsAttrs = Map.of(
-                                    "authenticated.party", party,
-                                    "authorities", authorities
-                            );
-                            LoggingSpanHelper.setSpanAttributes(methodSpan, userDetailsAttrs);
-                            LoggingSpanHelper.logDebug(logger, "Resolved user details", userDetailsAttrs);
-
-                            String registrationId = auth.getAuthorizedClientRegistrationId();
-                            String walletUrl = null;
-                            TenantProperties props = tenantPropertiesRepository.getTenant(registrationId);
-                            if (props != null && props.getWalletUrl() != null) {
-                                walletUrl = props.getWalletUrl();
-                            }
-
-                            AuthenticatedUser user = new AuthenticatedUser(
-                                    // name
-                                    party.split("::")[0],
-                                    // party
-                                    party,
-                                    // roles
-                                    authorities,
-                                    // isAdmin
-                                    authorities.contains("ROLE_ADMIN"),
-                                    // walletUrl
-                                    walletUrl
-                            );
-
-                            LoggingSpanHelper.addEventWithAttributes(methodSpan, "Constructed AuthenticatedUser object (200 OK)", null);
-                            return ResponseEntity.ok(user);
+                                    .orElseThrow(() -> new SecurityException("User is not authenticated"));
                         })
-                )
-                .whenComplete(
+                    )
+                ).whenComplete(
                         completeWithin(parentContext, (response, ex) -> {
                             if (ex == null) {
                                 logger.atInfo().log("Successfully retrieved authenticated user");
@@ -134,6 +97,8 @@ public class UserApiImpl implements UserApi {
                 .exceptionally(ex -> {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
                     if (cause instanceof SecurityException) {
+                        methodSpan.addEvent("User not authenticated");
+                        LoggingSpanHelper.logInfo(logger, "User is not authenticated");
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
                     }
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

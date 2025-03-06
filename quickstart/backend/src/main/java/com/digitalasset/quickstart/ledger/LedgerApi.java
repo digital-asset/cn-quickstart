@@ -75,29 +75,6 @@ public class LedgerApi {
         proto2Dto = Utils.getConverters(protoCodec, Daml.ENTITIES);
     }
 
-    public CompletableFuture<UserManagementServiceOuterClass.User> fetchUserInfo(String userId) {
-        Map<String, Object> attrs = new HashMap<>();
-        attrs.put("userId", userId);
-
-        LoggingSpanHelper.logDebug(logger, "Fetching user info", attrs);
-
-        UserManagementServiceOuterClass.GetUserRequest request =
-                UserManagementServiceOuterClass.GetUserRequest.newBuilder().setUserId(userId).build();
-
-        return toCompletableFuture(userManagement.getUser(request))
-                .thenApply(UserManagementServiceOuterClass.GetUserResponse::getUser)
-                .whenComplete((user, ex) -> {
-                    if (ex != null) {
-                        LoggingSpanHelper.logError(logger, "Failed to fetch user info", attrs, ex);
-                    } else {
-                        Map<String, Object> successAttrs = new HashMap<>(attrs);
-                        successAttrs.put("fetchedUserId", user.getId());
-                        LoggingSpanHelper.logInfo(logger, "Fetched user info", successAttrs);
-                    }
-                });
-    }
-
-
     @WithSpan
     public <T extends Template> CompletableFuture<Void> create(
             @SpanAttribute("backend.party") String party,

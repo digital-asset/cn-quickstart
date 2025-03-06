@@ -44,6 +44,7 @@ volumes:
   postgres-splice-app-user:
   postgres-splice-app-provider:
   postgres-splice-sv:
+  postgres-keycloak:
   domain-upgrade-dump:
 
 networks:
@@ -67,7 +68,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: keycloakdb
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres-keycloak:/var/lib/postgresql/data
     networks:
       - ${DOCKER_NETWORK:-splice_validator}
 

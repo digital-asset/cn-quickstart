@@ -69,7 +69,7 @@ public class LicenseRenewalRequestsApiImpl implements LicenseRenewalRequestsApi 
         methodSpan.addEvent("listLicenseRenewalRequests: Starting retrieval of license renewal requests");
         logger.atInfo().log("listLicenseRenewalRequests: Starting retrieval of license renewal requests");
 
-        return authenticatedPartyService.getPartyOrFail()
+        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
                 .thenCompose(party ->
                         damlRepository.findActiveLicenseRenewalRequests()
                                 .thenApply(contracts -> {
@@ -158,7 +158,7 @@ public class LicenseRenewalRequestsApiImpl implements LicenseRenewalRequestsApi 
                 initialAttrs
         );
 
-        return authenticatedPartyService.getPartyOrFail()
+        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
                 .<ResponseEntity<Void>>thenCompose(actingParty ->
                         damlRepository.findLicenseRenewalRequestById(contractId)
                                 .thenCompose(lrrContract -> {

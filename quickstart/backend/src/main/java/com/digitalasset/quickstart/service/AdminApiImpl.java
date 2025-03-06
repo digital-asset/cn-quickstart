@@ -65,7 +65,7 @@ public class AdminApiImpl implements AdminApi {
         Map<String, Object> commonAttrs = Map.of(
                 "tenant.tenantId", request.getTenantId(),
                 "tenant.clientId", request.getClientId(),
-                "tenant.party", request.getParty()
+                "tenant.party", request.getPartyId()
         );
 
         LoggingSpanHelper.setSpanAttributes(methodSpan, commonAttrs);

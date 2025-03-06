@@ -8,10 +8,8 @@ import com.digitalasset.quickstart.ledger.LedgerApi;
 import com.digitalasset.quickstart.security.AuthenticatedPartyProvider;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.quickstart.utility.LoggingSpanHelper;
-import com.digitalasset.transcode.java.ContractId;
 import com.digitalasset.transcode.java.Party;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
@@ -66,7 +64,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
         LoggingSpanHelper.addEventWithAttributes(methodSpan, "Starting listAppInstalls", null);
         LoggingSpanHelper.logInfo(logger, "listAppInstalls: retrieving AppInstalls for the requesting party");
 
-        return authenticatedPartyService.getPartyOrFail()
+        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
                 .thenCompose(requestingParty -> {
                     Map<String, Object> attrs = Map.of("requesting.party", requestingParty);
                     LoggingSpanHelper.setSpanAttributes(methodSpan, attrs);
@@ -131,7 +129,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
         LoggingSpanHelper.setSpanAttributes(methodSpan, startAttrs);
         LoggingSpanHelper.logInfo(logger, "createLicense: received request", startAttrs);
 
-        return authenticatedPartyService.getPartyOrFail()
+        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
                 .<ResponseEntity<AppInstallCreateLicenseResult>>thenCompose(actorParty -> damlRepository.findAppInstallById(contractId)
                         .thenCompose(contract -> {
                             methodSpan.addEvent("Fetched contract, verifying provider");
@@ -195,7 +193,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
         LoggingSpanHelper.setSpanAttributes(methodSpan, startAttrs);
         LoggingSpanHelper.logInfo(logger, "cancelAppInstall: received request", startAttrs);
 
-        return authenticatedPartyService.getPartyOrFail()
+        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
                 .<ResponseEntity<Void>>thenCompose(actorParty ->
                         damlRepository.findAppInstallById(contractId)
                                 .thenCompose(contract -> {
