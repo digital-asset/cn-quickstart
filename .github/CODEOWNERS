@@ -1,6 +1,6 @@
 # Default owners across the repo
-* @iggy-da @peterkvokacka-da @erwin-ramirez-da @pgarmaz-da @filmackay
+* @digital-asset/etx
 
 # Documentation
-/docs/ @hrischuk-da
-/README.md @hrischuk-da
+/docs/ @hrischuk-da @digital-asset/etx
+/README.md @hrischuk-da @digital-asset/etx

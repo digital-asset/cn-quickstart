@@ -4,8 +4,8 @@
 import React, {createContext, useContext, useState, useCallback} from 'react';
 import {useToast} from './toastStore';
 import api from '../api';
-import {AuthenticatedUser, ApiClient} from '../types';
 import {useNavigate} from 'react-router-dom';
+import type {AuthenticatedUser, Client} from "../openapi.d.ts";
 
 interface UserContextType {
     user: AuthenticatedUser | null;
@@ -26,7 +26,7 @@ export const UserProvider = ({children}: { children: React.ReactNode }) => {
     const fetchUser = useCallback(async () => {
         setLoading(true);
         try {
-            const client: ApiClient = await api.getClient();
+            const client: Client = await api.getClient();
             const response = await client.getAuthenticatedUser();
             setUser(response.data);
         } catch (error) {

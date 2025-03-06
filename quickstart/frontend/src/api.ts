@@ -4,7 +4,7 @@
 import OpenAPIClientAxios from 'openapi-client-axios';
 import openApi from '../../common/openapi.yaml'
 
-const api = new OpenAPIClientAxios({
+const api: OpenAPIClientAxios = new OpenAPIClientAxios({
     definition: openApi as any,
     withServer: { url: '/api' },
 });

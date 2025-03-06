@@ -87,15 +87,25 @@ open class ConfigureProfilesTask : DefaultTask() {
     }
 
     private fun promptForPartyHint(prompt: String): String {
-        // Regex for valid hint characters
-        val pattern = Regex("^[A-Za-z0-9:\\-_]+\$")
+        // The user input needs to match "<organization>-<function>-<enumerator>"
+        // where <organization> and <function> are alphabetical and <enumerator> is numeric.
+        val validPattern = Regex("^[A-Za-z]+-[A-Za-z]+-\\d+\$")
 
         // Grab either $USER or $USERNAME from the environment
-        val rawDefault = System.getenv("USER") ?: System.getenv("USERNAME") ?: ""
-        // Remove any characters that don't match the valid pattern
-        val defaultPartyHint = rawDefault.replace(Regex("[^A-Za-z0-9:\\-_]"), "")
+        val rawUser = System.getenv("USER") ?: System.getenv("USERNAME") ?: ""
 
-        // If we found a valid default, include it in the prompt in brackets
+        // Clean up rawUser to keep only letters
+        val cleanedUser = rawUser.replace(Regex("[^A-Za-z]"), "")
+
+        // If a cleaned user exists, use "quickstart-$cleanedUser-1" as default
+        // Otherwise, no default is provided (we'll force user input).
+        val defaultPartyHint = if (cleanedUser.isNotEmpty()) {
+            "quickstart-$cleanedUser-1"
+        } else {
+            ""
+        }
+
+        // If there's a valid default, show it in brackets; otherwise, show no brackets.
         val fullPrompt = if (defaultPartyHint.isNotEmpty()) {
             "$prompt [$defaultPartyHint]"
         } else {
@@ -106,23 +116,32 @@ open class ConfigureProfilesTask : DefaultTask() {
             print("$fullPrompt: ")
             System.out.flush()
 
-            // User input
+            // Read user input
             val input = readLine().orEmpty().trim()
 
-            // If user didn't type anything but we have a default, use the default
+            // If no input was provided but a default exists, use the default.
             val candidate = if (input.isEmpty() && defaultPartyHint.isNotEmpty()) {
                 defaultPartyHint
             } else {
                 input
             }
 
-            // Validate against the pattern
+            // If there's no default and the user provided nothing, force them to try again.
             if (candidate.isEmpty()) {
-                println("Invalid party hint. You must enter a non-empty string.")
-            } else if (pattern.matches(candidate)) {
-                return candidate
+                println("No default is available. You must enter a valid party hint.")
+                continue
+            }
+
+            // Now validate "<organization>-<function>-<enumerator>"
+            if (!validPattern.matches(candidate)) {
+                println(
+                    """
+                Invalid party hint. Must match "<organization>-<function>-<enumerator>"
+                where <organization> and <function> are alphabetical, and <enumerator> is numeric.
+                """.trimIndent()
+                )
             } else {
-                println("Invalid party hint. Only use letters, digits, ':', '-' and '_'.")
+                return candidate
             }
         }
     }

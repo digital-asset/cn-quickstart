@@ -5,14 +5,8 @@ import React, { createContext, useContext, useState, useCallback } from 'react'
 import { useToast } from './toastStore'
 // @ts-ignore
 import openApi from '../../../common/openapi.yaml'
-import OpenAPIClientAxios from 'openapi-client-axios'
+import api from "../api.ts";
 
-const api = new OpenAPIClientAxios({
-    definition: openApi as any,
-    withServer: { url: '/api' },
-})
-
-api.init()
 
 export interface TenantRegistration {
     tenantId: string

@@ -509,6 +509,12 @@ components:
 
     AppInstallRequest:
       type: object
+      required:
+        - contractId
+        - dso
+        - provider
+        - user
+        - meta
       properties:
         contractId:
           type: string
@@ -550,6 +556,14 @@ components:
 
     AppInstall:
       type: object
+      required:
+        - contractId
+        - dso
+        - provider
+        - user
+        - meta
+        - numLicensesCreated
+        - licenseNum
       properties:
         contractId:
           type: string
@@ -598,6 +612,14 @@ components:
 
     License:
       type: object
+      required:
+          - contractId
+          - dso
+          - provider
+          - user
+          - params
+          - expiresAt
+          - licenseNum
       properties:
         contractId:
           type: string
@@ -644,6 +666,15 @@ components:
 
     LicenseRenewalRequest:
       type: object
+      required:
+          - contractId
+          - provider
+          - user
+          - dso
+          - licenseNum
+          - licenseFeeCc
+          - licenseExtensionDuration
+          - reference
       properties:
         contractId:
           type: string

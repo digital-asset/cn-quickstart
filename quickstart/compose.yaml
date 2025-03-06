@@ -45,7 +45,6 @@ volumes:
   postgres-splice-app-provider:
   postgres-splice-sv:
   domain-upgrade-dump:
-  pgdata:
 
 networks:
   quickstart:
@@ -259,7 +258,7 @@ services:
     environment:
       - SPLICE_APP_UI_AUTH_AUDIENCE=${AUTH_APP_USER_VALIDATOR_AUDIENCE}
       - SPLICE_APP_UI_AUTH_CLIENT_ID=${AUTH_APP_USER_WALLET_UI_CLIENT_ID}
-      - SPLICE_APP_UI_AUTH_URL=${AUTH_APP_USER_ISSUER_URL} 
+      - SPLICE_APP_UI_AUTH_URL=${AUTH_APP_USER_ISSUER_URL}
     networks:
       - ${DOCKER_NETWORK}
 
@@ -373,7 +372,7 @@ services:
       AUTH_APP_PROVIDER_TOKEN_URL: "${AUTH_APP_PROVIDER_TOKEN_URL}"
       AUTH_APP_PROVIDER_VALIDATOR_USER_ID: "${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}"
       AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET: "${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}"
-      JAVA_OPTS: "-javaagent:/otel-agent.jar"
+      JAVA_OPTS: "-javaagent:/otel-agent.jar -Dotel.instrumentation.logback-appender.experimental-log-attributes=true -Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true"
     volumes:
       - ./backend/build/distributions/backend.tar:/backend.tar
       - ./backend/build/otel-agent/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar:/otel-agent.jar
@@ -382,12 +381,6 @@ services:
     command: /app/start.sh
     ports:
       - "${BACKEND_PORT}:8080"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080 || exit 1"]
-      interval: 10s
-      timeout: 10s
-      retries: 300000
-      start_period: 10s
     depends_on:
       pqs:
         condition: service_started
@@ -609,6 +602,7 @@ services:
         condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
+
 ###############################################################################################################
 ### SUPER VALIDATOR
 ###############################################################################################################

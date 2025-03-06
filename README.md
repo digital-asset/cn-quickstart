@@ -3,9 +3,10 @@
 This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
 
 If you are impatient, then you can start by following the Engineer Setup below. Alternatively, you can peruse the documentation:
-- [Quickstart Installation](docs/guide/CantonNetworkQuickstartInstallationGuide-20250213.pdf)
-- [Exploring The Demo](docs/guide/ExploringTheDemo-20250213.pdf)
+- [Quickstart Installation](docs/guide/CN-QS-Installation-20250227.pdf)
+- [Exploring The Demo](docs/guide/ExploringTheDemo-20250227.pdf)
 - [Project Structure](docs/guide/ProjectStructureGuide-20250212.pdf)
+- [FAQ](docs/guide/CN-QS-FAQ-20250227.pdf)
 <!---  - Troubleshooting and debugging with Observability --->
 Additional documentation and updates are planned weekly.
 
@@ -148,9 +149,10 @@ To perform operations such as creating, editing, and archiving assets, users mus
 
 The following user guides provide an engineering handover to teams using the Canton Network Quickstart to bootstrap their project.
 
-- [Quickstart Installation](docs/guide/CantonNetworkQuickstartInstallationGuide-20250213.pdf)
-- [Exploring The Demo](docs/guide/ExploringTheDemo-20250213.pdf)
+- [Quickstart Installation](docs/guide/CN-QS-Installation-20250227.pdf)
+- [Exploring The Demo](docs/guide/ExploringTheDemo-20250227.pdf)
 - [Project Structure](docs/guide/ProjectStructureGuide-20250212.pdf)
+- [Observability and Troubleshooting Overview](docs/guide/ObservabilityTroubleshootingOverview-20250220.pdf)
 
 ### Technical Documentation
 
