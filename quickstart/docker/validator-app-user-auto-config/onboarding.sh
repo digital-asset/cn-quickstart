@@ -6,27 +6,6 @@ set -eo pipefail
 
 source /app/utils.sh
 
-#
-#get_app_user_admin_token2() {
-#  local secret=$1
-#  echo "get_app_user_admin_token $secret" >&2
-#  if [ -z "$secret" ]; then
-#    echo "Secret is empty" >&2
-#    exit 1
-#  fi
-#
-##    -H "Host: $AUTH_APP_USER_ISSUER_HOST" \
-#  curl -v -s -S "http://nginx-keycloak:8082/realms/AppUser/protocol/openid-connect/token" \
-#    -H 'Content-Type: application/x-www-form-urlencoded' \
-#    -d 'client_id=app-user-validator' \
-#    -d 'client_secret='${secret} \
-#    -d 'grant_type=client_credentials' \
-#    -d 'scope=openid' | jq -r .access_token
-#}
-#
-#test=$(get_app_user_admin_token2 $AUTH_APP_USER_VALIDATOR_CLIENT_SECRET)
-#echo "test: $test"
-
 APP_USER_PARTICIPANT_ADMIN_TOKEN=$(get_app_user_admin_token $AUTH_APP_USER_VALIDATOR_CLIENT_SECRET)
 
 if [ ! -f /tmp/onboarding-dars-uploaded ]; then

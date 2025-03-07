@@ -25,7 +25,7 @@ For each realm create clients:
       - Authentication flow: Standard Flow
       - Valid redirect URIs: http://app-provider.localhost:3000/*
       - Valid post logout redirect URIs: +
-      - Web origins: *- 
+      - Web origins: * 
     - app-provider-unsafe:
       - Client authentication: off
       - Authentication flow: Direct access grant  
@@ -50,7 +50,7 @@ For each realm create clients:
           - Authentication flow: Standard Flow
           - Valid redirect URIs: http://app-provider.localhost:3000/*
           - Valid post logout redirect URIs: +
-          - Web origins: *-
+          - Web origins: *
       - app-user-unsafe:
           - Client authentication: off
           - Authentication flow: Direct access grant
