@@ -56,6 +56,9 @@ To start the application:
 $ direnv allow
 $ cd quickstart
 
+# Setup your quickstart environment
+$ make setup
+
 # Build the application
 $ make build
 
