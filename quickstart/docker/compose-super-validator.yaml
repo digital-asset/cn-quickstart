@@ -71,7 +71,7 @@ services:
       - CANTON_PARTICIPANT_ADMIN_USER_NAME=administrator
       - AUTH_TARGET_AUDIENCE=${LEDGER_API_AUTH_AUDIENCE}
       - ADDITIONAL_CONFIG_DISABLE_AUTH=canton.participants.participant.ledger-api.auth-services=[]
-      - ADDITIONAL_CONFIG_ALLOW_INSECURE=canton.participants.participant.http-ledger-api-experimental.allow-insecure-tokens=true
+      - ADDITIONAL_CONFIG_ALLOW_INSECURE=canton.participants.participant.http-ledger-api.allow-insecure-tokens=true
     depends_on:
       postgres-splice-sv:
         condition: service_healthy
@@ -115,9 +115,6 @@ services:
         ADDITIONAL_CONFIG_TRUST_SINGLE_SCAN=
             canton.validator-apps.validator_backend.scan-client.type = "trust-single"
             canton.validator-apps.validator_backend.scan-client.url = "http://scan:5012"
-      - |
-        ADDITIONAL_CONFIG_TRUST_SINGLE_SEQUENCER=
-            canton.validator-apps.validator_backend.domains.global.url = "http://sequencer-mediator:5008"
       - |
         ADDITIONAL_CONFIG_MIGRATION_ID=
             canton.validator-apps.validator_backend {
@@ -247,7 +244,6 @@ services:
                     }
                   }
                 }
-      - SPLICE_APP_SV_GLOBAL_DOMAIN_URL=http://sequencer-mediator:5008
       - SPLICE_APP_SV_COMETBFT_ENABLED=false
       - SPLICE_APP_UI_NETWORK_NAME=${SPLICE_APP_UI_NETWORK_NAME}
       - SPLICE_APP_UI_NETWORK_FAVICON_URL=${SPLICE_APP_UI_NETWORK_FAVICON_URL}
