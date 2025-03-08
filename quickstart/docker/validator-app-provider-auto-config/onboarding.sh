@@ -6,7 +6,7 @@ set -eo pipefail
 
 source /app/utils.sh
 
-APP_PROVIDER_PARTICIPANT_ADMIN_TOKEN=$(get_app_provider_admin_token $AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET)
+APP_PROVIDER_PARTICIPANT_ADMIN_TOKEN=$(get_admin_token $AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET $AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID $AUTH_APP_PROVIDER_TOKEN_URL)
 
 if [ ! -f /tmp/onboarding-dars-uploaded ]; then
   upload_dars "$APP_PROVIDER_PARTICIPANT_ADMIN_TOKEN" participant-app-provider

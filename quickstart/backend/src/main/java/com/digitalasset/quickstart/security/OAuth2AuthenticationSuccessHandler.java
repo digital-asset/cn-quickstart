@@ -3,6 +3,7 @@
 
 package com.digitalasset.quickstart.security;
 
+import com.digitalasset.quickstart.config.SecurityConfig;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,12 +34,12 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
     private final OAuth2AuthorizedClientService authorizedClientService;
     private final TenantPropertiesRepository tenantPropertiesRepository;
-    private final String appProviderIssuerURL;
+    private final SecurityConfig securityConfig;
 
-    public OAuth2AuthenticationSuccessHandler(OAuth2AuthorizedClientService authorizedClientService, TenantPropertiesRepository tenantPropertiesRepository) {
+    public OAuth2AuthenticationSuccessHandler(OAuth2AuthorizedClientService authorizedClientService, TenantPropertiesRepository tenantPropertiesRepository, SecurityConfig securityConfig) {
         this.authorizedClientService = authorizedClientService;
         this.tenantPropertiesRepository = tenantPropertiesRepository;
-        appProviderIssuerURL = getVariable("AUTH_APP_PROVIDER_ISSUER_URL");
+        this.securityConfig = securityConfig;
     }
 
     @Override
@@ -52,7 +53,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         ClientRegistration clientReg = authorizedClientService.loadAuthorizedClient(auth.getAuthorizedClientRegistrationId(), auth.getName()).getClientRegistration();
 
         List<GrantedAuthority> authorities = new ArrayList<>();
-        if (appProviderIssuerURL.equals(clientReg.getProviderDetails().getIssuerUri())) {
+        if (securityConfig.getIssuerUrl().equals(clientReg.getProviderDetails().getIssuerUri())) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         }
 
@@ -75,13 +76,5 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         csrfToken.getToken();
         SavedRequestAwareAuthenticationSuccessHandler handler = new SavedRequestAwareAuthenticationSuccessHandler();
         handler.onAuthenticationSuccess(request, response, newAuth);
-    }
-
-    private String getVariable(String name) {
-        String value = System.getenv(name);
-        if (value == null) {
-            throw new IllegalStateException("Environment variable " + name + " was not set");
-        }
-        return value;
     }
 }

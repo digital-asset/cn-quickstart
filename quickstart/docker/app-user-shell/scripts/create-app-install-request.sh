@@ -18,7 +18,7 @@ create_app_install_request() {
   local participantUserId=$5
   local participant=$6
 
-  echo "create_app_install_request $token $dsoParty $appUserParty $appProviderParty $participant" >&2
+  echo "create_app_install_request $dsoParty $appUserParty $appProviderParty $participant" >&2
 
   curl_check "http://$participant:7575/v2/commands/submit-and-wait" "$token" "application/json" \
     --data-raw '{

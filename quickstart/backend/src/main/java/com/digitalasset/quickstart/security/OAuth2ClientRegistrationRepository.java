@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 public class OAuth2ClientRegistrationRepository
         implements AuthClientRegistrationRepository, ClientRegistrationRepository, Iterable<ClientRegistration> {
 
-    private final String APP_PROVIDER = "AppProvider";
     private final Map<String, ClientRegistration> registrations;
 
 

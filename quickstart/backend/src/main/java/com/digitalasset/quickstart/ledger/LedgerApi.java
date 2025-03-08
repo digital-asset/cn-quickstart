@@ -36,16 +36,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 public class LedgerApi {
-    private static final String APP_ID ;
-
-    static {
-        String appId = System.getenv("AUTH_APP_PROVIDER_BACKEND_USER_ID");
-        if (appId == null || appId.isBlank()) {
-            throw new IllegalStateException("Environment variable AUTH_APP_PROVIDER_BACKEND_USER_ID is not set");
-        }
-        APP_ID = appId;
-    }
-
+    private final String APP_ID ;
     private final CommandSubmissionServiceGrpc.CommandSubmissionServiceFutureStub submission;
     private final CommandServiceGrpc.CommandServiceFutureStub commands;
     private final Dictionary<Converter<Object, ValueOuterClass.Value>> dto2Proto;
@@ -55,6 +46,7 @@ public class LedgerApi {
 
     @Autowired
     public LedgerApi(LedgerConfig ledgerConfig, TokenProvider tokenProvider) {
+        APP_ID = ledgerConfig.getApplicationId();
         ManagedChannel channel = ManagedChannelBuilder
                 .forAddress(ledgerConfig.getHost(), ledgerConfig.getPort())
                 .usePlaintext()
