@@ -13,6 +13,7 @@ create_app_install_request() {
   local appUserParty=$3
   local appProviderParty=$4
   local participant=$5
+  local time="$(date +%s)"
   curl_check "http://$participant:7575/v2/commands/submit-and-wait" "$token" "application/json" \
     --data-raw '{
         "commands" : [
@@ -30,7 +31,7 @@ create_app_install_request() {
         ],
         "workflow_id" : "create-app-install-request",
         "application_id": "ledger-api-user",
-        "command_id": "create-app-install-request",
+        "command_id": "create-app-install-request-'$time'",
         "deduplication_period": { "Empty": {} },
         "act_as": ["'$appUserParty'"],
         "read_as": ["'$appUserParty'"],

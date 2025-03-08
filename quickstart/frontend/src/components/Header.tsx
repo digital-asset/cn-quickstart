@@ -63,12 +63,6 @@ const AuthenticatedLinks: React.FC = () => {
                             Home
                         </Link>
                     </li>
-                    {/*{user.isAdmin && (*/}
-                    <li className="nav-item">
-                        <Link className="nav-link" to="/app-install-requests">
-                            AppInstallRequests
-                        </Link>
-                    </li>
                     <li className="nav-item">
                         <Link className="nav-link" to="/app-installs">
                             AppInstalls
@@ -77,11 +71,6 @@ const AuthenticatedLinks: React.FC = () => {
                     <li className="nav-item">
                         <Link className="nav-link" to="/licenses">
                             Licenses
-                        </Link>
-                    </li>
-                    <li className="nav-item">
-                        <Link className="nav-link" to="/license-renewal-requests">
-                            LicenseRenewalRequests
                         </Link>
                     </li>
                     {user.isAdmin && (
