@@ -9,6 +9,13 @@ ifneq (,$(wildcard .env.local))
     include .env.local
 endif
 
+# Determine if the local environment has been configured, if not inject the first-run-setup target
+ifneq ($(strip $(PARTY_HINT)),)
+FIRST_RUN_DEPENDENCY :=
+else
+FIRST_RUN_DEPENDENCY := first-run-setup
+endif
+
 # Set default goal to 'help' if no target is specified
 .DEFAULT_GOAL := help
 
@@ -62,7 +69,7 @@ SETUP_COMMAND := ./gradlew configureProfiles --no-daemon --console=plain --quiet
 
 # Build targets
 .PHONY: build
-build: build-frontend build-backend build-daml build-docker-images ## Build frontend, backend, Daml model and docker images
+build: $(FIRST_RUN_DEPENDENCY) build-frontend build-backend build-daml build-docker-images ## Build frontend, backend, Daml model and docker images
 
 .PHONY: build-frontend
 build-frontend: ## Build the frontend application
@@ -94,21 +101,9 @@ restart-frontend: build-frontend ## Build and start the application
 
 # Run targets
 .PHONY: start
-ifneq ($(strip $(PARTY_HINT)),)
-start: build ## Start the application, and observability services if enabled
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} up -d --no-recreate)
-else
-start:
-	@echo "#########################################################################"
-	@echo "Looks like this is the first time you are starting the application."
-	@echo "Let's configure the local development environment that should be started."
-	@echo "You can always change this later by running 'make setup'."
-	@echo "#########################################################################"
-	@echo ""
-	$(SETUP_COMMAND)
-	@echo "Environment updated. Please re-run make start."
-	@exit 0
-endif
+start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} up -d)
+
 
 .PHONY: stop
 stop: ## Stop the application and observability services
@@ -137,8 +132,20 @@ tail: ## Tail logs of Docker containers
 # Development environment
 .PHONY: setup
 setup: ## Configure the local development environment (enable DevNet/LocalNet, Observability)
-	@echo "Starting setup..."
+	@echo "Starting local environment setup tool..."
 	$(SETUP_COMMAND)
+
+.PHONY: first-run-setup
+first-run-setup:
+	@echo "#########################################################################"
+	@echo "Looks like your local configuration is missing or stale."
+	@echo "Let's configure the local development environment before proceeding."
+	@echo "You can always change your configuration later by running 'make setup'."
+	@echo "#########################################################################"
+	@echo ""
+	$(SETUP_COMMAND)
+	@echo "Environment file generated, Please re-run your previous command to continue."
+	@exit 2
 
 # Console
 .PHONY: console-app-provider
