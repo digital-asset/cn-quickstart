@@ -5,11 +5,10 @@ package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.AppInstallRequestsApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
-import com.digitalasset.quickstart.oauth.AuthenticatedPartyService;
+import com.digitalasset.quickstart.security.AuthenticatedPartyProvider;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.quickstart.utility.LoggingSpanHelper;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
@@ -26,7 +25,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import quickstart_licensing.licensing.util.Metadata;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -41,17 +39,17 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
     private static final Logger logger = LoggerFactory.getLogger(AppInstallRequestsApiImpl.class);
 
     private final LedgerApi ledger;
-    private final AuthenticatedPartyService authenticatedPartyService;
+    private final AuthenticatedPartyProvider authenticatedPartyProvider;
     private final DamlRepository damlRepository;
 
     @Autowired
     public AppInstallRequestsApiImpl(
             LedgerApi ledger,
-            AuthenticatedPartyService authenticatedPartyService,
+            AuthenticatedPartyProvider authenticatedPartyProvider,
             DamlRepository damlRepository
     ) {
         this.ledger = ledger;
-        this.authenticatedPartyService = authenticatedPartyService;
+        this.authenticatedPartyProvider = authenticatedPartyProvider;
         this.damlRepository = damlRepository;
     }
 
@@ -76,7 +74,7 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
         LoggingSpanHelper.setSpanAttributes(span, attributes);
         LoggingSpanHelper.logInfo(logger, "acceptAppInstallRequest: received request", attributes);
 
-        return authenticatedPartyService.getPartyOrFail()
+        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
                 .thenCompose(providerParty ->
                         damlRepository.findAppInstallRequestById(contractId)
                                 .thenCompose(contract -> {
@@ -133,7 +131,7 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
         LoggingSpanHelper.setSpanAttributes(span, attributes);
         LoggingSpanHelper.logInfo(logger, "cancelAppInstallRequest: received request", attributes);
 
-        return authenticatedPartyService.getPartyOrFail()
+        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
                 .thenCompose(userParty ->
                         damlRepository.findAppInstallRequestById(contractId)
                                 .thenCompose(contract -> {
@@ -176,7 +174,7 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
         LoggingSpanHelper.setSpanAttributes(span, attributes);
         LoggingSpanHelper.logInfo(logger, "listAppInstallRequests: received request, retrieving active requests", attributes);
 
-        return authenticatedPartyService.getPartyOrFail()
+        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
                 .thenCompose(party ->
                         damlRepository.findActiveAppInstallRequests()
                                 .thenApply(contracts -> {
@@ -236,7 +234,7 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
         LoggingSpanHelper.setSpanAttributes(span, attributes);
         LoggingSpanHelper.logInfo(logger, "rejectAppInstallRequest: received request", attributes);
 
-        return authenticatedPartyService.getPartyOrFail()
+        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
                 .thenCompose(providerParty ->
                         damlRepository.findAppInstallRequestById(contractId)
                                 .thenCompose(contract -> {

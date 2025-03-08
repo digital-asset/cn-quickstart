@@ -32,6 +32,7 @@ object Deps {
         val web get() = "org.springframework.boot:spring-boot-starter-web:$version"
         val jdbc get() = "org.springframework.boot:spring-boot-starter-jdbc:$version"
         val oauth2Client get() = "org.springframework.boot:spring-boot-starter-oauth2-client:$version"
+        val oauth2ResourceServer get() = "org.springframework.boot:spring-boot-starter-oauth2-resource-server:$version"
         val security get() = "org.springframework.boot:spring-boot-starter-security:$version"
         val actuator get() = "org.springframework.boot:spring-boot-starter-actuator:$version"
         val test get() = "org.springframework.boot:spring-boot-starter-test:$version"
