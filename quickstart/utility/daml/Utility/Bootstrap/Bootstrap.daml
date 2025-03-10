@@ -1,3 +1,6 @@
+-- Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
 module Utility.Bootstrap.Bootstrap where 
 
 import Daml.Script
@@ -18,6 +21,8 @@ bootstrapUtility  UtilitySpec{credentialAppSpec; registryAppSpec} = do
     bootstrapRegistryApp registryAppSpec
     debug "Bootstrapped utility."
 
+
+-- Default bootstrap
 bootstrapUtilityDefault : Script () 
 bootstrapUtilityDefault = do
     debug "Assigning default parties..."
@@ -57,3 +62,22 @@ bootstrapUtilityDefault = do
     debug "Bootstrapping utility with default specs..."
     bootstrapUtility utilitySpec
     debug "Bootstrapped utility with default specs."
+
+-- Utils
+data UtilityParties = UtilityParties with 
+  dso : Party
+  operator : Party
+  provider : Party
+  registrar : Party
+  issuer : Party
+  holders : [Party]
+
+findOrCreateUtilityParties : Script UtilityParties
+findOrCreateUtilityParties = do
+  dso <- findOrCreateParty "svParticipant" "DSO"
+  operator <- findOrCreateParty "providerParticipant" "utility-operator"
+  provider <- findOrCreateParty "userParticipant" "utility-provider"
+  registrar <- findOrCreateParty "userParticipant" "utility-registrar"
+  issuer <- findOrCreateParty "userParticipant" "utility-issuer"
+  holders <- mapA (\i -> findOrCreateParty "userParticipant" ("utility-holder-" <> show i)) [1]
+  pure UtilityParties with ..

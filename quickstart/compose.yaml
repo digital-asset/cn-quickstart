@@ -172,6 +172,9 @@ services:
         ADDITIONAL_CONFIG_AUTO_INIT=
         canton.participants.participant.init.auto-init=true
     healthcheck: *canton-healthcheck
+    ports: 
+     - 7575:7575
+     - 5001:5001
     depends_on:
       postgres-splice-app-user:
         condition: service_healthy

@@ -1,0 +1,27 @@
+server {
+    listen 8080;
+    server_name localhost;
+    location /health {
+      access_log off;
+      default_type text/plain;
+      return 200 "healthy\n";
+    }
+    root /app;
+    index index.html;
+    location / {
+      try_files ${DOLLAR}uri ${DOLLAR}uri/ /index.html;
+    }
+    location /api/json-api/v1/ {
+      rewrite ^/api/json-api/(.*)$ /$1 break;
+      proxy_pass http://participant-app-user:7575;
+    }
+    location /api/validator/ {
+      proxy_pass http://validator-app-user:5003;
+    }
+    rewrite_log on;
+    # Disable all forms of caching on all requests.
+    add_header Last-Modified ${DOLLAR}date_gmt;
+    add_header Expires ${DOLLAR}date_gmt;
+    add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
+    add_header Pragma "no-cache";
+}

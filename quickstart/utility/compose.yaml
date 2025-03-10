@@ -8,7 +8,7 @@ networks:
     name: ${DOCKER_NETWORK}
 
 services:
-  get-participant-config:
+  onboard-utility:
     image: "${IMAGE_REPO}canton:${IMAGE_TAG}"
     volumes:
       - type: bind
@@ -55,7 +55,7 @@ services:
     networks:
       - ${DOCKER_NETWORK}
 
-  bootstrap-daml:
+  bootstrap-utility-contracts:
     image: digitalasset-docker.jfrog.io/daml-script:3.2.0-snapshot.20250206.13406.0.ve23b19ba-debug
     command: [
       "--dar", "/dars/utility-bootstrap-0.0.1.dar",
@@ -78,13 +78,20 @@ services:
       - ${DOCKER_NETWORK}
 
   utility-ui: 
-    image: "${UTILITY_IMAGE_REPO}frontend:${UTILITY_VERSION}"
+    image: "${UTILITY_IMAGE_REPO}/frontend:${UTILITY_VERSION}"
+    volumes:
+      - type: bind
+        source: ./nginx
+        read_only: true
+        target: /opt/bitnami/nginx/conf/templates
     environment:
-      AUTH_AUTHORITY: ${AUTH_APP_USER_CLIENT_ID}
+      AUTH_AUTHORITY: ${AUTH_APP_USER_URL}
       AUTH_CLIENT_ID: ${AUTH_APP_USER_CLIENT_ID}
       AUTH_AUDIENCE: https://canton.network.global
       UTILITY_APP_OPERATOR_PARTY_ID: ${UTILITY_APP_OPERATOR_PARTY_ID}
+      LEDGER_URL: participant-app-user:7575
+      VALIDATOR_URL: validator-app-user:5003
     networks:
       - ${DOCKER_NETWORK}
     ports: 
-      - "8002:8080"
+      - "8000:8080"

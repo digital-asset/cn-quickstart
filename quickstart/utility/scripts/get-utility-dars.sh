@@ -4,7 +4,7 @@
 
 set -eou pipefail
 cd "$(dirname "$0")"
-source '../.env.utility'
+source '../.env'
 source '../.envrc.private'
 
 version="$UTILITY_VERSION"
@@ -16,7 +16,7 @@ if [ ! -f "../dars/canton-network-utility-dars-$version.tar.gz" ]; then
     echo "from: $url"
     echo "to: ../dars/canton-network-utility-dars-$version.tar.gz"
     curl --fail -u "$ARTIFACTORY_USER:$ARTIFACTORY_PASSWORD" -L "$url" -o "../dars/canton-network-utility-dars-$version.tar.gz"
-    tar -xvf "./dars/canton-network-utility-dars-$version.tar.gz" -C "../dars"
+    tar -xvf "../dars/canton-network-utility-dars-$version.tar.gz" -C "../dars"
     echo "== Installed DAR dependencies"
 else
     echo "== DAR dependencies already installed"

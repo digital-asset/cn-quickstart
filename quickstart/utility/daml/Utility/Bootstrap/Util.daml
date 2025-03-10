@@ -1,5 +1,7 @@
-module Utility.Bootstrap.Util where
+-- Copyright (c) 2025 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
 
+module Utility.Bootstrap.Util where
 import DA.Time qualified as T
 import DA.Text (isPrefixOf)
 import Daml.Script
@@ -49,16 +51,19 @@ queryWithRetries query tries p cid
 tries : Int
 tries = 20
 
+-- | Find a party in the given list of party details.
 findPartyInDetails : [PartyDetails] -> Text -> Optional PartyDetails
 findPartyInDetails partyDetails roleName = do
   let rolePartyOptional pd = pd.displayName == Some (roleName) || isPrefixOf ("'" <> roleName <> "::") (show pd.party)
   find rolePartyOptional partyDetails 
 
+-- | Find a party on the given participant.
 findPartyOnParticipant : Text -> Text -> Script (Optional PartyDetails)
 findPartyOnParticipant participantName roleName = do
   partyDetails <- filter (.isLocal) <$> listKnownPartiesOn (ParticipantName participantName)
   pure $ findPartyInDetails partyDetails roleName
 
+-- | Find or create a party on the given participant.
 findOrCreateParty : Text -> Text -> Script Party
 findOrCreateParty participantName roleName = do
   result <- findPartyOnParticipant participantName roleName
@@ -72,21 +77,3 @@ findOrCreateParty participantName roleName = do
         None -> do
           debug $ "Creating party: " <> roleNameLocal
           allocatePartyWithHint roleNameLocal (PartyIdHint roleNameLocal)
-
-data UtilityParties = UtilityParties with 
-  dso : Party
-  operator : Party
-  provider : Party
-  registrar : Party
-  issuer : Party
-  holders : [Party]
-
-findOrCreateUtilityParties : Script UtilityParties
-findOrCreateUtilityParties = do
-  dso <- findOrCreateParty "svParticipant" "DSO"
-  operator <- findOrCreateParty "providerParticipant" "utility-operator"
-  provider <- findOrCreateParty "userParticipant" "utility-provider"
-  registrar <- findOrCreateParty "userParticipant" "utility-registrar"
-  issuer <- findOrCreateParty "userParticipant" "utility-issuer"
-  holders <- mapA (\i -> findOrCreateParty "userParticipant" ("utility-holder-" <> show i)) [1]
-  pure UtilityParties with ..

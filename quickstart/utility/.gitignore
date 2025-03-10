@@ -1,3 +1,12 @@
 dars/** 
+
+# We keep this for now as its not included in the download bundle. 
+# TODO: Remove once included
+!dars/utility-credential-v0-0.0.2.dar 
+
 .envrc.private
 output/** 
+
+.daml/
+/log
+navigator.log

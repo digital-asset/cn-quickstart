@@ -1,0 +1,21 @@
+sdk-version: 3.2.0-snapshot.20241106.0
+name: utility-bootstrap
+source: ./daml
+version: 0.0.1
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-script
+data-dependencies:
+  - ./dars/utility-credential-app-v0-0.1.0.dar
+  - ./dars/utility-credential-v0-0.0.2.dar
+  - ./dars/utility-registry-holding-v0-0.0.1.dar
+  - ./dars/utility-registry-v0-0.1.0.dar
+  - ./dars/utility-registry-app-v0-0.1.0.dar
+  - ./dars//utility-registry-operator-v0-0.0.2.dar
+  - ./dars/utility-version-v0-0.0.1.dar
+build-options:
+  - --include=./daml
+  - --ghc-option=-Wunused-binds
+  - --ghc-option=-Wunused-matches
+  - --output=./dars/utility-bootstrap-0.0.1.dar
