@@ -63,7 +63,7 @@ public class OAuth2ClientRegistrationRepository
 
     @Override
     public void removeClientRegistration(String tenantId, String clientId) {
-        registrations.remove(tenantId + "-" + tenantId);
+        registrations.remove(tenantId + "-" + clientId);
     }
 
     public void removeClientRegistrations(String tenantId) {
