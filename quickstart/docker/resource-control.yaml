@@ -1,132 +1,95 @@
 services:
   await-onboarding-done:
-    #cpus: 1
     mem_limit: 32mb
   backend-service:
-    #cpus: 1
     mem_limit: 1g
     environment:
       _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   cadvisor:
-    #cpus: 1
     mem_limit: 256mb
   global-synchronizer:
-    #cpus: 1
     mem_limit: 2g
     environment:
       _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0"    
   grafana:
-    #cpus: 1
     mem_limit: 256mb
   loki:
-    #cpus: 1
     mem_limit: 512mb
   nginx-app-provider:
-    #cpus: 1
     mem_limit: 32mb
   nginx-app-provider-metrics:
-    #cpus: 1
     mem_limit: 32mb
   nginx-app-user:
-    #cpus: 1
     mem_limit: 32mb
   nginx-app-user-metrics:
-    #cpus: 1
     mem_limit: 32mb
   nginx-sv:
-    #cpus: 1
     mem_limit: 32mb
   nginx-sv-metrics:
-    #cpus: 1
     mem_limit: 32mb
   oauth:
-    #cpus: 1
     mem_limit: 256mb
   otel-collector:
-    #cpus: 1
     mem_limit: 1gb
   participant-app-provider:
-    #cpus: 1
     mem_limit: 4g
     environment:
       _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   participant-app-user:
-    #cpus: 1
     mem_limit: 4g
     environment:
       _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   participant-sv:
-    #cpus: 1
     mem_limit: 4g
     environment:
       _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   postgres-splice:
-    #cpus: 1
     mem_limit: 512mb
   postgres-splice-app-provider:
-    #cpus: 1
     mem_limit: 512mb
   postgres-splice-app-provider-metrics:
-    #cpus: 1
     mem_limit: 32mb
   postgres-splice-app-user:
-    #cpus: 1
     mem_limit: 512mb
   postgres-splice-app-user-metrics:
-    #cpus: 1
     mem_limit: 32mb
   postgres-splice-sv:
-    #cpus: 1
     mem_limit: 512mb
   postgres-splice-sv-metrics:
-    #cpus: 1
     mem_limit: 32mb
   pqs:
-    #cpus: 1
     mem_limit: 1g
     environment:
       _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   prometheus:
-    #cpus: 1
     mem_limit: 256mb
   scan:
-    #cpus: 1
     mem_limit: 2g
     environment:
       _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   scan-web-ui:
-    #cpus: 1
     mem_limit: 256mb
   sv-app:
-    #cpus: 1
     mem_limit: 2g
     # environment:
     #   _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   sv-web-ui:
-    #cpus: 1
     mem_limit: 512mb
   tempo:
-    #cpus: 1
     mem_limit: 1g
   validator-app-provider:
-    #cpus: 1
     mem_limit: 2g
   validator-app-user:
-    #cpus: 1
     mem_limit: 2g
     # environment:
     #   JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   validator-sv:
-    #cpus: 1
     mem_limit: 2g
     # environment:
     #   JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   wallet-web-ui-app-provider:
-    #cpus: 1
     mem_limit: 256mb
   wallet-web-ui-app-user:
-    #cpus: 1
     mem_limit: 256mb
   wallet-web-ui-sv:
-    #cpus: 1
     mem_limit: 256mb
