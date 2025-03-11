@@ -16,6 +16,11 @@ else
 FIRST_RUN_DEPENDENCY := first-run-setup
 endif
 
+ifeq ($(RESOURCE_CONTROL),true)
+RESOURCE_CONFIG := -f docker/resource-control.yaml
+else
+RESOURCE_CONFIG :=
+endif
 # Set default goal to 'help' if no target is specified
 .DEFAULT_GOAL := help
 
@@ -28,9 +33,9 @@ DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env
 DOCKER_COMPOSE_FILES := -f compose.yaml
 
 ifeq ($(KERNEL_NAME), Darwin)
-DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml
+DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml $(RESOURCE_CONFIG)
 else ifeq ($(KERNEL_NAME), Linux)
-DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml
+DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml $(RESOURCE_CONFIG)
 else
 DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/compose.yaml
 endif
@@ -119,7 +124,15 @@ restart: stop start ## Restart the application
 # Utility targets
 .PHONY: status
 status: ## Show status of Docker containers
-	$(call docker-compose, ps)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} ps)
+
+.PHONY: status
+services: ## List all services in compose template
+	@$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} ps --services)
+
+.PHONY: compose-config
+compose-config:
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} config)
 
 .PHONY: logs
 logs: ## Show logs of Docker containers
