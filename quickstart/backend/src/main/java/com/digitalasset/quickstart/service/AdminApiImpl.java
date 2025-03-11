@@ -4,7 +4,9 @@
 package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.AdminApi;
-import com.digitalasset.quickstart.repository.OAuth2ClientRegistrationRepository;
+import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
+import com.digitalasset.quickstart.security.AuthClientRegistrationRepository;
+import com.digitalasset.quickstart.security.AuthClientRegistrationRepository.Client;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
 import com.digitalasset.quickstart.utility.LoggingSpanHelper;
 
@@ -13,7 +15,6 @@ import org.openapitools.model.TenantRegistrationRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -41,15 +42,15 @@ public class AdminApiImpl implements AdminApi {
 
     private static final Logger logger = LoggerFactory.getLogger(AdminApiImpl.class);
 
-    private final OAuth2ClientRegistrationRepository tenantRegistrationRepository;
+    private final AuthClientRegistrationRepository authClientRegistrationRepository;
     private final TenantPropertiesRepository tenantPropertiesRepository;
 
     @Autowired
     public AdminApiImpl(
-            OAuth2ClientRegistrationRepository tenantRegistrationRepository,
+            AuthClientRegistrationRepository authClientRegistrationRepository,
             TenantPropertiesRepository tenantPropertiesRepository
     ) {
-        this.tenantRegistrationRepository = tenantRegistrationRepository;
+        this.authClientRegistrationRepository = authClientRegistrationRepository;
         this.tenantPropertiesRepository = tenantPropertiesRepository;
     }
 
@@ -62,8 +63,9 @@ public class AdminApiImpl implements AdminApi {
         Context parentContext = Context.current();
 
         Map<String, Object> commonAttrs = Map.of(
+                "tenant.tenantId", request.getTenantId(),
                 "tenant.clientId", request.getClientId(),
-                "tenant.party", request.getParty()
+                "tenant.party", request.getPartyId()
         );
 
         LoggingSpanHelper.setSpanAttributes(methodSpan, commonAttrs);
@@ -78,37 +80,29 @@ public class AdminApiImpl implements AdminApi {
                                     null
                             );
 
-                            var registration = org.springframework.security.oauth2.client.registration.ClientRegistration
-                                    .withRegistrationId(request.getClientId())
-                                    .clientId(request.getClientId())
-                                    .clientSecret(request.getClientSecret())
-                                    .authorizationUri(request.getAuthorizationUri())
-                                    .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                                    .tokenUri(request.getTokenUri())
-                                    .jwkSetUri(request.getJwkSetUri())
-                                    .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
-                                    .scope(request.getScope())
-                                    .clientName(request.getParty())
-                                    .providerConfigurationMetadata(Map.of("preconfigured", "false"))
-                                    .build();
+                            Client c = new Client();
+                            c.setTenantId(request.getTenantId());
+                            c.setClientId(request.getClientId());
+                            c.setIssuerURL(request.getIssuerUrl());
 
-                            tenantRegistrationRepository.addRegistration(registration);
+                            authClientRegistrationRepository.registerClient(c);
 
+                            // Save extra properties in a separate repository
                             TenantPropertiesRepository.TenantProperties props = new TenantPropertiesRepository.TenantProperties();
                             props.setWalletUrl(request.getWalletUrl());
-                            tenantPropertiesRepository.addTenant(registration.getRegistrationId(), props);
+                            props.setPartyId(request.getPartyId());
+                            props.setTenantId(request.getTenantId());
+                            props.setInternal(request.getInternal());
+                            tenantPropertiesRepository.addTenant(request.getTenantId(), props);
 
+                            // Build the response (OpenAPI model)
                             TenantRegistration response = new TenantRegistration();
-                            response.setClientId(registration.getClientId());
-                            response.setClientSecret(registration.getClientSecret());
-                            response.setScope(String.join(" ", registration.getScopes()));
-                            response.setAuthorizationUri(URI.create(registration.getProviderDetails().getAuthorizationUri()));
-                            response.setTokenUri(URI.create(registration.getProviderDetails().getTokenUri()));
-                            response.setJwkSetUri(URI.create(registration.getProviderDetails().getJwkSetUri()));
-                            response.setParty(registration.getClientName());
-                            response.setPreconfigured(false);
+                            response.setTenantId(request.getTenantId());
+                            response.setPartyId(request.getPartyId());
+                            response.setInternal(request.getInternal());
+                            response.setClientId(request.getClientId());
+                            response.setIssuerUrl(URI.create(request.getIssuerUrl()));
                             response.setWalletUrl(URI.create(props.getWalletUrl()));
-
                             return ResponseEntity.ok(response);
                         })
                 )
@@ -153,7 +147,7 @@ public class AdminApiImpl implements AdminApi {
                                     "Executing asynchronous logic for deleteTenantRegistration",
                                     null
                             );
-                            tenantRegistrationRepository.removeRegistration(tenantId);
+                            authClientRegistrationRepository.removeClientRegistrations(tenantId);
                             tenantPropertiesRepository.removeTenant(tenantId);
                             return ResponseEntity.ok().<Void>build();
                         })
@@ -196,26 +190,18 @@ public class AdminApiImpl implements AdminApi {
                                     null
                             );
 
-                            List<TenantRegistration> result = tenantRegistrationRepository
-                                    .getRegistrations().stream()
-                                    .filter(r -> AuthorizationGrantType.AUTHORIZATION_CODE.equals(r.getAuthorizationGrantType()))
-                                    .map(r -> {
+                            List<TenantRegistration> result = authClientRegistrationRepository.getClientRegistrations().stream()
+                                    .map(c -> {
                                         TenantRegistration out = new TenantRegistration();
-                                        out.setClientId(r.getClientId());
-                                        out.setClientSecret(r.getClientSecret());
-                                        out.setScope(String.join(" ", r.getScopes()));
-                                        out.setAuthorizationUri(URI.create(r.getProviderDetails().getAuthorizationUri()));
-                                        out.setTokenUri(URI.create(r.getProviderDetails().getTokenUri()));
-                                        out.setJwkSetUri(URI.create(r.getProviderDetails().getJwkSetUri()));
-                                        out.setParty(r.getClientName());
-                                        Object preconfiguredFlag = r.getProviderDetails()
-                                                .getConfigurationMetadata()
-                                                .get("preconfigured");
-                                        out.setPreconfigured("true".equals(preconfiguredFlag));
-                                        TenantPropertiesRepository.TenantProperties props =
-                                                tenantPropertiesRepository.getTenant(r.getRegistrationId());
-                                        if (props != null && props.getWalletUrl() != null) {
-                                            out.setWalletUrl(URI.create(props.getWalletUrl()));
+                                        out.setTenantId(c.getTenantId());
+                                        out.setClientId(c.getClientId());
+                                        out.setIssuerUrl(URI.create(c.getIssuerURL()));
+
+                                        TenantPropertiesRepository.TenantProperties props = tenantPropertiesRepository.getTenant(c.getTenantId());
+                                        if (props != null) {
+                                            if (props.getWalletUrl() != null) out.setWalletUrl(URI.create(props.getWalletUrl()));
+                                            out.setPartyId(props.getPartyId());
+                                            out.setInternal(props.isInternal());
                                         }
                                         return out;
                                     })

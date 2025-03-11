@@ -1,46 +1,43 @@
 # Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 # SPDX-License-Identifier: 0BSD
 
-spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          AppProvider-client-credentials:
-            client-id: ${AUTH_APP_PROVIDER_CLIENT_ID}
-            client-secret: ${AUTH_APP_PROVIDER_CLIENT_SECRET}
-            authorization-grant-type: client_credentials
-            scope: daml_ledger_api
-          AppProvider:
-            client-id: ${AUTH_APP_PROVIDER_CLIENT_ID}
-            client-name: ${AUTH_APP_PROVIDER_PARTY}
-            client-secret: ${AUTH_APP_PROVIDER_CLIENT_SECRET}
-            authorization-grant-type: authorization_code
-            scope: "openid,daml_ledger_api"
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-          Org1:
-            client-id: ${AUTH_APP_USER_CLIENT_ID}
-            client-name: ${AUTH_APP_USER_PARTY}
-            client-secret: ${AUTH_APP_USER_CLIENT_SECRET}
-            authorization-grant-type: authorization_code
-            scope: "openid,daml_ledger_api"
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-        provider:
-          AppProvider-client-credentials:
-            token-uri: ${AUTH_APP_PROVIDER_TOKEN_URI}
-          AppProvider:
-            authorization-uri: ${AUTH_APP_PROVIDER_AUTHORIZATION_URI}
-            token-uri: ${AUTH_APP_PROVIDER_TOKEN_URI}
-            jwk-set-uri: ${AUTH_APP_PROVIDER_JWK_SET_URI}
-          Org1:
-            authorization-uri: ${AUTH_APP_USER_AUTHORIZATION_URI}
-            token-uri: ${AUTH_APP_USER_TOKEN_URI}
-            jwk-set-uri: ${AUTH_APP_USER_JWK_SET_URI}
+ledger:
+  application-id: ${AUTH_APP_PROVIDER_BACKEND_USER_ID}
+
+security:
+  issuer-url: ${AUTH_APP_PROVIDER_ISSUER_URL}
 
 application:
   tenants:
-    Org1:
-      walletUrl: ${ORG1_WALLET_URL:http://wallet.localhost:2000/}
+    AppProvider:
+      tenantId: AppProvider
+      partyId: ${AUTH_APP_PROVIDER_PARTY}
+      internal: true
+
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${security.issuer-url}
+      client:
+        registration:
+          AppProviderBackend:
+            client-id: ${AUTH_APP_PROVIDER_BACKEND_CLIENT_ID}
+            client-secret: ${AUTH_APP_PROVIDER_BACKEND_SECRET}
+            authorization-grant-type: client_credentials
+            provider: AppProvider
+          AppProvider:
+            client-id: ${AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID}
+            client-name: ${application.tenants.AppProvider.tenantId}
+            authorization-grant-type: authorization_code
+            scope: "openid"
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            provider: AppProvider
+        provider:
+          AppProvider:
+            issuer-uri: ${security.issuer-url}
 
 server:
   forward-headers-strategy: NATIVE
@@ -55,3 +52,4 @@ management:
     web:
       exposure:
         include: '*'
+

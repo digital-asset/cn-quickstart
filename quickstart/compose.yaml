@@ -44,6 +44,7 @@ volumes:
   postgres-splice-app-user:
   postgres-splice-app-provider:
   postgres-splice-sv:
+  postgres-keycloak:
   domain-upgrade-dump:
 
 networks:
@@ -59,58 +60,58 @@ services:
 ###############################################################################################################
 ### Common Services
 ###############################################################################################################
-  oauth:
-    image: ${OAUTH_IMAGE}:${OAUTH_VERSION}
-    container_name: oauth
-    ports:
-      - "${OAUTH_PORT}:8080"
+  postgres:
+    image: postgres:14
+    container_name: keycloak-postgres
     environment:
-      JSON_CONFIG_PATH: "/data/oauth.conf"
-      LOG_LEVEL: "DEBUG"
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: keycloakdb
     volumes:
-      - ./docker/oauth:/data
+      - postgres-keycloak:/var/lib/postgresql/data
     networks:
       - ${DOCKER_NETWORK:-splice_validator}
 
-  # It can take significant time for parties to be allocated, which is a prerequisite for other services.
-  # This service acts as a convenience barrier until the parties are allocated to reduce errors and noise in the logs,
-  # and to give meaningful readiness signals to the user, but it is not strictly necessary for the system to function.
-  await-onboarding-done:
-    build: ./docker/await-onboarding-done/
-    container_name: await-onboarding-done
+  nginx-keycloak:
+    image: "nginx:${NGINX_VERSION}"
+    container_name: nginx-keycloak
     volumes:
-      - ./docker/await-onboarding-done/health-check.sh:/app/health-check.sh
-      - ./docker/await-onboarding-done/onboarding.sh:/app/onboarding.sh
-      - ./docker/utils.sh:/app/utils.sh
-      - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
-      - ./daml/assets/.daml/dist/quickstart-assets-0.0.1.dar:/canton/dars/quickstart-assets-0.0.1.dar
-    environment:
-      - LEDGER_API_ADMIN_USER=${LEDGER_API_ADMIN_USER}
-      - WALLET_ADMIN_USER=${WALLET_ADMIN_USER}
-      - APP_PROVIDER_USER_ID=${AUTH_APP_PROVIDER_CLIENT_ID}
-      - APP_USER_USER_ID=${AUTH_APP_USER_CLIENT_ID}
-    healthcheck:
-      test: ["CMD", "bash", "/app/health-check.sh"]
-      interval: 5s
-      timeout: 100s
-      retries: 1000
-      start_period: 300s
-    entrypoint: [ "tail", "-f", "/dev/null" ]
-    stdin_open: true
-    tty: true
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/nginx/keycloak/keycloak.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "8082:8082"
     depends_on:
-      participant-app-user:
+      keycloak:
         condition: service_healthy
-      participant-app-provider:
-        condition: service_healthy
-      validator-app-user:
-        condition: service_healthy
-      validator-app-provider:
-        condition: service_healthy
-      oauth:
-        condition: service_started
+    # Workaround limitation of using localhost subdomains in QS. It is used only in backend-service
+    # to configure frontend facing client otherwise the configuration would be quite difficult.
     networks:
-      - ${DOCKER_NETWORK}
+      quickstart:
+        aliases:
+          - keycloak.localhost
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.0
+    container_name: keycloak
+    volumes:
+      - ./docker/oauth/data:/opt/keycloak/data/import
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: keycloakdb
+      KC_HEALTH_ENABLED: true
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 30s
+      timeout: 10s
+      retries: 50
+    networks:
+      - ${DOCKER_NETWORK:-splice_validator}
+    command: ["start-dev", "--import-realm", "--http-port=8082", "--health-enabled=true", "--hostname-strict=false", "--proxy-headers=forwarded"]
 
   # This is dummy service just for healthcheck purpose (always healthy)
   # upstream splice-services (participant, validator) depend on it
@@ -160,7 +161,9 @@ services:
       - CANTON_PARTICIPANT_POSTGRES_USER=${SPLICE_APP_USER_DB_USER}
       - CANTON_PARTICIPANT_POSTGRES_PASSWORD=${SPLICE_APP_USER_DB_PASSWORD}
       - CANTON_PARTICIPANT_POSTGRES_PORT=${SPLICE_APP_USER_DB_PORT}
-      - AUTH_JWKS_URL=${AUTH_APP_USER_JWK_SET_URI}
+      - AUTH_JWKS_URL=${AUTH_APP_USER_JWK_SET_URL}
+      - CANTON_PARTICIPANT_ADMIN_USER_NAME=${AUTH_APP_USER_VALIDATOR_USER_ID}
+      - AUTH_TARGET_AUDIENCE=${AUTH_APP_USER_AUDIENCE}
       - *canton-metrics-config
       - |
         ADDITIONAL_CONFIG_HEALTHCHECK=
@@ -168,9 +171,8 @@ services:
             address = localhost
             port = ${CANTON_HEALTHCHECK_PORT}
           }
-      - |
-        ADDITIONAL_CONFIG_AUTO_INIT=
-        canton.participants.participant.init.auto-init=true
+    ports:
+      - "27575:7575"
     healthcheck: *canton-healthcheck
     depends_on:
       postgres-splice-app-user:
@@ -178,8 +180,8 @@ services:
       global-synchronizer:
         condition: service_healthy
         required: false
-      oauth:
-        condition: service_started
+      keycloak:
+        condition: service_healthy
 
   validator-app-user:
     extends:
@@ -188,16 +190,21 @@ services:
     container_name: validator-app-user
     volumes:
       - ./docker/validator/entrypoint.sh:/validator-entrypoint.sh
-      - ./docker/validator/bootstrap.sc:/app/bootstrap.sc
     entrypoint: /validator-entrypoint.sh
     logging: *default-logging
     environment:
       - *canton-metrics-config
       - ONBOARDING_SECRET_URL=${ONBOARDING_SECRET_URL}
-      - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=participant-app-user
-      - SPLICE_APP_VALIDATOR_AUTH_JWKS_URL=${AUTH_APP_USER_JWK_SET_URI}
+      - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=${APP_USER_VALIDATOR_PARTICIPANT_ADDRESS}
+      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_CLIENT_ID=${AUTH_APP_USER_VALIDATOR_CLIENT_ID}
+      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_CLIENT_SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
+      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_AUDIENCE=${AUTH_APP_USER_AUDIENCE}
+      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_USER_NAME=${AUTH_APP_USER_VALIDATOR_USER_ID}
+      - SPLICE_APP_VALIDATOR_WALLET_USER_NAME=${AUTH_APP_USER_WALLET_ADMIN_USER_ID}
+      - SPLICE_APP_VALIDATOR_AUTH_AUDIENCE=${AUTH_APP_USER_AUDIENCE}
+      - SPLICE_APP_VALIDATOR_AUTH_JWKS_URL=${AUTH_APP_USER_JWK_SET_URL}
       - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_URL=${AUTH_APP_USER_WELLKNOWN_URL}
-      - SPLICE_DB_SERVER=${SPLICE_APP_USER_DB_SERVER}
+      - SPLICE_APP_VALIDATOR_PARTY_HINT=${AUTH_APP_USER_PARTY_HINT}
       - |
         ADDITIONAL_CONFIG_PERSISTENCE=
             canton.validator-apps.validator_backend.storage {
@@ -220,8 +227,10 @@ services:
       sv-app:
         condition: service_healthy
         required: false
-      oauth:
-        condition: service_started
+      participant-app-user:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
 
@@ -248,7 +257,46 @@ services:
     container_name: wallet-web-ui-app-user
     logging: *default-logging
     environment:
-      - SPLICE_APP_UI_AUTH_URL=${AUTH_APP_USER_URL}
+      - SPLICE_APP_UI_AUTH_AUDIENCE=${AUTH_APP_USER_AUDIENCE}
+      - SPLICE_APP_UI_AUTH_CLIENT_ID=${AUTH_APP_USER_WALLET_UI_CLIENT_ID}
+      - SPLICE_APP_UI_AUTH_URL=${AUTH_APP_USER_ISSUER_URL}
+    networks:
+      - ${DOCKER_NETWORK}
+
+  validator-app-user-auto-config:
+    build: ./docker/validator-app-user-auto-config/
+    container_name: validator-app-user-auto-config
+    volumes:
+      - ./docker/validator-app-user-auto-config/health-check.sh:/app/health-check.sh
+      - ./docker/validator-app-user-auto-config/onboarding.sh:/app/onboarding.sh
+      - ./docker/utils.sh:/app/utils.sh
+      - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
+      - ./daml/assets/.daml/dist/quickstart-assets-0.0.1.dar:/canton/dars/quickstart-assets-0.0.1.dar
+    environment:
+      - AUTH_APP_USER_VALIDATOR_USER_ID=${AUTH_APP_USER_VALIDATOR_USER_ID}
+      - AUTH_APP_USER_VALIDATOR_USER_NAME=${AUTH_APP_USER_VALIDATOR_USER_NAME}
+      - AUTH_APP_USER_VALIDATOR_CLIENT_ID=${AUTH_APP_USER_VALIDATOR_CLIENT_ID}
+      - AUTH_APP_USER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
+      - AUTH_APP_USER_WALLET_ADMIN_USER_ID=${AUTH_APP_USER_WALLET_ADMIN_USER_ID}
+      - AUTH_APP_USER_WALLET_ADMIN_USER_NAME=${AUTH_APP_USER_WALLET_ADMIN_USER_NAME}
+      - AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD=${AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD}
+      - AUTH_APP_USER_TOKEN_URL=${AUTH_APP_USER_TOKEN_URL}
+    healthcheck:
+      test: ["CMD", "bash", "/app/health-check.sh"]
+      interval: 5s
+      timeout: 100s
+      retries: 1000
+      start_period: 300s
+    entrypoint: [ "tail", "-f", "/dev/null" ]
+    stdin_open: true
+    tty: true
+    depends_on:
+      participant-app-user:
+        condition: service_healthy
+      validator-app-user:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
 
@@ -261,7 +309,7 @@ services:
     working_dir: /daml3.2
     environment:
       SCRIBE_SOURCE_LEDGER_HOST: "participant-app-provider"
-      SCRIBE_SOURCE_LEDGER_PORT: "${PARTICIPANT_APP_PROVIDER_LEDGER_API_PORT}"
+      SCRIBE_SOURCE_LEDGER_PORT: "${PARTICIPANT_LEDGER_API_PORT}"
       SCRIBE_TARGET_POSTGRES_HOST: "${SCRIBE_POSTGRES_HOST}"
       SCRIBE_TARGET_POSTGRES_PORT: "5432"
       SCRIBE_TARGET_POSTGRES_USERNAME: "${SCRIBE_POSTGRES_USER}"
@@ -269,6 +317,7 @@ services:
       SCRIBE_TARGET_POSTGRES_DATABASE: "${SCRIBE_POSTGRES_DATABASE}"
       SCRIBE_PIPELINE_OAUTH_CLIENTID: "${SCRIBE_PIPELINE_OAUTH_CLIENTID}"
       SCRIBE_PIPELINE_OAUTH_CLIENTSECRET: "${SCRIBE_PIPELINE_OAUTH_CLIENTSECRET}"
+      SCRIBE_PIPELINE_OAUTH_SCOPE: "${SCRIBE_PIPELINE_OAUTH_SCOPE}"
       SCRIBE_PIPELINE_OAUTH_ENDPOINT: "${SCRIBE_PIPELINE_OAUTH_ENDPOINT}"
       SCRIBE_SOURCE_LEDGER_AUTH: "${SCRIBE_SOURCE_LEDGER_AUTH}"
       SCRIBE_PIPELINE_OAUTH_PARAMETERS_AUDIENCE: "${SCRIBE_PIPELINE_OAUTH_PARAMETERS_AUDIENCE}"
@@ -290,7 +339,7 @@ services:
         condition: service_healthy
       participant-app-provider:
         condition: service_healthy
-      await-onboarding-done:
+      validator-app-provider-auto-config:
         condition: service_healthy
     restart: on-failure:100
     networks:
@@ -305,7 +354,7 @@ services:
     working_dir: /app
     environment:
       LEDGER_HOST: "participant-app-provider"
-      LEDGER_PORT: "${PARTICIPANT_APP_PROVIDER_LEDGER_API_PORT}"
+      LEDGER_PORT: "${PARTICIPANT_LEDGER_API_PORT}"
       POSTGRES_HOST: "${SCRIBE_POSTGRES_HOST}"
       POSTGRES_DATABASE: "${SCRIBE_POSTGRES_DATABASE}"
       POSTGRES_USERNAME: "${SCRIBE_POSTGRES_USER}"
@@ -317,17 +366,15 @@ services:
       OTEL_METRIC_EXPORT_INTERVAL: 5000
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:${OTEL_COLLECTOR_OTLP_PORT}"
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
-      AUTH_APP_PROVIDER_CLIENT_ID: "${AUTH_APP_PROVIDER_CLIENT_ID}"
-      AUTH_APP_PROVIDER_CLIENT_SECRET: "${AUTH_APP_PROVIDER_CLIENT_SECRET}"
-      AUTH_APP_PROVIDER_TOKEN_URI: "${AUTH_APP_PROVIDER_TOKEN_URI}"
-      AUTH_APP_PROVIDER_AUTHORIZATION_URI: "${AUTH_APP_PROVIDER_AUTHORIZATION_URI}"
-      AUTH_APP_PROVIDER_JWK_SET_URI: "${AUTH_APP_PROVIDER_JWK_SET_URI}"
-      AUTH_APP_USER_CLIENT_ID: "${AUTH_APP_USER_CLIENT_ID}"
-      AUTH_APP_USER_CLIENT_SECRET: "${AUTH_APP_USER_CLIENT_SECRET}"
-      AUTH_APP_USER_TOKEN_URI: "${AUTH_APP_USER_TOKEN_URI}"
-      AUTH_APP_USER_AUTHORIZATION_URI: "${AUTH_APP_USER_AUTHORIZATION_URI}"
-      AUTH_APP_USER_JWK_SET_URI: "${AUTH_APP_USER_JWK_SET_URI}"
-      LEDGER_API_ADMIN_USER: "${LEDGER_API_ADMIN_USER}"
+      AUTH_APP_PROVIDER_BACKEND_CLIENT_ID: "${AUTH_APP_PROVIDER_BACKEND_CLIENT_ID}"
+      AUTH_APP_PROVIDER_BACKEND_SECRET: "${AUTH_APP_PROVIDER_BACKEND_SECRET}"
+      AUTH_APP_PROVIDER_BACKEND_USER_ID: "${AUTH_APP_PROVIDER_BACKEND_USER_ID}"
+      AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID: "${AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID}"
+      AUTH_APP_PROVIDER_ISSUER_URL: "${AUTH_APP_PROVIDER_ISSUER_URL}"
+      AUTH_APP_PROVIDER_TOKEN_URL: "${AUTH_APP_PROVIDER_TOKEN_URL}"
+      AUTH_APP_PROVIDER_VALIDATOR_USER_ID: "${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}"
+      AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID: "${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID}"
+      AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET: "${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}"
       JAVA_OPTS: "-javaagent:/otel-agent.jar -Dotel.instrumentation.logback-appender.experimental-log-attributes=true -Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true"
     volumes:
       - ./backend/build/distributions/backend.tar:/backend.tar
@@ -342,7 +389,7 @@ services:
         condition: service_started
       participant-app-provider:
         condition: service_healthy
-      await-onboarding-done:
+      validator-app-provider-auto-config:
         condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
@@ -380,7 +427,9 @@ services:
       - CANTON_PARTICIPANT_POSTGRES_USER=${SPLICE_APP_PROVIDER_DB_USER}
       - CANTON_PARTICIPANT_POSTGRES_PASSWORD=${SPLICE_APP_PROVIDER_DB_PASSWORD}
       - CANTON_PARTICIPANT_POSTGRES_PORT=${SPLICE_APP_PROVIDER_DB_PORT}
-      - AUTH_JWKS_URL=${AUTH_APP_PROVIDER_JWK_SET_URI}
+      - AUTH_JWKS_URL=${AUTH_APP_PROVIDER_JWK_SET_URL}
+      - CANTON_PARTICIPANT_ADMIN_USER_NAME=${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}
+      - AUTH_TARGET_AUDIENCE=${AUTH_APP_PROVIDER_AUDIENCE}
       - *canton-metrics-config
       - |
         ADDITIONAL_CONFIG_HEALTHCHECK=
@@ -388,9 +437,8 @@ services:
             address = localhost
             port = ${CANTON_HEALTHCHECK_PORT}
           }
-      - |
-        ADDITIONAL_CONFIG_AUTO_INIT=
-        canton.participants.participant.init.auto-init=true
+    ports:
+      - "37575:7575"
     healthcheck: *canton-healthcheck
     depends_on:
       postgres-splice-app-provider:
@@ -398,8 +446,8 @@ services:
       global-synchronizer:
         condition: service_healthy
         required: false
-      oauth:
-        condition: service_started
+      keycloak:
+        condition: service_healthy
 
   validator-app-provider:
     extends:
@@ -408,15 +456,21 @@ services:
     container_name: validator-app-provider
     volumes:
       - ./docker/validator/entrypoint.sh:/validator-entrypoint.sh
-      - ./docker/validator/bootstrap.sc:/app/bootstrap.sc
     entrypoint: /validator-entrypoint.sh
     logging: *default-logging
     environment:
       - *canton-metrics-config
       - ONBOARDING_SECRET_URL=${ONBOARDING_SECRET_URL}
-      - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=participant-app-provider
-      - SPLICE_APP_VALIDATOR_AUTH_JWKS_URL=${AUTH_APP_PROVIDER_JWK_SET_URI}
+      - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=${APP_PROVIDER_VALIDATOR_PARTICIPANT_ADDRESS}
+      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_CLIENT_ID=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID}
+      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_CLIENT_SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
+      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_AUDIENCE=${AUTH_APP_PROVIDER_AUDIENCE}
+      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_USER_NAME=${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}
+      - SPLICE_APP_VALIDATOR_WALLET_USER_NAME=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID}
+      - SPLICE_APP_VALIDATOR_AUTH_AUDIENCE=${AUTH_APP_PROVIDER_AUDIENCE}
+      - SPLICE_APP_VALIDATOR_AUTH_JWKS_URL=${AUTH_APP_PROVIDER_JWK_SET_URL}
       - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_URL=${AUTH_APP_PROVIDER_WELLKNOWN_URL}
+      - SPLICE_APP_VALIDATOR_PARTY_HINT=${AUTH_APP_PROVIDER_PARTY_HINT}
       - |
         ADDITIONAL_CONFIG_PERSISTENCE=
             canton.validator-apps.validator_backend.storage {
@@ -439,8 +493,10 @@ services:
       sv-app:
         condition: service_healthy
         required: false
-      oauth:
-        condition: service_started
+      keycloak:
+        condition: service_healthy
+      participant-app-provider:
+        condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
 
@@ -470,7 +526,85 @@ services:
     container_name: wallet-web-ui-app-provider
     logging: *default-logging
     environment:
-      - SPLICE_APP_UI_AUTH_URL=${AUTH_APP_PROVIDER_URL}
+      - SPLICE_APP_UI_AUTH_AUDIENCE=${AUTH_APP_PROVIDER_AUDIENCE}
+      - SPLICE_APP_UI_AUTH_CLIENT_ID=${AUTH_APP_PROVIDER_WALLET_UI_CLIENT_ID}
+      - SPLICE_APP_UI_AUTH_URL=${AUTH_APP_PROVIDER_ISSUER_URL}
+    networks:
+      - ${DOCKER_NETWORK}
+
+  validator-app-provider-auto-config:
+    build: ./docker/validator-app-provider-auto-config/
+    container_name: validator-app-provider-auto-config
+    volumes:
+      - ./docker/validator-app-provider-auto-config/health-check.sh:/app/health-check.sh
+      - ./docker/validator-app-provider-auto-config/onboarding.sh:/app/onboarding.sh
+      - ./docker/utils.sh:/app/utils.sh
+      - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
+      - ./daml/assets/.daml/dist/quickstart-assets-0.0.1.dar:/canton/dars/quickstart-assets-0.0.1.dar
+    environment:
+      - AUTH_APP_PROVIDER_VALIDATOR_USER_ID=${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}
+      - AUTH_APP_PROVIDER_VALIDATOR_USER_NAME=${AUTH_APP_PROVIDER_VALIDATOR_USER_NAME}
+      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID}
+      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
+      - AUTH_APP_PROVIDER_PQS_USER_ID=${AUTH_APP_PROVIDER_PQS_USER_ID}
+      - AUTH_APP_PROVIDER_PQS_USER_NAME=${AUTH_APP_PROVIDER_PQS_USER_NAME}
+      - AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID}
+      - AUTH_APP_PROVIDER_WALLET_ADMIN_USER_NAME=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_NAME}
+      - AUTH_APP_PROVIDER_BACKEND_USER_ID=${AUTH_APP_PROVIDER_BACKEND_USER_ID}
+      - AUTH_APP_PROVIDER_BACKEND_USER_NAME=${AUTH_APP_PROVIDER_BACKEND_USER_NAME}
+      - AUTH_APP_PROVIDER_TOKEN_URL=${AUTH_APP_PROVIDER_TOKEN_URL}
+    healthcheck:
+      test: ["CMD", "bash", "/app/health-check.sh"]
+      interval: 5s
+      timeout: 100s
+      retries: 1000
+      start_period: 300s
+    entrypoint: [ "tail", "-f", "/dev/null" ]
+    stdin_open: true
+    tty: true
+    depends_on:
+      participant-app-provider:
+        condition: service_healthy
+      validator-app-provider:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - ${DOCKER_NETWORK}
+
+  backend-service-auto-config:
+    build: ./docker/backend-service-auto-config/
+    container_name: backend-service-auto-config
+    volumes:
+      - ./docker/backend-service-auto-config/health-check.sh:/app/health-check.sh
+      - ./docker/backend-service-auto-config/onboarding.sh:/app/onboarding.sh
+      - ./docker/utils.sh:/app/utils.sh
+    environment:
+      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID}
+      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
+      - AUTH_APP_PROVIDER_TOKEN_URL=${AUTH_APP_PROVIDER_TOKEN_URL}
+      - AUTH_APP_PROVIDER_ISSUER_URL=${AUTH_APP_PROVIDER_ISSUER_URL}
+      - AUTH_APP_USER_VALIDATOR_USER_ID=${AUTH_APP_USER_VALIDATOR_USER_ID}
+      - AUTH_APP_USER_VALIDATOR_CLIENT_ID=${AUTH_APP_USER_VALIDATOR_CLIENT_ID}
+      - AUTH_APP_USER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
+      - AUTH_APP_USER_TOKEN_URL=${AUTH_APP_USER_TOKEN_URL}
+      - AUTH_APP_USER_BACKEND_OIDC_CLIENT_ID=${AUTH_APP_USER_BACKEND_OIDC_CLIENT_ID}
+      - AUTH_APP_USER_TOKEN_URL=${AUTH_APP_USER_TOKEN_URL}
+      - AUTH_APP_USER_ISSUER_URL=${AUTH_APP_USER_ISSUER_URL}
+    healthcheck:
+      test: ["CMD", "bash", "/app/health-check.sh"]
+      interval: 5s
+      timeout: 100s
+      retries: 1000
+      start_period: 300s
+    entrypoint: [ "tail", "-f", "/dev/null" ]
+    stdin_open: true
+    tty: true
+    depends_on:
+      backend-service:
+        condition: service_started
+      validator-app-user-auto-config:
+        condition: service_healthy
     networks:
       - ${DOCKER_NETWORK}
 

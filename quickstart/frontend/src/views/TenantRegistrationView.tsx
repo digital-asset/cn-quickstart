@@ -16,14 +16,11 @@ const TenantRegistrationView: React.FC = () => {
     } = useTenantRegistrationStore()
 
     const [formData, setFormData] = useState<TenantRegistration>({
+        tenantId: '',
+        partyId: '',
         clientId: '',
-        clientSecret: '',
-        scope: '',
-        authorizationUri: '',
-        tokenUri: '',
-        jwkSetUri: '',
-        party: '',
-        preconfigured: false,
+        issuerUrl: '',
+        internal: false,
         walletUrl: '',
     })
 
@@ -43,15 +40,13 @@ const TenantRegistrationView: React.FC = () => {
         e.preventDefault()
         await createTenantRegistration(formData)
         setFormData({
+            tenantId: '',
+            partyId: '',
             clientId: '',
-            clientSecret: '',
-            scope: '',
-            authorizationUri: '',
-            tokenUri: '',
-            jwkSetUri: '',
-            party: '',
-            preconfigured: false,
+            issuerUrl: '',
+            internal: false,
             walletUrl: '',
+
         })
     }
 
@@ -64,6 +59,34 @@ const TenantRegistrationView: React.FC = () => {
     return (
         <div>
             <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                    <label htmlFor="tenantId" className="form-label">
+                        Tenant ID:
+                    </label>
+                    <input
+                        type="text"
+                        id="tenantId"
+                        name="tenantId"
+                        className="form-control"
+                        value={formData.tenantId}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+                <div className="mb-3">
+                    <label htmlFor="partyId" className="form-label">
+                        PartyId:
+                    </label>
+                    <input
+                        type="text"
+                        id="partyId"
+                        name="partyId"
+                        className="form-control"
+                        value={formData.partyId}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
                 <div className="mb-3">
                     <label htmlFor="clientId" className="form-label">
                         Client ID:
@@ -79,84 +102,15 @@ const TenantRegistrationView: React.FC = () => {
                     />
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="clientSecret" className="form-label">
-                        Client Secret:
+                    <label htmlFor="issuerUrl" className="form-label">
+                        Issuer URL:
                     </label>
                     <input
                         type="text"
-                        id="clientSecret"
-                        name="clientSecret"
+                        id="issuerUrl"
+                        name="issuerUrl"
                         className="form-control"
-                        value={formData.clientSecret}
-                        onChange={handleChange}
-                    />
-                </div>
-                <div className="mb-3">
-                    <label htmlFor="scope" className="form-label">
-                        Scope:
-                    </label>
-                    <input
-                        type="text"
-                        id="scope"
-                        name="scope"
-                        className="form-control"
-                        value={formData.scope}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-                <div className="mb-3">
-                    <label htmlFor="authorizationUri" className="form-label">
-                        Authorization URI:
-                    </label>
-                    <input
-                        type="text"
-                        id="authorizationUri"
-                        name="authorizationUri"
-                        className="form-control"
-                        value={formData.authorizationUri}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-                <div className="mb-3">
-                    <label htmlFor="tokenUri" className="form-label">
-                        Token URI:
-                    </label>
-                    <input
-                        type="text"
-                        id="tokenUri"
-                        name="tokenUri"
-                        className="form-control"
-                        value={formData.tokenUri}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-                <div className="mb-3">
-                    <label htmlFor="jwkSetUri" className="form-label">
-                        JWK Set URI:
-                    </label>
-                    <input
-                        type="text"
-                        id="jwkSetUri"
-                        name="jwkSetUri"
-                        className="form-control"
-                        value={formData.jwkSetUri}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-                <div className="mb-3">
-                    <label htmlFor="party" className="form-label">
-                        Party:
-                    </label>
-                    <input
-                        type="text"
-                        id="party"
-                        name="party"
-                        className="form-control"
-                        value={formData.party}
+                        value={formData.issuerUrl}
                         onChange={handleChange}
                         required
                     />
@@ -180,12 +134,14 @@ const TenantRegistrationView: React.FC = () => {
             </form>
 
             <div className="mt-4">
-                <h3>Existing Tenant/OAuth2 Registrations</h3>
-                <table className="table">
+                <h3>Existing Tenant Registrations</h3>
+                <table className="table nowrap">
                     <thead>
                     <tr>
+                        <th>Tenant ID</th>
+                        <th>Party ID</th>
                         <th>Client ID</th>
-                        <th>Party</th>
+                        <th>Issuer URL</th>
                         <th>Wallet URL</th>
                         <th>Actions</th>
                     </tr>
@@ -193,14 +149,16 @@ const TenantRegistrationView: React.FC = () => {
                     <tbody>
                     {registrations.map((registration, index) => (
                         <tr key={index}>
+                            <td>{registration.tenantId}</td>
+                            <td>{registration.partyId}</td>
                             <td>{registration.clientId}</td>
-                            <td>{registration.party}</td>
+                            <td>{registration.issuerUrl}</td>
                             <td>{registration.walletUrl}</td>
                             <td>
                                 <button
                                     className="btn btn-danger"
-                                    disabled={registration.preconfigured}
-                                    onClick={() => handleDelete(registration.clientId)}
+                                    disabled={registration.internal}
+                                    onClick={() => handleDelete(registration.tenantId)}
                                 >
                                     Delete
                                 </button>

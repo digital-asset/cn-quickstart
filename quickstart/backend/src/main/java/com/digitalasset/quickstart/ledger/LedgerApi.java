@@ -4,10 +4,8 @@
 package com.digitalasset.quickstart.ledger;
 
 import com.daml.ledger.api.v2.*;
-import com.daml.ledger.api.v2.admin.UserManagementServiceGrpc;
-import com.daml.ledger.api.v2.admin.UserManagementServiceOuterClass;
 import com.digitalasset.quickstart.config.LedgerConfig;
-import com.digitalasset.quickstart.oauth.Interceptor;
+import com.digitalasset.quickstart.security.TokenProvider;
 import com.digitalasset.quickstart.utility.LoggingSpanHelper;
 import com.digitalasset.transcode.Converter;
 import com.digitalasset.transcode.codec.proto.ProtobufCodec;
@@ -22,8 +20,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import daml.Daml;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import io.grpc.*;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
@@ -39,33 +36,21 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 public class LedgerApi {
-    private static final String APP_ID;
-    private static final String APP_PROVIDER_USER_ID;
-
-    static {
-        String appId = System.getenv("AUTH_APP_PROVIDER_CLIENT_ID");
-        if (appId == null || appId.isBlank()) {
-            throw new IllegalStateException("Environment variable AUTH_APP_PROVIDER_CLIENT_ID is not set");
-        }
-        APP_ID = appId;
-        APP_PROVIDER_USER_ID = appId;
-    }
-
+    private final String APP_ID ;
     private final CommandSubmissionServiceGrpc.CommandSubmissionServiceFutureStub submission;
     private final CommandServiceGrpc.CommandServiceFutureStub commands;
-    private final UserManagementServiceGrpc.UserManagementServiceFutureStub userManagement;
-    private final StateServiceGrpc.StateServiceFutureStub stateService;
     private final Dictionary<Converter<Object, ValueOuterClass.Value>> dto2Proto;
     private final Dictionary<Converter<ValueOuterClass.Value, Object>> proto2Dto;
 
     private final Logger logger = LoggerFactory.getLogger(LedgerApi.class);
 
     @Autowired
-    public LedgerApi(LedgerConfig ledgerConfig, Interceptor oAuth2ClientInterceptor) {
+    public LedgerApi(LedgerConfig ledgerConfig, TokenProvider tokenProvider) {
+        APP_ID = ledgerConfig.getApplicationId();
         ManagedChannel channel = ManagedChannelBuilder
                 .forAddress(ledgerConfig.getHost(), ledgerConfig.getPort())
                 .usePlaintext()
-                .intercept(oAuth2ClientInterceptor)
+                .intercept(new Interceptor(tokenProvider))
                 .build();
 
         // Single log statement, not duplicating attributes for spans, so leaving as-is:
@@ -76,97 +61,10 @@ public class LedgerApi {
 
         submission = CommandSubmissionServiceGrpc.newFutureStub(channel);
         commands = CommandServiceGrpc.newFutureStub(channel);
-        userManagement = UserManagementServiceGrpc.newFutureStub(channel);
-        stateService = StateServiceGrpc.newFutureStub(channel);
 
         ProtobufCodec protoCodec = new ProtobufCodec();
         dto2Proto = Utils.getConverters(Daml.ENTITIES, protoCodec);
         proto2Dto = Utils.getConverters(protoCodec, Daml.ENTITIES);
-    }
-
-    public CompletableFuture<Void> grantRights(String actAs, String readAs) {
-        Map<String, Object> attrs = new HashMap<>();
-        attrs.put("userId", APP_PROVIDER_USER_ID);
-        attrs.put("actAs", actAs);
-        attrs.put("readAs", readAs);
-
-        LoggingSpanHelper.logDebug(logger, "Attempting to grant user rights", attrs);
-
-        return toCompletableFuture(
-                userManagement.grantUserRights(
-                        UserManagementServiceOuterClass.GrantUserRightsRequest.newBuilder()
-                                .setUserId(APP_PROVIDER_USER_ID)
-                                .addAllRights(
-                                        List.of(
-                                                UserManagementServiceOuterClass.Right.newBuilder()
-                                                        .setCanReadAs(
-                                                                UserManagementServiceOuterClass.Right.CanReadAs.newBuilder()
-                                                                        .setParty(readAs).build()
-                                                        ).build(),
-                                                UserManagementServiceOuterClass.Right.newBuilder()
-                                                        .setCanActAs(
-                                                                UserManagementServiceOuterClass.Right.CanActAs.newBuilder()
-                                                                        .setParty(actAs).build()
-                                                        ).build()
-                                        )
-                                ).build()
-                ))
-                .<Void>thenApply(x -> null)
-                .whenComplete((res, ex) -> {
-                    if (ex != null) {
-                        LoggingSpanHelper.logError(logger, "Failed to grant user rights", attrs, ex);
-                    } else {
-                        LoggingSpanHelper.logInfo(logger, "Successfully granted user rights", attrs);
-                    }
-                });
-    }
-
-    public CompletableFuture<List<UserManagementServiceOuterClass.Right>> fetchUserRights(String userId) {
-        Map<String, Object> attrs = new HashMap<>();
-        attrs.put("userId", userId);
-
-        LoggingSpanHelper.logDebug(logger, "Fetching user rights", attrs);
-
-        CompletableFuture<UserManagementServiceOuterClass.ListUserRightsResponse> response =
-                toCompletableFuture(
-                        userManagement.listUserRights(
-                                UserManagementServiceOuterClass.ListUserRightsRequest.newBuilder().setUserId(userId).build()
-                        )
-                );
-
-        return response
-                .thenApply(UserManagementServiceOuterClass.ListUserRightsResponse::getRightsList)
-                .whenComplete((rights, ex) -> {
-                    if (ex != null) {
-                        LoggingSpanHelper.logError(logger, "Failed to fetch user rights", attrs, ex);
-                    } else {
-                        Map<String, Object> successAttrs = new HashMap<>(attrs);
-                        successAttrs.put("rights.size", rights.size());
-                        LoggingSpanHelper.logInfo(logger, "Fetched user rights", successAttrs);
-                    }
-                });
-    }
-
-    public CompletableFuture<UserManagementServiceOuterClass.User> fetchUserInfo(String userId) {
-        Map<String, Object> attrs = new HashMap<>();
-        attrs.put("userId", userId);
-
-        LoggingSpanHelper.logDebug(logger, "Fetching user info", attrs);
-
-        UserManagementServiceOuterClass.GetUserRequest request =
-                UserManagementServiceOuterClass.GetUserRequest.newBuilder().setUserId(userId).build();
-
-        return toCompletableFuture(userManagement.getUser(request))
-                .thenApply(UserManagementServiceOuterClass.GetUserResponse::getUser)
-                .whenComplete((user, ex) -> {
-                    if (ex != null) {
-                        LoggingSpanHelper.logError(logger, "Failed to fetch user info", attrs, ex);
-                    } else {
-                        Map<String, Object> successAttrs = new HashMap<>(attrs);
-                        successAttrs.put("fetchedUserId", user.getId());
-                        LoggingSpanHelper.logInfo(logger, "Fetched user info", successAttrs);
-                    }
-                });
     }
 
     @WithSpan
@@ -382,5 +280,27 @@ public class LedgerApi {
                 .setModuleName(id.moduleName())
                 .setEntityName(id.entityName())
                 .build();
+    }
+
+
+    private static class Interceptor implements ClientInterceptor {
+        private final Metadata.Key<String> AUTHORIZATION_HEADER = Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER);
+        private final TokenProvider tokenProvider;
+
+        public Interceptor(TokenProvider tokenProvider) {
+            this.tokenProvider = tokenProvider;
+        }
+
+        @Override
+        public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
+            ClientCall<ReqT, RespT> clientCall = next.newCall(method, callOptions);
+            return new ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(clientCall) {
+                @Override
+                public void start(Listener<RespT> responseListener, Metadata headers) {
+                    headers.put(AUTHORIZATION_HEADER, "Bearer " + tokenProvider.getToken());
+                    super.start(responseListener, headers);
+                }
+            };
+        }
     }
 }
