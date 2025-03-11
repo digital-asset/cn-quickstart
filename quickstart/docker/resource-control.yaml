@@ -4,9 +4,9 @@ services:
     mem_limit: 32mb
   backend-service:
     #cpus: 1
-    mem_limit: 512mb
+    mem_limit: 1g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   cadvisor:
     #cpus: 1
     mem_limit: 256mb
@@ -47,16 +47,19 @@ services:
     mem_limit: 1gb
   participant-app-provider:
     #cpus: 1
-    mem_limit: 5g
-
+    mem_limit: 4g
+    environment:
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   participant-app-user:
     #cpus: 1
-    mem_limit: 5g
-
+    mem_limit: 4g
+    environment:
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   participant-sv:
     #cpus: 1
-    mem_limit: 5g
-
+    mem_limit: 4g
+    environment:
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   postgres-splice:
     #cpus: 1
     mem_limit: 512mb
@@ -77,12 +80,12 @@ services:
     mem_limit: 512mb
   postgres-splice-sv-metrics:
     #cpus: 1
-    mem_limit: 512mb
+    mem_limit: 32mb
   pqs:
     #cpus: 1
     mem_limit: 1g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   prometheus:
     #cpus: 1
     mem_limit: 256mb
@@ -90,15 +93,15 @@ services:
     #cpus: 1
     mem_limit: 2g
     environment:
-      JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   scan-web-ui:
     #cpus: 1
-    mem_limit: 1g
+    mem_limit: 256mb
   sv-app:
     #cpus: 1
     mem_limit: 2g
     # environment:
-    #   _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0"
+    #   _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   sv-web-ui:
     #cpus: 1
     mem_limit: 512mb
@@ -112,12 +115,12 @@ services:
     #cpus: 1
     mem_limit: 2g
     # environment:
-    #   JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0"
+    #   JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   validator-sv:
     #cpus: 1
     mem_limit: 2g
     # environment:
-    #   JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0"
+    #   JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   wallet-web-ui-app-provider:
     #cpus: 1
     mem_limit: 256mb
