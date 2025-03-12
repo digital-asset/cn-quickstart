@@ -2,12 +2,20 @@
 
 This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
 
+## Docs and Guides
+
 If you are impatient, then you can start by following the Engineer Setup below. Alternatively, you can peruse the documentation:
 - [Quickstart Installation](docs/guide/CN-QS-Installation-20250227.pdf)
 - [Exploring The Demo](docs/guide/ExploringTheDemo-20250227.pdf)
 - [Project Structure](docs/guide/ProjectStructureGuide-20250212.pdf)
 - [FAQ](docs/guide/CN-QS-FAQ-20250227.pdf)
-<!---  - Troubleshooting and debugging with Observability --->
+- [Observability and Troubleshooting Overview](docs/guide/ObservabilityTroubleshootingOverview-20250220.pdf)
+
+### Technical Documentation
+
+- [Observability](docs/user/001-observability.md)
+- [Topology](docs/user/002-topology.md)
+
 Additional documentation and updates are planned weekly.
 
 This project will be rapidly enhanced, so please check back often for updates.
@@ -145,22 +153,6 @@ The `*.localhost` domains will resolve to your local host IP `127.0.0.1`.
 ### Auth
 
 To perform operations such as creating, editing, and archiving assets, users must be authenticated and authorized. The endpoints that perform these operations are protected by OAuth2 Authorization Code Grant Flow. GRPC communication between the backend service and participant is secured by OAuth2 Client Credentials Flow.
-
-## User Documentation
-
-### User Guides
-
-The following user guides provide an engineering handover to teams using the Canton Network Quickstart to bootstrap their project.
-
-- [Quickstart Installation](docs/guide/CN-QS-Installation-20250227.pdf)
-- [Exploring The Demo](docs/guide/ExploringTheDemo-20250227.pdf)
-- [Project Structure](docs/guide/ProjectStructureGuide-20250212.pdf)
-- [Observability and Troubleshooting Overview](docs/guide/ObservabilityTroubleshootingOverview-20250220.pdf)
-
-### Technical Documentation
-
-- [Observability](docs/user/001-observability.md)
-- [Topology](docs/user/002-topology.md)
 
 ## License
 
