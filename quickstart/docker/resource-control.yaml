@@ -49,20 +49,20 @@ services:
     mem_limit: 256mb
   sv-app:
     mem_limit: 2g
-    # environment:
-    #   _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+    environment:
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   sv-web-ui:
     mem_limit: 512mb
   validator-app-provider:
     mem_limit: 2g
   validator-app-user:
     mem_limit: 2g
-    # environment:
-    #   JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+    environment:
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   validator-sv:
     mem_limit: 2g
-    # environment:
-    #   JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+    environment:
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   wallet-web-ui-app-provider:
     mem_limit: 256mb
   wallet-web-ui-app-user:
