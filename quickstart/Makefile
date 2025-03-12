@@ -43,9 +43,9 @@ endif
 
 
 ifeq ($(KERNEL_NAME), Darwin)
-DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml $(RESOURCE_CONSTRAINT_CONFIG)
+DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml
 else ifeq ($(KERNEL_NAME), Linux)
-DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml $(RESOURCE_CONSTRAINT_CONFIG)
+DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml
 else
 DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/compose.yaml
 endif
@@ -100,7 +100,7 @@ build-daml: ## Build the Daml model
 
 .PHONY: build-docker-images
 build-docker-images:
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} build)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) build)
 
 .PHONY: create-app-install-request
 create-app-install-request: ## Submit an App Install Request from the App User participant node
@@ -117,12 +117,12 @@ restart-frontend: build-frontend ## Build and start the application
 # Run targets
 .PHONY: start
 start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} up -d)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d)
 
 
 .PHONY: stop
 stop: ## Stop the application and observability services
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} down)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) down)
 
 .PHONY: stop-application
 stop-application: ## Stop the application, leaving observability services running
@@ -134,15 +134,15 @@ restart: stop start ## Restart the application
 # Utility targets
 .PHONY: status
 status: ## Show status of Docker containers
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} ps)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) ps)
 
 .PHONY: status
 services: ## List all services in compose template
-	@$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} ps --services)
+	@$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) ps --services)
 
 .PHONY: compose-config
 compose-config:
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} config)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) config)
 
 .PHONY: logs
 logs: ## Show logs of Docker containers
@@ -203,7 +203,7 @@ clean: ## Clean the build artifacts
 
 .PHONY: clean-docker
 clean-docker: clean-shell clean-console-app-provider clean-console-app-user ## Stop and remove application Docker containers and volumes
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} down -v)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) down -v)
 
 .PHONY: clean-application
 clean-application: ## like clean-docker, but leave observability services running
