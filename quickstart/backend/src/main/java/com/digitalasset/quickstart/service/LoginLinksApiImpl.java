@@ -4,7 +4,7 @@
 package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.LoginLinksApi;
-import com.digitalasset.quickstart.repository.OAuth2ClientRegistrationRepository;
+import com.digitalasset.quickstart.security.AuthClientRegistrationRepository;
 import com.digitalasset.quickstart.utility.ContextAwareCompletableFutures;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
@@ -14,7 +14,6 @@ import org.openapitools.model.LoginLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -31,9 +30,9 @@ public class LoginLinksApiImpl implements LoginLinksApi {
 
     private static final Logger logger = LoggerFactory.getLogger(LoginLinksApiImpl.class);
 
-    private final OAuth2ClientRegistrationRepository clientRegistrationRepository;
+    private final AuthClientRegistrationRepository clientRegistrationRepository;
 
-    public LoginLinksApiImpl(OAuth2ClientRegistrationRepository clientRegistrationRepository) {
+    public LoginLinksApiImpl(AuthClientRegistrationRepository clientRegistrationRepository) {
         this.clientRegistrationRepository = clientRegistrationRepository;
     }
 
@@ -51,12 +50,11 @@ public class LoginLinksApiImpl implements LoginLinksApi {
                         supplyWithin(parentContext, () -> {
                             methodSpan.addEvent("Building list of LoginLink objects from client registrations");
 
-                            List<LoginLink> links = clientRegistrationRepository.getRegistrations().stream()
-                                    .filter(registration -> AuthorizationGrantType.AUTHORIZATION_CODE.equals(registration.getAuthorizationGrantType()))
+                            List<LoginLink> links = clientRegistrationRepository.getClientRegistrations().stream()
                                     .map(registration ->
                                             new LoginLink()
-                                                    .name(registration.getClientName().split("::")[0])
-                                                    .url("/oauth2/authorization/" + registration.getRegistrationId())
+                                                    .name(registration.getTenantId())
+                                                    .url(clientRegistrationRepository.getLoginLink(registration.getRegistrationId()))
                                     )
                                     .collect(Collectors.toList());
 

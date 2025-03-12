@@ -8,18 +8,36 @@ networks:
     name: ${DOCKER_NETWORK}
 
 services:
-  canton-console:
+  canton-console-app-provider:
     image: "${IMAGE_REPO}canton:${IMAGE_TAG}"
     volumes:
       - ../../config/canton-console/app.conf:/app/app.conf
       - ../../docker/canton-console/entrypoint.sh:/app/entrypoint.sh
     environment:
+      - PARTICIPANT_LEDGER_API_PORT=${PARTICIPANT_LEDGER_API_PORT}
+      - PARTICIPANT_ADMIN_API_PORT=${PARTICIPANT_ADMIN_API_PORT}
       - LEDGER_API_ADDRESS=participant-app-provider
-      - PARTICIPANT_APP_PROVIDER_LEDGER_API_PORT=${PARTICIPANT_APP_PROVIDER_LEDGER_API_PORT}
-      - PARTICIPANT_APP_PROVIDER_ADMIN_API_PORT=${PARTICIPANT_APP_PROVIDER_ADMIN_API_PORT}
-      - LEDGER_API_ADMIN_USER=${LEDGER_API_ADMIN_USER}
-      - LEDGER_API_ADMIN_SECRET=${LEDGER_API_ADMIN_SECRET}
-      - AUTH_APP_PROVIDER_TOKEN_URI=${AUTH_APP_PROVIDER_TOKEN_URI}
+      - CLIENT_ID=app-provider-validator
+      - SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
+      - TOKEN_URL=${AUTH_APP_PROVIDER_TOKEN_URL}
+    entrypoint: /app/entrypoint.sh
+    stdin_open: true
+    tty: true
+    networks:
+      - ${DOCKER_NETWORK}
+
+  canton-console-app-user:
+    image: "${IMAGE_REPO}canton:${IMAGE_TAG}"
+    volumes:
+      - ../../config/canton-console/app.conf:/app/app.conf
+      - ../../docker/canton-console/entrypoint.sh:/app/entrypoint.sh
+    environment:
+      - PARTICIPANT_LEDGER_API_PORT=${PARTICIPANT_LEDGER_API_PORT}
+      - PARTICIPANT_ADMIN_API_PORT=${PARTICIPANT_ADMIN_API_PORT}
+      - LEDGER_API_ADDRESS=participant-app-user
+      - CLIENT_ID=app-user-validator
+      - SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
+      - TOKEN_URL=${AUTH_APP_USER_TOKEN_URL}
     entrypoint: /app/entrypoint.sh
     stdin_open: true
     tty: true

@@ -9,15 +9,12 @@ import api from "../api.ts";
 
 
 export interface TenantRegistration {
+    tenantId: string
+    partyId: string
     clientId: string
-    clientSecret: string
-    scope: string
-    authorizationUri: string
-    tokenUri: string
-    jwkSetUri: string
-    party: string
-    preconfigured: boolean
+    issuerUrl: string
     walletUrl: string
+    internal: boolean
 }
 
 interface TenantRegistrationState {
@@ -73,12 +70,12 @@ export const TenantRegistrationProvider = ({
         [toast]
     )
 
-    const deleteTenantRegistration = useCallback(async (clientId: string) => {
+    const deleteTenantRegistration = useCallback(async (tenantId: string) => {
         try {
             const client = await api.getClient()
             // New name: deleteTenantRegistration
-            await client.deleteTenantRegistration({ tenantId: clientId })
-            setRegistrations((prev) => prev.filter((reg) => reg.clientId !== clientId))
+            await client.deleteTenantRegistration({ tenantId: tenantId })
+            setRegistrations((prev) => prev.filter((reg) => reg.tenantId !== tenantId))
         } catch (error) {
             toast.displayError('Error deleting tenant registration')
         }

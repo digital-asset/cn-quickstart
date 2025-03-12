@@ -5,7 +5,7 @@ package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.LicensesApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
-import com.digitalasset.quickstart.oauth.AuthenticatedPartyService;
+import com.digitalasset.quickstart.security.AuthenticatedPartyProvider;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.quickstart.utility.LoggingSpanHelper;
 import com.digitalasset.transcode.java.ContractId;
@@ -13,7 +13,6 @@ import com.digitalasset.transcode.java.Party;
 import daml_prim_da_types.da.types.Tuple2;
 import daml_stdlib_da_time_types.da.time.types.RelTime;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
@@ -51,17 +50,17 @@ public class LicenseApiImpl implements LicensesApi {
 
     private final LedgerApi ledger;
     private final DamlRepository damlRepository;
-    private final AuthenticatedPartyService authenticatedPartyService;
+    private final AuthenticatedPartyProvider authenticatedPartyProvider;
 
     @Autowired
     public LicenseApiImpl(
             LedgerApi ledger,
             DamlRepository damlRepository,
-            AuthenticatedPartyService authenticatedPartyService
+            AuthenticatedPartyProvider authenticatedPartyProvider
     ) {
         this.ledger = ledger;
         this.damlRepository = damlRepository;
-        this.authenticatedPartyService = authenticatedPartyService;
+        this.authenticatedPartyProvider = authenticatedPartyProvider;
     }
 
     @Override
@@ -85,7 +84,7 @@ public class LicenseApiImpl implements LicensesApi {
         LoggingSpanHelper.setSpanAttributes(methodSpan, attributes);
         LoggingSpanHelper.logInfo(logger, "expireLicense: received request", attributes);
 
-        return authenticatedPartyService.getPartyOrFail()
+        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
                 .thenCompose(actingParty ->
                         CompletableFuture.supplyAsync(
                                 supplyWithin(parentContext, () -> {
@@ -134,7 +133,7 @@ public class LicenseApiImpl implements LicensesApi {
                 startAttributes
         );
 
-        return authenticatedPartyService.getPartyOrFail()
+        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
                 .thenCompose(party ->
                         CompletableFuture.supplyAsync(
                                 supplyWithin(parentContext, () -> {
@@ -212,7 +211,7 @@ public class LicenseApiImpl implements LicensesApi {
         LoggingSpanHelper.setSpanAttributes(methodSpan, attributes);
         LoggingSpanHelper.logInfo(logger, "renewLicense: received request", attributes);
 
-        return authenticatedPartyService.getPartyOrFail()
+        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
                 .thenCompose(providerParty ->
                         CompletableFuture.supplyAsync(
                                 supplyWithin(parentContext, () -> {

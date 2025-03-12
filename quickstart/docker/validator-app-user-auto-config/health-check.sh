@@ -3,6 +3,11 @@
 # SPDX-License-Identifier: 0BSD
 
 set -eo pipefail
+exec > /proc/1/fd/1 2>&1
 
-source /app/simulate-user-input.sh
-/app/create-app-install-request.sh $APP_PROVIDER_PARTY $APP_USER_PARTY $DSO_PARTY "$APP_USER_WALLET_ADMIN_TOKEN"
+if [ ! -f /tmp/onboarding-done ]; then
+  /app/onboarding.sh
+  touch /tmp/onboarding-done
+fi
+
+

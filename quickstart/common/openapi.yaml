@@ -424,73 +424,55 @@ components:
     TenantRegistrationRequest:
       type: object
       required:
+        - tenantId
+        - partyId
+        - walletUrl
         - clientId
-        - scope
-        - authorizationUri
-        - tokenUri
-        - jwkSetUri
-        - party
+        - issuerUrl
       properties:
-        clientId:
+        tenantId:
           type: string
-        clientSecret:
-          type: string
-        scope:
-          type: string
-        authorizationUri:
-          type: string
-        tokenUri:
-          type: string
-        jwkSetUri:
-          type: string
-        party:
+        partyId:
           type: string
         walletUrl:
           type: string
+        clientId:
+          type: string
+        issuerUrl:
+          type: string
+        internal:
+          type: boolean
 
     TenantRegistration:
       type: object
       required:
-        - clientId
-        - scope
-        - authorizationUri
-        - tokenUri
-        - jwkSetUri
-        - party
-        - preconfigured
+        - tenantId
+        - partyId
         - walletUrl
+        - clientId
+        - issuerUrl
+        - internal
       properties:
-        clientId:
+        tenantId:
           type: string
-          description: OAuth2 client identifier
-        clientSecret:
-          type: string
-          description: OAuth2 client secret
-        scope:
-          type: string
-          description: Requested scopes
-        authorizationUri:
-          type: string
-          description: Authorization endpoint URI
-          format: uri
-        tokenUri:
-          type: string
-          description: Token endpoint URI
-          format: uri
-        jwkSetUri:
-          type: string
-          description: JSON Web Key Set endpoint URI
-          format: uri
-        party:
+          description: Tenant identifier
+        partyId:
           type: string
           description: Party identifier
-        preconfigured:
-          type: boolean
-          description: Indicates if the registration is preconfigured on server-side
         walletUrl:
           type: string
           description: Wallet URL for payment redirects
           format: uri
+        clientId:
+          type: string
+          description: OAuth2 client identifier
+        issuerUrl:
+          type: string
+          description: Issuer URL
+          format: uri
+        internal:
+          type: boolean
+          description: Internal registration
 
     AuthenticatedUser:
       type: object
