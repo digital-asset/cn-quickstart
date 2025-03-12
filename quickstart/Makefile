@@ -32,10 +32,20 @@ KERNEL_NAME := $(shell uname -s)
 DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env
 DOCKER_COMPOSE_FILES := -f compose.yaml
 
+# default to add resource constraints for Quickstart default stack.
+RESOURCE_CONSTRAINTS ?= true
+
+ifeq ($(RESOURCE_CONSTRAINTS),true)
+RESOURCE_CONSTRAINT_CONFIG := -f docker/resource-constraints.yaml
+else
+RESOURCE_CONSTRAINT_CONFIG :=
+endif
+
+
 ifeq ($(KERNEL_NAME), Darwin)
-DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml $(RESOURCE_CONFIG)
+DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml $(RESOURCE_CONSTRAINT_CONFIG)
 else ifeq ($(KERNEL_NAME), Linux)
-DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml $(RESOURCE_CONFIG)
+DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml $(RESOURCE_CONSTRAINT_CONFIG)
 else
 DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/compose.yaml
 endif

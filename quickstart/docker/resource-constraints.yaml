@@ -1,3 +1,6 @@
+## This file is used to set and control resource constraints for all essential services defined
+## in the Quickstart template, These values should be adjusted carefully as it will impact the
+## baseline resource requirements for the project.
 services:
   await-onboarding-done:
     mem_limit: 32mb
@@ -8,7 +11,7 @@ services:
   global-synchronizer:
     mem_limit: 2g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0"    
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   nginx-app-provider:
     mem_limit: 32mb
   nginx-app-user:
