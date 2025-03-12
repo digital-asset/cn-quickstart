@@ -5,32 +5,18 @@ services:
     mem_limit: 1g
     environment:
       _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
-  cadvisor:
-    mem_limit: 256mb
   global-synchronizer:
     mem_limit: 2g
     environment:
       _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0"    
-  grafana:
-    mem_limit: 256mb
-  loki:
-    mem_limit: 512mb
   nginx-app-provider:
-    mem_limit: 32mb
-  nginx-app-provider-metrics:
     mem_limit: 32mb
   nginx-app-user:
     mem_limit: 32mb
-  nginx-app-user-metrics:
-    mem_limit: 32mb
   nginx-sv:
-    mem_limit: 32mb
-  nginx-sv-metrics:
     mem_limit: 32mb
   oauth:
     mem_limit: 256mb
-  otel-collector:
-    mem_limit: 1gb
   participant-app-provider:
     mem_limit: 4g
     environment:
@@ -47,22 +33,14 @@ services:
     mem_limit: 512mb
   postgres-splice-app-provider:
     mem_limit: 512mb
-  postgres-splice-app-provider-metrics:
-    mem_limit: 32mb
   postgres-splice-app-user:
     mem_limit: 512mb
-  postgres-splice-app-user-metrics:
-    mem_limit: 32mb
   postgres-splice-sv:
     mem_limit: 512mb
-  postgres-splice-sv-metrics:
-    mem_limit: 32mb
   pqs:
     mem_limit: 1g
     environment:
       _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
-  prometheus:
-    mem_limit: 256mb
   scan:
     mem_limit: 2g
     environment:
@@ -75,8 +53,6 @@ services:
     #   _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
   sv-web-ui:
     mem_limit: 512mb
-  tempo:
-    mem_limit: 1g
   validator-app-provider:
     mem_limit: 2g
   validator-app-user:
