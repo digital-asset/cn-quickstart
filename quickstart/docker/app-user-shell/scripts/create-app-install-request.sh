@@ -22,31 +22,38 @@ create_app_install_request() {
 
   curl_check "http://$participant:7575/v2/commands/submit-and-wait" "$token" "application/json" \
     --data-raw '{
-        "commands" : [
-           { "CreateCommand" : {
-                "template_id": "#quickstart-licensing:Licensing.AppInstall:AppInstallRequest",
-                "create_arguments": {
-                    "dso": "'$dsoParty'",
-                    "provider": "'$appProviderParty'",
-                    "user": "'$appUserParty'",
-                    "meta": {"values": []}
+        "commands": [
+          {
+            "CreateCommand": {
+              "templateId": "#quickstart-licensing:Licensing.AppInstall:AppInstallRequest",
+              "createArguments": {
+                "dso": "'$dsoParty'",
+                "provider": "'$appProviderParty'",
+                "user": "'$appUserParty'",
+                "meta": {
+                  "values": []
                 }
+              }
             }
-           }
-
+          }
         ],
-        "workflow_id" : "create-app-install-request",
-        "application_id": "'$participantUserId'",
-        "command_id": "create-app-install-request",
-        "deduplication_period": { "Empty": {} },
-        "act_as": ["'$appUserParty'"],
-        "read_as": ["'$appUserParty'"],
-        "submission_id": "create-app-install-request",
-        "disclosed_contracts": [],
-        "domain_id": "",
-        "package_id_selection_preference": []
+        "workflowId": "create-app-install-request",
+        "applicationId": "'$participantUserId'",
+        "commandId": "create-app-install-request",
+        "deduplicationPeriod": {
+          "Empty": {}
+        },
+        "actAs": [
+          "'$appUserParty'"
+        ],
+        "readAs": [
+          "'$appUserParty'"
+        ],
+        "submissionId": "create-app-install-request",
+        "disclosedContracts": [],
+        "domainId": "",
+        "packageIdSelectionPreference": []
     }'
 }
 
 create_app_install_request "$APP_USER_WALLET_ADMIN_TOKEN" $DSO_PARTY $APP_USER_PARTY $APP_PROVIDER_PARTY $AUTH_APP_USER_WALLET_ADMIN_USER_ID participant-app-user
-
