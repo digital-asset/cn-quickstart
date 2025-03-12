@@ -16,11 +16,6 @@ else
 FIRST_RUN_DEPENDENCY := first-run-setup
 endif
 
-ifeq ($(RESOURCE_CONTROL),true)
-RESOURCE_CONFIG := -f docker/resource-control.yaml
-else
-RESOURCE_CONFIG :=
-endif
 # Set default goal to 'help' if no target is specified
 .DEFAULT_GOAL := help
 
@@ -32,7 +27,7 @@ KERNEL_NAME := $(shell uname -s)
 DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env
 DOCKER_COMPOSE_FILES := -f compose.yaml
 
-# default to add resource constraints for Quickstart default stack.
+# Default to adding resource constraints for Quickstart compose stack.
 RESOURCE_CONSTRAINTS ?= true
 
 ifeq ($(RESOURCE_CONSTRAINTS),true)
