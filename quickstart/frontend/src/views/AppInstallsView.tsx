@@ -1,11 +1,14 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useAppInstallStore } from '../stores/appInstallStore';
 import { useUserStore } from '../stores/userStore';
 import type { AppInstallUnified } from '../types';
 
+/**
+ * Displays a list of AppInstallUnified items with always-visible action buttons.
+ */
 const AppInstallsView: React.FC = () => {
   const {
     unifiedInstalls,
@@ -16,9 +19,7 @@ const AppInstallsView: React.FC = () => {
     cancelInstall,
     createLicense,
   } = useAppInstallStore();
-
   const { user, fetchUser } = useUserStore();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUser();
@@ -28,87 +29,6 @@ const AppInstallsView: React.FC = () => {
     }, 1000);
     return () => clearInterval(intervalId);
   }, [fetchUser, fetchAll]);
-
-  const handleAccept = async (contractId: string) => {
-    await accept(contractId, {}, {});
-    setSelectedId(null);
-  };
-
-  const handleReject = async (contractId: string) => {
-    await reject(contractId, {});
-    setSelectedId(null);
-  };
-
-  const handleCancelRequest = async (contractId: string) => {
-    await cancelRequest(contractId, {});
-    setSelectedId(null);
-  };
-
-  const handleCancelInstall = async (contractId: string) => {
-    await cancelInstall(contractId, {});
-    setSelectedId(null);
-  };
-
-  const handleCreateLicense = async (contractId: string) => {
-    await createLicense(contractId, {});
-    setSelectedId(null);
-  };
-
-  const renderActions = (item: AppInstallUnified) => {
-    if (selectedId !== item.contractId) {
-      return (
-          <button
-              className="btn btn-primary"
-              onClick={() => setSelectedId(item.contractId)}
-          >
-            Actions
-          </button>
-      );
-    }
-
-    if (item.status === 'REQUEST') {
-      return (
-          <div className="btn-group" role="group">
-            {user?.isAdmin && (
-                <>
-                  <button className="btn btn-success" onClick={() => handleAccept(item.contractId)}>
-                    Accept
-                  </button>
-                  <button className="btn btn-warning" onClick={() => handleReject(item.contractId)}>
-                    Reject
-                  </button>
-                </>
-            )}
-            <button className="btn btn-danger" onClick={() => handleCancelRequest(item.contractId)}>
-              Cancel
-            </button>
-            <button className="btn btn-secondary" onClick={() => setSelectedId(null)}>
-              Close
-            </button>
-          </div>
-      );
-    }
-
-    // For installs
-    return (
-        <div className="btn-group" role="group">
-          {user?.isAdmin && (
-              <button
-                  className="btn btn-success"
-                  onClick={() => handleCreateLicense(item.contractId)}
-              >
-                Create License
-              </button>
-          )}
-          <button className="btn btn-danger" onClick={() => handleCancelInstall(item.contractId)}>
-            Cancel Install
-          </button>
-          <button className="btn btn-secondary" onClick={() => setSelectedId(null)}>
-            Close
-          </button>
-        </div>
-    );
-  };
 
   return (
       <div>
@@ -123,17 +43,17 @@ const AppInstallsView: React.FC = () => {
             <thead>
             <tr>
               <th style={{ width: '150px' }}>Contract ID</th>
-              <th style={{ width: '80px' }}>Status</th>
+              <th style={{ width: '100px' }}>Status</th>
               <th style={{ width: '150px' }}>DSO</th>
               <th style={{ width: '150px' }}>Provider</th>
               <th style={{ width: '150px' }}>User</th>
               <th style={{ width: '200px' }}>Meta</th>
-              <th style={{ width: '180px' }}># Licenses Created</th>
-              <th style={{ width: '250px' }}>Actions</th>
+              <th style={{ width: '100px' }}># Licenses</th>
+              <th style={{ width: '310px' }}>Actions</th>
             </tr>
             </thead>
             <tbody>
-            {unifiedInstalls.map((item) => (
+            {unifiedInstalls.map((item: AppInstallUnified) => (
                 <tr key={item.contractId}>
                   <td className="ellipsis-cell">{item.contractId}</td>
                   <td className="ellipsis-cell">{item.status}</td>
@@ -144,7 +64,51 @@ const AppInstallsView: React.FC = () => {
                     {item.meta ? JSON.stringify(item.meta) : '{}'}
                   </td>
                   <td>{item.numLicensesCreated}</td>
-                  <td>{renderActions(item)}</td>
+                  <td>
+                    {item.status === 'REQUEST' ? (
+                        <div className="btn-group" role="group">
+                          {user?.isAdmin && (
+                              <>
+                                <button
+                                    className="btn btn-success"
+                                    onClick={() => accept(item.contractId, {}, {})}
+                                >
+                                  Accept
+                                </button>
+                                <button
+                                    className="btn btn-warning"
+                                    onClick={() => reject(item.contractId, {})}
+                                >
+                                  Reject
+                                </button>
+                              </>
+                          )}
+                          <button
+                              className="btn btn-danger"
+                              onClick={() => cancelRequest(item.contractId, {})}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                    ) : (
+                        <div className="btn-group" role="group">
+                          {user?.isAdmin && (
+                              <button
+                                  className="btn btn-success"
+                                  onClick={() => createLicense(item.contractId, {})}
+                              >
+                                Create License
+                              </button>
+                          )}
+                          <button
+                              className="btn btn-danger"
+                              onClick={() => cancelInstall(item.contractId, {})}
+                          >
+                            Cancel Install
+                          </button>
+                        </div>
+                    )}
+                  </td>
                 </tr>
             ))}
             </tbody>
@@ -155,3 +119,4 @@ const AppInstallsView: React.FC = () => {
 };
 
 export default AppInstallsView;
+
