@@ -18,6 +18,9 @@ create_app_install_request() {
   local participantUserId=$5
   local participant=$6
 
+  # Add a timestamp for a unique command ID to allow resubmission
+  local time="$(date +%s)"
+
   echo "create_app_install_request $dsoParty $appUserParty $appProviderParty $participant" >&2
 
   curl_check "http://$participant:7575/v2/commands/submit-and-wait" "$token" "application/json" \
@@ -39,7 +42,7 @@ create_app_install_request() {
         ],
         "workflowId": "create-app-install-request",
         "applicationId": "'$participantUserId'",
-        "commandId": "create-app-install-request",
+        "commandId": "create-app-install-request-'$time'",
         "deduplicationPeriod": {
           "Empty": {}
         },
