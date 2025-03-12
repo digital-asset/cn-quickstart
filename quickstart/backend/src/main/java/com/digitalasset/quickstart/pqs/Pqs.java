@@ -29,6 +29,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * PQS adapter that provides access to Daml contracts from a Postgres database.
+ */
 @Component
 public class Pqs {
 
@@ -43,11 +46,13 @@ public class Pqs {
         this.json2Dto = Utils.getConverters(new JsonStringCodec(true, true), Daml.ENTITIES);
     }
 
+    /**
+     * Retrieves all active contracts of a specific template type.
+     */
     @WithSpan
     public <T extends Template> CompletableFuture<List<Contract<T>>> active(Class<T> clazz) {
         Identifier identifier = Utils.getTemplateIdByClass(clazz);
         Span span = Span.current();
-
         Map<String, Object> baseAttrs = Map.of("templateId", identifier.qualifiedName());
         LoggingSpanHelper.setSpanAttributes(span, baseAttrs);
         LoggingSpanHelper.logInfo(logger, "Fetching active contracts", baseAttrs);
@@ -68,12 +73,7 @@ public class Pqs {
                 })
                 .whenComplete((res, ex) -> {
                     if (ex != null) {
-                        LoggingSpanHelper.logError(
-                                logger,
-                                "Failed to fetch active contracts",
-                                baseAttrs,
-                                ex
-                        );
+                        LoggingSpanHelper.logError(logger, "Failed to fetch active contracts", baseAttrs, ex);
                         LoggingSpanHelper.recordException(span, ex);
                     } else {
                         Map<String, Object> successAttrs = Map.of(
@@ -86,7 +86,54 @@ public class Pqs {
     }
 
     /**
-     * Fetch an active contract with a given WHERE clause.
+     * Retrieves all active contracts of a specific template type with a custom WHERE clause.
+     */
+    @WithSpan
+    public <T extends Template> CompletableFuture<List<Contract<T>>> activeWhere(
+            Class<T> clazz,
+            String whereClause,
+            Object... params
+    ) {
+        Identifier identifier = Utils.getTemplateIdByClass(clazz);
+        Span span = Span.current();
+        Map<String, Object> baseAttrs = Map.of(
+                "templateId", identifier.qualifiedName(),
+                "whereClause", whereClause
+        );
+        LoggingSpanHelper.setSpanAttributes(span, baseAttrs);
+        LoggingSpanHelper.logInfo(logger, "Fetching multiple active contracts with custom whereClause", baseAttrs);
+
+        return CompletableFuture
+                .supplyAsync(() -> {
+                    String sql = "select contract_id, payload from active(?) where " + whereClause;
+                    List<Contract<T>> results = jdbcTemplate.query(
+                            sql,
+                            new PqsContractRowMapper<>(identifier),
+                            combineParams(identifier.qualifiedName(), params)
+                    );
+                    return results;
+                })
+                .whenComplete((res, ex) -> {
+                    if (ex != null) {
+                        LoggingSpanHelper.logError(
+                                logger,
+                                "Failed to fetch contracts with custom whereClause",
+                                baseAttrs,
+                                ex
+                        );
+                        LoggingSpanHelper.recordException(span, ex);
+                    } else {
+                        LoggingSpanHelper.logInfo(
+                                logger,
+                                "Fetched active contracts with custom whereClause",
+                                baseAttrs
+                        );
+                    }
+                });
+    }
+
+    /**
+     * Retrieves a single active contract of a specific template type matching a custom WHERE clause.
      */
     @WithSpan
     public <T extends Template> CompletableFuture<Optional<Contract<T>>> singleActiveWhere(
@@ -96,7 +143,6 @@ public class Pqs {
     ) {
         Identifier identifier = Utils.getTemplateIdByClass(clazz);
         Span span = Span.current();
-
         Map<String, Object> baseAttrs = Map.of(
                 "templateId", identifier.qualifiedName(),
                 "whereClause", whereClause
@@ -133,6 +179,9 @@ public class Pqs {
                 });
     }
 
+    /**
+     * Retrieves a contract by its contract ID from the underlying store.
+     */
     @WithSpan
     public <T extends Template> CompletableFuture<Contract<T>> byContractId(
             Class<T> clazz,
@@ -140,7 +189,6 @@ public class Pqs {
     ) {
         Identifier identifier = Utils.getTemplateIdByClass(clazz);
         Span span = Span.current();
-
         Map<String, Object> baseAttrs = Map.of(
                 "templateId", identifier.qualifiedName(),
                 "contractId", id
@@ -159,12 +207,7 @@ public class Pqs {
                 })
                 .whenComplete((res, ex) -> {
                     if (ex != null) {
-                        LoggingSpanHelper.logError(
-                                logger,
-                                "Failed to fetch contract by ID",
-                                baseAttrs,
-                                ex
-                        );
+                        LoggingSpanHelper.logError(logger, "Failed to fetch contract by ID", baseAttrs, ex);
                         LoggingSpanHelper.recordException(span, ex);
                     } else {
                         LoggingSpanHelper.logInfo(logger, "Fetched contract by ID", baseAttrs);
@@ -172,11 +215,73 @@ public class Pqs {
                 });
     }
 
+    /**
+     * Retrieves joined active contracts based on a join condition and where clause.
+     */
+    @WithSpan
+    public <T extends Template, U extends Template, R> CompletableFuture<List<R>> activeLeftJoinWhere(
+            Class<T> primaryClazz,
+            Class<U> secondaryClazz,
+            String joinCondition,
+            String whereClause,
+            RowMapper<R> mapper,
+            Object... params
+    ) {
+        Identifier primaryId = Utils.getTemplateIdByClass(primaryClazz);
+        Identifier secondaryId = Utils.getTemplateIdByClass(secondaryClazz);
+        Span span = Span.current();
+        Map<String, Object> attrs = Map.of(
+                "primaryTemplateId", primaryId.qualifiedName(),
+                "secondaryTemplateId", secondaryId.qualifiedName(),
+                "joinCondition", joinCondition,
+                "whereClause", whereClause
+        );
+        LoggingSpanHelper.setSpanAttributes(span, attrs);
+        LoggingSpanHelper.logInfo(logger, "Fetching joined active contracts", attrs);
+
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = String.format(
+                    """
+                    SELECT prim.contract_id AS primary_contract_id,
+                           prim.payload     AS primary_payload,
+                           sec.contract_id  AS secondary_contract_id,
+                           sec.payload      AS secondary_payload
+                      FROM active(?) prim
+                 LEFT JOIN active(?) sec ON %s
+                     WHERE %s
+                    """,
+                    joinCondition, whereClause
+            );
+            Object[] mergedParams = combineJoinParams(primaryId.qualifiedName(), secondaryId.qualifiedName(), params);
+            return jdbcTemplate.query(sql, mapper, mergedParams);
+        }).whenComplete((res, ex) -> {
+            if (ex != null) {
+                LoggingSpanHelper.logError(logger, "Error fetching joined contracts", attrs, ex);
+                LoggingSpanHelper.recordException(span, ex);
+            } else {
+                LoggingSpanHelper.logInfo(logger, "Fetched joined contracts", Map.of("resultCount", res.size()));
+            }
+        });
+    }
+
     private Object[] combineParams(String qname, Object... params) {
         Object[] combined = new Object[params.length + 1];
         combined[0] = qname;
         System.arraycopy(params, 0, combined, 1, params.length);
         return combined;
+    }
+
+    private Object[] combineJoinParams(String primaryQname, String secondaryQname, Object... params) {
+        Object[] combined = new Object[params.length + 2];
+        combined[0] = primaryQname;
+        combined[1] = secondaryQname;
+        System.arraycopy(params, 0, combined, 2, params.length);
+        return combined;
+    }
+
+
+    public Dictionary<Converter<String, Object>> getJson2Dto() {
+        return json2Dto;
     }
 
     private class PqsContractRowMapper<T extends Template> implements RowMapper<Contract<T>> {
