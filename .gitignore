@@ -30,3 +30,6 @@ gradle-app.setting
 
 # backups
 *.bak
+
+# MacOS
+.DS_Store
