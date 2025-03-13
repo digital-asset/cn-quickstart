@@ -49,7 +49,7 @@ services:
   pqs:
     mem_limit: 1g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops-Xms512m -Xmx768m"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx768m"
   scan:
     mem_limit: 1g
     environment:
