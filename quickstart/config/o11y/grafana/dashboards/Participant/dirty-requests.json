@@ -43,7 +43,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "daml_dirty_requests{namespace=\"$namespace\", pod=~\"$pod\"}",
+               "expr": "daml_participant_inflight_validation_requests{namespace=\"$namespace\", pod=~\"$pod\"}",
                "legendFormat": "[{{node}} / {{domain}}] in-flight"
             },
             {
@@ -51,7 +51,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "daml_max_dirty_requests{namespace=\"$namespace\", pod=~\"$pod\"}",
+               "expr": "daml_participant_max_inflight_validation_requests{namespace=\"$namespace\", pod=~\"$pod\"}",
                "legendFormat": "[{{node}} / {{domain}}] max"
             }
          ],
@@ -76,7 +76,7 @@
                "uid": "${datasource}"
             },
             "name": "namespace",
-            "query": "label_values(daml_dirty_requests, namespace)",
+            "query": "label_values(daml_participant_inflight_validation_requests, namespace)",
             "refresh": 2,
             "type": "query"
          },
@@ -88,7 +88,7 @@
             "includeAll": true,
             "multi": true,
             "name": "pod",
-            "query": "label_values(daml_dirty_requests{namespace=\"$namespace\"}, pod)",
+            "query": "label_values(daml_participant_inflight_validation_requests{namespace=\"$namespace\"}, pod)",
             "refresh": 2,
             "type": "query"
          }
