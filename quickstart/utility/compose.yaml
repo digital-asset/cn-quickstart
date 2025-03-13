@@ -58,7 +58,7 @@ services:
   bootstrap-utility-contracts:
     image: digitalasset-docker.jfrog.io/daml-script:3.2.0-snapshot.20250206.13406.0.ve23b19ba-debug
     command: [
-      "--dar", "/dars/utility-bootstrap-0.0.1.dar",
+      "--dar", "/dars/utility-bootstrap-0.0.2.dar",
       "--script-name", "Utility.Bootstrap.Bootstrap:bootstrapUtilityDefault",
       "--participant-config", "/output/participant-config.json"
       ]
@@ -74,6 +74,26 @@ services:
     environment: 
       PROVIDER_ACCESS_TOKEN: ${PROVIDER_ACCESS_TOKEN}
       USER_ACCESS_TOKEN: ${USER_ACCESS_TOKEN}
+    networks:
+      - ${DOCKER_NETWORK}
+
+  execute-accepted-utility-contracts:
+    image: digitalasset-docker.jfrog.io/daml-script:3.2.0-snapshot.20250206.13406.0.ve23b19ba-debug
+    command: [
+      "--dar", "/dars/Utility-bootstrap-0.0.2.dar",
+      "--script-name", "Utility.Execute.Registry:executeAcceptedContracts",
+      "--participant-config", "/output/participant-config.json",
+      "--input-file", "/output/operator.json"
+      ]
+    volumes:
+      - type: bind
+        source: ./dars
+        read_only: true
+        target: /dars
+      - type: bind
+        source: ./output
+        read_only: false
+        target: /output
     networks:
       - ${DOCKER_NETWORK}
 

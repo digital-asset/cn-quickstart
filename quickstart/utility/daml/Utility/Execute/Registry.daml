@@ -1,0 +1,49 @@
+module Utility.Execute.Registry where 
+
+import DA.List (groupOn)
+import DA.Optional (isNone)
+import Daml.Script
+import Utility.Bootstrap.Util (queryFilterOrExecuteCid)
+import Utility.Credential.V0.Credential (Credential)
+import Utility.Registry.App.V0.Configuration.Operator (OperatorConfiguration)
+import Utility.Registry.App.V0.Service.Registrar (RegistrarService)
+import Utility.Registry.Holding.V0.Holding (Holding)
+import Utility.Registry.V0.Configuration.Instrument (InstrumentConfiguration)
+import Utility.Registry.V0.Holding.Mint (AcceptedMint)
+import Utility.Registry.V0.Holding.Burn (AcceptedBurn)
+import Utility.Registry.V0.Holding.Lock (AcceptedLock)
+import Utility.Registry.V0.Holding.Unlock (AcceptedUnlock)
+import Utility.Registry.V0.Holding.Transfer (AcceptedTransfer)
+import Utility.Registry.Operator.V0.Service.Operator (OperatorService(..), OperatorService_Execute(..))
+
+executeAcceptedContracts : Party -> Script ()
+executeAcceptedContracts operator = do
+
+  debug $ "Creating operator service for " <> partyToText operator
+  operatorServiceCid <-
+    queryFilterOrExecuteCid operator (\c -> c.operator == operator) do
+      submit operator do createCmd OperatorService with operator
+  debug $ "Created operator service for " <> partyToText operator
+
+  [(operatorConfigurationCid, _)] <- query @OperatorConfiguration operator 
+  registrarServiceCids <- map fst <$> query @RegistrarService operator
+  credentialCids <- map fst <$> query @Credential operator
+  instrumentConfigurationCids <- map fst <$> query @InstrumentConfiguration operator
+  holdings <- query @Holding operator
+  let [lockedHoldingCids, holdingCids] = map fst <$> groupOn (\(_,n) -> isNone n.lock) holdings
+  mintCids <- map fst <$> query @AcceptedMint operator
+  burnCids <- map fst <$> query @AcceptedBurn operator
+  lockCids <- map fst <$> query @AcceptedLock operator
+  unlockCids <- map fst <$> query @AcceptedUnlock operator
+  transferCids <- map fst <$> query @AcceptedTransfer operator
+
+  submit operator do 
+    exerciseCmd operatorServiceCid OperatorService_Execute
+      with operatorConfigurationCid; registrarServiceCids; credentialCids; instrumentConfigurationCids; holdingCids; lockedHoldingCids; mintCids; burnCids; lockCids; unlockCids; transferCids
+  
+  pure ()
+
+
+
+
+

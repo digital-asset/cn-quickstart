@@ -13,7 +13,6 @@ On top of the artifactory access required for QS ensure you have access to Digit
 docker login digitalasset-canton-network-utility-docker.jfrog.io  -u "<user_name>" -p "<user_password>"
 ```
 
-#### TODO - move below to pull creds inline with rest of QS
 Currently an `envrc.pivate` file is required within the utility folder with the format:
 
 ```bash
