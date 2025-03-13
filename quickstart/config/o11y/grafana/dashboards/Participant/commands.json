@@ -255,7 +255,7 @@
                   "type": "prometheus",
                   "uid": "${datasource}"
                },
-               "expr": "daml_commands_failed_command_interpretations_total{namespace=\"$namespace\"}",
+               "expr": "daml_participant_api_commands_failed_command_interpretations_total{namespace=\"$namespace\"}",
                "legendFormat": "{{node}}"
             }
          ],
