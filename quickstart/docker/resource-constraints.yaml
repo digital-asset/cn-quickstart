@@ -21,21 +21,23 @@ services:
   nginx-sv:
     mem_limit: 32mb
   keycloak:
-    mem_limit: 3g
+    mem_limit: 1g
+    environment:
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx700m"
   keycloak-postgres:
     mem_limit: 256mb
   participant-app-provider:
-    mem_limit: 4g
+    mem_limit: 2g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx1536m"
   participant-app-user:
-    mem_limit: 4g
+    mem_limit: 2g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx1536m"
   participant-sv:
-    mem_limit: 4g
+    mem_limit: 2g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx1536m"
   postgres-splice:
     mem_limit: 512mb
   postgres-splice-app-provider:
@@ -47,17 +49,17 @@ services:
   pqs:
     mem_limit: 1g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops-Xms512m -Xmx768m"
   scan:
-    mem_limit: 2g
+    mem_limit: 1g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx768m"
   scan-web-ui:
     mem_limit: 256mb
   sv-app:
-    mem_limit: 2g
+    mem_limit: 1g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx768m"
   sv-web-ui:
     mem_limit: 512mb
   validator-app-provider:
@@ -67,13 +69,13 @@ services:
   validator-app-user:
     mem_limit: 2g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx1536m"
   validator-app-user-auto-config:
     mem_limit: 32mb
   validator-sv:
     mem_limit: 2g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx1536m"
   wallet-web-ui-app-provider:
     mem_limit: 256mb
   wallet-web-ui-app-user:
