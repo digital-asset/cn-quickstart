@@ -10,7 +10,7 @@ networks:
 services:
   daml-shell:
     image: ${SHELL_IMAGE}:${SHELL_VERSION}
-    mem_limit: 1gb
+    mem_limit: 512mb
     environment:
       _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
       DAML_SHELL_POSTGRES_HOST: "${SCRIBE_POSTGRES_HOST}"
