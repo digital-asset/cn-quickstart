@@ -182,15 +182,9 @@ generate-NOTICES: ## Generate the NOTICES.txt file
 	./gradlew generateNotices
 
 .PHONY: start-swagger-ui
-start-swagger-ui:
-	docker compose -f docker/swagger/compose.yaml $(DOCKER_COMPOSE_ENVFILE) up -d || true
-
-.PHONY: stop-swagger-ui
-stop-swagger-ui:
-	docker compose -f docker/swagger/compose.yaml $(DOCKER_COMPOSE_ENVFILE) down || true
-
-.PHONY: restart-swagger-ui
-restart-swagger-ui: stop-swagger-ui start-swagger-ui
+start-swagger-ui: ## Start Swagger UI docker container for Canton JSON API OpenAPI Docs
+	@echo "Starting Swagger UI on http://localhost:9080"
+	docker compose -f docker/swagger/compose.yaml $(DOCKER_COMPOSE_ENVFILE) up || true
 
 # Help target
 .PHONY: help
