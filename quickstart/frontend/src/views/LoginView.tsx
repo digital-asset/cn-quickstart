@@ -38,7 +38,7 @@ const LoginView: React.FC = () => {
                 </tbody>
             </table>
             {/*TODO get username/password from .env*/}
-            <div>AppProvider user: bob, password: abc123</div>
+            <div>AppProvider user: pat, password: abc123</div>
             <div>AppUser user: alice, password: abc123</div>
         </div>
     );

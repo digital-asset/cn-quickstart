@@ -25,10 +25,10 @@
     "groups" : [ ]
   }, {
     "id" : "553c6754-8879-41c9-ae80-b302f5af92c9",
-    "username" : "bob",
-    "firstName" : "Bob",
+    "username" : "pat",
+    "firstName" : "Pat",
     "lastName" : "the provider",
-    "email" : "bob@app-provider.localhost",
+    "email" : "pat@app-provider.localhost",
     "emailVerified" : true,
     "createdTimestamp" : 1738819160124,
     "enabled" : true,
