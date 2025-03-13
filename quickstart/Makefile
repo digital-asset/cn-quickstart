@@ -131,10 +131,6 @@ restart: stop start ## Restart the application
 status: ## Show status of Docker containers
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) ps)
 
-.PHONY: status
-services: ## List all services in compose template
-	@$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) ps --services)
-
 .PHONY: compose-config
 compose-config:
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) config)
