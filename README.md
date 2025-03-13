@@ -73,8 +73,8 @@ $ make build
 # Start the application, Canton services, and Observability (if enabled)
 $ make start
 
-# In a separate shell - run a Canton Console
-$ make console
+# In a separate shell - run a Canton Console for the App Provider
+$ make console-app-provider
 
 # In a separate shell - run Daml Shell
 $ make shell
@@ -98,7 +98,8 @@ Run `make help` to see a list of all available targets, including (but not limit
 - **stop-application**: Like `stop`, but leaves the observability services running.
 - **restart**: Re-runs the application services by stopping and then starting it again.
 - **build**: Builds frontend, Daml model, and backend.
-- **console**: Starts the Canton console using Docker, connected to the running application ledger.
+- **console-app-provider**: Starts the Canton console using Docker, connected to the running app provider ledger.
+- **console-app-user**: Starts the Canton console using Docker, connected to the running app user ledger.
 - **shell**: Starts Daml Shell using Docker, connected to the running application PQS database.
 - **status**: Shows the status of Docker containers.
 - **logs**: Shows logs of Docker containers.
