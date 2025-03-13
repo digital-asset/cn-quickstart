@@ -5,13 +5,13 @@ services:
   backend-service:
     mem_limit: 1g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx700m"
   backend-service-auto-config:
     mem_limit: 32mb
   global-synchronizer:
-    mem_limit: 2g
+    mem_limit: 1g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx512m"
   nginx-keycloak:
     mem_limit: 32mb
   nginx-app-provider:
@@ -63,13 +63,15 @@ services:
   sv-web-ui:
     mem_limit: 512mb
   validator-app-provider:
-    mem_limit: 2g
+    mem_limit: 1g
+    environment:
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx768m"
   validator-app-provider-auto-config:
     mem_limit: 32mb
   validator-app-user:
-    mem_limit: 2g
+    mem_limit: 1g
     environment:
-      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx1536m"
+      _JAVA_OPTIONS: "-XX:+UseContainerSupport -XX:-UseCompressedOops -Xms512m -Xmx768m"
   validator-app-user-auto-config:
     mem_limit: 32mb
   validator-sv:
