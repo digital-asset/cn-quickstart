@@ -12,6 +12,7 @@ networks:
 services:
   swagger-ui:
     image: swaggerapi/swagger-ui
+    mem_limit: 128mb
     ports:
       - "9080:8080"
     environment:
