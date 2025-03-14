@@ -509,6 +509,7 @@ services:
       - ./config/nginx/app-provider/frontend.conf:/etc/nginx/conf.d/default.conf
       - ./config/nginx/app-provider/common-backend-proxy-settings.conf:/etc/nginx/common-backend-proxy-settings.conf
       - ./config/nginx/app-provider/wallet.conf:/etc/nginx/conf.d/wallet.conf
+      - ./config/nginx/app-provider/swagger.conf:/etc/nginx/conf.d/swagger.conf
     ports:
       - "${APP_PROVIDER_UI_PORT}:80"
     depends_on:
