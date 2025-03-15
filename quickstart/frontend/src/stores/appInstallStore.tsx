@@ -10,7 +10,6 @@ import type {
     AppInstallRequest as ApiAppInstallRequest,
     AppInstallRequestAccept,
     AppInstallRequestReject,
-    AppInstallRequestCancel,
     AppInstallCreateLicenseRequest,
     AppInstallCreateLicenseResult,
     AppInstallCancel,
@@ -27,7 +26,6 @@ interface AppInstallContextType extends AppInstallState {
     fetchAll: () => Promise<void>;
     accept: (contractId: string, installMeta: Metadata, meta: Metadata) => Promise<void>;
     reject: (contractId: string, meta: Metadata) => Promise<void>;
-    cancelRequest: (contractId: string, meta: Metadata) => Promise<void>;
     cancelInstall: (contractId: string, meta: Metadata) => Promise<void>;
     createLicense: (contractId: string, meta: Metadata) => Promise<AppInstallCreateLicenseResult | undefined>;
 }
@@ -38,9 +36,6 @@ export const AppInstallProvider = ({ children }: { children: React.ReactNode }) 
     const [unifiedInstalls, setUnifiedInstalls] = useState<AppInstallUnified[]>([]);
     const toast = useToast();
 
-    /**
-     * Fetches all items and merges them into a single array.
-     */
     const fetchAll = useCallback(async () => {
         try {
             const client: Client = await api.getClient();
@@ -75,9 +70,6 @@ export const AppInstallProvider = ({ children }: { children: React.ReactNode }) 
         }
     }, [toast]);
 
-    /**
-     * Accepts a request, refreshes local state, and displays toasts.
-     */
     const accept = useCallback(
         async (contractId: string, installMeta: Metadata, meta: Metadata) => {
             try {
@@ -96,9 +88,6 @@ export const AppInstallProvider = ({ children }: { children: React.ReactNode }) 
         [toast, fetchAll]
     );
 
-    /**
-     * Rejects a request, refreshes local state, and displays toasts.
-     */
     const reject = useCallback(
         async (contractId: string, meta: Metadata) => {
             try {
@@ -117,30 +106,6 @@ export const AppInstallProvider = ({ children }: { children: React.ReactNode }) 
         [toast, fetchAll]
     );
 
-    /**
-     * Cancels a request, refreshes local state, and displays toasts.
-     */
-    const cancelRequest = useCallback(
-        async (contractId: string, meta: Metadata) => {
-            try {
-                const client: Client = await api.getClient();
-                const commandId = generateCommandId();
-                await client.cancelAppInstallRequest(
-                    { contractId, commandId },
-                    { meta } as AppInstallRequestCancel
-                );
-                await fetchAll();
-                toast.displaySuccess(`Canceled AppInstallRequest ${contractId}`);
-            } catch (error) {
-                toast.displayError('Error canceling AppInstallRequest');
-            }
-        },
-        [toast, fetchAll]
-    );
-
-    /**
-     * Cancels an install, refreshes local state, and displays toasts.
-     */
     const cancelInstall = useCallback(
         async (contractId: string, meta: Metadata) => {
             try {
@@ -159,9 +124,6 @@ export const AppInstallProvider = ({ children }: { children: React.ReactNode }) 
         [toast, fetchAll]
     );
 
-    /**
-     * Creates a license, refreshes local state, and displays toasts.
-     */
     const createLicense = useCallback(
         async (contractId: string, meta: Metadata) => {
             try {
@@ -186,7 +148,6 @@ export const AppInstallProvider = ({ children }: { children: React.ReactNode }) 
                 fetchAll,
                 accept,
                 reject,
-                cancelRequest,
                 cancelInstall,
                 createLicense,
             }}

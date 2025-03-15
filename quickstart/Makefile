@@ -147,6 +147,22 @@ first-run-setup:
 	@echo "Environment file generated, Please re-run your previous command to continue."
 	@exit 2
 
+.PHONY: integration-test
+integration-test: build ## Run integration tests
+	node ./integration-test/setup-and-run-tests.js
+
+.PHONY: integration-test-ci
+integration-test-ci: start ## Run integration tests using host's application deployment
+	@# The integration test expects four AppInstallRequests
+	for i in {1..4}; do \
+		make create-app-install-request; \
+	done
+	docker run --network host --rm -it --user "$(shell id -u):$(shell id -g)" \
+		-v "$(PWD)/integration-test":/work:ro \
+		-w /work \
+		mcr.microsoft.com/playwright:v1.51.0-jammy \
+		npx playwright test --reporter list --output /tmp/playwright-report
+
 # Console
 .PHONY: console-app-provider
 console-app-provider: ## Start the Canton console

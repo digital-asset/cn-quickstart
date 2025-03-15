@@ -170,36 +170,6 @@ paths:
         '400':
           description: Invalid input
 
-  /app-install-requests/{contractId}/cancel:
-    post:
-      summary: Cancel an AppInstallRequest
-      operationId: cancelAppInstallRequest
-      parameters:
-        - name: contractId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The contract ID of the AppInstallRequest to cancel
-        - name: commandId
-          in: query
-          required: true
-          schema:
-            type: string
-          description: The command ID for the ledger transaction
-      requestBody:
-        description: Cancellation parameters
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AppInstallRequestCancel'
-      responses:
-        '200':
-          description: AppInstallRequest canceled
-        '400':
-          description: Invalid input
-
   /app-installs/{contractId}/create-license:
     post:
       summary: Create a License using the AppInstall
