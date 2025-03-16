@@ -28,9 +28,9 @@ DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env
 DOCKER_COMPOSE_FILES := -f compose.yaml
 
 # Default to adding resource constraints for Quickstart compose stack.
-RESOURCE_CONSTRAINTS ?= true
+RESOURCE_CONSTRAINTS_ENABLED ?= true
 
-ifeq ($(RESOURCE_CONSTRAINTS),true)
+ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
 RESOURCE_CONSTRAINT_CONFIG := -f docker/resource-constraints.yaml
 else
 RESOURCE_CONSTRAINT_CONFIG :=
