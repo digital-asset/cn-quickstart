@@ -152,40 +152,42 @@ services:
       - max_connections=1000
     logging: *default-logging
 
-  participant-app-user:
-    extends:
-      file: docker/compose-validator.yaml
-      service: participant
-    container_name: participant-app-user
-    logging: *default-logging
-    environment:
-      - CANTON_PARTICIPANT_POSTGRES_SERVER=${SPLICE_APP_USER_DB_SERVER}
-      - CANTON_PARTICIPANT_POSTGRES_USER=${SPLICE_APP_USER_DB_USER}
-      - CANTON_PARTICIPANT_POSTGRES_PASSWORD=${SPLICE_APP_USER_DB_PASSWORD}
-      - CANTON_PARTICIPANT_POSTGRES_PORT=${SPLICE_APP_USER_DB_PORT}
-      - AUTH_JWKS_URL=${AUTH_APP_USER_JWK_SET_URL}
-      - CANTON_PARTICIPANT_ADMIN_USER_NAME=${AUTH_APP_USER_VALIDATOR_USER_ID}
-      - AUTH_TARGET_AUDIENCE=${AUTH_APP_USER_AUDIENCE}
-      - *canton-metrics-config
-      - |
-        ADDITIONAL_CONFIG_HEALTHCHECK=
-          canton.participants.participant.monitoring.http-health-server {
-            address = localhost
-            port = ${CANTON_HEALTHCHECK_PORT}
-          }
-    ports:
-      - "2${PARTICIPANT_LEDGER_API_PORT}:${PARTICIPANT_LEDGER_API_PORT}"
-      - "2${PARTICIPANT_ADMIN_API_PORT}:${PARTICIPANT_ADMIN_API_PORT}"
-      - "2${PARTICIPANT_JSON_API_PORT}:${PARTICIPANT_JSON_API_PORT}"
-    healthcheck: *canton-healthcheck
-    depends_on:
-      postgres-splice-app-user:
-        condition: service_healthy
-      global-synchronizer:
-        condition: service_healthy
-        required: false
-      keycloak:
-        condition: service_healthy
+#  participant-app-user:
+#    extends:
+#      file: docker/compose-validator.yaml
+#      service: participant
+#    container_name: participant-app-user
+#    logging: *default-logging
+#    volumes:
+#        - ./docker/participant/app-user.conf:/app/app.conf
+#    environment:
+#      - CANTON_PARTICIPANT_POSTGRES_SERVER=${SPLICE_APP_USER_DB_SERVER}
+#      - CANTON_PARTICIPANT_POSTGRES_USER=${SPLICE_APP_USER_DB_USER}
+#      - CANTON_PARTICIPANT_POSTGRES_PASSWORD=${SPLICE_APP_USER_DB_PASSWORD}
+#      - CANTON_PARTICIPANT_POSTGRES_PORT=${SPLICE_APP_USER_DB_PORT}
+#      - AUTH_JWKS_URL=${AUTH_APP_USER_JWK_SET_URL}
+#      - CANTON_PARTICIPANT_ADMIN_USER_NAME=${AUTH_APP_USER_VALIDATOR_USER_ID}
+#      - AUTH_TARGET_AUDIENCE=${AUTH_APP_USER_AUDIENCE}
+#      - *canton-metrics-config
+#      - |
+#        ADDITIONAL_CONFIG_HEALTHCHECK=
+#          canton.participants.participant.monitoring.http-health-server {
+#            address = localhost
+#            port = ${CANTON_HEALTHCHECK_PORT}
+#          }
+#    ports:
+#      - "2${PARTICIPANT_LEDGER_API_PORT}:2${PARTICIPANT_LEDGER_API_PORT}"
+#      - "2${PARTICIPANT_ADMIN_API_PORT}:2${PARTICIPANT_ADMIN_API_PORT}"
+#      - "2${PARTICIPANT_JSON_API_PORT}:2${PARTICIPANT_JSON_API_PORT}"
+#    healthcheck: *canton-healthcheck
+#    depends_on:
+#      postgres-splice-app-user:
+#        condition: service_healthy
+#      global-synchronizer:
+#        condition: service_healthy
+#        required: false
+#      keycloak:
+#        condition: service_healthy
 
   validator-app-user:
     extends:
@@ -194,12 +196,13 @@ services:
     container_name: validator-app-user
     volumes:
       - ./docker/validator/entrypoint.sh:/validator-entrypoint.sh
+      - ./docker/validator/app-user.conf:/app/app.conf
     entrypoint: /validator-entrypoint.sh
     logging: *default-logging
     environment:
       - *canton-metrics-config
       - ONBOARDING_SECRET_URL=${ONBOARDING_SECRET_URL}
-      - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=${APP_USER_VALIDATOR_PARTICIPANT_ADDRESS}
+      - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=${APP_PROVIDER_VALIDATOR_PARTICIPANT_ADDRESS}
       - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_CLIENT_ID=${AUTH_APP_USER_VALIDATOR_CLIENT_ID}
       - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_CLIENT_SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
       - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_AUDIENCE=${AUTH_APP_USER_AUDIENCE}
@@ -233,7 +236,7 @@ services:
       sv-app:
         condition: service_healthy
         required: false
-      participant-app-user:
+      participant-app-provider:
         condition: service_healthy
       keycloak:
         condition: service_healthy
@@ -297,7 +300,7 @@ services:
     stdin_open: true
     tty: true
     depends_on:
-      participant-app-user:
+      participant-app-provider:
         condition: service_healthy
       validator-app-user:
         condition: service_healthy
@@ -315,7 +318,7 @@ services:
     working_dir: /daml3.2
     environment:
       SCRIBE_SOURCE_LEDGER_HOST: "participant-app-provider"
-      SCRIBE_SOURCE_LEDGER_PORT: "${PARTICIPANT_LEDGER_API_PORT}"
+      SCRIBE_SOURCE_LEDGER_PORT: "3${PARTICIPANT_LEDGER_API_PORT}"
       SCRIBE_TARGET_POSTGRES_HOST: "${SCRIBE_POSTGRES_HOST}"
       SCRIBE_TARGET_POSTGRES_PORT: "5432"
       SCRIBE_TARGET_POSTGRES_USERNAME: "${SCRIBE_POSTGRES_USER}"
@@ -360,7 +363,7 @@ services:
     working_dir: /app
     environment:
       LEDGER_HOST: "participant-app-provider"
-      LEDGER_PORT: "${PARTICIPANT_LEDGER_API_PORT}"
+      LEDGER_PORT: "3${PARTICIPANT_LEDGER_API_PORT}"
       POSTGRES_HOST: "${SCRIBE_POSTGRES_HOST}"
       POSTGRES_DATABASE: "${SCRIBE_POSTGRES_DATABASE}"
       POSTGRES_USERNAME: "${SCRIBE_POSTGRES_USER}"
@@ -430,6 +433,8 @@ services:
       service: participant
     container_name: participant-app-provider
     logging: *default-logging
+    volumes:
+      - ./docker/participant/app-provider.conf:/app/app.conf
     environment:
       - CANTON_PARTICIPANT_POSTGRES_SERVER=${SPLICE_APP_PROVIDER_DB_SERVER}
       - CANTON_PARTICIPANT_POSTGRES_USER=${SPLICE_APP_PROVIDER_DB_USER}
@@ -446,9 +451,12 @@ services:
             port = ${CANTON_HEALTHCHECK_PORT}
           }
     ports:
-      - "3${PARTICIPANT_LEDGER_API_PORT}:${PARTICIPANT_LEDGER_API_PORT}"
-      - "3${PARTICIPANT_ADMIN_API_PORT}:${PARTICIPANT_ADMIN_API_PORT}"
-      - "3${PARTICIPANT_JSON_API_PORT}:${PARTICIPANT_JSON_API_PORT}"
+      - "3${PARTICIPANT_LEDGER_API_PORT}:3${PARTICIPANT_LEDGER_API_PORT}"
+      - "3${PARTICIPANT_ADMIN_API_PORT}:3${PARTICIPANT_ADMIN_API_PORT}"
+      - "3${PARTICIPANT_JSON_API_PORT}:3${PARTICIPANT_JSON_API_PORT}"
+      - "2${PARTICIPANT_LEDGER_API_PORT}:2${PARTICIPANT_LEDGER_API_PORT}"
+      - "2${PARTICIPANT_ADMIN_API_PORT}:2${PARTICIPANT_ADMIN_API_PORT}"
+      - "2${PARTICIPANT_JSON_API_PORT}:2${PARTICIPANT_JSON_API_PORT}"
     healthcheck: *canton-healthcheck
     depends_on:
       postgres-splice-app-provider:
@@ -466,6 +474,7 @@ services:
     container_name: validator-app-provider
     volumes:
       - ./docker/validator/entrypoint.sh:/validator-entrypoint.sh
+      - ./docker/validator/app-provider.conf:/app/app.conf
     entrypoint: /validator-entrypoint.sh
     logging: *default-logging
     environment:
