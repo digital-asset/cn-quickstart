@@ -142,6 +142,8 @@ services:
     environment:
       - POSTGRES_USER=${SPLICE_APP_USER_DB_USER}
       - POSTGRES_PASSWORD=${SPLICE_APP_USER_DB_PASSWORD}
+    ports:
+      - "2${POSTGRES_PORT}:${POSTGRES_PORT}"
     healthcheck:
       test: "pg_isready -U ${SPLICE_APP_USER_DB_USER} -d postgres"
     command:
@@ -172,7 +174,9 @@ services:
             port = ${CANTON_HEALTHCHECK_PORT}
           }
     ports:
-      - "27575:7575"
+      - "2${PARTICIPANT_LEDGER_API_PORT}:${PARTICIPANT_LEDGER_API_PORT}"
+      - "2${PARTICIPANT_ADMIN_API_PORT}:${PARTICIPANT_ADMIN_API_PORT}"
+      - "2${PARTICIPANT_JSON_API_PORT}:${PARTICIPANT_JSON_API_PORT}"
     healthcheck: *canton-healthcheck
     depends_on:
       postgres-splice-app-user:
@@ -221,6 +225,8 @@ services:
                 }
               }
             }
+    ports:
+      - "2${VALIDATOR_ADMIN_API_PORT}:${VALIDATOR_ADMIN_API_PORT}"
     depends_on:
       postgres-splice-app-user:
         condition: service_healthy
@@ -408,6 +414,8 @@ services:
       - CREATE_DATABASE_scribe=${SCRIBE_POSTGRES_DATABASE}
       - CREATE_DATABASE_sequencer=${CANTON_SEQUENCER_POSTGRES_DB}
       - CREATE_DATABASE_mediator=${CANTON_MEDIATOR_POSTGRES_DB}
+    ports:
+      - "3${POSTGRES_PORT}:${POSTGRES_PORT}"
     healthcheck:
       test: "pg_isready -U ${SPLICE_APP_PROVIDER_DB_USER} -d postgres"
     command:
@@ -438,7 +446,9 @@ services:
             port = ${CANTON_HEALTHCHECK_PORT}
           }
     ports:
-      - "37575:7575"
+      - "3${PARTICIPANT_LEDGER_API_PORT}:${PARTICIPANT_LEDGER_API_PORT}"
+      - "3${PARTICIPANT_ADMIN_API_PORT}:${PARTICIPANT_ADMIN_API_PORT}"
+      - "3${PARTICIPANT_JSON_API_PORT}:${PARTICIPANT_JSON_API_PORT}"
     healthcheck: *canton-healthcheck
     depends_on:
       postgres-splice-app-provider:
@@ -487,6 +497,8 @@ services:
                 }
               }
             }
+    ports:
+      - "3${VALIDATOR_ADMIN_API_PORT}:${VALIDATOR_ADMIN_API_PORT}"
     depends_on:
       postgres-splice-app-provider:
         condition: service_healthy
@@ -648,6 +660,8 @@ services:
       - postgres
       - -c
       - max_connections=1000
+    ports:
+      - "4${POSTGRES_PORT}:${POSTGRES_PORT}"
     logging: *default-logging
     networks:
       - ${DOCKER_NETWORK}
@@ -686,6 +700,10 @@ services:
     logging: *default-logging
     environment:
       - *canton-metrics-config
+    ports:
+      - "4${PARTICIPANT_LEDGER_API_PORT}:${PARTICIPANT_LEDGER_API_PORT}"
+      - "4${PARTICIPANT_ADMIN_API_PORT}:${PARTICIPANT_ADMIN_API_PORT}"
+      - "4${PARTICIPANT_JSON_API_PORT}:${PARTICIPANT_JSON_API_PORT}"
     networks:
       - ${DOCKER_NETWORK}
     profiles:
@@ -700,6 +718,8 @@ services:
     environment:
       - *canton-metrics-config
       - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=participant-sv
+    ports:
+      - "4${VALIDATOR_ADMIN_API_PORT}:${VALIDATOR_ADMIN_API_PORT}"
     depends_on:
       postgres-splice-sv:
         condition: service_healthy
