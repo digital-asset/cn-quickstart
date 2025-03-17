@@ -60,7 +60,7 @@ services:
 ###############################################################################################################
 ### Common Services
 ###############################################################################################################
-  postgres:
+  keycloak-postgres:
     image: postgres:14
     container_name: keycloak-postgres
     environment:
@@ -101,7 +101,7 @@ services:
       KC_DB: postgres
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: password
-      KC_DB_URL_HOST: postgres
+      KC_DB_URL_HOST: keycloak-postgres
       KC_DB_URL_DATABASE: keycloakdb
       KC_HEALTH_ENABLED: true
     healthcheck:
@@ -149,7 +149,7 @@ services:
     command:
       - postgres
       - -c
-      - max_connections=8000
+      - max_connections=1000
     logging: *default-logging
 
   participant-app-user:
@@ -421,7 +421,7 @@ services:
     command:
       - postgres
       - -c
-      - max_connections=8000
+      - max_connections=1000
     logging: *default-logging
 
   participant-app-provider:
@@ -521,6 +521,7 @@ services:
       - ./config/nginx/app-provider/frontend.conf:/etc/nginx/conf.d/default.conf
       - ./config/nginx/app-provider/common-backend-proxy-settings.conf:/etc/nginx/common-backend-proxy-settings.conf
       - ./config/nginx/app-provider/wallet.conf:/etc/nginx/conf.d/wallet.conf
+      - ./config/nginx/app-provider/swagger.conf:/etc/nginx/conf.d/swagger.conf
     ports:
       - "${APP_PROVIDER_UI_PORT}:80"
     depends_on:
@@ -658,7 +659,7 @@ services:
     command:
       - postgres
       - -c
-      - max_connections=8000
+      - max_connections=1000
     ports:
       - "4${POSTGRES_PORT}:${POSTGRES_PORT}"
     logging: *default-logging
