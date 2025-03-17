@@ -30,10 +30,10 @@ services:
     mem_limit: 2g
     environment:
       _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
-  participant-app-user:
-    mem_limit: 2g
-    environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
+#  participant-app-user:
+#    mem_limit: 2g
+#    environment:
+#      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
   participant-sv:
     mem_limit: 2g
     environment:

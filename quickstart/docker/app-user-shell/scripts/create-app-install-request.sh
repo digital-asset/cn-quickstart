@@ -23,7 +23,7 @@ create_app_install_request() {
 
   echo "create_app_install_request $dsoParty $appUserParty $appProviderParty $participant" >&2
 
-  curl_check "http://$participant:7575/v2/commands/submit-and-wait" "$token" "application/json" \
+  curl_check "http://$participant/v2/commands/submit-and-wait" "$token" "application/json" \
     --data-raw '{
         "commands": [
           {
@@ -59,4 +59,4 @@ create_app_install_request() {
     }'
 }
 
-create_app_install_request "$APP_USER_WALLET_ADMIN_TOKEN" $DSO_PARTY $APP_USER_PARTY $APP_PROVIDER_PARTY $AUTH_APP_USER_WALLET_ADMIN_USER_ID participant-app-user
+create_app_install_request "$APP_USER_WALLET_ADMIN_TOKEN" $DSO_PARTY $APP_USER_PARTY $APP_PROVIDER_PARTY $AUTH_APP_USER_WALLET_ADMIN_USER_ID "participant-app-provider:27575"

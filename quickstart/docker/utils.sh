@@ -44,9 +44,9 @@ create_user() {
   local participant=$5
   echo "create_user $userId $userName $party $participant" >&2
 
-  code=$(curl_status_code "http://$participant:7575/v2/users/$userId" "$token" "application/json")
+  code=$(curl_status_code "http://$participant/v2/users/$userId" "$token" "application/json")
   if  [ "$code" == "400" ]; then
-    curl_check "http://$participant:7575/v2/users" "$token" "application/json" \
+    curl_check "http://$participant/v2/users" "$token" "application/json" \
       --data-raw '{
         "user" : {
             "id" : "'$userId'",
@@ -73,9 +73,9 @@ delete_user() {
   local participant=$3
   echo "delete_user $userId $participant" >&2
 
-  code=$(curl_status_code "http://$participant:7575/v2/users/$userId" "$token" "application/json")
+  code=$(curl_status_code "http://$participant/v2/users/$userId" "$token" "application/json")
   if  [ "$code" == "200" ]; then
-    curl_check "http://$participant:7575/v2/users/$userId" "$token" "application/json" -X DELETE
+    curl_check "http://$participant/v2/users/$userId" "$token" "application/json" -X DELETE
   fi
 }
 
@@ -110,7 +110,7 @@ function grant_rights() {
   done
 
   local rightsJson=$(joinByChar "," "${rightsArr[@]}")
-  curl_check "http://$participant:7575/v2/users/$userId/rights" "$token" "application/json" \
+  curl_check "http://$participant/v2/users/$userId/rights" "$token" "application/json" \
     --data-raw '{
         "userId": "'$userId'",
         "identityProviderId": "",
@@ -125,7 +125,7 @@ update_user() {
   local party=$4
   local participant=$5
   echo "update_user $userId $userName $party $participant" >&2
-  curl_check "http://$participant:7575/v2/users/$userId" "$token" "application/json" \
+  curl_check "http://$participant/v2/users/$userId" "$token" "application/json" \
     -X PATCH \
     --data-raw '{
       "user" : {
@@ -154,7 +154,7 @@ upload_dars() {
   local participant=$2
   find /canton/dars -type f -name "*.dar" | while read -r file; do
     echo "uploadDar $file $participant" >&2
-    curl_check "http://$participant:7575/v2/packages" "$token" "application/octet-stream" \
+    curl_check "http://$participant/v2/packages" "$token" "application/octet-stream" \
       --data-binary @"$file"
     echo "Uploaded $file"
   done
@@ -165,7 +165,7 @@ get_user_party() {
   local user=$2
   local participant=$3
   echo "get_user_party $user $participant" >&2
-  curl_check "http://$participant:7575/v2/users/$user" "$token" "application/json" | jq -r .user.primaryParty
+  curl_check "http://$participant/v2/users/$user" "$token" "application/json" | jq -r .user.primaryParty
 }
 
 get_dso_party_id() {
