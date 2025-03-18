@@ -174,53 +174,6 @@ get_dso_party_id() {
   curl_check "http://$validator:5003/api/validator/v0/scan-proxy/dso-party-id" "$token" "application/json" | jq -r .dso_party_id
 }
 
-allocate_party() {
-  local token=$1
-  local partyIdHint=$2
-  local participant=$3
-
-  echo "allocate_party $partyIdHint $participant" >&2
-
-  namespace=$(get_participant_namespace "$token" "$participant")
-
-  party=$(curl_check "http://$participant:7575/v2/parties/party?parties=$partyIdHint::$namespace" "$token" "application/json" |
-    jq -r '.partyDetails[0].party')
-
-  if [ -n "$party" ] && [ "$party" != "null" ]; then
-    echo "party exists $party" >&2
-    echo $party
-    return
-  fi
-
-  curl_check "http://$participant:7575/v2/parties" "$token" "application/json" \
-    --data-raw '{
-      "partyIdHint": "'$partyIdHint'",
-      "displayName" : "'$partyIdHint'",
-      "identityProviderId": ""
-    }' | jq -r .partyDetails.party
-}
-
-get_participant_namespace() {
-  local token=$1
-  local participant=$2
-  echo "get_participant_namespace $participant" >&2
-  curl_check "http://$participant:7575/v2/parties/participant-id" "$token" "application/json" |
-    jq -r .participantId | sed 's/^participant:://'
-}
-
-onboard_wallet_user() {
-  local token=$1
-  local user=$2
-  local party=$3
-  local validator=$4
-  echo "onboard_wallet_user $user $party $validator" >&2
-  curl_check "http://$validator:5003/api/validator/v0/admin/users" "$token" "application/json" \
-    --data-raw '{
-      "party_id": "'$party'",
-      "name":"'$user'"
-    }'
-}
-
 curl_check() {
   local url=$1
   local token=$2
@@ -268,4 +221,54 @@ curl_status_code() {
       )
 
   echo "$response" | tail -n1 | tr -d '\r'
+}
+
+# Following functions are not used atm in QS but customer may need them when start building on top of QS
+# to support their use-cases. E.g. need to create additional (wallet) users and allocate additional parties.
+#
+allocate_party() {
+  local token=$1
+  local partyIdHint=$2
+  local participant=$3
+
+  echo "allocate_party $partyIdHint $participant" >&2
+
+  namespace=$(get_participant_namespace "$token" "$participant")
+
+  party=$(curl_check "http://$participant:7575/v2/parties/party?parties=$partyIdHint::$namespace" "$token" "application/json" |
+    jq -r '.partyDetails[0].party')
+
+  if [ -n "$party" ] && [ "$party" != "null" ]; then
+    echo "party exists $party" >&2
+    echo $party
+    return
+  fi
+
+  curl_check "http://$participant:7575/v2/parties" "$token" "application/json" \
+    --data-raw '{
+      "partyIdHint": "'$partyIdHint'",
+      "displayName" : "'$partyIdHint'",
+      "identityProviderId": ""
+    }' | jq -r .partyDetails.party
+}
+
+get_participant_namespace() {
+  local token=$1
+  local participant=$2
+  echo "get_participant_namespace $participant" >&2
+  curl_check "http://$participant:7575/v2/parties/participant-id" "$token" "application/json" |
+    jq -r .participantId | sed 's/^participant:://'
+}
+
+onboard_wallet_user() {
+  local token=$1
+  local user=$2
+  local party=$3
+  local validator=$4
+  echo "onboard_wallet_user $user $party $validator" >&2
+  curl_check "http://$validator:5003/api/validator/v0/admin/users" "$token" "application/json" \
+    --data-raw '{
+      "party_id": "'$party'",
+      "name":"'$user'"
+    }'
 }
