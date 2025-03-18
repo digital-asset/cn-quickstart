@@ -104,7 +104,6 @@ services:
       KC_DB_URL_HOST: keycloak-postgres
       KC_DB_URL_DATABASE: keycloakdb
       KC_HEALTH_ENABLED: true
-      KEYCLOAK_IMPORT_DIR: ${KEYCLOAK_IMPORT_DIR}
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'"]
       interval: 30s
