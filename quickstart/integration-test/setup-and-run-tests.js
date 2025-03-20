@@ -282,13 +282,28 @@ async function containerHasImage(containerName, image) {
             }
         }
 
-        // Remove docker state since we persist it in a volume to reduce docker image transfers
         console.log('[INFO] Ensuring fresh slate...');
         await runCommand('docker', [
             'exec',
             containerName,
-            'make',
-            'clean-docker',
+            'bash',
+            '-c',
+            'docker rm -f $(docker ps -aq) || true'
+        ]);
+        await runCommand('docker', [
+            'exec',
+            containerName,
+            'docker',
+            'network',
+            'prune',
+            '-f'
+        ]);
+        await runCommand('docker', [
+            'exec',
+            containerName,
+            'bash',
+            '-c',
+            'docker volume rm $(docker volume ls -q) || true'
         ]);
 
         console.log('[INFO] Starting the application inside the container...');
