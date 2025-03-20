@@ -24,8 +24,8 @@
  *   --force-rebuild: Optional flag to force a rebuild of the Docker image.
  */
 
-const { spawn } = require('child_process');
-const { join } = require('path');
+const {spawn} = require('child_process');
+const {join} = require('path');
 const process = require('process');
 
 function runCommand(command, args, options = {}) {
@@ -93,8 +93,8 @@ function pipeCommands(producerCmd, consumerCmd) {
 
         console.log(`[PIPE] ${producerCmd.join(' ')} | ${consumerCmd.join(' ')}`);
 
-        const producer = spawn(prod, prodArgs, { stdio: ['ignore', 'pipe', 'inherit'] });
-        const consumer = spawn(cons, consArgs, { stdio: ['pipe', 'inherit', 'inherit'] });
+        const producer = spawn(prod, prodArgs, {stdio: ['ignore', 'pipe', 'inherit']});
+        const consumer = spawn(cons, consArgs, {stdio: ['pipe', 'inherit', 'inherit']});
 
         producer.stdout.pipe(consumer.stdin);
 
@@ -146,12 +146,11 @@ async function containerHasImage(containerName, image) {
 }
 
 (async () => {
+    const containerName = 'quickstart-end2end-runner';
     try {
         const rawArgs = process.argv.slice(2);
         const flags = rawArgs.filter((arg) => arg.startsWith('--'));
         const forceRebuild = flags.includes('--force-rebuild');
-
-        const containerName = 'quickstart-end2end-runner';
 
         const scriptDir = __dirname;
         const projectRoot = join(scriptDir, '../');
@@ -163,7 +162,7 @@ async function containerHasImage(containerName, image) {
 
         if (forceRebuild) {
             console.log('[INFO] Removing existing volume "quickstart-e2e-dind-data" if it exists...');
-            await runCommand('docker', ['volume', 'rm', 'quickstart-e2e-dind-data'], { shell: true })
+            await runCommand('docker', ['volume', 'rm', 'quickstart-e2e-dind-data'], {shell: true})
                 .catch(() => null);
         }
 
@@ -182,7 +181,8 @@ async function containerHasImage(containerName, image) {
         }
 
         console.log(`[INFO] Removing old container "${containerName}" if it exists...`);
-        await runCommand('docker', ['rm', '-f', containerName], { shell: true }).catch(() => {});
+        await runCommand('docker', ['rm', '-f', containerName], {shell: true}).catch(() => {
+        });
 
         console.log(`[INFO] Running container "${containerName}" in detached mode...`);
         await runCommand('docker', [
