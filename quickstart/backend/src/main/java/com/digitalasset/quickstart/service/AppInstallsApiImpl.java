@@ -200,13 +200,13 @@ public class AppInstallsApiImpl implements AppInstallsApi {
                                     methodSpan.addEvent("Fetched contract, verifying user");
                                     String userParty = contract.payload.getUser.getParty;
 
-                                    if (!actorParty.equals(userParty)) {
+                                    if (!actorParty.equals(userParty) && !actorParty.equals(contract.payload.getProvider.getParty)) {
                                         Map<String, Object> errorAttrs = Map.of(
                                                 "contractId", contractId,
                                                 "commandId", commandId,
                                                 "actorParty", actorParty
                                         );
-                                        LoggingSpanHelper.logError(logger, "cancelAppInstall: party is not the user", errorAttrs, null);
+                                        LoggingSpanHelper.logError(logger, "cancelAppInstall: party is not the user nor provider", errorAttrs, null);
                                         return CompletableFuture.completedFuture(
                                                 ResponseEntity.status(HttpStatus.FORBIDDEN).build()
                                         );
@@ -214,10 +214,12 @@ public class AppInstallsApiImpl implements AppInstallsApi {
 
                                     methodSpan.addEvent("Constructing AppInstall_Cancel choice");
                                     Metadata meta = new Metadata(appInstallCancel.getMeta().getData());
-                                    Party actor = new Party(actorParty);
-                                    AppInstall_Cancel choice = new AppInstall_Cancel(actor, meta);
+                                    // topologically we can only act as the provider
+                                    String providerParty = contract.payload.getProvider.getParty;
+                                    Party provider = new Party(providerParty);
+                                    AppInstall_Cancel choice = new AppInstall_Cancel(provider, meta);
 
-                                    return ledger.exerciseAndGetResult(actorParty, contract.contractId, choice, commandId)
+                                    return ledger.exerciseAndGetResult(providerParty, contract.contractId, choice, commandId)
                                             .thenApply(result -> {
                                                 methodSpan.addEvent("Choice exercised, returning 200 OK");
                                                 return ResponseEntity.ok().build();

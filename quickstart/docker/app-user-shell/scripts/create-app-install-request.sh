@@ -19,7 +19,7 @@ create_app_install_request() {
   local participant=$6
 
   # Add a timestamp for a unique command ID to allow resubmission
-  local time="$(date +%s)"
+  local time="$(date +%s%N)"
 
   echo "create_app_install_request $dsoParty $appUserParty $appProviderParty $participant" >&2
 

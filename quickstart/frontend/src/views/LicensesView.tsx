@@ -6,9 +6,6 @@ import { useLicenseStore } from '../stores/licenseStore';
 import { useUserStore } from '../stores/userStore';
 import { useLocation } from 'react-router-dom';
 
-/**
- * Renders a table of Licenses and provides actions to renew or expire them.
- */
 const LicensesView: React.FC = () => {
     const {
         licenses,
@@ -53,9 +50,6 @@ const LicensesView: React.FC = () => {
         closeModal();
     };
 
-    /**
-     * Executes the final step of the renewal if a request exists and is already paid.
-     */
     const handleCompleteRenewal = async (renewalContractId: string) => {
         await completeLicenseRenewal(renewalContractId);
         await fetchLicenses();
@@ -66,7 +60,7 @@ const LicensesView: React.FC = () => {
     return (
         <div>
             <h2>Licenses</h2>
-            <table className="table table-fixed">
+            <table className="table table-fixed" id="licenses-table">
                 <thead>
                 <tr>
                     <th style={{ width: '220px' }}>License Contract ID</th>
@@ -102,37 +96,33 @@ const LicensesView: React.FC = () => {
                         : '';
 
                     return (
-                        <tr key={license.contractId}>
-                            <td className="ellipsis-cell">{license.contractId}</td>
-                            <td className="ellipsis-cell">{license.dso}</td>
-                            <td className="ellipsis-cell">{license.provider}</td>
-                            <td className="ellipsis-cell">{license.user}</td>
-                            <td className="ellipsis-cell">{license.expiresAt}</td>
-                            <td className="ellipsis-cell">{license.licenseNum}</td>
-                            <td className="ellipsis-cell">{fee || ''}</td>
-                            <td className="ellipsis-cell">{extension || ''}</td>
-                            <td>
+                        <tr key={license.contractId} className="license-row">
+                            <td className="ellipsis-cell license-contract-id">{license.contractId}</td>
+                            <td className="ellipsis-cell license-dso">{license.dso}</td>
+                            <td className="ellipsis-cell license-provider">{license.provider}</td>
+                            <td className="ellipsis-cell license-user">{license.user}</td>
+                            <td className="ellipsis-cell license-expires-at">{license.expiresAt}</td>
+                            <td className="ellipsis-cell license-number">{license.licenseNum}</td>
+                            <td className="ellipsis-cell license-renew-fee">{fee || ''}</td>
+                            <td className="ellipsis-cell license-extension">{extension || ''}</td>
+                            <td className="license-actions">
                                 {matchedRequest ? (
                                     <>
-                                        {/* If the user is NOT an admin: show Pay Renewal only if NOT paid */}
                                         {!isAdmin &&
                                             user &&
                                             matchedRequest.user === user.party &&
                                             !matchedRequest.isPaid && (
                                                 <a
                                                     href={payURL}
-                                                    className="btn btn-primary me-2"
-                                                    target="_blank"
+                                                    className="btn btn-primary me-2 btn-pay-renewal"
                                                     rel="noopener noreferrer"
                                                 >
                                                     Pay Renewal
                                                 </a>
                                             )}
-
-                                        {/* If the user IS an admin: show Complete Renewal only if request IS paid */}
                                         {isAdmin && matchedRequest.isPaid && (
                                             <button
-                                                className="btn btn-success"
+                                                className="btn btn-success btn-complete-renewal"
                                                 onClick={() =>
                                                     handleCompleteRenewal(matchedRequest.contractId)
                                                 }
@@ -142,10 +132,9 @@ const LicensesView: React.FC = () => {
                                         )}
                                     </>
                                 ) : (
-                                    // If there's no existing renewal, only Admin sees the Actions button
                                     isAdmin && (
                                         <button
-                                            className="btn btn-primary"
+                                            className="btn btn-primary btn-actions-license"
                                             onClick={() => setSelectedLicenseId(license.contractId)}
                                         >
                                             Actions
@@ -159,7 +148,6 @@ const LicensesView: React.FC = () => {
                 </tbody>
             </table>
 
-            {/* Modal for Renew/Expire actions (Admin only) */}
             {selectedLicenseId && (
                 <>
                     <div className="modal-backdrop fade show"></div>
@@ -187,13 +175,13 @@ const LicensesView: React.FC = () => {
                                         </p>
                                         <label>Description:</label>
                                         <input
-                                            className="form-control mb-2"
+                                            className="form-control mb-2 input-renew-description"
                                             placeholder='e.g. "Renew for next month"'
                                             value={renewDescription}
                                             onChange={(e) => setRenewDescription(e.target.value)}
                                         />
                                         <button
-                                            className="btn btn-success"
+                                            className="btn btn-success btn-issue-renewal"
                                             onClick={handleRenew}
                                             disabled={!renewDescription.trim()}
                                         >
@@ -205,13 +193,13 @@ const LicensesView: React.FC = () => {
                                         <h6>Expire License</h6>
                                         <label>Description:</label>
                                         <input
-                                            className="form-control mb-2"
+                                            className="form-control mb-2 input-expire-description"
                                             placeholder='e.g. "License expired"'
                                             value={expireDescription}
                                             onChange={(e) => setExpireDescription(e.target.value)}
                                         />
                                         <button
-                                            className="btn btn-danger"
+                                            className="btn btn-danger btn-expire-license"
                                             onClick={handleExpire}
                                             disabled={!expireDescription.trim()}
                                         >

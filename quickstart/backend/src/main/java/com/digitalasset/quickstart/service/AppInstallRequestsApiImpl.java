@@ -112,56 +112,6 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
 
     @Override
     @WithSpan
-    public CompletableFuture<ResponseEntity<Void>> cancelAppInstallRequest(
-            @SpanAttribute("appInstall.contractId") String contractId,
-            @SpanAttribute("appInstall.commandId") String commandId,
-            AppInstallRequestCancel appInstallRequestCancel
-    ) {
-        Span span = Span.current();
-        Context parentContext = Context.current();
-
-        Map<String, Object> attributes = Map.of(
-                "contractId", contractId,
-                "commandId", commandId,
-                "templateId", TEMPLATE_ID.qualifiedName(),
-                "choiceName", "AppInstallRequest_Cancel"
-        );
-
-        LoggingSpanHelper.addEventWithAttributes(span, "Starting cancelAppInstallRequest", attributes);
-        LoggingSpanHelper.setSpanAttributes(span, attributes);
-        LoggingSpanHelper.logInfo(logger, "cancelAppInstallRequest: received request", attributes);
-
-        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
-                .thenCompose(userParty ->
-                        damlRepository.findAppInstallRequestById(contractId)
-                                .thenCompose(contract -> {
-                                    span.addEvent("Fetched contract, exercising AppInstallRequest_Cancel choice");
-
-                                    var choice = new quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Cancel(
-                                            new quickstart_licensing.licensing.util.Metadata(appInstallRequestCancel.getMeta().getData())
-                                    );
-
-                                    return ledger.exerciseAndGetResult(userParty, contract.contractId, choice, commandId)
-                                            .thenApply(result -> {
-                                                span.addEvent("Choice exercised, returning 200 OK");
-                                                return ResponseEntity.ok().<Void>build();
-                                            });
-                                })
-                )
-                .whenComplete(
-                        completeWithin(parentContext, (res, ex) -> {
-                            if (ex == null) {
-                                LoggingSpanHelper.logDebug(logger, "cancelAppInstallRequest: success", attributes);
-                            } else {
-                                LoggingSpanHelper.logError(logger, "cancelAppInstallRequest: failed", attributes, ex);
-                                LoggingSpanHelper.recordException(span, ex);
-                            }
-                        })
-                );
-    }
-
-    @Override
-    @WithSpan
     public CompletableFuture<ResponseEntity<List<AppInstallRequest>>> listAppInstallRequests() {
         Span span = Span.current();
         Context parentContext = Context.current();

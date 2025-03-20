@@ -1,0 +1,14 @@
+{
+  "name": "integration-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "setup-and-run-tests.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "0BSD",
+  "devDependencies": {
+    "@playwright/test": "^1.51.0",
+    "@types/node": "^22.13.10"
+  }
+}
