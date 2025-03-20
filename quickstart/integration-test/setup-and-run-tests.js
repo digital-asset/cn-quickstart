@@ -147,6 +147,7 @@ async function containerHasImage(containerName, image) {
 
 (async () => {
     const containerName = 'quickstart-end2end-runner';
+    let exitCode = 0;
     try {
         const rawArgs = process.argv.slice(2);
         const flags = rawArgs.filter((arg) => arg.startsWith('--'));
@@ -341,9 +342,10 @@ async function containerHasImage(containerName, image) {
         console.log('[SUCCESS] All tasks completed successfully.');
     } catch (error) {
         console.error(`[FATAL] Script failed: ${error.message}`);
-        process.exit(1);
+        exitCode = 1;
     } finally {
         console.log(`[INFO] Removing container "${containerName}"...`);
         await runCommand('docker', ['rm', '-f', containerName]);
+        process.exit(exitCode);
     }
 })();
