@@ -25,9 +25,9 @@ receivers:
         - job_name: cadvisor
           static_configs:
             - targets: [ "cadvisor:${env:CADVISOR_METRICS_PORT}" ]
-        - job_name: participant-sv
+        - job_name: participant
           static_configs:
-            - targets: [ "participant-sv:${env:CANTON_METRICS_PORT}" ]
+            - targets: [ "participant:${env:CANTON_METRICS_PORT}" ]
         - job_name: validator-sv
           static_configs:
             - targets: [ "validator-sv:${env:CANTON_METRICS_PORT}" ]
