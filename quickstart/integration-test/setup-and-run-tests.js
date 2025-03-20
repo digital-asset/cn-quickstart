@@ -338,12 +338,12 @@ async function containerHasImage(containerName, image) {
             'npx playwright test --output /tmp/ --reporter line',
         ]);
 
-        console.log(`[INFO] Removing container "${containerName}"...`);
-        await runCommand('docker', ['rm', '-f', containerName]);
-
         console.log('[SUCCESS] All tasks completed successfully.');
     } catch (error) {
         console.error(`[FATAL] Script failed: ${error.message}`);
         process.exit(1);
+    } finally {
+        console.log(`[INFO] Removing container "${containerName}"...`);
+        await runCommand('docker', ['rm', '-f', containerName]);
     }
 })();
