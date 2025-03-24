@@ -30,8 +30,6 @@ services:
     mem_limit: 2g
     environment:
       _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
-  postgres-splice:
-    mem_limit: 512mb
   postgres-splice-app-provider:
     mem_limit: 512mb
   postgres-splice-app-user:
@@ -60,16 +58,12 @@ services:
       _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
   validator-app-provider-auto-config:
     mem_limit: 32mb
-  validator-app-user:
-    mem_limit: 1g
-    environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
   validator-app-user-auto-config:
     mem_limit: 32mb
-  validator-sv:
-    mem_limit: 2g
-    environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
+#  validator-sv:
+#    mem_limit: 2g
+#    environment:
+#      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
   wallet-web-ui-app-provider:
     mem_limit: 256mb
   wallet-web-ui-app-user:

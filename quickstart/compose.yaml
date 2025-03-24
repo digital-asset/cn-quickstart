@@ -155,60 +155,6 @@ services:
       - max_connections=1000
     logging: *default-logging
 
-  validator-app-user:
-    extends:
-      file: docker/compose-validator.yaml
-      service: validator
-    container_name: validator-app-user
-    volumes:
-      - ./docker/validator/entrypoint.sh:/validator-entrypoint.sh
-      - ./docker/validator/app-user.conf:/app/app.conf
-    entrypoint: /validator-entrypoint.sh
-    logging: *default-logging
-    environment:
-      - *canton-metrics-config
-      - ONBOARDING_SECRET_URL=${ONBOARDING_SECRET_URL}
-      - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=${APP_PROVIDER_VALIDATOR_PARTICIPANT_ADDRESS}
-      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_CLIENT_ID=${AUTH_APP_USER_VALIDATOR_CLIENT_ID}
-      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_CLIENT_SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
-      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_AUDIENCE=${AUTH_APP_USER_AUDIENCE}
-      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_USER_NAME=${AUTH_APP_USER_VALIDATOR_USER_ID}
-      - SPLICE_APP_VALIDATOR_WALLET_USER_NAME=${AUTH_APP_USER_WALLET_ADMIN_USER_ID}
-      - SPLICE_APP_VALIDATOR_AUTH_AUDIENCE=${AUTH_APP_USER_AUDIENCE}
-      - SPLICE_APP_VALIDATOR_AUTH_JWKS_URL=${AUTH_APP_USER_JWK_SET_URL}
-      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_URL=${AUTH_APP_USER_WELLKNOWN_URL}
-      - SPLICE_APP_VALIDATOR_PARTY_HINT=${AUTH_APP_USER_PARTY_HINT}
-      - |
-        ADDITIONAL_CONFIG_PERSISTENCE=
-            canton.validator-apps.validator_backend.storage {
-              type = postgres
-              config {
-                dataSourceClass = "org.postgresql.ds.PGSimpleDataSource"
-                properties = {
-                  databaseName = validator
-                  currentSchema = validator
-                  serverName = ${SPLICE_APP_USER_DB_SERVER}
-                  portNumber = ${SPLICE_APP_USER_DB_PORT}
-                  user = ${SPLICE_APP_USER_DB_USER}
-                  password = ${SPLICE_APP_USER_DB_PASSWORD}
-                }
-              }
-            }
-    ports:
-      - "2${VALIDATOR_ADMIN_API_PORT}:${VALIDATOR_ADMIN_API_PORT}"
-    depends_on:
-      postgres-splice-app-user:
-        condition: service_healthy
-      sv-app:
-        condition: service_healthy
-        required: false
-      participant:
-        condition: service_healthy
-      keycloak:
-        condition: service_healthy
-    networks:
-      - ${DOCKER_NETWORK}
-
   nginx-app-user:
     image: "nginx:${NGINX_VERSION}"
     container_name: nginx-app-user
@@ -218,7 +164,7 @@ services:
     ports:
       - "${APP_USER_UI_PORT}:80"
     depends_on:
-      - validator-app-user
+      - validator-app-provider
       - wallet-web-ui-app-user
     restart: always
     logging: *default-logging
@@ -268,7 +214,7 @@ services:
     depends_on:
       participant:
         condition: service_healthy
-      validator-app-user:
+      validator-app-provider:
         condition: service_healthy
       keycloak:
         condition: service_healthy
@@ -395,9 +341,7 @@ services:
     logging: *default-logging
 
   participant:
-    extends:
-      file: docker/compose-validator.yaml
-      service: participant
+    image: "${IMAGE_REPO}canton-participant:${IMAGE_TAG}"
     env_file:
       - ./.env
     container_name: participant
@@ -441,51 +385,56 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
+    restart: always
+    networks:
+      - ${DOCKER_NETWORK:-splice_validator}
 
   validator-app-provider:
-    extends:
-      file: docker/compose-validator.yaml
-      service: validator
+    image: "${IMAGE_REPO}validator-app:${IMAGE_TAG}"
     container_name: validator-app-provider
+    env_file:
+      - ./.env
+      - ./docker/localnet.env
+      # KV solve this ^^^^^^
     volumes:
       - ./docker/validator/entrypoint.sh:/validator-entrypoint.sh
-      - ./docker/validator/app-provider.conf:/app/app.conf
+      - ./docker/validator/app.conf:/app/app.conf
+      - ./docker/validator/bootstrap.sc:/app/bootstrap.sc
+      - domain-upgrade-dump:/domain-upgrade-dump
     entrypoint: /validator-entrypoint.sh
     logging: *default-logging
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "curl -f http://localhost:4${VALIDATOR_ADMIN_API_PORT}/api/validator/readyz && curl -f http://localhost:3${VALIDATOR_ADMIN_API_PORT}/api/validator/readyz && curl -f http://localhost:2${VALIDATOR_ADMIN_API_PORT}/api/validator/readyz || exit 1"
+      ]
+      interval: 20s
+      start_interval: 5s
+      timeout: 30s
+      retries: 10
+      start_period: 20s
+
     environment:
       - *canton-metrics-config
       - ONBOARDING_SECRET_URL=${ONBOARDING_SECRET_URL}
-      - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=${APP_PROVIDER_VALIDATOR_PARTICIPANT_ADDRESS}
-      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_CLIENT_ID=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID}
-      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_CLIENT_SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
-      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_AUDIENCE=${AUTH_APP_PROVIDER_AUDIENCE}
-      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_USER_NAME=${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}
-      - SPLICE_APP_VALIDATOR_WALLET_USER_NAME=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID}
-      - SPLICE_APP_VALIDATOR_AUTH_AUDIENCE=${AUTH_APP_PROVIDER_AUDIENCE}
-      - SPLICE_APP_VALIDATOR_AUTH_JWKS_URL=${AUTH_APP_PROVIDER_JWK_SET_URL}
-      - SPLICE_APP_VALIDATOR_LEDGER_API_AUTH_URL=${AUTH_APP_PROVIDER_WELLKNOWN_URL}
-      - SPLICE_APP_VALIDATOR_PARTY_HINT=${AUTH_APP_PROVIDER_PARTY_HINT}
-      - |
-        ADDITIONAL_CONFIG_PERSISTENCE=
-            canton.validator-apps.validator_backend.storage {
-              type = postgres
-              config {
-                dataSourceClass = "org.postgresql.ds.PGSimpleDataSource"
-                properties = {
-                  databaseName = validator
-                  currentSchema = validator
-                  serverName = ${SPLICE_APP_PROVIDER_DB_SERVER}
-                  portNumber = ${SPLICE_APP_PROVIDER_DB_PORT}
-                  user = ${SPLICE_APP_PROVIDER_DB_USER}
-                  password = ${SPLICE_APP_PROVIDER_DB_PASSWORD}
-                }
-              }
-            }
+      - SPLICE_APP_VALIDATOR_SCAN_ADDRESS=${SCAN_ADDRESS}
+      - SPLICE_APP_VALIDATOR_SV_SPONSOR_ADDRESS=${SPONSOR_SV_ADDRESS}
+      - SPLICE_APP_VALIDATOR_ONBOARDING_SECRET=${ONBOARDING_SECRET}
     ports:
-      - "3${VALIDATOR_ADMIN_API_PORT}:${VALIDATOR_ADMIN_API_PORT}"
+      - "4${VALIDATOR_ADMIN_API_PORT}:4${VALIDATOR_ADMIN_API_PORT}"
+      - "3${VALIDATOR_ADMIN_API_PORT}:3${VALIDATOR_ADMIN_API_PORT}"
+      - "2${VALIDATOR_ADMIN_API_PORT}:2${VALIDATOR_ADMIN_API_PORT}"
     depends_on:
       postgres-splice-app-provider:
         condition: service_healthy
+      postgres-splice-app-user:
+        condition: service_healthy
+      postgres-splice-sv:
+        condition: service_healthy
+        required: false # KV check this maybe this just forward reference problem???
+      scan:
+        condition: service_started
+        required: false
       sv-app:
         condition: service_healthy
         required: false
@@ -493,6 +442,7 @@ services:
         condition: service_healthy
       participant:
         condition: service_healthy
+    restart: always
     networks:
       - ${DOCKER_NETWORK}
 
@@ -621,7 +571,7 @@ services:
     ports:
       - "${SV_UI_PORT}:80"
     depends_on:
-      - validator-sv
+      - validator-app-provider
       - wallet-web-ui-sv
       - scan
       - sv-app
@@ -651,28 +601,28 @@ services:
     profiles:
       - localnet
 
-  validator-sv:
-    extends:
-      file: docker/compose-super-validator.yaml
-      service: validator
-    container_name: validator-sv
-    logging: *default-logging
-    environment:
-      - *canton-metrics-config
-      - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=participant
-    ports:
-      - "4${VALIDATOR_ADMIN_API_PORT}:${VALIDATOR_ADMIN_API_PORT}"
-    depends_on:
-      postgres-splice-sv:
-        condition: service_healthy
-      participant:
-        condition: service_healthy
-      scan:
-        condition: service_started
-    networks:
-      - ${DOCKER_NETWORK}
-    profiles:
-      - localnet
+#  validator-sv:
+#    extends:
+#      file: docker/compose-super-validator.yaml
+#      service: validator
+#    container_name: validator-sv
+#    logging: *default-logging
+#    environment:
+#      - *canton-metrics-config
+#      - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=participant
+#    ports:
+#      - "4${VALIDATOR_ADMIN_API_PORT}:${VALIDATOR_ADMIN_API_PORT}"
+#    depends_on:
+#      postgres-splice-sv:
+#        condition: service_healthy
+#      participant:
+#        condition: service_healthy
+#      scan:
+#        condition: service_started
+#    networks:
+#      - ${DOCKER_NETWORK}
+#    profiles:
+#      - localnet
 
   scan:
     extends:
