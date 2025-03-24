@@ -28,9 +28,9 @@ receivers:
         - job_name: participant
           static_configs:
             - targets: [ "participant:${env:CANTON_METRICS_PORT}" ]
-        - job_name: validator-sv
-          static_configs:
-            - targets: [ "validator-sv:${env:CANTON_METRICS_PORT}" ]
+#        - job_name: validator-sv
+#          static_configs:
+#            - targets: [ "validator-sv:${env:CANTON_METRICS_PORT}" ]
         - job_name: domain-global
           static_configs:
             - targets: [ "global-synchronizer:${env:CANTON_METRICS_PORT}" ]

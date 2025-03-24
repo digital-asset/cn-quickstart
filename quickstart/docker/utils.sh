@@ -171,7 +171,7 @@ get_user_party() {
 get_dso_party_id() {
   local token=$1
   local validator=$2
-  curl_check "http://$validator:5003/api/validator/v0/scan-proxy/dso-party-id" "$token" "application/json" | jq -r .dso_party_id
+  curl_check "http://$validator/api/validator/v0/scan-proxy/dso-party-id" "$token" "application/json" | jq -r .dso_party_id
 }
 
 curl_check() {
