@@ -317,23 +317,13 @@ async function containerHasImage(containerName, image) {
             'start',
         ]);
 
-        console.log('[INFO] Creating four app-install requests (expected by end2end test)...');
-        for (let i = 1; i <= 4; i++) {
-            await runCommand('docker', [
-                'exec',
-                containerName,
-                'make',
-                'create-app-install-request',
-            ]);
-        }
-
         console.log('[INFO] Running integration tests via nested Docker container...');
         await runCommand('docker', [
             'exec',
             containerName,
             'bash',
             '-c',
-            'docker run --rm --net host --user "$(id -u):$(id -g)" ' +
+            'docker run --env-file "$PWD/.env" --rm --net host --user "$(id -u):$(id -g)" ' +
             '-v "$PWD/integration-test/":/work -w /work ' +
             'mcr.microsoft.com/playwright:v1.51.0-jammy ' +
             'npx playwright test --output /tmp/ --reporter line',

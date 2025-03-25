@@ -1,10 +1,10 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-import { test, expect, BrowserContext, Page } from '@playwright/test';
-import { getVisibleLocator } from './helpers';
+import {test, expect, BrowserContext, Page} from '@playwright/test';
+import {getVisibleLocator, createAppInstallRequests} from './helpers';
 
-// Reused runtime values (not including assertion description messages):
+// Reused runtime values
 const APP_PROVIDER_LOGIN_URL = 'http://app-provider.localhost:3000/login';
 const APP_PROVIDER_APP_INSTALLS_URL = 'http://app-provider.localhost:3000/app-installs';
 const APP_PROVIDER_LICENSES_URL = 'http://app-provider.localhost:3000/licenses';
@@ -15,7 +15,7 @@ const INSTALL_STATUS = 'INSTALL';
 const TEST_RENEWAL_REASON = 'test renewal reason';
 
 test.describe('AppInstall and Licensing workflow', () => {
-    test.describe.configure({ mode: 'serial' });
+    test.describe.configure({mode: 'serial'});
 
     let providerContext: BrowserContext;
     let providerPage: Page;
@@ -23,12 +23,13 @@ test.describe('AppInstall and Licensing workflow', () => {
     let userContext: BrowserContext;
     let userPage: Page;
 
-    test.beforeAll(async ({ browser }) => {
+    test.beforeAll(async ({browser, request}) => {
         providerContext = await browser.newContext();
         providerPage = await providerContext.newPage();
 
         userContext = await browser.newContext();
         userPage = await userContext.newPage();
+        await createAppInstallRequests(request);
     });
 
     test.afterAll(async () => {
@@ -118,7 +119,7 @@ test.describe('AppInstall and Licensing workflow', () => {
             'Should have exactly four rows in the app installs table. Assumes that make create-app-install-request was run four times.'
         ).toHaveCount(4);
         await expect(
-            providerPage.locator('td.app-install-status', { hasText: REQUEST_STATUS }),
+            providerPage.locator('td.app-install-status', {hasText: REQUEST_STATUS}),
             'There should be exactly four "REQUEST" status cells.'
         ).toHaveCount(4);
     });
@@ -130,7 +131,7 @@ test.describe('AppInstall and Licensing workflow', () => {
             'Should have exactly four rows in the app installs table. Assumes that make create-app-install-request was run four times.'
         ).toHaveCount(4);
         await expect(
-            userPage.locator('td.app-install-status', { hasText: REQUEST_STATUS }),
+            userPage.locator('td.app-install-status', {hasText: REQUEST_STATUS}),
             'There should be exactly four "REQUEST" status cells.'
         ).toHaveCount(4);
     });
@@ -148,19 +149,19 @@ test.describe('AppInstall and Licensing workflow', () => {
         await providerPage.goto(APP_PROVIDER_APP_INSTALLS_URL);
         await providerPage.locator('button.btn-accept-install').first().click();
         await expect(
-            providerPage.locator('td.app-install-status', { hasText: INSTALL_STATUS }),
+            providerPage.locator('td.app-install-status', {hasText: INSTALL_STATUS}),
             'Should have exactly one "INSTALL" status cell.'
         ).toHaveCount(1);
 
         await providerPage.locator('button.btn-accept-install').first().click();
         await expect(
-            providerPage.locator('td.app-install-status', { hasText: INSTALL_STATUS }),
+            providerPage.locator('td.app-install-status', {hasText: INSTALL_STATUS}),
             'Should have exactly two "INSTALL" status cells.'
         ).toHaveCount(2);
 
         await providerPage.locator('button.btn-accept-install').first().click();
         await expect(
-            providerPage.locator('td.app-install-status', { hasText: INSTALL_STATUS }),
+            providerPage.locator('td.app-install-status', {hasText: INSTALL_STATUS}),
             'Should have exactly three "INSTALL" status cells.'
         ).toHaveCount(3);
     });
@@ -177,7 +178,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     test('AppUser can see accepted AppInstalls', async () => {
         await userPage.goto(APP_PROVIDER_APP_INSTALLS_URL);
         await expect(
-            userPage.locator('td.app-install-status', { hasText: INSTALL_STATUS }),
+            userPage.locator('td.app-install-status', {hasText: INSTALL_STATUS}),
             'Should have exactly two "INSTALL" status cells.'
         ).toHaveCount(2);
     });
@@ -194,19 +195,19 @@ test.describe('AppInstall and Licensing workflow', () => {
     test('AppProvider can create licenses', async () => {
         await providerPage.goto(APP_PROVIDER_APP_INSTALLS_URL);
         await expect(
-            providerPage.locator('td.app-install-status', { hasText: INSTALL_STATUS }),
+            providerPage.locator('td.app-install-status', {hasText: INSTALL_STATUS}),
             'Should have one "INSTALL" status cell.'
         ).toHaveCount(1);
         await expect(
-            providerPage.locator('.app-install-num-licenses', { hasText: '0' }),
+            providerPage.locator('.app-install-num-licenses', {hasText: '0'}),
             'precondition: AppInstall should not have created any licenses yet'
         ).toHaveCount(1);
 
         await providerPage.locator('button.btn-create-license').first().click();
-        await expect(providerPage.locator('.app-install-num-licenses', { hasText: '1' })).toHaveCount(1);
+        await expect(providerPage.locator('.app-install-num-licenses', {hasText: '1'})).toHaveCount(1);
 
         await providerPage.locator('button.btn-create-license').first().click();
-        await expect(providerPage.locator('.app-install-num-licenses', { hasText: '2' })).toHaveCount(1);
+        await expect(providerPage.locator('.app-install-num-licenses', {hasText: '2'})).toHaveCount(1);
 
         await providerPage.goto(APP_PROVIDER_LICENSES_URL);
         await expect(providerPage.locator('.license-row')).toHaveCount(2);
@@ -245,10 +246,10 @@ test.describe('AppInstall and Licensing workflow', () => {
         await providerPage.locator('button.btn-issue-renewal').click();
 
         await expect(
-            providerPage.locator('td.license-renew-fee', { hasText: '100' })
+            providerPage.locator('td.license-renew-fee', {hasText: '100'})
         ).toHaveCount(1);
         await expect(
-            providerPage.locator('td.license-extension', { hasText: '30 days' })
+            providerPage.locator('td.license-extension', {hasText: '30 days'})
         ).toHaveCount(1);
     });
 
@@ -259,7 +260,7 @@ test.describe('AppInstall and Licensing workflow', () => {
         ).click();
         await userPage.waitForURL(/.*wallet.localhost.*/);
         await expect(
-            userPage.locator('.payment-description', { hasText: TEST_RENEWAL_REASON }),
+            userPage.locator('.payment-description', {hasText: TEST_RENEWAL_REASON}),
             'Matching license renewal reason visible'
         ).toBeVisible();
         await (
@@ -272,11 +273,11 @@ test.describe('AppInstall and Licensing workflow', () => {
         await providerPage.goto(APP_PROVIDER_LICENSES_URL);
         const completeRenewalBtn = providerPage.locator('.btn-complete-renewal');
         test.slow(); // payment processing can take a while
-        await expect(completeRenewalBtn, 'Paid license is renewable').toHaveCount(1, { timeout: 30_000 });
+        await expect(completeRenewalBtn, 'Paid license is renewable').toHaveCount(1, {timeout: 30_000});
         await completeRenewalBtn.click();
         await expect(
             completeRenewalBtn,
             'Complete Renewal button disappears after payment acceptance',
-        ).toHaveCount(0, { timeout: 30_000 });
+        ).toHaveCount(0, {timeout: 30_000});
     });
 });
