@@ -104,6 +104,7 @@ test.describe('AppInstall and Licensing workflow', () => {
         await (
             await getVisibleLocator(userPage, '#tap-button', 'Tap button is visible')
         ).click();
+        test.slow(); // CC processing can take a while
         await expect(
             userPage.locator('[data-testid="AccountBalanceWalletIcon"]').first(),
             'Balance update should show in transaction history.'
@@ -275,7 +276,7 @@ test.describe('AppInstall and Licensing workflow', () => {
         await completeRenewalBtn.click();
         await expect(
             completeRenewalBtn,
-            'Complete Renewal button disappears after payment acceptance'
-        ).toHaveCount(0);
+            'Complete Renewal button disappears after payment acceptance',
+        ).toHaveCount(0, { timeout: 30_000 });
     });
 });
