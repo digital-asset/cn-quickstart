@@ -40,16 +40,8 @@ services:
     mem_limit: 1g
     environment:
       _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
-  scan:
-    mem_limit: 1g
-    environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
   scan-web-ui:
     mem_limit: 256mb
-  sv-app:
-    mem_limit: 1g
-    environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
   sv-web-ui:
     mem_limit: 512mb
   validator-app-provider:
