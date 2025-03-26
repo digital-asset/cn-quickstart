@@ -112,7 +112,7 @@ restart-frontend: build-frontend ## Build and start the application
 # Run targets
 .PHONY: start
 start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up)
 
 
 .PHONY: stop
@@ -139,6 +139,9 @@ compose-config:
 logs: ## Show logs of Docker containers
 	$(call docker-compose, logs)
 
+.PHONY: logs-validator-app-provider
+logs-validator-app-provider: ## Show logs of Docker containers
+	$(call docker-compose, logs validator-app-provider)
 .PHONY: tail
 tail: ## Tail logs of Docker containers
 	$(call docker-compose, logs -f)
