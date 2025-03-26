@@ -142,6 +142,11 @@ logs: ## Show logs of Docker containers
 .PHONY: logs-validator-app-provider
 logs-validator-app-provider: ## Show logs of Docker containers
 	$(call docker-compose, logs validator-app-provider)
+
+.PHONY: logs-sv-app
+logs-sv-app: ## Show logs of Docker containers
+	$(call docker-compose, logs sv-app)
+
 .PHONY: tail
 tail: ## Tail logs of Docker containers
 	$(call docker-compose, logs -f)
