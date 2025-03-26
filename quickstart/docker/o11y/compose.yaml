@@ -167,49 +167,17 @@ services:
     profiles:
       - observability
 
-  postgres-splice-app-user-metrics:
+  postgres-metrics:
     image: ${POSTGRES_EXPORTER_IMAGE}:${POSTGRES_EXPORTER_VERSION}
-    container_name: postgres-splice-app-user-metrics
-    hostname: postgres-splice-app-user-metrics
+    container_name: postgres-metrics
+    hostname: postgres-metrics
     mem_limit: 32mb
     command:
       - --web.listen-address=:${POSTGRES_EXPORTER_METRICS_PORT}
     environment:
-      DATA_SOURCE_URI: "${SPLICE_APP_USER_DB_SERVER}:${SPLICE_APP_USER_DB_PORT}/postgres?sslmode=disable"
-      DATA_SOURCE_USER: "${SPLICE_APP_USER_DB_USER}"
-      DATA_SOURCE_PASS: "${SPLICE_APP_USER_DB_PASSWORD}"
-    networks:
-      - ${DOCKER_NETWORK}
-    profiles:
-      - observability
-
-  postgres-splice-app-provider-metrics:
-    image: ${POSTGRES_EXPORTER_IMAGE}:${POSTGRES_EXPORTER_VERSION}
-    container_name: postgres-splice-app-provider-metrics
-    hostname: postgres-splice-app-provider-metrics
-    mem_limit: 32mb
-    command:
-      - --web.listen-address=:${POSTGRES_EXPORTER_METRICS_PORT}
-    environment:
-      DATA_SOURCE_URI: "${SPLICE_APP_PROVIDER_DB_SERVER}:${SPLICE_APP_PROVIDER_DB_PORT}/postgres?sslmode=disable"
-      DATA_SOURCE_USER: "${SPLICE_APP_PROVIDER_DB_USER}"
-      DATA_SOURCE_PASS: "${SPLICE_APP_PROVIDER_DB_PASSWORD}"
-    networks:
-      - ${DOCKER_NETWORK}
-    profiles:
-      - observability
-
-  postgres-splice-sv-metrics:
-    image: ${POSTGRES_EXPORTER_IMAGE}:${POSTGRES_EXPORTER_VERSION}
-    container_name: postgres-splice-sv-metrics
-    hostname: postgres-splice-sv-metrics
-    mem_limit: 32mb
-    command:
-      - --web.listen-address=:${POSTGRES_EXPORTER_METRICS_PORT}
-    environment:
-      DATA_SOURCE_URI: "${SPLICE_SV_DB_SERVER}:${SPLICE_SV_DB_PORT}/postgres?sslmode=disable"
-      DATA_SOURCE_USER: "${SPLICE_SV_DB_USER}"
-      DATA_SOURCE_PASS: "${SPLICE_SV_DB_PASSWORD}"
+      DATA_SOURCE_URI: "${DB_SERVER}:${DB_PORT}/postgres?sslmode=disable"
+      DATA_SOURCE_USER: "${DB_USER}"
+      DATA_SOURCE_PASS: "${DB_PASSWORD}"
     networks:
       - ${DOCKER_NETWORK}
     profiles:

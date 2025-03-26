@@ -41,10 +41,7 @@ x-vars:
     start_period: 20s
 
 volumes:
-  postgres-splice-app-user:
-  postgres-splice-app-provider:
-  postgres-splice-sv:
-  postgres-keycloak:
+  postgres:
   domain-upgrade-dump:
 
 networks:
@@ -60,17 +57,17 @@ services:
 ###############################################################################################################
 ### Common Services
 ###############################################################################################################
-  keycloak-postgres:
-    image: postgres:14
-    container_name: keycloak-postgres
-    environment:
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: keycloakdb
-    volumes:
-      - postgres-keycloak:/var/lib/postgresql/data
-    networks:
-      - ${DOCKER_NETWORK:-splice_validator}
+#  keycloak-postgres:
+#    image: postgres:14
+#    container_name: keycloak-postgres
+#    environment:
+#      POSTGRES_USER: keycloak
+#      POSTGRES_PASSWORD: password
+#      POSTGRES_DB: keycloakdb
+#    volumes:
+#      - postgres-keycloak:/var/lib/postgresql/data
+#    networks:
+#      - ${DOCKER_NETWORK:-splice_validator}
 
   nginx-keycloak:
     image: "nginx:${NGINX_VERSION}"
@@ -99,9 +96,9 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_DB: postgres
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: password
-      KC_DB_URL_HOST: keycloak-postgres
+      KC_DB_USERNAME: ${DB_USER}
+      KC_DB_PASSWORD: ${DB_PASSWORD}
+      KC_DB_URL_HOST: postgres
       KC_DB_URL_DATABASE: keycloakdb
       KC_HEALTH_ENABLED: true
     healthcheck:
@@ -112,49 +109,9 @@ services:
     networks:
       - ${DOCKER_NETWORK:-splice_validator}
     command: ["start-dev", "--import-realm", "--http-port=8082", "--health-enabled=true", "--hostname-strict=false", "--proxy-headers=forwarded"]
-
-  # This is dummy service just for healthcheck purpose (always healthy)
-  # upstream splice-services (participant, validator) depend on it
-  # dedicated postgres-splice-app-user and postgres-splice-app-provider are used for real data
-  postgres-splice:
-    image: "alpine:3.21"
-    container_name: postgres-splice
-    command: tail -f /dev/null
-    healthcheck:
-      test: ["CMD", "true"]
-      interval: 3s
-      timeout: 2s
-      retries: 3
-    networks:
-      - ${DOCKER_NETWORK}
-
 ###############################################################################################################
 ### Application User
 ###############################################################################################################
-  postgres-splice-app-user:
-    extends:
-      file: docker/compose-validator.yaml
-      service: postgres-splice
-    container_name: postgres-splice-app-user
-    volumes:
-      - postgres-splice-app-user:/var/lib/postgresql/data
-      - ./docker/postgres/postgres-entrypoint.sh:/postgres-entrypoint.sh
-    environment:
-      - POSTGRES_USER=${SPLICE_APP_USER_DB_USER}
-      - POSTGRES_PASSWORD=${SPLICE_APP_USER_DB_PASSWORD}
-      - POSTGRES_DB=postgres
-      - CREATE_DATABASE_participant=participant
-      - CREATE_DATABASE_validator=validator
-    ports:
-      - "2${POSTGRES_PORT}:${POSTGRES_PORT}"
-    healthcheck:
-      test: "pg_isready -U ${SPLICE_APP_USER_DB_USER} -d postgres"
-    command:
-      - postgres
-      - -c
-      - max_connections=1000
-    logging: *default-logging
-
   nginx-app-user:
     image: "nginx:${NGINX_VERSION}"
     container_name: nginx-app-user
@@ -231,11 +188,11 @@ services:
     environment:
       SCRIBE_SOURCE_LEDGER_HOST: "participant"
       SCRIBE_SOURCE_LEDGER_PORT: "3${PARTICIPANT_LEDGER_API_PORT}"
-      SCRIBE_TARGET_POSTGRES_HOST: "${SCRIBE_POSTGRES_HOST}"
-      SCRIBE_TARGET_POSTGRES_PORT: "5432"
-      SCRIBE_TARGET_POSTGRES_USERNAME: "${SCRIBE_POSTGRES_USER}"
-      SCRIBE_TARGET_POSTGRES_PASSWORD: "${SCRIBE_POSTGRES_PASSWORD}"
-      SCRIBE_TARGET_POSTGRES_DATABASE: "${SCRIBE_POSTGRES_DATABASE}"
+      SCRIBE_TARGET_POSTGRES_HOST: "${DB_SERVER}"
+      SCRIBE_TARGET_POSTGRES_PORT: "${DB_PORT}"
+      SCRIBE_TARGET_POSTGRES_USERNAME: "${DB_USER}"
+      SCRIBE_TARGET_POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      SCRIBE_TARGET_POSTGRES_DATABASE: "scribe"
       SCRIBE_PIPELINE_OAUTH_CLIENTID: "${SCRIBE_PIPELINE_OAUTH_CLIENTID}"
       SCRIBE_PIPELINE_OAUTH_CLIENTSECRET: "${SCRIBE_PIPELINE_OAUTH_CLIENTSECRET}"
       SCRIBE_PIPELINE_OAUTH_SCOPE: "${SCRIBE_PIPELINE_OAUTH_SCOPE}"
@@ -256,7 +213,7 @@ services:
       - "ledger"
       - "postgres-document"
     depends_on:
-      postgres-splice-app-provider:
+      postgres:
         condition: service_healthy
       participant:
         condition: service_healthy
@@ -276,10 +233,10 @@ services:
     environment:
       LEDGER_HOST: "participant"
       LEDGER_PORT: "3${PARTICIPANT_LEDGER_API_PORT}"
-      POSTGRES_HOST: "${SCRIBE_POSTGRES_HOST}"
-      POSTGRES_DATABASE: "${SCRIBE_POSTGRES_DATABASE}"
-      POSTGRES_USERNAME: "${SCRIBE_POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${SCRIBE_POSTGRES_PASSWORD}"
+      POSTGRES_HOST: "${DB_SERVER}"
+      POSTGRES_DATABASE: "scribe"
+      POSTGRES_USERNAME: "${DB_USER}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
       OTEL_SERVICE_NAME: backend-service
       OTEL_TRACES_EXPORTER: otlp
       OTEL_LOGS_EXPORTER: otlp
@@ -315,30 +272,45 @@ services:
     networks:
       - ${DOCKER_NETWORK}
 
-  postgres-splice-app-provider:
-    extends:
-      file: docker/compose-validator.yaml
-      service: postgres-splice
-    container_name: postgres-splice-app-provider
+  postgres:
+    image: "postgres:${POSTGRES_VERSION}"
+    container_name: postgres
     volumes:
-      - postgres-splice-app-provider:/var/lib/postgresql/data
+      - postgres:/var/lib/postgresql/data
       - ./docker/postgres/postgres-entrypoint.sh:/postgres-entrypoint.sh
     environment:
-      - POSTGRES_USER=${SPLICE_APP_PROVIDER_DB_USER}
-      - POSTGRES_PASSWORD=${SPLICE_APP_PROVIDER_DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=postgres
-      - CREATE_DATABASE_participant=participant
-      - CREATE_DATABASE_validator=validator
-      - CREATE_DATABASE_scribe=${SCRIBE_POSTGRES_DATABASE}
+      - CREATE_DATABASE_01=participant-app-provider
+      - CREATE_DATABASE_02=validator-app-provider
+      - CREATE_DATABASE_03=scribe
+      - CREATE_DATABASE_04=participant-app-user
+      - CREATE_DATABASE_05=validator-app-user
+      - CREATE_DATABASE_06=participant-sv
+      - CREATE_DATABASE_07=validator-sv
+      - CREATE_DATABASE_08=sequencer
+      - CREATE_DATABASE_09=mediator
+      - CREATE_DATABASE_10=scan
+      - CREATE_DATABASE_11=sv
+      - CREATE_DATABASE_12=keycloakdb
     ports:
-      - "3${POSTGRES_PORT}:${POSTGRES_PORT}"
+      - "${DB_PORT}:${DB_PORT}"
+    entrypoint: /postgres-entrypoint.sh
     healthcheck:
-      test: "pg_isready -U ${SPLICE_APP_PROVIDER_DB_USER} -d postgres"
+      test: "pg_isready -U ${DB_USER} -d postgres"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 60s
+    user: "postgres"
     command:
       - postgres
       - -c
       - max_connections=1000
     logging: *default-logging
+    networks:
+      - ${DOCKER_NETWORK:-splice_validator}
 
   participant:
     image: "${IMAGE_REPO}canton-participant:${IMAGE_TAG}"
@@ -349,11 +321,8 @@ services:
     logging: *default-logging
     volumes:
       - ./docker/participant/app.conf:/app/app.conf
+      - ./docker/participant/sv.conf:/app/sv.conf
     environment:
-      - CANTON_PARTICIPANT_POSTGRES_SERVER=${SPLICE_APP_PROVIDER_DB_SERVER}
-      - CANTON_PARTICIPANT_POSTGRES_USER=${SPLICE_APP_PROVIDER_DB_USER}
-      - CANTON_PARTICIPANT_POSTGRES_PASSWORD=${SPLICE_APP_PROVIDER_DB_PASSWORD}
-      - CANTON_PARTICIPANT_POSTGRES_PORT=${SPLICE_APP_PROVIDER_DB_PORT}
       - AUTH_JWKS_URL=${AUTH_APP_PROVIDER_JWK_SET_URL}
       - CANTON_PARTICIPANT_ADMIN_USER_NAME=${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}
       - AUTH_TARGET_AUDIENCE=${AUTH_APP_PROVIDER_AUDIENCE}
@@ -376,12 +345,7 @@ services:
       retries: 10
       start_period: 20s
     depends_on:
-      postgres-splice-sv:
-        condition: service_healthy
-        required: false
-      postgres-splice-app-provider:
-        condition: service_healthy
-      postgres-splice-app-user:
+      postgres:
         condition: service_healthy
       keycloak:
         condition: service_healthy
@@ -426,16 +390,8 @@ services:
       - "3${VALIDATOR_ADMIN_API_PORT}:3${VALIDATOR_ADMIN_API_PORT}"
       - "2${VALIDATOR_ADMIN_API_PORT}:2${VALIDATOR_ADMIN_API_PORT}"
     depends_on:
-      postgres-splice-app-provider:
+      postgres:
         condition: service_healthy
-      postgres-splice-app-user:
-        condition: service_healthy
-      postgres-splice-sv:
-        condition: service_healthy
-        required: false # KV check this maybe this just forward reference problem???
-#      sv-app:
-#        condition: service_healthy
-#        required: false
       keycloak:
         condition: service_healthy
       participant:
@@ -577,94 +533,6 @@ services:
       - ${DOCKER_NETWORK}
     profiles:
       - localnet
-  postgres-splice-sv:
-    extends:
-      file: docker/compose-super-validator.yaml
-      service: postgres-splice-sv
-    container_name: postgres-splice-sv
-    volumes:
-      - postgres-splice-sv:/var/lib/postgresql/data
-      - ./docker/postgres/postgres-entrypoint.sh:/postgres-entrypoint.sh
-    command:
-      - postgres
-      - -c
-      - max_connections=1000
-    ports:
-      - "4${POSTGRES_PORT}:${POSTGRES_PORT}"
-    logging: *default-logging
-    networks:
-      - ${DOCKER_NETWORK}
-    profiles:
-      - localnet
-
-#  validator-sv:
-#    extends:
-#      file: docker/compose-super-validator.yaml
-#      service: validator
-#    container_name: validator-sv
-#    logging: *default-logging
-#    environment:
-#      - *canton-metrics-config
-#      - SPLICE_APP_VALIDATOR_PARTICIPANT_ADDRESS=participant
-#    ports:
-#      - "4${VALIDATOR_ADMIN_API_PORT}:${VALIDATOR_ADMIN_API_PORT}"
-#    depends_on:
-#      postgres-splice-sv:
-#        condition: service_healthy
-#      participant:
-#        condition: service_healthy
-#      scan:
-#        condition: service_started
-#    networks:
-#      - ${DOCKER_NETWORK}
-#    profiles:
-#      - localnet
-
-#  scan:
-#    extends:
-#      file: docker/compose-super-validator.yaml
-#      service: scan
-#    container_name: scan
-#    logging: *default-logging
-#    environment:
-#      - *canton-metrics-config
-##      - SPLICE_APP_SCAN_PARTICIPANT_ADDRESS=participant
-##      - |
-##        ADDITIONAL_CONFIG_API_PORTS=
-##            canton.scan-apps.scan-app.participant-client{
-##              admin-api.port = 4${PARTICIPANT_ADMIN_API_PORT}
-##              ledger-api.client-config.port = 4${PARTICIPANT_LEDGER_API_PORT}
-##            }
-#    depends_on:
-#      postgres-splice-sv:
-#        condition: service_healthy
-#    networks:
-#      - ${DOCKER_NETWORK}
-#    profiles:
-#      - localnet
-
-#  sv-app:
-#    extends:
-#      file: docker/compose-super-validator.yaml
-#      service: sv-app
-#    container_name: sv-app
-#    logging: *default-logging
-#    environment:
-#      - *canton-metrics-config
-#      - SPLICE_APP_SV_PARTICIPANT_ADDRESS=participant
-#      - |
-#        ADDITIONAL_CONFIG_API_PORTS=
-#            canton.sv-apps.sv.participant-client{
-#              admin-api.port = 4${PARTICIPANT_ADMIN_API_PORT}
-#              ledger-api.client-config.port = 4${PARTICIPANT_LEDGER_API_PORT}
-#            }
-#    depends_on:
-#      postgres-splice-sv:
-#        condition: service_healthy
-#    networks:
-#      - ${DOCKER_NETWORK}
-#    profiles:
-#      - localnet
 
   wallet-web-ui-sv:
     extends:
