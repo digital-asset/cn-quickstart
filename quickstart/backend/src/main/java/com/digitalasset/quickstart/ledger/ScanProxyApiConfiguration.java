@@ -15,7 +15,7 @@ public class ScanProxyApiConfiguration {
     @Bean
     public ScanProxyApi scanProxyApi(TokenProvider tokenProvider) {
         ApiClient apiClient = new ApiClient();
-        apiClient.updateBaseUri("http://validator-app-provider:35003/api/validator"); // TODO: configure this properly
+        apiClient.updateBaseUri("http://splice:35003/api/validator"); // TODO: configure this properly
         apiClient.setRequestInterceptor(requestBuilder -> {
             requestBuilder.header("Authorization", "Bearer " + tokenProvider.getToken());
         });
