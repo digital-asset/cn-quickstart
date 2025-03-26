@@ -34,12 +34,6 @@ receivers:
         - job_name: domain-global
           static_configs:
             - targets: [ "global-synchronizer:${env:CANTON_METRICS_PORT}" ]
-        - job_name: scan
-          static_configs:
-            - targets: [ "scan:${env:CANTON_METRICS_PORT}" ]
-        - job_name: sv-app
-          static_configs:
-            - targets: [ "sv-app:${env:CANTON_METRICS_PORT}" ]
         - job_name: nginx-sv
           static_configs:
             - targets: [ "nginx-sv-metrics:${env:NGINX_EXPORTER_METRICS_PORT}" ]

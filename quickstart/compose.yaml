@@ -399,6 +399,7 @@ services:
     volumes:
       - ./docker/validator/entrypoint.sh:/validator-entrypoint.sh
       - ./docker/validator/app.conf:/app/app.conf
+      - ./docker/validator/sv.conf:/app/sv.conf
       - ./docker/validator/bootstrap.sc:/app/bootstrap.sc
       - domain-upgrade-dump:/domain-upgrade-dump
     entrypoint: /validator-entrypoint.sh
@@ -406,7 +407,8 @@ services:
     healthcheck:
       test: [
         "CMD-SHELL",
-        "curl -f http://localhost:4${VALIDATOR_ADMIN_API_PORT}/api/validator/readyz && curl -f http://localhost:3${VALIDATOR_ADMIN_API_PORT}/api/validator/readyz && curl -f http://localhost:2${VALIDATOR_ADMIN_API_PORT}/api/validator/readyz || exit 1"
+# TODO readiness check will depend whether we are in devnet or localnet mode as sv components are not started in devnet
+        "curl -f http://localhost:4${VALIDATOR_ADMIN_API_PORT}/api/validator/readyz && curl -f http://localhost:3${VALIDATOR_ADMIN_API_PORT}/api/validator/readyz && curl -f http://localhost:2${VALIDATOR_ADMIN_API_PORT}/api/validator/readyz && curl -f http://localhost:5012/api/scan/readyz && curl -f http://localhost:5014/api/sv/readyz || exit 1"
       ]
       interval: 20s
       start_interval: 5s
@@ -419,7 +421,6 @@ services:
       - ONBOARDING_SECRET_URL=${ONBOARDING_SECRET_URL}
       - SPLICE_APP_VALIDATOR_SCAN_ADDRESS=${SCAN_ADDRESS}
       - SPLICE_APP_VALIDATOR_SV_SPONSOR_ADDRESS=${SPONSOR_SV_ADDRESS}
-      - SPLICE_APP_VALIDATOR_ONBOARDING_SECRET=${ONBOARDING_SECRET}
     ports:
       - "4${VALIDATOR_ADMIN_API_PORT}:4${VALIDATOR_ADMIN_API_PORT}"
       - "3${VALIDATOR_ADMIN_API_PORT}:3${VALIDATOR_ADMIN_API_PORT}"
@@ -432,12 +433,9 @@ services:
       postgres-splice-sv:
         condition: service_healthy
         required: false # KV check this maybe this just forward reference problem???
-      scan:
-        condition: service_started
-        required: false
-      sv-app:
-        condition: service_healthy
-        required: false
+#      sv-app:
+#        condition: service_healthy
+#        required: false
       keycloak:
         condition: service_healthy
       participant:
@@ -573,8 +571,6 @@ services:
     depends_on:
       - validator-app-provider
       - wallet-web-ui-sv
-      - scan
-      - sv-app
     restart: always
     logging: *default-logging
     networks:
@@ -624,51 +620,51 @@ services:
 #    profiles:
 #      - localnet
 
-  scan:
-    extends:
-      file: docker/compose-super-validator.yaml
-      service: scan
-    container_name: scan
-    logging: *default-logging
-    environment:
-      - *canton-metrics-config
-      - SPLICE_APP_SCAN_PARTICIPANT_ADDRESS=participant
-      - |
-        ADDITIONAL_CONFIG_API_PORTS=
-            canton.scan-apps.scan-app.participant-client{ 
-              admin-api.port = 4${PARTICIPANT_ADMIN_API_PORT}
-              ledger-api.client-config.port = 4${PARTICIPANT_LEDGER_API_PORT}
-            }
-    depends_on:
-      postgres-splice-sv:
-        condition: service_healthy
-    networks:
-      - ${DOCKER_NETWORK}
-    profiles:
-      - localnet
+#  scan:
+#    extends:
+#      file: docker/compose-super-validator.yaml
+#      service: scan
+#    container_name: scan
+#    logging: *default-logging
+#    environment:
+#      - *canton-metrics-config
+##      - SPLICE_APP_SCAN_PARTICIPANT_ADDRESS=participant
+##      - |
+##        ADDITIONAL_CONFIG_API_PORTS=
+##            canton.scan-apps.scan-app.participant-client{
+##              admin-api.port = 4${PARTICIPANT_ADMIN_API_PORT}
+##              ledger-api.client-config.port = 4${PARTICIPANT_LEDGER_API_PORT}
+##            }
+#    depends_on:
+#      postgres-splice-sv:
+#        condition: service_healthy
+#    networks:
+#      - ${DOCKER_NETWORK}
+#    profiles:
+#      - localnet
 
-  sv-app:
-    extends:
-      file: docker/compose-super-validator.yaml
-      service: sv-app
-    container_name: sv-app
-    logging: *default-logging
-    environment:
-      - *canton-metrics-config
-      - SPLICE_APP_SV_PARTICIPANT_ADDRESS=participant
-      - |
-        ADDITIONAL_CONFIG_API_PORTS=
-            canton.sv-apps.sv.participant-client{ 
-              admin-api.port = 4${PARTICIPANT_ADMIN_API_PORT}
-              ledger-api.client-config.port = 4${PARTICIPANT_LEDGER_API_PORT}
-            }
-    depends_on:
-      postgres-splice-sv:
-        condition: service_healthy
-    networks:
-      - ${DOCKER_NETWORK}
-    profiles:
-      - localnet
+#  sv-app:
+#    extends:
+#      file: docker/compose-super-validator.yaml
+#      service: sv-app
+#    container_name: sv-app
+#    logging: *default-logging
+#    environment:
+#      - *canton-metrics-config
+#      - SPLICE_APP_SV_PARTICIPANT_ADDRESS=participant
+#      - |
+#        ADDITIONAL_CONFIG_API_PORTS=
+#            canton.sv-apps.sv.participant-client{
+#              admin-api.port = 4${PARTICIPANT_ADMIN_API_PORT}
+#              ledger-api.client-config.port = 4${PARTICIPANT_LEDGER_API_PORT}
+#            }
+#    depends_on:
+#      postgres-splice-sv:
+#        condition: service_healthy
+#    networks:
+#      - ${DOCKER_NETWORK}
+#    profiles:
+#      - localnet
 
   wallet-web-ui-sv:
     extends:
