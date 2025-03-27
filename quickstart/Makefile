@@ -24,7 +24,7 @@ export GRADLE_OPTS = -Dorg.gradle.daemon=false
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env
+DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file ports.env
 DOCKER_COMPOSE_FILES := -f compose.yaml
 
 # Default to adding resource constraints for Quickstart compose stack.
@@ -112,7 +112,7 @@ restart-frontend: build-frontend ## Build and start the application
 # Run targets
 .PHONY: start
 start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
 
 
 .PHONY: stop
