@@ -24,7 +24,7 @@ export GRADLE_OPTS = -Dorg.gradle.daemon=false
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env
+DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file ports.env
 DOCKER_COMPOSE_FILES := -f compose.yaml
 
 # Default to adding resource constraints for Quickstart compose stack.
