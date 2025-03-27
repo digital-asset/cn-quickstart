@@ -8,9 +8,9 @@ source /app/utils.sh
 
 APP_PROVIDER_PARTICIPANT_ADMIN_TOKEN=$(get_admin_token $AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET $AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID $AUTH_APP_PROVIDER_TOKEN_URL)
 
-if [ ! -f /tmp/onboarding-dars-uploaded ]; then
+if [ ! -f /tmp/app-provider-onboarding-dars-uploaded ]; then
   upload_dars "$APP_PROVIDER_PARTICIPANT_ADMIN_TOKEN" "canton:37575"
-  touch /tmp/onboarding-dars-uploaded
+  touch /tmp/app-provider-onboarding-dars-uploaded
 fi
 
 APP_PROVIDER_PARTY=$(get_user_party "$APP_PROVIDER_PARTICIPANT_ADMIN_TOKEN" $AUTH_APP_PROVIDER_VALIDATOR_USER_ID "canton:37575")
