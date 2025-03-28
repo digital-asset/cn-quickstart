@@ -12,6 +12,7 @@ networks:
 services:
   postgres-splice-sv:
     image: "postgres:${SPLICE_POSTGRES_VERSION}"
+    mem_limit: 1G
     environment:
       - POSTGRES_USER=${SPLICE_SV_DB_USER}
       - POSTGRES_PASSWORD=${SPLICE_SV_DB_PASSWORD}
