@@ -83,7 +83,7 @@ const AuthenticatedLinks: React.FC = () => {
                 </ul>
                 <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li className="nav-item">
-                        <span className="nav-link" style={{fontWeight: 'bold'}}>
+                        <span className="nav-link" style={{fontWeight: 'bold'}} id="user-name">
                             {user.name}
                         </span>
                     </li>

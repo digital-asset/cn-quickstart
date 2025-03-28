@@ -161,6 +161,25 @@ first-run-setup:
 	@echo "Environment file generated, Please re-run your previous command to continue."
 	@exit 2
 
+.PHONY: integration-test
+integration-test: integration-test/node_modules build ## Run integration tests
+	node ./integration-test/setup-and-run-tests.js
+
+.PHONY: integration-test-ci
+integration-test-ci: integration-test/node_modules start ## Run integration tests using host's application deployment
+	@# The integration test expects four AppInstallRequests
+	docker run --network host --rm -it --user "$(shell id -u):$(shell id -g)" \
+		-v "$(PWD)/integration-test":/work:ro \
+		--env-file .env \
+		-e NPM_CONFIG_CACHE=/tmp/.npm \
+		-w /work \
+		mcr.microsoft.com/playwright:v1.51.0-jammy \
+		npx playwright test --reporter list --output /tmp/playwright-report
+
+.PHONY: integration-test/node_modules
+integration-test/node_modules:
+	cd integration-test && npm install
+
 # Console
 .PHONY: console-app-provider
 console-app-provider: ## Start the Canton console

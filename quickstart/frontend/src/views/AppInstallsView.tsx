@@ -6,18 +6,14 @@ import { useAppInstallStore } from '../stores/appInstallStore';
 import { useUserStore } from '../stores/userStore';
 import type { AppInstallUnified } from '../types';
 
-/**
- * Displays a list of AppInstallUnified items with always-visible action buttons.
- */
 const AppInstallsView: React.FC = () => {
   const {
     unifiedInstalls,
     fetchAll,
     accept,
     reject,
-    cancelRequest,
-    cancelInstall,
     createLicense,
+    cancelInstall,
   } = useAppInstallStore();
   const { user, fetchUser } = useUserStore();
 
@@ -33,13 +29,11 @@ const AppInstallsView: React.FC = () => {
   return (
       <div>
         <h2>App Installs</h2>
-
         <div className="alert alert-info" role="alert">
           <strong>Note:</strong> Run <code>make create-app-install-request</code> to submit an AppInstallRequest
         </div>
-
         <div className="mt-4">
-          <table className="table table-fixed">
+          <table className="table table-fixed" id="app-installs-table">
             <thead>
             <tr>
               <th style={{ width: '150px' }}>Contract ID</th>
@@ -54,58 +48,62 @@ const AppInstallsView: React.FC = () => {
             </thead>
             <tbody>
             {unifiedInstalls.map((item: AppInstallUnified) => (
-                <tr key={item.contractId}>
-                  <td className="ellipsis-cell">{item.contractId}</td>
-                  <td className="ellipsis-cell">{item.status}</td>
-                  <td className="ellipsis-cell">{item.dso}</td>
-                  <td className="ellipsis-cell">{item.provider}</td>
-                  <td className="ellipsis-cell">{item.user}</td>
-                  <td className="ellipsis-cell">
+                <tr key={item.contractId} className="app-install-row">
+                  <td className="ellipsis-cell app-install-contract-id">
+                    {item.contractId}
+                  </td>
+                  <td className="ellipsis-cell app-install-status">
+                    {item.status}
+                  </td>
+                  <td className="ellipsis-cell app-install-dso">
+                    {item.dso}
+                  </td>
+                  <td className="ellipsis-cell app-install-provider">
+                    {item.provider}
+                  </td>
+                  <td className="ellipsis-cell app-install-user">
+                    {item.user}
+                  </td>
+                  <td className="ellipsis-cell app-install-meta">
                     {item.meta ? JSON.stringify(item.meta) : '{}'}
                   </td>
-                  <td>{item.numLicensesCreated}</td>
-                  <td>
+                  <td className="app-install-num-licenses">
+                    {item.numLicensesCreated}
+                  </td>
+                  <td className="app-install-actions">
                     {item.status === 'REQUEST' ? (
+                        user?.isAdmin ? (
+                            <div className="btn-group" role="group">
+                              <button
+                                  className="btn btn-success btn-accept-install"
+                                  onClick={() => accept(item.contractId, {}, {})}
+                              >
+                                Accept
+                              </button>
+                              <button
+                                  className="btn btn-warning btn-reject-install"
+                                  onClick={() => reject(item.contractId, {})}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                        ) : null
+                    ) : (
                         <div className="btn-group" role="group">
-                          {user?.isAdmin && (
-                              <>
-                                <button
-                                    className="btn btn-success"
-                                    onClick={() => accept(item.contractId, {}, {})}
-                                >
-                                  Accept
-                                </button>
-                                <button
-                                    className="btn btn-warning"
-                                    onClick={() => reject(item.contractId, {})}
-                                >
-                                  Reject
-                                </button>
-                              </>
-                          )}
                           <button
-                              className="btn btn-danger"
-                              onClick={() => cancelRequest(item.contractId, {})}
+                              className="btn btn-danger btn-cancel-install"
+                              onClick={() => cancelInstall(item.contractId, {})}
                           >
                             Cancel
                           </button>
-                        </div>
-                    ) : (
-                        <div className="btn-group" role="group">
                           {user?.isAdmin && (
                               <button
-                                  className="btn btn-success"
+                                  className="btn btn-success btn-create-license"
                                   onClick={() => createLicense(item.contractId, {})}
                               >
                                 Create License
                               </button>
                           )}
-                          <button
-                              className="btn btn-danger"
-                              onClick={() => cancelInstall(item.contractId, {})}
-                          >
-                            Cancel Install
-                          </button>
                         </div>
                     )}
                   </td>
@@ -119,4 +117,3 @@ const AppInstallsView: React.FC = () => {
 };
 
 export default AppInstallsView;
-
