@@ -24,7 +24,7 @@ export GRADLE_OPTS = -Dorg.gradle.daemon=false
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file ports.env
+DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file env/ports.env
 DOCKER_COMPOSE_FILES := -f compose.yaml
 
 # Default to adding resource constraints for Quickstart compose stack.
@@ -49,7 +49,9 @@ endif
 DOCKER_COMPOSE_PROFILES :=
 
 ifeq ($(LOCALNET_ENABLED),true)
-    DOCKER_COMPOSE_PROFILES += --profile localnet --env-file docker/localnet.env
+    DOCKER_COMPOSE_PROFILES += --profile localnet --env-file env/localnet.env
+else
+    DOCKER_COMPOSE_PROFILES += --env-file env/devnet.env
 endif
 
 ifeq ($(OBSERVABILITY_ENABLED),true)
