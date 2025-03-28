@@ -87,7 +87,7 @@ services:
       - max_connections=1000
     logging: *default-logging
     networks:
-      - ${DOCKER_NETWORK:-splice_validator}
+      - ${DOCKER_NETWORK}
 
   nginx-keycloak:
     image: "nginx:${NGINX_VERSION}"
@@ -131,14 +131,16 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - ${DOCKER_NETWORK:-splice_validator}
+      - ${DOCKER_NETWORK}
 
   canton:
     image: "${IMAGE_REPO}canton-participant:${IMAGE_TAG}"
     env_file:
-      - ./ports.env
+      - ./env/ports.env
+      - ./env/app-provider.env
+      - ./env/app-user.env
+      - ./env/splice.env
     container_name: canton
-    hostname: sequencer-mediator
     logging: *default-logging
     volumes:
       - ./docker/canton/health-check.sh:/app/health-check.sh
@@ -149,12 +151,7 @@ services:
       - DB_PORT=${DB_PORT}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - AUTH_APP_PROVIDER_VALIDATOR_USER_ID=${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}
-      - AUTH_APP_PROVIDER_AUDIENCE=${AUTH_APP_PROVIDER_AUDIENCE}
-      - AUTH_APP_PROVIDER_JWK_SET_URL=${AUTH_APP_PROVIDER_JWK_SET_URL}
-      - AUTH_APP_USER_VALIDATOR_USER_ID=${AUTH_APP_USER_VALIDATOR_USER_ID}
-      - AUTH_APP_USER_AUDIENCE=${AUTH_APP_USER_AUDIENCE}
-      - AUTH_APP_USER_JWK_SET_URL=${AUTH_APP_USER_JWK_SET_URL}
+      - LOCALNET_ENABLED=${LOCALNET_ENABLED}
       - *canton-metrics-config
     ports:
       - "4${PARTICIPANT_LEDGER_API_PORT}:4${PARTICIPANT_LEDGER_API_PORT}"
@@ -186,13 +183,16 @@ services:
     image: "${IMAGE_REPO}validator-app:${IMAGE_TAG}"
     container_name: splice
     env_file:
-      - ./ports.env
+      - ./env/ports.env
+      - ./env/app-provider.env
+      - ./env/app-user.env
+      - ./env/splice.env
     volumes:
       - ./docker/splice/entrypoint.sh:/splice-entrypoint.sh
       - ./docker/splice/health-check.sh:/app/health-check.sh
       - ./docker/splice/bootstrap.sc:/app/bootstrap.sc
       - ./docker/splice/app.conf:/app/app.conf
-      - ${SV_SPLICE_CONFIG:-./docker/empty}:/app/sv.conf
+      - ${SV_SPLICE_CONFIG:-./docker/splice/sv-off.conf}:/app/sv.conf
       - domain-upgrade-dump:/domain-upgrade-dump
     entrypoint: /splice-entrypoint.sh
     logging: *default-logging
@@ -208,37 +208,14 @@ services:
       - DB_PORT=${DB_PORT}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - *canton-metrics-config
       - ONBOARDING_SECRET_URL=${ONBOARDING_SECRET_URL}
       - SPLICE_APP_VALIDATOR_SCAN_ADDRESS=${SCAN_ADDRESS}
       - SPLICE_APP_VALIDATOR_SV_SPONSOR_ADDRESS=${SPONSOR_SV_ADDRESS}
-      - SPLICE_SV_IS_DEVNET=${SPLICE_SV_IS_DEVNET}
       - MIGRATION_ID=${MIGRATION_ID}
       - APP_PROVIDER_VALIDATOR_ONBOARDING_SECRET=${APP_PROVIDER_VALIDATOR_ONBOARDING_SECRET}
-      - APP_PROVIDER_PARTY_HINT=${APP_PROVIDER_PARTY_HINT}
-      - AUTH_APP_PROVIDER_WELLKNOWN_URL=${AUTH_APP_PROVIDER_WELLKNOWN_URL}
-      - AUTH_APP_PROVIDER_JWK_SET_URL=${AUTH_APP_PROVIDER_JWK_SET_URL}
-      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID}
-      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
-      - AUTH_APP_PROVIDER_VALIDATOR_USER_ID=${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}
-      - AUTH_APP_PROVIDER_AUDIENCE=${AUTH_APP_PROVIDER_AUDIENCE}
-      - AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID}
       - APP_USER_VALIDATOR_ONBOARDING_SECRET=${APP_USER_VALIDATOR_ONBOARDING_SECRET}
-      - APP_USER_PARTY_HINT=${APP_USER_PARTY_HINT}
-      - AUTH_APP_USER_WELLKNOWN_URL=${AUTH_APP_USER_WELLKNOWN_URL}
-      - AUTH_APP_USER_JWK_SET_URL=${AUTH_APP_USER_JWK_SET_URL}
-      - AUTH_APP_USER_VALIDATOR_CLIENT_ID=${AUTH_APP_USER_VALIDATOR_CLIENT_ID}
-      - AUTH_APP_USER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
-      - AUTH_APP_USER_VALIDATOR_USER_ID=${AUTH_APP_USER_VALIDATOR_USER_ID}
-      - AUTH_APP_USER_AUDIENCE=${AUTH_APP_USER_AUDIENCE}
-      - AUTH_APP_USER_WALLET_ADMIN_USER_ID=${AUTH_APP_USER_WALLET_ADMIN_USER_ID}
-      - SPLICE_APP_VALIDATOR_AUTH_AUDIENCE=${SPLICE_APP_VALIDATOR_AUTH_AUDIENCE}
-      - SPLICE_APP_UI_NETWORK_NAME=${SPLICE_APP_UI_NETWORK_NAME}
-      - SPLICE_APP_UI_NETWORK_FAVICON_URL=${SPLICE_APP_UI_NETWORK_FAVICON_URL}
-      - SPLICE_APP_UI_AMULET_NAME=${SPLICE_APP_UI_AMULET_NAME}
-      - SPLICE_APP_UI_AMULET_NAME_ACRONYM=${SPLICE_APP_UI_AMULET_NAME_ACRONYM}
-      - SPLICE_APP_UI_NAME_SERVICE_NAME=${SPLICE_APP_UI_NAME_SERVICE_NAME}
-      - SPLICE_APP_UI_NAME_SERVICE_NAME_ACRONYM=${SPLICE_APP_UI_NAME_SERVICE_NAME_ACRONYM}
+      - LOCALNET_ENABLED=${LOCALNET_ENABLED}
+      - *canton-metrics-config
     ports:
       - "4${VALIDATOR_ADMIN_API_PORT}:4${VALIDATOR_ADMIN_API_PORT}"
       - "3${VALIDATOR_ADMIN_API_PORT}:3${VALIDATOR_ADMIN_API_PORT}"
@@ -257,6 +234,9 @@ services:
   splice-auto-config:
     build: ./docker/splice-auto-config/
     container_name: splice-auto-config
+    env_file:
+      - ./env/app-provider.env
+      - ./env/app-user.env
     volumes:
       - ./docker/splice-auto-config/health-check.sh:/app/health-check.sh
       - ./docker/splice-auto-config/app-provider.sh:/app/app-provider.sh
@@ -264,26 +244,6 @@ services:
       - ./docker/utils.sh:/app/utils.sh
       - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
       - ./daml/assets/.daml/dist/quickstart-assets-0.0.1.dar:/canton/dars/quickstart-assets-0.0.1.dar
-    environment:
-      - AUTH_APP_PROVIDER_VALIDATOR_USER_ID=${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}
-      - AUTH_APP_PROVIDER_VALIDATOR_USER_NAME=${AUTH_APP_PROVIDER_VALIDATOR_USER_NAME}
-      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID}
-      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
-      - AUTH_APP_PROVIDER_PQS_USER_ID=${AUTH_APP_PROVIDER_PQS_USER_ID}
-      - AUTH_APP_PROVIDER_PQS_USER_NAME=${AUTH_APP_PROVIDER_PQS_USER_NAME}
-      - AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID}
-      - AUTH_APP_PROVIDER_WALLET_ADMIN_USER_NAME=${AUTH_APP_PROVIDER_WALLET_ADMIN_USER_NAME}
-      - AUTH_APP_PROVIDER_BACKEND_USER_ID=${AUTH_APP_PROVIDER_BACKEND_USER_ID}
-      - AUTH_APP_PROVIDER_BACKEND_USER_NAME=${AUTH_APP_PROVIDER_BACKEND_USER_NAME}
-      - AUTH_APP_PROVIDER_TOKEN_URL=${AUTH_APP_PROVIDER_TOKEN_URL}
-      - AUTH_APP_USER_VALIDATOR_USER_ID=${AUTH_APP_USER_VALIDATOR_USER_ID}
-      - AUTH_APP_USER_VALIDATOR_USER_NAME=${AUTH_APP_USER_VALIDATOR_USER_NAME}
-      - AUTH_APP_USER_VALIDATOR_CLIENT_ID=${AUTH_APP_USER_VALIDATOR_CLIENT_ID}
-      - AUTH_APP_USER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
-      - AUTH_APP_USER_WALLET_ADMIN_USER_ID=${AUTH_APP_USER_WALLET_ADMIN_USER_ID}
-      - AUTH_APP_USER_WALLET_ADMIN_USER_NAME=${AUTH_APP_USER_WALLET_ADMIN_USER_NAME}
-      - AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD=${AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD}
-      - AUTH_APP_USER_TOKEN_URL=${AUTH_APP_USER_TOKEN_URL}
     healthcheck:
       test: ["CMD", "bash", "/app/health-check.sh"]
       interval: 5s
@@ -320,19 +280,21 @@ services:
     logging: *default-logging
     networks:
       - ${DOCKER_NETWORK}
+#    profiles:
+#      - app-user
 
   wallet-web-ui-app-user:
-    extends:
-      file: docker/compose-validator.yaml
-      service: wallet-web-ui
+    image: "${IMAGE_REPO}wallet-web-ui:${IMAGE_TAG}"
     container_name: wallet-web-ui-app-user
+    env_file:
+      - ./env/app-user.env
+      - ./env/splice.env
+      - ./env/wallet.app-user.env
     logging: *default-logging
-    environment:
-      - SPLICE_APP_UI_AUTH_AUDIENCE=${AUTH_APP_USER_AUDIENCE}
-      - SPLICE_APP_UI_AUTH_CLIENT_ID=${AUTH_APP_USER_WALLET_UI_CLIENT_ID}
-      - SPLICE_APP_UI_AUTH_URL=${AUTH_APP_USER_ISSUER_URL}
     networks:
       - ${DOCKER_NETWORK}
+#    profiles:
+#      - app-user
 ###############################################################################################################
 ### Application Provider
 ###############################################################################################################
@@ -340,20 +302,11 @@ services:
     image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
     container_name: pqs
     working_dir: /daml3.2
+    env_file:
+      - ./env/ports.env
+      - ./env/app-provider.env
+      - ./env/pqs.env
     environment:
-      SCRIBE_SOURCE_LEDGER_HOST: "canton"
-      SCRIBE_SOURCE_LEDGER_PORT: "3${PARTICIPANT_LEDGER_API_PORT}"
-      SCRIBE_TARGET_POSTGRES_HOST: "${DB_SERVER}"
-      SCRIBE_TARGET_POSTGRES_PORT: "${DB_PORT}"
-      SCRIBE_TARGET_POSTGRES_USERNAME: "${DB_USER}"
-      SCRIBE_TARGET_POSTGRES_PASSWORD: "${DB_PASSWORD}"
-      SCRIBE_TARGET_POSTGRES_DATABASE: "scribe"
-      SCRIBE_PIPELINE_OAUTH_CLIENTID: "${SCRIBE_PIPELINE_OAUTH_CLIENTID}"
-      SCRIBE_PIPELINE_OAUTH_CLIENTSECRET: "${SCRIBE_PIPELINE_OAUTH_CLIENTSECRET}"
-      SCRIBE_PIPELINE_OAUTH_SCOPE: "${SCRIBE_PIPELINE_OAUTH_SCOPE}"
-      SCRIBE_PIPELINE_OAUTH_ENDPOINT: "${SCRIBE_PIPELINE_OAUTH_ENDPOINT}"
-      SCRIBE_SOURCE_LEDGER_AUTH: "${SCRIBE_SOURCE_LEDGER_AUTH}"
-      SCRIBE_PIPELINE_OAUTH_PARAMETERS_AUDIENCE: "${SCRIBE_PIPELINE_OAUTH_PARAMETERS_AUDIENCE}"
       OTEL_SERVICE_NAME: pqs
       OTEL_TRACES_EXPORTER: otlp
       OTEL_LOGS_EXPORTER: otlp
@@ -385,6 +338,8 @@ services:
         JAVA_VERSION: ${JAVA_VERSION}
     container_name: backend-service
     working_dir: /app
+    env_file:
+      - ./env/app-provider.env
     environment:
       LEDGER_HOST: "canton"
       LEDGER_PORT: "3${PARTICIPANT_LEDGER_API_PORT}"
@@ -399,15 +354,6 @@ services:
       OTEL_METRIC_EXPORT_INTERVAL: 5000
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:${OTEL_COLLECTOR_OTLP_PORT}"
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
-      AUTH_APP_PROVIDER_BACKEND_CLIENT_ID: "${AUTH_APP_PROVIDER_BACKEND_CLIENT_ID}"
-      AUTH_APP_PROVIDER_BACKEND_SECRET: "${AUTH_APP_PROVIDER_BACKEND_SECRET}"
-      AUTH_APP_PROVIDER_BACKEND_USER_ID: "${AUTH_APP_PROVIDER_BACKEND_USER_ID}"
-      AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID: "${AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID}"
-      AUTH_APP_PROVIDER_ISSUER_URL: "${AUTH_APP_PROVIDER_ISSUER_URL}"
-      AUTH_APP_PROVIDER_TOKEN_URL: "${AUTH_APP_PROVIDER_TOKEN_URL}"
-      AUTH_APP_PROVIDER_VALIDATOR_USER_ID: "${AUTH_APP_PROVIDER_VALIDATOR_USER_ID}"
-      AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID: "${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID}"
-      AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET: "${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}"
       JAVA_OPTS: "-javaagent:/otel-agent.jar -Dotel.instrumentation.logback-appender.experimental-log-attributes=true -Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true"
     volumes:
       - ./backend/build/distributions/backend.tar:/backend.tar
@@ -448,15 +394,13 @@ services:
       - ${DOCKER_NETWORK}
 
   wallet-web-ui-app-provider:
-    extends:
-      file: docker/compose-validator.yaml
-      service: wallet-web-ui
+    image: "${IMAGE_REPO}wallet-web-ui:${IMAGE_TAG}"
     container_name: wallet-web-ui-app-provider
+    env_file:
+      - ./env/app-provider.env
+      - ./env/splice.env
+      - ./env/wallet.app-provider.env
     logging: *default-logging
-    environment:
-      - SPLICE_APP_UI_AUTH_AUDIENCE=${AUTH_APP_PROVIDER_AUDIENCE}
-      - SPLICE_APP_UI_AUTH_CLIENT_ID=${AUTH_APP_PROVIDER_WALLET_UI_CLIENT_ID}
-      - SPLICE_APP_UI_AUTH_URL=${AUTH_APP_PROVIDER_ISSUER_URL}
     networks:
       - ${DOCKER_NETWORK}
 
@@ -467,17 +411,9 @@ services:
       - ./docker/backend-service-auto-config/health-check.sh:/app/health-check.sh
       - ./docker/backend-service-auto-config/onboarding.sh:/app/onboarding.sh
       - ./docker/utils.sh:/app/utils.sh
-    environment:
-      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID}
-      - AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
-      - AUTH_APP_PROVIDER_TOKEN_URL=${AUTH_APP_PROVIDER_TOKEN_URL}
-      - AUTH_APP_PROVIDER_ISSUER_URL=${AUTH_APP_PROVIDER_ISSUER_URL}
-      - AUTH_APP_USER_VALIDATOR_USER_ID=${AUTH_APP_USER_VALIDATOR_USER_ID}
-      - AUTH_APP_USER_VALIDATOR_CLIENT_ID=${AUTH_APP_USER_VALIDATOR_CLIENT_ID}
-      - AUTH_APP_USER_VALIDATOR_CLIENT_SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
-      - AUTH_APP_USER_BACKEND_OIDC_CLIENT_ID=${AUTH_APP_USER_BACKEND_OIDC_CLIENT_ID}
-      - AUTH_APP_USER_TOKEN_URL=${AUTH_APP_USER_TOKEN_URL}
-      - AUTH_APP_USER_ISSUER_URL=${AUTH_APP_USER_ISSUER_URL}
+    env_file:
+      - ./env/app-provider.env
+      - ./env/app-user.env
     healthcheck:
       test: ["CMD", "bash", "/app/health-check.sh"]
       interval: 5s
@@ -522,10 +458,10 @@ services:
       - localnet
 
   wallet-web-ui-sv:
-    extends:
-      file: docker/compose-super-validator.yaml
-      service: wallet-web-ui
+    image: "${IMAGE_REPO}wallet-web-ui:${IMAGE_TAG}"
     container_name: wallet-web-ui-sv
+    env_file:
+      - ./env/splice.env
     logging: *default-logging
     networks:
       - ${DOCKER_NETWORK}
@@ -533,10 +469,10 @@ services:
       - localnet
 
   sv-web-ui:
-    extends:
-      file: docker/compose-super-validator.yaml
-      service: sv-web-ui
+    image: "${IMAGE_REPO}sv-web-ui:${IMAGE_TAG}"
     container_name: sv-web-ui
+    env_file:
+      - ./env/splice.env
     logging: *default-logging
     networks:
       - ${DOCKER_NETWORK}
@@ -544,10 +480,10 @@ services:
       - localnet
 
   scan-web-ui:
-    extends:
-      file: docker/compose-super-validator.yaml
-      service: scan-web-ui
+    image: "${IMAGE_REPO}scan-web-ui:${IMAGE_TAG}"
     container_name: scan-web-ui
+    env_file:
+      - ./env/splice.env
     logging: *default-logging
     networks:
       - ${DOCKER_NETWORK}
