@@ -143,6 +143,10 @@ logs: ## Show logs of Docker containers
 logs-validator-app-provider: ## Show logs of Docker containers
 	$(call docker-compose, logs validator-app-provider)
 
+.PHONY: logs-scan
+logs-scan: ## Show logs of Docker containers
+	$(call docker-compose, logs scan)
+
 .PHONY: logs-sv-app
 logs-sv-app: ## Show logs of Docker containers
 	$(call docker-compose, logs sv-app)
