@@ -89,7 +89,7 @@ Below is a high-level summary of the integration test flow:
    - `make build` compiles the frontend, backend, and Daml model, then builds the Docker images.
 
 2. **Create sample AppInstallRequests**  
-   - The test scenarios require multiple requests to be created. The script (or `integration-test-ci` target) automatically runs `make create-app-install-request` four times.
+   - The test scenarios require multiple `AppInstallRequests` to be created. The script (or `integration-test-ci` target) automatically creates them.
 
 3. **Run Playwright tests**  
    - A container with the official Playwright image (`mcr.microsoft.com/playwright`) is invoked.
@@ -121,20 +121,3 @@ make integration-test-ci # depends on, and runs, make start
 
 - This workflow is meant to be used in **CI pipelines**.  
 - The test container simply attaches to the local Docker network and runs the same suite of Playwright tests.
-
----
-
-## Writing or Extending Tests
-
-1. **Add new test files** under `integration-test/tests/`.  
-2. Use the same structure as [`workflow.spec.ts`](../../quickstart/integration-test/tests/workflow.spec.ts), leveraging Playwright’s `test` functions and `[expect](https://playwright.dev/docs/assertions)`.  
-3. If you need helper functions or page objects, place them in separate files (e.g. `helpers.ts`) and import them in your test files.  
-4. Ensure that any required environment setup (like creating new example data) is handled either by a new Make target or by calls in `setup-and-run-tests.js`.
-
----
-
-## Summary
-
-The integration testing setup provides a comprehensive, automated way to verify that the **Quickstart** stack is functioning from end to end in a **fully isolated** ephemeral environment (`integration-test`). The tests ensure real-world user flows—logins, contract creation, wallet interactions, licensing—work as intended.
-
-Feel free to **extend** or **modify** the provided tests to cover additional scenarios, contract types, or UI components. Most of the complexity (Docker setup, environment building, artifact distribution) is handled for you by the Makefile and the Node.js scripting in `integration-test/setup-and-run-tests.js`.
