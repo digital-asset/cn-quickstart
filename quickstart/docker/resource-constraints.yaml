@@ -39,13 +39,13 @@ services:
     environment:
       _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
   postgres-splice:
-    mem_limit: 512mb
+    mem_limit: 1g
   postgres-splice-app-provider:
-    mem_limit: 512mb
+    mem_limit: 1g
   postgres-splice-app-user:
-    mem_limit: 512mb
+    mem_limit: 1g
   postgres-splice-sv:
-    mem_limit: 512mb
+    mem_limit: 1g
   pqs:
     mem_limit: 1g
     environment:
