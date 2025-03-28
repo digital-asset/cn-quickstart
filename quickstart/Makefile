@@ -151,6 +151,10 @@ logs-scan: ## Show logs of Docker containers
 logs-sv-app: ## Show logs of Docker containers
 	$(call docker-compose, logs sv-app)
 
+.PHONY: logs-postgres-splice-sv
+logs-postgres-splice-sv: ## Show logs of Docker containers
+	$(call docker-compose, logs postgres-splice-sv)
+
 .PHONY: tail
 tail: ## Tail logs of Docker containers
 	$(call docker-compose, logs -f)
