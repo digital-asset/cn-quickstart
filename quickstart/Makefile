@@ -139,34 +139,6 @@ compose-config:
 logs: ## Show logs of Docker containers
 	$(call docker-compose, logs)
 
-.PHONY: logs-validator-app-provider
-logs-validator-app-provider: ## Show logs of Docker containers
-	$(call docker-compose, logs validator-app-provider)
-
-.PHONY: logs-participant-app-provider
-logs-participant-app-provider: ## Show logs of Docker containers
-	$(call docker-compose, logs participant-app-provider)
-
-.PHONY: logs-participant-sv
-logs-participant-sv: ## Show logs of Docker containers
-	$(call docker-compose, logs participant-sv)
-
-.PHONY: logs-scan
-logs-scan: ## Show logs of Docker containers
-	$(call docker-compose, logs scan)
-
-.PHONY: logs-sv-app
-logs-sv-app: ## Show logs of Docker containers
-	$(call docker-compose, logs sv-app)
-
-.PHONY: logs-postgres-splice-sv
-logs-postgres-splice-sv: ## Show logs of Docker containers
-	$(call docker-compose, logs postgres-splice-sv)
-
-.PHONY: logs-postgres-keycloak
-logs-postgres-keycloak: ## Show logs of Docker containers
-	$(call docker-compose, logs keycloak-postgres)
-
 .PHONY: tail
 tail: ## Tail logs of Docker containers
 	$(call docker-compose, logs -f)
