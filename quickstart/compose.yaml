@@ -225,7 +225,7 @@ services:
       - ./docker/splice/health-check.sh:/app/health-check.sh
       - ./docker/splice/bootstrap.sc:/app/bootstrap.sc
       - ./docker/splice/app.conf:/app/app.conf
-      - ${SV_SPLICE_CONFIG:-./docker/splice/sv-off.conf}:/app/sv.conf
+      - ${SV_SPLICE_CONFIG:-./docker/empty}:/app/sv.conf
       - domain-upgrade-dump:/domain-upgrade-dump
     entrypoint: /splice-entrypoint.sh
     logging: *default-logging
@@ -233,9 +233,9 @@ services:
       test: ["CMD", "bash", "/app/health-check.sh"]
       interval: 20s
       start_interval: 5s
-      timeout: 30s
-      retries: 10
-      start_period: 20s
+      timeout: 40s
+      retries: 100
+      start_period: 30s
     environment:
       - DB_SERVER=${DB_SERVER}
       - DB_PORT=${DB_PORT}
