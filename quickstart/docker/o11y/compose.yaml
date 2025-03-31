@@ -128,39 +128,13 @@ services:
     profiles:
       - observability
 
-  nginx-app-user-metrics:
+  nginx-metrics:
     image: ${NGINX_EXPORTER_IMAGE}:${NGINX_EXPORTER_VERSION}
-    container_name: nginx-app-user-metrics
-    hostname: nginx-app-user-metrics
+    container_name: nginx-metrics
+    hostname: nginx-metrics
     mem_limit: 32mb
     command:
-      - --nginx.scrape-uri=http://nginx-app-user/status
-      - --web.listen-address=:${NGINX_EXPORTER_METRICS_PORT}
-    networks:
-      - ${DOCKER_NETWORK}
-    profiles:
-      - observability
-
-  nginx-app-provider-metrics:
-    image: ${NGINX_EXPORTER_IMAGE}:${NGINX_EXPORTER_VERSION}
-    container_name: nginx-app-provider-metrics
-    hostname: nginx-app-provider-metrics
-    mem_limit: 32mb
-    command:
-      - --nginx.scrape-uri=http://nginx-app-provider/status
-      - --web.listen-address=:${NGINX_EXPORTER_METRICS_PORT}
-    networks:
-      - ${DOCKER_NETWORK}
-    profiles:
-      - observability
-
-  nginx-sv-metrics:
-    image: ${NGINX_EXPORTER_IMAGE}:${NGINX_EXPORTER_VERSION}
-    container_name: nginx-sv-metrics
-    hostname: nginx-sv-metrics
-    mem_limit: 32mb
-    command:
-      - --nginx.scrape-uri=http://nginx-sv/status
+      - --nginx.scrape-uri=http://nginx/status
       - --web.listen-address=:${NGINX_EXPORTER_METRICS_PORT}
     networks:
       - ${DOCKER_NETWORK}

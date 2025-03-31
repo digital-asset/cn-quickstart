@@ -10,11 +10,7 @@ services:
     mem_limit: 32mb
   nginx-keycloak:
     mem_limit: 32mb
-  nginx-app-provider:
-    mem_limit: 32mb
-  nginx-app-user:
-    mem_limit: 32mb
-  nginx-sv:
+  nginx:
     mem_limit: 32mb
   keycloak:
     mem_limit: 1g
