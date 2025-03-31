@@ -27,13 +27,13 @@ services:
   keycloak-postgres:
     mem_limit: 256mb
   participant-app-provider:
-    mem_limit: 2g
+    mem_limit: 3g
     environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx2304m"
   participant-app-user:
-    mem_limit: 2g
+    mem_limit: 3g
     environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx2304m"
   participant-sv:
     mem_limit: 2g
     environment:
