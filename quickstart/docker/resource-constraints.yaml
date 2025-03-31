@@ -63,15 +63,15 @@ services:
   sv-web-ui:
     mem_limit: 512mb
   validator-app-provider:
-    mem_limit: 1g
+    mem_limit: 2g
     environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
   validator-app-provider-auto-config:
     mem_limit: 32mb
   validator-app-user:
-    mem_limit: 1g
+    mem_limit: 2g
     environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
   validator-app-user-auto-config:
     mem_limit: 32mb
   validator-sv:
