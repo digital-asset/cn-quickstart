@@ -172,7 +172,7 @@ integration-test-ci: integration-test/node_modules start ## Run integration test
 	@# The integration test expects four AppInstallRequests
 	docker run --network host --rm -it --user "$(shell id -u):$(shell id -g)" \
 		-v "$(PWD)/integration-test":/work:ro \
-        $(foreach f,.env $(wildcard env/*.env),--env-file $(f)) \
+		$(foreach f,.env $(wildcard env/*.env),--env-file $(f)) \
 		-e NPM_CONFIG_CACHE=/tmp/.npm \
 		-w /work \
 		mcr.microsoft.com/playwright:v1.51.0-jammy \
