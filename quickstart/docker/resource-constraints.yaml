@@ -27,25 +27,25 @@ services:
   keycloak-postgres:
     mem_limit: 256mb
   participant-app-provider:
-    mem_limit: 3g
+    mem_limit: 2g
     environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx2304m"
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
   participant-app-user:
-    mem_limit: 3g
+    mem_limit: 2g
     environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx2304m"
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
   participant-sv:
     mem_limit: 2g
     environment:
       _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
   postgres-splice:
-    mem_limit: 1g
+    mem_limit: 512mb
   postgres-splice-app-provider:
-    mem_limit: 1g
+    mem_limit: 512mb
   postgres-splice-app-user:
-    mem_limit: 1g
+    mem_limit: 512mb
   postgres-splice-sv:
-    mem_limit: 1g
+    mem_limit: 512mb
   pqs:
     mem_limit: 1g
     environment:
@@ -63,15 +63,15 @@ services:
   sv-web-ui:
     mem_limit: 512mb
   validator-app-provider:
-    mem_limit: 2g
+    mem_limit: 1g
     environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
   validator-app-provider-auto-config:
     mem_limit: 32mb
   validator-app-user:
-    mem_limit: 2g
+    mem_limit: 1g
     environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
   validator-app-user-auto-config:
     mem_limit: 32mb
   validator-sv:
