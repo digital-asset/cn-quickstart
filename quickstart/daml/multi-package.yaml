@@ -1,2 +1,3 @@
 packages:
+- ./splice-api-token-allocation-v1
 - ./licensing
