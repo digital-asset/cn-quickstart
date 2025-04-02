@@ -25,29 +25,18 @@ receivers:
         - job_name: cadvisor
           static_configs:
             - targets: [ "cadvisor:${env:CADVISOR_METRICS_PORT}" ]
-        - job_name: participant-sv
+        - job_name: splice
           static_configs:
-            - targets: [ "participant-sv:${env:CANTON_METRICS_PORT}" ]
-        - job_name: validator-sv
+            - targets: [ "splice:${env:CANTON_METRICS_PORT}" ]
+        - job_name: canton
           static_configs:
-            - targets: [ "validator-sv:${env:CANTON_METRICS_PORT}" ]
-        - job_name: domain-global
-          static_configs:
-            - targets: [ "global-synchronizer:${env:CANTON_METRICS_PORT}" ]
-        - job_name: scan
-          static_configs:
-            - targets: [ "scan:${env:CANTON_METRICS_PORT}" ]
-        - job_name: sv-app
-          static_configs:
-            - targets: [ "sv-app:${env:CANTON_METRICS_PORT}" ]
+            - targets: [ "canton:${env:CANTON_METRICS_PORT}" ]
         - job_name: nginx-sv
           static_configs:
-            - targets: [ "nginx-sv-metrics:${env:NGINX_EXPORTER_METRICS_PORT}" ]
+            - targets: [ "nginx-metrics:${env:NGINX_EXPORTER_METRICS_PORT}" ]
         - job_name: postgres
           static_configs:
-            - targets: [ "postgres-splice-sv-metrics:${env:POSTGRES_EXPORTER_METRICS_PORT}" ]
-              labels:
-                role: super-validator
+            - targets: [ "postgres-metrics:${env:POSTGRES_EXPORTER_METRICS_PORT}" ]
 
 processors:
   batch:

@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
@@ -24,6 +23,7 @@
  *   --force-rebuild: Optional flag to force a rebuild of the Docker image.
  */
 
+const fs = require('fs');
 const {spawn} = require('child_process');
 const {join} = require('path');
 const process = require('process');
@@ -235,7 +235,9 @@ async function containerHasImage(containerName, image) {
             '--profile',
             'localnet',
             '--env-file',
-            'docker/localnet.env',
+            'env/localnet.env',
+            '--env-file',
+            'env/ports.env',
             '--profile',
             'observability',
             '-f',
@@ -317,25 +319,38 @@ async function containerHasImage(containerName, image) {
             'start',
         ]);
 
+        // Collect all *.env files from projectRoot/env to pass to the nested Docker run.
+        const envFileArgs = fs
+            .readdirSync(join(projectRoot, 'env'))
+            .filter((file) => file.endsWith('.env'))
+            .map((file) => `--env-file "/app/env/${file}"`);
+
         console.log('[INFO] Running integration tests via nested Docker container...');
         await runCommand('docker', [
             'exec',
             containerName,
             'bash',
             '-c',
-            'docker run --env-file "$PWD/.env" --rm --net host --user "$(id -u):$(id -g)" ' +
-            '-v "$PWD/integration-test/":/work -w /work ' +
-            'mcr.microsoft.com/playwright:v1.51.0-jammy ' +
-            'npx playwright test --output /tmp/ --reporter line',
+            [
+                'docker run',
+                '--env-file "$PWD/.env"',
+                ...envFileArgs,
+                '--rm',
+                '--net host',
+                '--user "$(id -u):$(id -g)"',
+                '-v "$PWD/integration-test/":/work',
+                '-w /work',
+                'mcr.microsoft.com/playwright:v1.51.0-jammy',
+                'npx playwright test --output /tmp/ --reporter line',
+            ].join(' ')
         ]);
-
         console.log('[SUCCESS] All tasks completed successfully.');
     } catch (error) {
         console.error(`[FATAL] Script failed: ${error.message}`);
         exitCode = 1;
     } finally {
         console.log(`[INFO] Removing container "${containerName}"...`);
-        await runCommand('docker', ['rm', '-f', containerName]);
+        await runCommand('docker', ['rm', '-f', containerName]).catch(() => {});
         process.exit(exitCode);
     }
 })();
