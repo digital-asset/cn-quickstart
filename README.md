@@ -136,7 +136,7 @@ After starting the application with `make start` you can access the following UI
   - **Description**: Interface for managing user wallets.
 
 - **App Provider Wallet UI**
-  - **URL**: [http://wallet.localhost:2000](http://wallet.localhost:3000)
+  - **URL**: [http://wallet.localhost:3000](http://wallet.localhost:3000)
   - **Description**: Interface for managing user wallets.
 
 ### Super Validator UIs (if LocalNet enabled via `make setup`)
@@ -150,6 +150,8 @@ After starting the application with `make start` you can access the following UI
 - **Scan Web UI**
   - **URL**: [http://scan.localhost:4000](http://scan.localhost:4000)
   - **Description**: Interface to monitor transactions.
+
+  > **Note**: `LocalNet` rounds may take up to 6 rounds (equivalent to one hour) to display in the scan UI.
 
 All the Super Validator UIs are accessible via a gateway at [http://localhost:4000](http://localhost:4000).
 
