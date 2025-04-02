@@ -34,7 +34,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{service_name=~\"$services\"} | service_name=~\"(db-migration)|(domain.*)|(splice.*)|(canton.*)|(scan)|(sv)|(sequencer.*)|(mediator.*)\" | detected_level=~\"(?i)$log_level\" | json | line_format \"[{{.service_name}}] {{.message}}\" | trace_id=~\"(?i)$traceId\" |~ `(?i)$search`",
+          "expr": "{service_name=~\"$services\"} | service_name=~\"(db-migration)|(domain.*)|(splice.*)|(app.*)|(canton.*)|(scan.*)|(sv.*)|(sequencer.*)|(mediator.*)\" | detected_level=~\"(?i)$log_level\" | json | line_format \"[{{.service_name}}] {{.message}}\" | trace_id=~\"(?i)$traceId\" |~ `(?i)$search`",
           "hide": false,
           "queryType": "range",
           "refId": "A"
@@ -45,7 +45,7 @@
             "uid": "loki"
           },
           "editorMode": "code",
-          "expr": "{service_name=~\"$services\"} | service_name=~\"(backend-service)|(pqs)|(postgres-.*)|(.*-web-ui)\" | label_format level=detected_level | level=~\"(?i)$log_level\" | line_format \"[{{.service_name}}] {{ __line__ }}\" | trace_id=~\"(?i)$traceId\" or correlation_id=~\"(?i)$traceId\" |~ `(?i)$search`",
+          "expr": "{service_name=~\"$services\"} | service_name=~\"(backend-service)|(pqs)|(postgres.*)|(.*web-ui.*)\" | label_format level=detected_level | level=~\"(?i)$log_level\" | line_format \"[{{.service_name}}] {{ __line__ }}\" | trace_id=~\"(?i)$traceId\" or correlation_id=~\"(?i)$traceId\" |~ `(?i)$search`",
           "hide": false,
           "queryType": "range",
           "refId": "B"
