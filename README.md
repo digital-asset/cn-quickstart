@@ -115,7 +115,7 @@ Run `make help` to see a list of all available targets, including (but not limit
 
 ## Topology
 
-This diagram summarizes the relationship of services that are started as part of `make start`. The focus of `Canton Network Quickstart` is to provide a development environment for App Providers.
+This diagram summarizes the relationship of services that are started as part of `make start`. The two core services `canton` and `splice` contain multiple logical components inside. The `postgres` service contains multiple databases required by QS services. One `nginx` service is used as proxy for all QS services that needs one except for `keycloak` that has its own `nginx-keycloak` as it needs to be ready before other services start. The focus of `Canton Network Quickstart` is to provide a development environment for App Providers.
 
 ![QS Topology](docs/images/qs-topology.drawio.png)
 
@@ -136,7 +136,7 @@ After starting the application with `make start` you can access the following UI
   - **Description**: Interface for managing user wallets.
 
 - **App Provider Wallet UI**
-  - **URL**: [http://wallet.localhost:2000](http://wallet.localhost:3000)
+  - **URL**: [http://wallet.localhost:3000](http://wallet.localhost:3000)
   - **Description**: Interface for managing user wallets.
 
 ### Super Validator UIs (if LocalNet enabled via `make setup`)
