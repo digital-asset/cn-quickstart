@@ -28,7 +28,15 @@ data Group = Group
     user : Party
     provider : Party
     dso: Party
-  deriving (Show, Eq)  
+  deriving (Show, Eq)
+
+-- | Information about the license renewal cancellation
+data LicenseRenewalCancellation = LicenseRenewalCancellation
+  with
+    actor : Party -- Party that ended the renewal request.
+    reasons  : Metadata
+    cancellationTime : Time
+  deriving (Eq, Show)
 
 -- | A template to track one specific license renewal request.
 -- Note that multiple of these can be in flight at any point in time.
@@ -43,6 +51,19 @@ template LicenseRenewalRequest with
   where 
     signatory user, provider
 
+    choice LicenseRenewalRequest_Cancellation : LicenseRenewalCancellation
+      with  
+        actor : Party -- Party that initiated the renewal request.
+        reasons  : Metadata
+      controller 
+        actor
+      do
+        now <- getTime
+        pure LicenseRenewalCancellation with
+          actor
+          reasons
+          cancellationTime = now
+        
     postconsuming choice LicenseRenewalRequest_CompleteRenewal : ContractId License
       with
         acceptedPaymentCid : ContractId AcceptedAppPayment
@@ -123,3 +144,4 @@ template License with
 
 instance HasCheckedFetch License Group where
   contractGroupId License{..} = Group with ..
+  
