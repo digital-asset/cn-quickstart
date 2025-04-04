@@ -20,10 +20,10 @@ object Deps {
     }
 
     object transcode {
-        val version get() = "0.0.1-main.20250207.69.405.v29f4d2c-SNAPSHOT"
-        val plugin get() = "com.daml.codegen-java-daml3_2:com.daml.codegen-java-daml3_2.gradle.plugin:$version"
+        val version get() = "0.0.1-main.20250326.74.446.v4863bbc-SNAPSHOT"
+        val plugin get() = "com.daml.codegen-java-daml3_3:com.daml.codegen-java-daml3_3.gradle.plugin:$version"
         val codegenJavaRuntime get() = "com.daml:transcode-codegen-java-runtime:$version"
-        val protoJava get() = "com.daml:transcode-codec-proto-java-daml3.2_3:$version"
+        val protoJava get() = "com.daml:transcode-codec-proto-java-daml3.3_3:$version"
         val protoJson get() = "com.daml:transcode-codec-json_3:$version"
     }
 
