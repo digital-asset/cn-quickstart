@@ -172,9 +172,9 @@ public class LedgerApi {
                     TransactionOuterClass.TransactionTree txTree = response.getTransaction();
                     long offset = txTree.getOffset();
                     String workflowId = txTree.getWorkflowId();
-                    Map<Integer, TransactionOuterClass.TreeEvent> eventsById = txTree.getEventsByIdMap();
-                    Integer eventId = !eventsById.isEmpty() ? eventsById.keySet().iterator().next() : null;
-                    TransactionOuterClass.TreeEvent event = eventId != null ? txTree.getEventsByIdMap().get(eventId) : null;
+                    String rootEventId = txTree.getRootEventIdsCount() > 0 ? txTree.getRootEventIds(0) : "";
+                    TransactionOuterClass.TreeEvent event = txTree.getEventsByIdMap().get(rootEventId);
+                    String eventId = event != null ? rootEventId : null;
 
                     Map<String, Object> completionAttrs = new HashMap<>(attrs);
                     completionAttrs.put("ledgerOffset", offset);

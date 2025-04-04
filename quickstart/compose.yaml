@@ -312,7 +312,7 @@ services:
   pqs:
     image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
     container_name: pqs
-    working_dir: /daml3.3
+    working_dir: /daml3.2
     environment:
       SCRIBE_SOURCE_LEDGER_HOST: "participant-app-provider"
       SCRIBE_SOURCE_LEDGER_PORT: "${PARTICIPANT_LEDGER_API_PORT}"
