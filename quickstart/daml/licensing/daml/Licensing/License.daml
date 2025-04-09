@@ -14,6 +14,15 @@ import Splice.Round
 import Splice.Util
 import DA.Time
 import DA.Assert
+import Licensing.Foo
+
+template Foo with
+    bar : Party
+    cid : ContractId AnyContract
+  where
+    signatory bar
+
+
 
 -- License contract template
 ----------------------------
@@ -28,7 +37,7 @@ data Group = Group
     user : Party
     provider : Party
     dso: Party
-  deriving (Show, Eq)  
+  deriving (Show, Eq)
 
 -- | A template to track one specific license renewal request.
 -- Note that multiple of these can be in flight at any point in time.
@@ -40,7 +49,7 @@ template LicenseRenewalRequest with
     licenseFeeCc : Decimal
     licenseExtensionDuration : RelTime
     reference : ContractId AppPaymentRequest
-  where 
+  where
     signatory user, provider
 
     postconsuming choice LicenseRenewalRequest_CompleteRenewal : ContractId License
@@ -72,7 +81,7 @@ template LicenseRenewalRequest with
                     provider
                     licenseNum
                     params = license.params
-                    expiresAt = (max now license.expiresAt) `addRelTime` licenseExtensionDuration       
+                    expiresAt = (max now license.expiresAt) `addRelTime` licenseExtensionDuration
 
 -- | A license contract between an app provider and an app user to use the app
 -- for a specific purpose.
@@ -88,7 +97,7 @@ template License with
     
     nonconsuming choice License_Renew : (ContractId LicenseRenewalRequest, ContractId AppPaymentRequest)
       with
-        licenseFeeCc: Decimal      
+        licenseFeeCc: Decimal
         licenseExtensionDuration : RelTime
         paymentAcceptanceDuration: RelTime
         description: Text
@@ -102,12 +111,12 @@ template License with
            expiresAt = now `addRelTime` paymentAcceptanceDuration
          renewalOffer <- create LicenseRenewalRequest
            with
-             provider, dso, user 
+             provider, dso, user
              licenseFeeCc
              licenseExtensionDuration
              licenseNum
              reference = paymentRequest
-         pure (renewalOffer, paymentRequest)    
+         pure (renewalOffer, paymentRequest)
 
 
     choice License_Expire : ()
@@ -118,7 +127,7 @@ template License with
       do
         now <- getTime
         Licensing.Util.require "Actor is a signatory" (actor `elem` signatory this)
-        Licensing.Util.require "License is not expired yet" (now > expiresAt)        
+        Licensing.Util.require "License is not expired yet" (now > expiresAt)
         enforceMetadataLimits meta
 
 instance HasCheckedFetch License Group where

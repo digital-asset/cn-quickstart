@@ -1,2 +1,3 @@
 packages:
+- ./foo
 - ./licensing
