@@ -14,6 +14,7 @@ import Splice.Round
 import Splice.Util
 import DA.Time
 import DA.Assert
+import Splice.Api.Token.HoldingV1
 
 -- License contract template
 ----------------------------
@@ -37,7 +38,8 @@ template LicenseRenewalRequest with
     user : Party
     dso : Party
     licenseNum : Int
-    licenseFeeCc : Decimal
+    licenseFeeAmount : Decimal
+    licenseFeeInstrumentId : InstrumentId
     licenseExtensionDuration : RelTime
     reference : ContractId AppPaymentRequest
   where 
@@ -57,7 +59,7 @@ template LicenseRenewalRequest with
          let expectedAcceptedPayment = AcceptedAppPayment with
                sender = user
                provider
-               amuletReceiverAmounts = [ReceiverAmuletAmount provider licenseFeeCc]
+               amuletReceiverAmounts = [ReceiverAmuletAmount provider licenseFeeAmount]
                dso 
                lockedAmulet = acceptedPayment.lockedAmulet
                round = openMiningRound.round
@@ -88,7 +90,7 @@ template License with
     
     nonconsuming choice License_Renew : (ContractId LicenseRenewalRequest, ContractId AppPaymentRequest)
       with
-        licenseFeeCc: Decimal      
+        licenseFeeAmount: Decimal      
         licenseExtensionDuration : RelTime
         paymentAcceptanceDuration: RelTime
         description: Text
@@ -97,17 +99,19 @@ template License with
          paymentRequest <- create AppPaymentRequest with
            provider, dso
            sender = user
-           receiverAmounts = [ReceiverAmount provider (PaymentAmount licenseFeeCc AmuletUnit)]
+           receiverAmounts = [ReceiverAmount provider (PaymentAmount licenseFeeAmount AmuletUnit)]
            description
            expiresAt = now `addRelTime` paymentAcceptanceDuration
          renewalOffer <- create LicenseRenewalRequest
            with
              provider, dso, user 
-             licenseFeeCc
+             licenseFeeAmount
              licenseExtensionDuration
              licenseNum
+             licenseFeeInstrumentId = InstrumentId { admin = dso, id = "Amulet" }
              reference = paymentRequest
-         pure (renewalOffer, paymentRequest)    
+
+         pure (renewalOffer, paymentRequest)
 
 
     choice License_Expire : ()
