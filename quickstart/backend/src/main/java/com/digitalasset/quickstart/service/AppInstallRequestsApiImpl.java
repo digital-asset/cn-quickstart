@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import quickstart_licensing.licensing.util.Metadata;
+import splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata;
 
 import java.util.List;
 import java.util.Map;
@@ -81,8 +81,8 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
                                     span.addEvent("Fetched contract, checking if request is already accepted");
 
                                     var choice = new quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Accept(
-                                            new quickstart_licensing.licensing.util.Metadata(appInstallRequestAccept.getInstallMeta().getData()),
-                                            new quickstart_licensing.licensing.util.Metadata(appInstallRequestAccept.getMeta().getData())
+                                            new splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata(appInstallRequestAccept.getInstallMeta().getData()),
+                                            new splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata(appInstallRequestAccept.getMeta().getData())
                                     );
 
                                     return ledger.exerciseAndGetResult(providerParty, contract.contractId, choice, commandId)

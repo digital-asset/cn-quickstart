@@ -5,9 +5,9 @@
 -- rights to both the app user and the app provider.
 module Licensing.AppInstall where
 
-import Licensing.Util
 import Licensing.License
-
+import Splice.Api.Token.MetadataV1
+import Splice.Util
 
 -- | Explicit result type to simplify upgrading.
 data AppInstall_CreateLicense_Result = AppInstall_CreateLicense_Result with

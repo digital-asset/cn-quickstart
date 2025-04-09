@@ -37,7 +37,7 @@ import quickstart_licensing.licensing.license.License.License_Expire;
 import quickstart_licensing.licensing.license.License.License_Renew;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest.LicenseRenewalRequest_CompleteRenewal;
-import quickstart_licensing.licensing.util.Metadata;
+import splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata;
 import splice_amulet.splice.amuletrules.AppTransferContext;
 import splice_wallet_payments.splice.wallet.payment.AcceptedAppPayment;
 

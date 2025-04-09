@@ -7,7 +7,6 @@
 -- See the comments on the License template and its choices for design rationale.
 module Licensing.License where
 
-import Licensing.Util
 import Splice.Wallet.Payment
 import Splice.AmuletRules (AppTransferContext(..))
 import Splice.Round
@@ -15,6 +14,9 @@ import Splice.Util
 import DA.Time
 import DA.Assert
 import Splice.Api.Token.HoldingV1
+import Splice.Api.Token.AllocationRequestV1
+import Splice.Api.Token.AllocationV1 as Api.Token.AllocationV1
+import Splice.Api.Token.MetadataV1
 
 -- License contract template
 ----------------------------
@@ -42,6 +44,9 @@ template LicenseRenewalRequest with
     licenseFeeInstrumentId : InstrumentId
     licenseExtensionDuration : RelTime
     reference : ContractId AppPaymentRequest
+    prepareUntil : Time
+    settleBefore : Time
+    createdAt : Time
   where 
     signatory user, provider
 
@@ -74,7 +79,38 @@ template LicenseRenewalRequest with
                     provider
                     licenseNum
                     params = license.params
-                    expiresAt = (max now license.expiresAt) `addRelTime` licenseExtensionDuration       
+                    expiresAt = (max now license.expiresAt) `addRelTime` licenseExtensionDuration
+
+    interface instance AllocationRequest for LicenseRenewalRequest where
+          view = AllocationRequestView with
+            settlement = SettlementInfo with
+              executor = provider
+              settlementRef = Reference with
+                id = "LicenseRenewalRequest"
+                cid = None -- Some (coerceContractId self) FIXME self not available here
+              requestedAt = createdAt
+              allocateBefore = prepareUntil
+              settleBefore = settleBefore
+            transferLegs =
+              [ TransferLeg with
+                  sender = user
+                  receiver = provider
+                  amount = licenseFeeAmount
+                  instrumentId = licenseFeeInstrumentId
+                  meta = emptyMetadata
+              ]
+            meta = emptyMetadata
+
+          allocationRequest_RejectImpl _self AllocationRequest_Reject{..} = do
+            -- Only the user (the sender of the renewal fee) can reject.
+            require "Actor is the user paying the fee" (actor == user)
+            pure ChoiceExecutionMetadata with meta = emptyMetadata
+
+          allocationRequest_WithdrawImpl _self _extraArgs =
+            -- Executor (provider) can withdraw this request; here we keep it simple and return immediately.
+            pure ChoiceExecutionMetadata with meta = emptyMetadata
+
+
 
 -- | A license contract between an app provider and an app user to use the app
 -- for a specific purpose.
@@ -110,7 +146,9 @@ template License with
              licenseNum
              licenseFeeInstrumentId = InstrumentId { admin = dso, id = "Amulet" }
              reference = paymentRequest
-
+             prepareUntil = now `addRelTime` paymentAcceptanceDuration -- ????
+             settleBefore = now `addRelTime` paymentAcceptanceDuration -- ????
+             createdAt = now
          pure (renewalOffer, paymentRequest)
 
 
@@ -121,9 +159,10 @@ template License with
       controller actor
       do
         now <- getTime
-        Licensing.Util.require "Actor is a signatory" (actor `elem` signatory this)
-        Licensing.Util.require "License is not expired yet" (now > expiresAt)        
+        require "Actor is a signatory" (actor `elem` signatory this)
+        require "License is not expired yet" (now > expiresAt)
         enforceMetadataLimits meta
 
 instance HasCheckedFetch License Group where
   contractGroupId License{..} = Group with ..
+

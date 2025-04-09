@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import quickstart_licensing.licensing.appinstall.AppInstall.AppInstall_Cancel;
 import quickstart_licensing.licensing.appinstall.AppInstall.AppInstall_CreateLicense;
 import quickstart_licensing.licensing.license.LicenseParams;
-import quickstart_licensing.licensing.util.Metadata;
+import splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata;
 
 import java.util.List;
 import java.util.Map;
