@@ -3,6 +3,7 @@
 
 ledger:
   application-id: ${AUTH_APP_PROVIDER_BACKEND_USER_ID}
+  validator-uri: "http://splice:3${VALIDATOR_ADMIN_API_PORT}/api/validator"
 
 security:
   issuer-url: ${AUTH_APP_PROVIDER_ISSUER_URL}

@@ -18,7 +18,7 @@ services:
       - _JAVA_OPTIONS=-XX:+UseContainerSupport -XX:-UseCompressedOops
       - PARTICIPANT_LEDGER_API_PORT=${PARTICIPANT_LEDGER_API_PORT}
       - PARTICIPANT_ADMIN_API_PORT=${PARTICIPANT_ADMIN_API_PORT}
-      - LEDGER_API_ADDRESS=participant-app-provider
+      - LEDGER_API_ADDRESS=canton
       - CLIENT_ID=app-provider-validator
       - SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
       - TOKEN_URL=${AUTH_APP_PROVIDER_TOKEN_URL}
@@ -38,7 +38,7 @@ services:
       - _JAVA_OPTIONS=-XX:+UseContainerSupport -XX:-UseCompressedOops
       - PARTICIPANT_LEDGER_API_PORT=${PARTICIPANT_LEDGER_API_PORT}
       - PARTICIPANT_ADMIN_API_PORT=${PARTICIPANT_ADMIN_API_PORT}
-      - LEDGER_API_ADDRESS=participant-app-user
+      - LEDGER_API_ADDRESS=canton
       - CLIENT_ID=app-user-validator
       - SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}
       - TOKEN_URL=${AUTH_APP_USER_TOKEN_URL}
