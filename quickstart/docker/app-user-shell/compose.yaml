@@ -17,6 +17,7 @@ services:
       - ./scripts/simulate-user-input.sh:/app/simulate-user-input.sh
       - ./../utils.sh:/app/utils.sh
     env_file:
+      - ./../..//env/ports.env
       - ./../../env/app-provider.env
       - ./../../env/app-user.env
     command: /app/start.sh

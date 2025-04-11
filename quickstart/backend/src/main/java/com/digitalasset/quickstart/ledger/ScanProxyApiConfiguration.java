@@ -3,6 +3,7 @@
 
 package com.digitalasset.quickstart.ledger;
 
+import com.digitalasset.quickstart.config.LedgerConfig;
 import com.digitalasset.quickstart.security.TokenProvider;
 import com.digitalasset.quickstart.validatorproxy.client.ApiClient;
 import com.digitalasset.quickstart.validatorproxy.client.api.ScanProxyApi;
@@ -13,9 +14,9 @@ import org.springframework.context.annotation.Configuration;
 public class ScanProxyApiConfiguration {
 
     @Bean
-    public ScanProxyApi scanProxyApi(TokenProvider tokenProvider) {
+    public ScanProxyApi scanProxyApi(TokenProvider tokenProvider, LedgerConfig ledgerConfig) {
         ApiClient apiClient = new ApiClient();
-        apiClient.updateBaseUri("http://splice:35003/api/validator"); // TODO: configure this properly
+        apiClient.updateBaseUri(ledgerConfig.getValidatorUri());
         apiClient.setRequestInterceptor(requestBuilder -> {
             requestBuilder.header("Authorization", "Bearer " + tokenProvider.getToken());
         });
