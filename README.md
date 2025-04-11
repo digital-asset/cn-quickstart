@@ -115,7 +115,7 @@ Run `make help` to see a list of all available targets, including (but not limit
 
 ## Topology
 
-This diagram summarizes the relationship of services that are started as part of `make start`. The focus of `Canton Network Quickstart` is to provide a development environment for App Providers.
+This diagram summarizes the relationship of services that are started as part of `make start`. The `canton` and `splice` services are configured to serve multiple logically separate components (each component represented with a box in the diagram) from a single container to reduce resource consumption. Similarly the `postgres` service contains multiple databases required by QS services. One `nginx` service is used as proxy for all QS services that needs one except for `keycloak` that has its own `nginx-keycloak` as it needs to be ready before other services start. The focus of `Canton Network Quickstart` is to provide a development environment for App Providers.
 
 ![QS Topology](docs/images/qs-topology.drawio.png)
 
