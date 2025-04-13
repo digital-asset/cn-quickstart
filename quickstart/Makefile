@@ -19,9 +19,6 @@ endif
 # Set default goal to 'help' if no target is specified
 .DEFAULT_GOAL := help
 
-# Disable gradle daemon:
-export GRADLE_OPTS = -Dorg.gradle.daemon=false
-
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
 DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file env/ports.env
