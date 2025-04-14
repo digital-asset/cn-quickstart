@@ -2,11 +2,24 @@
 
 This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
 
+## Disclaimer
+
+Once you are familiar with the QS, please review the technology choices and the application design to determine what changes are needed. Technology and design decisions are ultimately up to you. Please be aware that the CN QS is a rapidly evolving work in progress. 
+
+## Docs and Guides
+
 If you are impatient, then you can start by following the Engineer Setup below. Alternatively, you can peruse the documentation:
-- [Quickstart Installation](docs/guide/CantonNetworkQuickstartInstallationGuide-20250213.pdf)
-- [Exploring The Demo](docs/guide/ExploringTheDemo-20250213.pdf)
-- [Project Structure](docs/guide/ProjectStructureGuide-20250212.pdf)
-<!---  - Troubleshooting and debugging with Observability --->
+- [Quickstart Installation](docs/guide/CN-QS-Installation-20250314.pdf)
+- [Exploring The Demo](docs/guide/ExploringTheDemo-20250404.pdf)
+- [Project Structure](docs/guide/ProjectStructureGuide-20250317.pdf)
+- [FAQ](docs/guide/CN-QS-FAQ-20250404.pdf)
+- [Observability and Troubleshooting Overview](docs/guide/ObservabilityTroubleshootingOverview-20250220.pdf)
+
+### Technical Documentation
+
+- [Observability](docs/user/001-observability.md)
+- [Topology](docs/user/002-topology.md)
+
 Additional documentation and updates are planned weekly.
 
 This project will be rapidly enhanced, so please check back often for updates.
@@ -55,14 +68,17 @@ To start the application:
 $ direnv allow
 $ cd quickstart
 
+# Setup your quickstart environment
+$ make setup
+
 # Build the application
 $ make build
 
 # Start the application, Canton services, and Observability (if enabled)
 $ make start
 
-# In a separate shell - run a Canton Console
-$ make console
+# In a separate shell - run a Canton Console for the App Provider
+$ make console-app-provider
 
 # In a separate shell - run Daml Shell
 $ make shell
@@ -86,7 +102,8 @@ Run `make help` to see a list of all available targets, including (but not limit
 - **stop-application**: Like `stop`, but leaves the observability services running.
 - **restart**: Re-runs the application services by stopping and then starting it again.
 - **build**: Builds frontend, Daml model, and backend.
-- **console**: Starts the Canton console using Docker, connected to the running application ledger.
+- **console-app-provider**: Starts the Canton console using Docker, connected to the running app provider ledger.
+- **console-app-user**: Starts the Canton console using Docker, connected to the running app user ledger.
 - **shell**: Starts Daml Shell using Docker, connected to the running application PQS database.
 - **status**: Shows the status of Docker containers.
 - **logs**: Shows logs of Docker containers.
@@ -98,7 +115,7 @@ Run `make help` to see a list of all available targets, including (but not limit
 
 ## Topology
 
-This diagram summarizes the relationship of services that are started as part of `make start`. The focus of `Canton Network Quickstart` is to provide a development environment for App Providers.
+This diagram summarizes the relationship of services that are started as part of `make start`. The `canton` and `splice` services are configured to serve multiple logically separate components (each component represented with a box in the diagram) from a single container to reduce resource consumption. Similarly the `postgres` service contains multiple databases required by QS services. One `nginx` service is used as proxy for all QS services that needs one except for `keycloak` that has its own `nginx-keycloak` as it needs to be ready before other services start. The focus of `Canton Network Quickstart` is to provide a development environment for App Providers.
 
 ![QS Topology](docs/images/qs-topology.drawio.png)
 
@@ -119,7 +136,7 @@ After starting the application with `make start` you can access the following UI
   - **Description**: Interface for managing user wallets.
 
 - **App Provider Wallet UI**
-  - **URL**: [http://wallet.localhost:2000](http://wallet.localhost:3000)
+  - **URL**: [http://wallet.localhost:3000](http://wallet.localhost:3000)
   - **Description**: Interface for managing user wallets.
 
 ### Super Validator UIs (if LocalNet enabled via `make setup`)
@@ -134,6 +151,8 @@ After starting the application with `make start` you can access the following UI
   - **URL**: [http://scan.localhost:4000](http://scan.localhost:4000)
   - **Description**: Interface to monitor transactions.
 
+  > **Note**: `LocalNet` rounds may take up to 6 rounds (equivalent to one hour) to display in the scan UI.
+
 All the Super Validator UIs are accessible via a gateway at [http://localhost:4000](http://localhost:4000).
 
 The `*.localhost` domains will resolve to your local host IP `127.0.0.1`.
@@ -142,21 +161,10 @@ The `*.localhost` domains will resolve to your local host IP `127.0.0.1`.
 
 To perform operations such as creating, editing, and archiving assets, users must be authenticated and authorized. The endpoints that perform these operations are protected by OAuth2 Authorization Code Grant Flow. GRPC communication between the backend service and participant is secured by OAuth2 Client Credentials Flow.
 
-## User Documentation
+### Port Mappings
 
-### User Guides
-
-The following user guides provide an engineering handover to teams using the Canton Network Quickstart to bootstrap their project.
-
-- [Quickstart Installation](docs/guide/CantonNetworkQuickstartInstallationGuide-20250213.pdf)
-- [Exploring The Demo](docs/guide/ExploringTheDemo-20250213.pdf)
-- [Project Structure](docs/guide/ProjectStructureGuide-20250212.pdf)
-- [Observability and Troubleshooting Overview](docs/guide/ObservabilityTroubleshootingOverview-20250220.pdf)
-
-### Technical Documentation
-
-- [Observability](docs/user/001-observability.md)
-- [Topology](docs/user/002-topology.md)
+The LocalNet configuration includes port mappings for local development that should not be exposed in production deployments.
+See the [Project Structure](docs/guide/ProjectStructureGuide-20250317.pdf) for more details.
 
 ## License
 

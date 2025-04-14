@@ -22,7 +22,7 @@ tasks.register<Exec>("compileDaml") {
 }
 
 tasks.register<com.digitalasset.transcode.codegen.java.gradle.JavaCodegenTask>("codeGen") {
-    dar = file("$projectDir/licensing/.daml/dist/quickstart-licensing-0.0.1.dar")
+    dar.from("$projectDir/licensing/.daml/dist/quickstart-licensing-0.0.1.dar")
     destination = file("$rootDir/backend/build/generated-daml-bindings")
     dependsOn("compileDaml")
 }
@@ -40,20 +40,19 @@ fun computeSdkVariables(): Map<String, Any> {
     val isUnix = osName.contains("nix") || osName.contains("nux") || osName.contains("aix")
 
     val sdkOs = when {
-        isWindows -> "windows"
-        isMac -> "macos"
+        isWindows -> "windows-x86_64"
+        isMac -> "macos-x86_64"
         isUnix -> when {
-            osArch.contains("arm") || osArch.contains("aarch64") -> "linux-arm"
-            else -> "linux-intel"
+            osArch.contains("arm") || osArch.contains("aarch64") -> "linux-aarch64"
+            else -> "linux-x86_64"
         }
-
         else -> throw Exception("Unsupported OS: $osName")
     }
 
     val damlSdkRuntimeVersion = VersionFiles.dotenv["DAML_RUNTIME_VERSION"] as String
     val damlSdkVersion = VersionFiles.damlYamlSdk
-    val sdkArchive = "daml-sdk-$damlSdkRuntimeVersion-$sdkOs.tar.gz"
-    val sdkUrl = "https://digitalasset.jfrog.io/artifactory/assembly/daml/$damlSdkRuntimeVersion/$sdkArchive"
+    val sdkArchive = "daml-sdk-$damlSdkRuntimeVersion-$sdkOs-ee.tar.gz"
+    val sdkUrl = "https://digitalasset.jfrog.io/artifactory/sdk-ee/$damlSdkRuntimeVersion/$sdkArchive"
     val sdkDir = file("$projectDir/.sdk")
     val sdkArchiveFile = file("${sdkDir}/${sdkArchive}")
     val extractedDir = file("${sdkDir}/extracted")
@@ -100,7 +99,6 @@ tasks.register<de.undercouch.gradle.tasks.download.Download>("fetchDamlSdk") {
             }
         }
 
-        // Apply the action to populate username and password
         Credentials.fromNetRc("digitalasset.jfrog.io").execute(passwordCredentials)
 
         val username = passwordCredentials.username
@@ -127,8 +125,6 @@ tasks.register<UnpackTarGzTask>("unpackDamlSdk") {
     destinationDir = sdkVars["extractedDir"] as File
 }
 
-
-
 // Task to run the install script
 tasks.register<Exec>("installDamlSdk") {
     dependsOn("unpackDamlSdk")
@@ -147,13 +143,12 @@ tasks.register<Exec>("installDamlSdk") {
         workingDir = topLevelDirs.first()
     }
     commandLine(
-        if (sdkOs == "windows") "./install.bat" else "./install.sh",
+        if (sdkOs == "windows-x86_64") "./install.bat" else "./install.sh",
         "--install-with-custom-version",
         damlSdkVersion
     )
     doLast {
         println("Installed Daml SDK runtime $damlSdkRuntimeVersion as $damlSdkVersion")
-        // Clean up extracted files
         println("Cleaning up downloaded files")
         sdkDir.deleteRecursively()
     }

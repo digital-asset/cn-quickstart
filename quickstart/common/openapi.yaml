@@ -170,36 +170,6 @@ paths:
         '400':
           description: Invalid input
 
-  /app-install-requests/{contractId}/cancel:
-    post:
-      summary: Cancel an AppInstallRequest
-      operationId: cancelAppInstallRequest
-      parameters:
-        - name: contractId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The contract ID of the AppInstallRequest to cancel
-        - name: commandId
-          in: query
-          required: true
-          schema:
-            type: string
-          description: The command ID for the ledger transaction
-      requestBody:
-        description: Cancellation parameters
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AppInstallRequestCancel'
-      responses:
-        '200':
-          description: AppInstallRequest canceled
-        '400':
-          description: Invalid input
-
   /app-installs/{contractId}/create-license:
     post:
       summary: Create a License using the AppInstall
@@ -282,7 +252,7 @@ paths:
 
   /licenses:
     get:
-      summary: List all Licenses
+      summary: List all Licenses (including renewal requests)
       operationId: listLicenses
       responses:
         '200':
@@ -326,23 +296,7 @@ paths:
         '400':
           description: Invalid input
 
-  /license-renewal-requests:
-    get:
-      summary: List all LicenseRenewalRequests
-      operationId: listLicenseRenewalRequests
-      responses:
-        '200':
-          description: A list of LicenseRenewalRequests
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LicenseRenewalRequest'
-        '400':
-          description: Invalid input
-
-  /license-renewal-requests/{contractId}/complete-renewal:
+  /licenses/{contractId}/complete-renewal:
     post:
       summary: Complete the License Renewal
       operationId: completeLicenseRenewal
@@ -364,6 +318,8 @@ paths:
           description: License renewed successfully
         '400':
           description: Invalid input
+        '404':
+          description: No matching contract found
 
   /licenses/{contractId}/expire:
     post:
@@ -424,73 +380,55 @@ components:
     TenantRegistrationRequest:
       type: object
       required:
+        - tenantId
+        - partyId
+        - walletUrl
         - clientId
-        - scope
-        - authorizationUri
-        - tokenUri
-        - jwkSetUri
-        - party
+        - issuerUrl
       properties:
-        clientId:
+        tenantId:
           type: string
-        clientSecret:
-          type: string
-        scope:
-          type: string
-        authorizationUri:
-          type: string
-        tokenUri:
-          type: string
-        jwkSetUri:
-          type: string
-        party:
+        partyId:
           type: string
         walletUrl:
           type: string
+        clientId:
+          type: string
+        issuerUrl:
+          type: string
+        internal:
+          type: boolean
 
     TenantRegistration:
       type: object
       required:
-        - clientId
-        - scope
-        - authorizationUri
-        - tokenUri
-        - jwkSetUri
-        - party
-        - preconfigured
+        - tenantId
+        - partyId
         - walletUrl
+        - clientId
+        - issuerUrl
+        - internal
       properties:
-        clientId:
+        tenantId:
           type: string
-          description: OAuth2 client identifier
-        clientSecret:
-          type: string
-          description: OAuth2 client secret
-        scope:
-          type: string
-          description: Requested scopes
-        authorizationUri:
-          type: string
-          description: Authorization endpoint URI
-          format: uri
-        tokenUri:
-          type: string
-          description: Token endpoint URI
-          format: uri
-        jwkSetUri:
-          type: string
-          description: JSON Web Key Set endpoint URI
-          format: uri
-        party:
+          description: Tenant identifier
+        partyId:
           type: string
           description: Party identifier
-        preconfigured:
-          type: boolean
-          description: Indicates if the registration is preconfigured on server-side
         walletUrl:
           type: string
           description: Wallet URL for payment redirects
           format: uri
+        clientId:
+          type: string
+          description: OAuth2 client identifier
+        issuerUrl:
+          type: string
+          description: Issuer URL
+          format: uri
+        internal:
+          type: boolean
+          description: Internal registration
 
     AuthenticatedUser:
       type: object
@@ -527,6 +465,12 @@ components:
 
     AppInstallRequest:
       type: object
+      required:
+        - contractId
+        - dso
+        - provider
+        - user
+        - meta
       properties:
         contractId:
           type: string
@@ -568,6 +512,14 @@ components:
 
     AppInstall:
       type: object
+      required:
+        - contractId
+        - dso
+        - provider
+        - user
+        - meta
+        - numLicensesCreated
+        - licenseNum
       properties:
         contractId:
           type: string
@@ -616,6 +568,14 @@ components:
 
     License:
       type: object
+      required:
+        - contractId
+        - dso
+        - provider
+        - user
+        - params
+        - expiresAt
+        - licenseNum
       properties:
         contractId:
           type: string
@@ -632,6 +592,10 @@ components:
           format: date-time
         licenseNum:
           type: integer
+        renewalRequests:
+          type: array
+          items:
+            $ref: '#/components/schemas/LicenseRenewalRequest'
 
     Metadata:
       type: object
@@ -662,6 +626,16 @@ components:
 
     LicenseRenewalRequest:
       type: object
+      required:
+          - contractId
+          - provider
+          - user
+          - dso
+          - licenseNum
+          - licenseFeeCc
+          - licenseExtensionDuration
+          - reference
+          - isPaid
       properties:
         contractId:
           type: string
@@ -680,6 +654,8 @@ components:
           description: "RelTime representing how long the license should be extended."
         reference:
           type: string
+        isPaid:
+          type: boolean
 
     LicenseExpireRequest:
       type: object

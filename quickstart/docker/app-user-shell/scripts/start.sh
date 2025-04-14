@@ -5,4 +5,4 @@
 set -eo pipefail
 
 source /app/simulate-user-input.sh
-/app/create-app-install-request.sh $APP_PROVIDER_PARTY
+/app/create-app-install-request.sh $APP_PROVIDER_PARTY $APP_USER_PARTY $DSO_PARTY "$APP_USER_WALLET_ADMIN_TOKEN"

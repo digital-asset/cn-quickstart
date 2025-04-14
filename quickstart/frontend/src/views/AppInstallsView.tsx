@@ -1,121 +1,119 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useAppInstallStore } from '../stores/appInstallStore';
 import { useUserStore } from '../stores/userStore';
-import { useToast } from '../stores/toastStore';
+import type { AppInstallUnified } from '../types';
 
 const AppInstallsView: React.FC = () => {
-    const {
-        appInstalls,
-        fetchUserInfo,
-        fetchAppInstalls,
-        cancelAppInstall,
-        createLicenseFromAppInstall,
-    } = useAppInstallStore();
+  const {
+    unifiedInstalls,
+    fetchAll,
+    accept,
+    reject,
+    createLicense,
+    cancelInstall,
+  } = useAppInstallStore();
+  const { user, fetchUser } = useUserStore();
 
-    const { user } = useUserStore();
-    const toast = useToast();
+  useEffect(() => {
+    fetchUser();
+    fetchAll();
+    const intervalId = setInterval(() => {
+      fetchAll();
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, [fetchUser, fetchAll]);
 
-    const [selectedInstallId, setSelectedInstallId] = useState<string | null>(null);
-
-    useEffect(() => {
-        fetchUserInfo();
-        fetchAppInstalls();
-        const intervalId = setInterval(() => {
-            fetchAppInstalls();
-        }, 1000);
-        return () => {
-            clearInterval(intervalId);
-        };
-    }, [fetchUserInfo, fetchAppInstalls]);
-
-    const handleCancel = async (contractId: string) => {
-        await cancelAppInstall(contractId, {});
-        toast.displaySuccess(`AppInstall with Contract ID ${contractId} was successfully canceled.`);
-        setSelectedInstallId(null);
-    };
-
-    const handleCreateLicense = async (contractId: string) => {
-        const result = await createLicenseFromAppInstall(contractId, {});
-        if (result) {
-            toast.displaySuccess(`License created with ID: ${result.licenseId}`);
-        }
-        setSelectedInstallId(null);
-    };
-
-    return (
-        <div>
-            <h2>App Installs</h2>
-
-            <div className="mt-4">
-                <h3>Existing AppInstalls</h3>
-                <table className="table table-fixed">
-                    <thead>
-                    <tr>
-                        <th style={{width: '150px'}}>Contract ID</th>
-                        <th style={{width: '150px'}}>DSO</th>
-                        <th style={{width: '150px'}}>Provider</th>
-                        <th style={{width: '150px'}}>User</th>
-                        <th style={{width: '200px'}}>Meta</th>
-                        <th style={{width: '150px'}}>Num Licenses Created</th>
-                        <th style={{width: '250px'}}>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {appInstalls.map((install) => (
-                        <tr key={install.contractId}>
-                            <td className="ellipsis-cell">{install.contractId}</td>
-                            <td className="ellipsis-cell">{install.dso}</td>
-                            <td className="ellipsis-cell">{install.provider}</td>
-                            <td className="ellipsis-cell">{install.user}</td>
-                            <td className="ellipsis-cell">{install.meta ? JSON.stringify(install.meta) : '{}'}</td>
-                            <td>{install.numLicensesCreated || 0}</td>
-                            <td>
-                                {selectedInstallId === install.contractId ? (
-                                    <div>
-                                        <div className="btn-group" role="group">
-                                            {user?.isAdmin && (
-                                                <button
-                                                    className="btn btn-success"
-                                                    onClick={() => handleCreateLicense(install.contractId)}
-                                                >
-                                                    Create License
-                                                </button>
-                                            )}
-                                            <button
-                                                className="btn btn-danger"
-                                                onClick={() => handleCancel(install.contractId)}
-                                            >
-                                                Cancel Install
-                                            </button>
-                                            <button
-                                                className="btn btn-secondary"
-                                                onClick={() => {
-                                                    setSelectedInstallId(null);
-                                                }}
-                                            >
-                                                Close
-                                            </button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <button
-                                        className="btn btn-primary"
-                                        onClick={() => setSelectedInstallId(install.contractId)}
-                                    >
-                                        Actions
-                                    </button>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
-            </div>
+  return (
+      <div>
+        <h2>App Installs</h2>
+        <div className="alert alert-info" role="alert">
+          <strong>Note:</strong> Run <code>make create-app-install-request</code> to submit an AppInstallRequest
         </div>
-    );
+        <div className="mt-4">
+          <table className="table table-fixed" id="app-installs-table">
+            <thead>
+            <tr>
+              <th style={{ width: '150px' }}>Contract ID</th>
+              <th style={{ width: '100px' }}>Status</th>
+              <th style={{ width: '150px' }}>DSO</th>
+              <th style={{ width: '150px' }}>Provider</th>
+              <th style={{ width: '150px' }}>User</th>
+              <th style={{ width: '200px' }}>Meta</th>
+              <th style={{ width: '100px' }}># Licenses</th>
+              <th style={{ width: '310px' }}>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {unifiedInstalls.map((item: AppInstallUnified) => (
+                <tr key={item.contractId} className="app-install-row">
+                  <td className="ellipsis-cell app-install-contract-id">
+                    {item.contractId}
+                  </td>
+                  <td className="ellipsis-cell app-install-status">
+                    {item.status}
+                  </td>
+                  <td className="ellipsis-cell app-install-dso">
+                    {item.dso}
+                  </td>
+                  <td className="ellipsis-cell app-install-provider">
+                    {item.provider}
+                  </td>
+                  <td className="ellipsis-cell app-install-user">
+                    {item.user}
+                  </td>
+                  <td className="ellipsis-cell app-install-meta">
+                    {item.meta ? JSON.stringify(item.meta) : '{}'}
+                  </td>
+                  <td className="app-install-num-licenses">
+                    {item.numLicensesCreated}
+                  </td>
+                  <td className="app-install-actions">
+                    {item.status === 'REQUEST' ? (
+                        user?.isAdmin ? (
+                            <div className="btn-group" role="group">
+                              <button
+                                  className="btn btn-success btn-accept-install"
+                                  onClick={() => accept(item.contractId, {}, {})}
+                              >
+                                Accept
+                              </button>
+                              <button
+                                  className="btn btn-warning btn-reject-install"
+                                  onClick={() => reject(item.contractId, {})}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                        ) : null
+                    ) : (
+                        <div className="btn-group" role="group">
+                          <button
+                              className="btn btn-danger btn-cancel-install"
+                              onClick={() => cancelInstall(item.contractId, {})}
+                          >
+                            Cancel
+                          </button>
+                          {user?.isAdmin && (
+                              <button
+                                  className="btn btn-success btn-create-license"
+                                  onClick={() => createLicense(item.contractId, {})}
+                              >
+                                Create License
+                              </button>
+                          )}
+                        </div>
+                    )}
+                  </td>
+                </tr>
+            ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+  );
 };
 
 export default AppInstallsView;

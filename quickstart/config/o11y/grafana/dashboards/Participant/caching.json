@@ -94,7 +94,7 @@
                   "axisSoftMin": 0,
                   "showPoints": "never"
                },
-               "unit": "reqps"
+               "unit": "s"
             }
          },
          "gridPos": {
@@ -104,88 +104,6 @@
             "y": 8
          },
          "id": 3,
-         "interval": "10s",
-         "options": {
-            "tooltip": {
-               "mode": "multi"
-            }
-         },
-         "pluginVersion": "v11.0.0",
-         "targets": [
-            {
-               "datasource": {
-                  "type": "prometheus",
-                  "uid": "${datasource}"
-               },
-               "expr": "rate(daml_cache_misses{namespace=\"$namespace\"}[$__rate_interval])",
-               "legendFormat": "[{{node}}] {{cache}}"
-            }
-         ],
-         "title": "Cache Throughput (misses)",
-         "type": "timeseries"
-      },
-      {
-         "datasource": {
-            "type": "datasource",
-            "uid": "-- Mixed --"
-         },
-         "fieldConfig": {
-            "defaults": {
-               "custom": {
-                  "axisSoftMin": 0,
-                  "showPoints": "never"
-               },
-               "unit": "reqps"
-            }
-         },
-         "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 8
-         },
-         "id": 4,
-         "interval": "10s",
-         "options": {
-            "tooltip": {
-               "mode": "multi"
-            }
-         },
-         "pluginVersion": "v11.0.0",
-         "targets": [
-            {
-               "datasource": {
-                  "type": "prometheus",
-                  "uid": "${datasource}"
-               },
-               "expr": "rate(daml_cache_evictions{namespace=\"$namespace\"}[$__rate_interval])",
-               "legendFormat": "[{{node}}] {{cache}}"
-            }
-         ],
-         "title": "Cache Throughput (evictions)",
-         "type": "timeseries"
-      },
-      {
-         "datasource": {
-            "type": "datasource",
-            "uid": "-- Mixed --"
-         },
-         "fieldConfig": {
-            "defaults": {
-               "custom": {
-                  "axisSoftMin": 0,
-                  "showPoints": "never"
-               },
-               "unit": "s"
-            }
-         },
-         "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 16
-         },
-         "id": 5,
          "interval": "10s",
          "options": {
             "tooltip": {

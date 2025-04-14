@@ -5,120 +5,228 @@ package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.AdminApi;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
-import com.digitalasset.quickstart.repository.OAuth2ClientRegistrationRepository;
+import com.digitalasset.quickstart.security.AuthClientRegistrationRepository;
+import com.digitalasset.quickstart.security.AuthClientRegistrationRepository.Client;
+import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
+import com.digitalasset.quickstart.utility.LoggingSpanHelper;
 
-// Updated models from the renamed OpenAPI spec
 import org.openapitools.model.TenantRegistration;
 import org.openapitools.model.TenantRegistrationRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static com.digitalasset.quickstart.utility.ContextAwareCompletableFutures.completeWithin;
+import static com.digitalasset.quickstart.utility.ContextAwareCompletableFutures.supplyWithin;
 
 @Controller
 @RequestMapping("${openapi.asset.base-path:}")
 public class AdminApiImpl implements AdminApi {
 
-    private final OAuth2ClientRegistrationRepository tenantRegistrationRepository;
+    private static final Logger logger = LoggerFactory.getLogger(AdminApiImpl.class);
+
+    private final AuthClientRegistrationRepository authClientRegistrationRepository;
     private final TenantPropertiesRepository tenantPropertiesRepository;
 
     @Autowired
     public AdminApiImpl(
-            OAuth2ClientRegistrationRepository tenantRegistrationRepository,
+            AuthClientRegistrationRepository authClientRegistrationRepository,
             TenantPropertiesRepository tenantPropertiesRepository
     ) {
-        this.tenantRegistrationRepository = tenantRegistrationRepository;
+        this.authClientRegistrationRepository = authClientRegistrationRepository;
         this.tenantPropertiesRepository = tenantPropertiesRepository;
     }
 
     @Override
+    @WithSpan
     public CompletableFuture<ResponseEntity<TenantRegistration>> createTenantRegistration(
-            TenantRegistrationRequest request
+            @SpanAttribute("tenant.request") TenantRegistrationRequest request
     ) {
-        // Build the Spring Security OAuth2 ClientRegistration
-        var registration = org.springframework.security.oauth2.client.registration.ClientRegistration
-                .withRegistrationId(request.getClientId())
-                .clientId(request.getClientId())
-                .clientSecret(request.getClientSecret())
-                .authorizationUri(request.getAuthorizationUri())
-                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                .tokenUri(request.getTokenUri())
-                .jwkSetUri(request.getJwkSetUri())
-                .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
-                .scope(request.getScope())
-                .clientName(request.getParty())
-                // Mark as preconfigured=false, i.e. added at runtime
-                .providerConfigurationMetadata(java.util.Map.of("preconfigured", "false"))
-                .build();
+        Span methodSpan = Span.current();
+        Context parentContext = Context.current();
 
-        // Save the registration in your custom repository
-        tenantRegistrationRepository.addRegistration(registration);
+        Map<String, Object> commonAttrs = Map.of(
+                "tenant.tenantId", request.getTenantId(),
+                "tenant.clientId", request.getClientId(),
+                "tenant.party", request.getPartyId()
+        );
 
-        // Save extra properties in a separate repository
-        TenantPropertiesRepository.TenantProperties props = new TenantPropertiesRepository.TenantProperties();
-        props.setWalletUrl(request.getWalletUrl());
-        tenantPropertiesRepository.addTenant(registration.getRegistrationId(), props);
+        LoggingSpanHelper.setSpanAttributes(methodSpan, commonAttrs);
+        LoggingSpanHelper.logInfo(logger, "createTenantRegistration: Starting async creation", commonAttrs);
 
-        // Build the response (OpenAPI model)
-        TenantRegistration response = new TenantRegistration();
-        response.setClientId(registration.getClientId());
-        response.setClientSecret(registration.getClientSecret());
-        response.setScope(String.join(" ", registration.getScopes()));
-        response.setAuthorizationUri(URI.create(registration.getProviderDetails().getAuthorizationUri()));
-        response.setTokenUri(URI.create(registration.getProviderDetails().getTokenUri()));
-        response.setJwkSetUri(URI.create(registration.getProviderDetails().getJwkSetUri()));
-        response.setParty(registration.getClientName());
-        response.setPreconfigured(false);
-        response.setWalletUrl(URI.create(props.getWalletUrl()));
+        return CompletableFuture
+                .supplyAsync(
+                        supplyWithin(parentContext, () -> {
+                            LoggingSpanHelper.addEventWithAttributes(
+                                    methodSpan,
+                                    "Executing asynchronous logic for createTenantRegistration",
+                                    null
+                            );
 
-        return CompletableFuture.completedFuture(ResponseEntity.ok(response));
+                            Client c = new Client();
+                            c.setTenantId(request.getTenantId());
+                            c.setClientId(request.getClientId());
+                            c.setIssuerURL(request.getIssuerUrl());
+
+                            authClientRegistrationRepository.registerClient(c);
+
+                            // Save extra properties in a separate repository
+                            TenantPropertiesRepository.TenantProperties props = new TenantPropertiesRepository.TenantProperties();
+                            props.setWalletUrl(request.getWalletUrl());
+                            props.setPartyId(request.getPartyId());
+                            props.setTenantId(request.getTenantId());
+                            props.setInternal(request.getInternal());
+                            tenantPropertiesRepository.addTenant(request.getTenantId(), props);
+
+                            // Build the response (OpenAPI model)
+                            TenantRegistration response = new TenantRegistration();
+                            response.setTenantId(request.getTenantId());
+                            response.setPartyId(request.getPartyId());
+                            response.setInternal(request.getInternal());
+                            response.setClientId(request.getClientId());
+                            response.setIssuerUrl(URI.create(request.getIssuerUrl()));
+                            response.setWalletUrl(URI.create(props.getWalletUrl()));
+                            return ResponseEntity.ok(response);
+                        })
+                )
+                .whenComplete(
+                        completeWithin(parentContext, (res, ex) -> {
+                            if (ex == null) {
+                                LoggingSpanHelper.logInfo(
+                                        logger,
+                                        "createTenantRegistration: Successfully created tenant registration",
+                                        commonAttrs
+                                );
+                            } else {
+                                LoggingSpanHelper.logError(
+                                        logger,
+                                        "createTenantRegistration: Failed",
+                                        commonAttrs,
+                                        ex
+                                );
+                                LoggingSpanHelper.recordException(methodSpan, ex);
+                            }
+                        })
+                );
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Void>> deleteTenantRegistration(String tenantId) {
-        tenantRegistrationRepository.removeRegistration(tenantId);
-        tenantPropertiesRepository.removeTenant(tenantId);
-        return CompletableFuture.completedFuture(ResponseEntity.ok().build());
+    @WithSpan
+    public CompletableFuture<ResponseEntity<Void>> deleteTenantRegistration(
+            @SpanAttribute("tenant.tenantId") String tenantId
+    ) {
+        Span methodSpan = Span.current();
+        Context parentContext = Context.current();
+
+        Map<String, Object> commonAttrs = Map.of("tenant.tenantId", tenantId);
+        LoggingSpanHelper.setSpanAttributes(methodSpan, commonAttrs);
+        LoggingSpanHelper.logInfo(logger, "deleteTenantRegistration: Starting async deletion", commonAttrs);
+
+        return CompletableFuture
+                .supplyAsync(
+                        supplyWithin(parentContext, () -> {
+                            LoggingSpanHelper.addEventWithAttributes(
+                                    methodSpan,
+                                    "Executing asynchronous logic for deleteTenantRegistration",
+                                    null
+                            );
+                            authClientRegistrationRepository.removeClientRegistrations(tenantId);
+                            tenantPropertiesRepository.removeTenant(tenantId);
+                            return ResponseEntity.ok().<Void>build();
+                        })
+                )
+                .whenComplete(
+                        completeWithin(parentContext, (res, ex) -> {
+                            if (ex == null) {
+                                LoggingSpanHelper.logDebug(
+                                        logger,
+                                        "deleteTenantRegistration: Successfully deleted tenant registration",
+                                        commonAttrs
+                                );
+                            } else {
+                                LoggingSpanHelper.logError(
+                                        logger,
+                                        "deleteTenantRegistration: Failed",
+                                        commonAttrs,
+                                        ex
+                                );
+                                LoggingSpanHelper.recordException(methodSpan, ex);
+                            }
+                        })
+                );
     }
 
     @Override
+    @WithSpan
     public CompletableFuture<ResponseEntity<List<TenantRegistration>>> listTenantRegistrations() {
-        List<TenantRegistration> result = tenantRegistrationRepository.getRegistrations().stream()
-                // Filter only those using the AUTHORIZATION_CODE grant type
-                .filter(r -> AuthorizationGrantType.AUTHORIZATION_CODE.equals(r.getAuthorizationGrantType()))
-                .map(r -> {
-                    TenantRegistration out = new TenantRegistration();
-                    out.setClientId(r.getClientId());
-                    out.setClientSecret(r.getClientSecret());
-                    out.setScope(String.join(" ", r.getScopes()));
-                    out.setAuthorizationUri(URI.create(r.getProviderDetails().getAuthorizationUri()));
-                    out.setTokenUri(URI.create(r.getProviderDetails().getTokenUri()));
-                    out.setJwkSetUri(URI.create(r.getProviderDetails().getJwkSetUri()));
-                    out.setParty(r.getClientName());
+        Span methodSpan = Span.current();
+        Context parentContext = Context.current();
 
-                    // Determine whether it was preconfigured or added at runtime
-                    Object preconfiguredFlag = r.getProviderDetails()
-                            .getConfigurationMetadata()
-                            .get("preconfigured");
-                    out.setPreconfigured("true".equals(preconfiguredFlag));
+        LoggingSpanHelper.logDebug(logger, "listTenantRegistrations: Starting async retrieval");
 
-                    // Populate walletUrl from your separate repository
-                    TenantPropertiesRepository.TenantProperties props =
-                            tenantPropertiesRepository.getTenant(r.getRegistrationId());
-                    if (props != null && props.getWalletUrl() != null) {
-                        out.setWalletUrl(URI.create(props.getWalletUrl()));
-                    }
-                    return out;
-                })
-                .collect(Collectors.toList());
+        return CompletableFuture
+                .supplyAsync(
+                        supplyWithin(parentContext, () -> {
+                            LoggingSpanHelper.addEventWithAttributes(
+                                    methodSpan,
+                                    "Executing asynchronous logic for listTenantRegistrations",
+                                    null
+                            );
 
-        return CompletableFuture.completedFuture(ResponseEntity.ok(result));
+                            List<TenantRegistration> result = authClientRegistrationRepository.getClientRegistrations().stream()
+                                    .map(c -> {
+                                        TenantRegistration out = new TenantRegistration();
+                                        out.setTenantId(c.getTenantId());
+                                        out.setClientId(c.getClientId());
+                                        out.setIssuerUrl(URI.create(c.getIssuerURL()));
+
+                                        TenantPropertiesRepository.TenantProperties props = tenantPropertiesRepository.getTenant(c.getTenantId());
+                                        if (props != null) {
+                                            if (props.getWalletUrl() != null) out.setWalletUrl(URI.create(props.getWalletUrl()));
+                                            out.setPartyId(props.getPartyId());
+                                            out.setInternal(props.isInternal());
+                                        }
+                                        return out;
+                                    })
+                                    .collect(Collectors.toList());
+
+                            return ResponseEntity.ok(result);
+                        })
+                )
+                .whenComplete(
+                        completeWithin(parentContext, (res, ex) -> {
+                            if (ex == null) {
+                                Map<String, Object> successAttrs = Map.of(
+                                        "list.count", res.getBody() != null ? res.getBody().size() : 0
+                                );
+                                LoggingSpanHelper.logDebug(logger, "listTenantRegistrations: Success", successAttrs);
+                            } else {
+                                LoggingSpanHelper.logError(
+                                        logger,
+                                        "listTenantRegistrations: Failed to list tenant registrations",
+                                        null,
+                                        ex
+                                );
+                                LoggingSpanHelper.recordException(methodSpan, ex);
+                            }
+                        })
+                );
     }
 }

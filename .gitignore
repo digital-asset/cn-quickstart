@@ -1,5 +1,6 @@
 .gradle
 **/build/
+**/bin/
 !src/**/build/
 
 # Ignore Gradle GUI config
@@ -30,3 +31,6 @@ gradle-app.setting
 
 # backups
 *.bak
+
+# MacOS
+.DS_Store

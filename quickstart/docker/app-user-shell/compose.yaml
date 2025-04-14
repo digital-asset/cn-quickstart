@@ -16,12 +16,10 @@ services:
       - ./scripts/create-app-install-request.sh:/app/create-app-install-request.sh
       - ./scripts/simulate-user-input.sh:/app/simulate-user-input.sh
       - ./../utils.sh:/app/utils.sh
-    environment:
-      - LEDGER_API_ADMIN_USER=${LEDGER_API_ADMIN_USER}
-      - AUTH_APP_PROVIDER_CLIENT_ID=${AUTH_APP_PROVIDER_CLIENT_ID}
-      - APP_USER_USER_ID=${AUTH_APP_USER_CLIENT_ID}
-      - AUTH_APP_USER_CLIENT_ID=${AUTH_APP_USER_CLIENT_ID}
-      - WALLET_ADMIN_USER=${WALLET_ADMIN_USER}
+    env_file:
+      - ./../..//env/ports.env
+      - ./../../env/app-provider.env
+      - ./../../env/app-user.env
     command: /app/start.sh
     networks:
       - ${DOCKER_NETWORK}

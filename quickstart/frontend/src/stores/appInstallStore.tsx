@@ -2,93 +2,154 @@
 // SPDX-License-Identifier: 0BSD
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { useToast } from './toastStore';
 import api from '../api';
-import { AuthenticatedUser, ApiClient, AppInstall, AppInstallCancel, AppInstallCreateLicenseRequest, AppInstallCreateLicenseResult } from '../types';
 import { generateCommandId } from '../utils/commandId';
+import { useToast } from './toastStore';
+import type {
+    AppInstall as ApiAppInstall,
+    AppInstallRequest as ApiAppInstallRequest,
+    AppInstallRequestAccept,
+    AppInstallRequestReject,
+    AppInstallCreateLicenseRequest,
+    AppInstallCreateLicenseResult,
+    AppInstallCancel,
+    Client,
+    Metadata,
+} from '../openapi.d.ts';
+import { AppInstallUnified } from '../types';
 
 interface AppInstallState {
-    appInstalls: AppInstall[];
+    unifiedInstalls: AppInstallUnified[];
 }
 
 interface AppInstallContextType extends AppInstallState {
-    fetchUserInfo: () => Promise<void>;
-    fetchAppInstalls: () => Promise<void>;
-    cancelAppInstall: (contractId: string, meta: Record<string, any>) => Promise<void>;
-    createLicenseFromAppInstall: (contractId: string, params: Record<string, any>) => Promise<AppInstallCreateLicenseResult | undefined>;
+    fetchAll: () => Promise<void>;
+    accept: (contractId: string, installMeta: Metadata, meta: Metadata) => Promise<void>;
+    reject: (contractId: string, meta: Metadata) => Promise<void>;
+    cancelInstall: (contractId: string, meta: Metadata) => Promise<void>;
+    createLicense: (contractId: string, meta: Metadata) => Promise<AppInstallCreateLicenseResult | undefined>;
 }
 
 const AppInstallContext = createContext<AppInstallContextType | undefined>(undefined);
 
 export const AppInstallProvider = ({ children }: { children: React.ReactNode }) => {
-    const [appInstalls, setAppInstalls] = useState<AppInstall[]>([]);
-    const [, setUser] = useState<AuthenticatedUser | null>(null);
+    const [unifiedInstalls, setUnifiedInstalls] = useState<AppInstallUnified[]>([]);
     const toast = useToast();
 
-    const fetchUserInfo = useCallback(async () => {
+    const fetchAll = useCallback(async () => {
         try {
-            const client: ApiClient = await api.getClient();
-            const response = await client.getAuthenticatedUser();
-            setUser(response.data);
+            const client: Client = await api.getClient();
+            const requestsResponse = await client.listAppInstallRequests();
+            const requests: ApiAppInstallRequest[] = requestsResponse.data;
+            const installsResponse = await client.listAppInstalls();
+            const installs: ApiAppInstall[] = installsResponse.data as ApiAppInstall[];
+
+            const unifiedRequests: AppInstallUnified[] = requests.map((r) => ({
+                status: 'REQUEST',
+                contractId: r.contractId,
+                dso: r.dso,
+                provider: r.provider,
+                user: r.user,
+                meta: r.meta,
+                numLicensesCreated: 0,
+            }));
+
+            const unifiedInstallRecords: AppInstallUnified[] = installs.map((i) => ({
+                status: 'INSTALL',
+                contractId: i.contractId,
+                dso: i.dso,
+                provider: i.provider,
+                user: i.user,
+                meta: i.meta,
+                numLicensesCreated: i.numLicensesCreated || 0,
+            }));
+
+            setUnifiedInstalls([...unifiedRequests, ...unifiedInstallRecords]);
         } catch (error) {
-            toast.displayError('Error fetching user info');
+            toast.displayError('Error fetching AppInstall data');
         }
     }, [toast]);
 
-    const fetchAppInstalls = useCallback(async () => {
-        try {
-            const client: ApiClient = await api.getClient();
-            const response = await client.listAppInstalls();
-            setAppInstalls(response.data);
-        } catch (error) {
-            toast.displayError('Error fetching AppInstalls');
-        }
-    }, [toast]);
-
-    const cancelAppInstall = useCallback(
-        async (contractId: string, meta: Record<string, any>) => {
+    const accept = useCallback(
+        async (contractId: string, installMeta: Metadata, meta: Metadata) => {
             try {
-                const client: ApiClient = await api.getClient();
-                const body: AppInstallCancel = {
-                    meta: { data: meta }
-                };
+                const client: Client = await api.getClient();
                 const commandId = generateCommandId();
-                await client.cancelAppInstall({ contractId, commandId }, body);
-                await fetchAppInstalls();
+                await client.acceptAppInstallRequest(
+                    { contractId, commandId },
+                    { installMeta, meta } as AppInstallRequestAccept
+                );
+                await fetchAll();
+                toast.displaySuccess(`Accepted AppInstallRequest ${contractId}`);
+            } catch (error) {
+                toast.displayError('Error accepting AppInstallRequest');
+            }
+        },
+        [toast, fetchAll]
+    );
+
+    const reject = useCallback(
+        async (contractId: string, meta: Metadata) => {
+            try {
+                const client: Client = await api.getClient();
+                const commandId = generateCommandId();
+                await client.rejectAppInstallRequest(
+                    { contractId, commandId },
+                    { meta } as AppInstallRequestReject
+                );
+                await fetchAll();
+                toast.displaySuccess(`Rejected AppInstallRequest ${contractId}`);
+            } catch (error) {
+                toast.displayError('Error rejecting AppInstallRequest');
+            }
+        },
+        [toast, fetchAll]
+    );
+
+    const cancelInstall = useCallback(
+        async (contractId: string, meta: Metadata) => {
+            try {
+                const client: Client = await api.getClient();
+                const commandId = generateCommandId();
+                await client.cancelAppInstall(
+                    { contractId, commandId },
+                    { meta } as AppInstallCancel
+                );
+                await fetchAll();
+                toast.displaySuccess(`Canceled AppInstall ${contractId}`);
             } catch (error) {
                 toast.displayError('Error canceling AppInstall');
             }
         },
-        [toast, fetchAppInstalls]
+        [toast, fetchAll]
     );
 
-    const createLicenseFromAppInstall = useCallback(
-        async (contractId: string, params: Record<string, any>) => {
+    const createLicense = useCallback(
+        async (contractId: string, meta: Metadata) => {
             try {
-                const client: ApiClient = await api.getClient();
-                const body: AppInstallCreateLicenseRequest = {
-                    params: { meta: { data: params } }
-                };
+                const client: Client = await api.getClient();
+                const body: AppInstallCreateLicenseRequest = { params: { meta } };
                 const commandId = generateCommandId();
                 const response = await client.createLicense({ contractId, commandId }, body);
-                // Refresh the list after creation if needed
-                await fetchAppInstalls();
+                await fetchAll();
+                toast.displaySuccess(`Created License: ${response.data?.licenseId}`);
                 return response.data;
             } catch (error) {
                 toast.displayError('Error creating License from AppInstall');
             }
         },
-        [toast, fetchAppInstalls]
+        [toast, fetchAll]
     );
 
     return (
         <AppInstallContext.Provider
             value={{
-                appInstalls,
-                fetchUserInfo,
-                fetchAppInstalls,
-                cancelAppInstall,
-                createLicenseFromAppInstall,
+                unifiedInstalls,
+                fetchAll,
+                accept,
+                reject,
+                cancelInstall,
+                createLicense,
             }}
         >
             {children}

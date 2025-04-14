@@ -35,8 +35,10 @@ dependencies {
     implementation("io.opentelemetry.javaagent:opentelemetry-javaagent:${Deps.opentelemetry.version}")
 
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:${Deps.opentelemetry.version}")
+    implementation("net.logstash.logback:logstash-logback-encoder:8.0")
     implementation(Deps.springBoot.actuator)
     implementation(Deps.springBoot.oauth2Client)
+    implementation(Deps.springBoot.oauth2ResourceServer)
     implementation(Deps.springBoot.security)
     runtimeOnly("org.postgresql:postgresql:42.7.3")
     runtimeOnly(Deps.grpc.api)

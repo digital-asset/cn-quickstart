@@ -12,6 +12,8 @@ public class LedgerConfig {
 
     private String host = "localhost";
     private int port = 6865;
+    private String applicationId;
+    private String validatorUri;
 
     // Getters and Setters
     public String getHost() {
@@ -28,6 +30,22 @@ public class LedgerConfig {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public String getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(String applicationId) {
+        this.applicationId = applicationId;
+    }
+
+    public String getValidatorUri() {
+        return validatorUri;
+    }
+
+    public void setValidatorUri(String validatorUri) {
+        this.validatorUri = validatorUri;
     }
 }
 

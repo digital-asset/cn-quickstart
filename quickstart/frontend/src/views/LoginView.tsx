@@ -4,7 +4,7 @@
 import React, {useEffect, useState} from 'react';
 import {useToast} from '../stores/toastStore';
 import api from '../api';
-import {LoginLink, ApiClient} from '../types';
+import {Client, LoginLink} from "../openapi";
 
 const LoginView: React.FC = () => {
     const [loginLinks, setLoginLinks] = useState<LoginLink[]>([]);
@@ -13,7 +13,7 @@ const LoginView: React.FC = () => {
     useEffect(() => {
         const fetchLoginLinks = async () => {
             try {
-                const client: ApiClient = await api.getClient();
+                const client: Client = await api.getClient();
                 const response = await client.listLinks();
                 setLoginLinks(response.data);
             } catch (error) {
@@ -37,6 +37,9 @@ const LoginView: React.FC = () => {
                 ))}
                 </tbody>
             </table>
+            {/*TODO get username/password from .env*/}
+            <div>AppProvider user: pat, password: abc123</div>
+            <div>AppUser user: alice, password: abc123</div>
         </div>
     );
 };

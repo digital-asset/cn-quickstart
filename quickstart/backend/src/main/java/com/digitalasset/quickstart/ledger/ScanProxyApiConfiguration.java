@@ -3,33 +3,22 @@
 
 package com.digitalasset.quickstart.ledger;
 
+import com.digitalasset.quickstart.config.LedgerConfig;
+import com.digitalasset.quickstart.security.TokenProvider;
 import com.digitalasset.quickstart.validatorproxy.client.ApiClient;
 import com.digitalasset.quickstart.validatorproxy.client.api.ScanProxyApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 
 @Configuration
 public class ScanProxyApiConfiguration {
 
-    private static final String CLIENT_REGISTRATION_ID = "AppProvider-client-credentials";
-
     @Bean
-    public ScanProxyApi scanProxyApi(OAuth2AuthorizedClientManager authorizedClientManager) {
+    public ScanProxyApi scanProxyApi(TokenProvider tokenProvider, LedgerConfig ledgerConfig) {
         ApiClient apiClient = new ApiClient();
-        apiClient.updateBaseUri("http://validator-app-provider:5003/api/validator"); // TODO: configure this properly
+        apiClient.updateBaseUri(ledgerConfig.getValidatorUri());
         apiClient.setRequestInterceptor(requestBuilder -> {
-            OAuth2AuthorizeRequest req = OAuth2AuthorizeRequest.withClientRegistrationId(CLIENT_REGISTRATION_ID)
-                    .principal("N/A")
-                    .build();
-            var authorizedClient = authorizedClientManager.authorize(req);
-            if (authorizedClient != null && authorizedClient.getAccessToken() != null) {
-                String accessToken = authorizedClient.getAccessToken().getTokenValue();
-                requestBuilder.header("Authorization", "Bearer " + accessToken);
-            } else {
-                throw new IllegalStateException("Failed to obtain access token for ScanProxyApi");
-            }
+            requestBuilder.header("Authorization", "Bearer " + tokenProvider.getToken());
         });
 
         return new ScanProxyApi(apiClient);
