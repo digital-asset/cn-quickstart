@@ -247,7 +247,7 @@ update-env-sdk-runtime-version: ## Helper to update DAML_RUNTIME_VERSION in .env
 	DAML_SDK_VERSION=$$(grep '^sdk-version:' daml/licensing/daml.yaml | awk '{print $$2}'); \
 	VERSION=$$(docker run --rm digitalasset/daml-sdk:$$DAML_SDK_VERSION bash -c 'cat /home/daml/.daml/sdk/*/sdk-config.yaml' | grep 'version:' | awk '{print $$2}'); \
 	sed -i.bak 's/^DAML_RUNTIME_VERSION=.*/DAML_RUNTIME_VERSION='"$$VERSION/" .env; \
-	@echo "Updated DAML_RUNTIME_VERSION to $$VERSION"
+	echo "Updated DAML_RUNTIME_VERSION to $$VERSION"
 
 # Run arbitrary command with environment variables set
 ifneq ($(origin COMMAND), undefined)
