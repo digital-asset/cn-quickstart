@@ -206,9 +206,9 @@ expirePaymentRequest app renewalRequestId paymentRequestId = do
   submit app.provider.primaryParty do
     exerciseCmd paymentRequestId AppPaymentRequest_Expire with actor = app.provider.primaryParty
   void $ submit app.provider.primaryParty do
-    exerciseCmd renewalRequestId LicenseRenewalRequest_Cancellation with 
-      actor   = app.provider.primaryParty
-      reasons = Metadata with values = Map.fromList [("cancellationReason", "Payment request expired")]
+    exerciseCmd renewalRequestId LicenseRenewalRequest_Cancel with 
+      actor = app.provider.primaryParty
+      meta  = Metadata with values = Map.fromList [("reason", "Payment request expired")]
 
 completeAllAcceptedTransfers : AmuletApp -> AmuletUser -> Script ()
 completeAllAcceptedTransfers app provider = do
@@ -228,9 +228,9 @@ rejectPaymentRequest : LicensingApp -> AmuletUser -> ContractId LicenseRenewalRe
 rejectPaymentRequest app sender renewalRequestId paymentRequest = do
   submit sender.primaryParty do exerciseCmd paymentRequest AppPaymentRequest_Reject
   void $ submit app.provider.primaryParty do
-    exerciseCmd renewalRequestId LicenseRenewalRequest_Cancellation with 
-      actor   = app.provider.primaryParty
-      reasons = Metadata with values = Map.fromList [("cancellationReason", "Payment rejected")]
+    exerciseCmd renewalRequestId LicenseRenewalRequest_Cancel with 
+      actor = app.provider.primaryParty
+      meta  = Metadata with values = Map.fromList [("reason", "Payment rejected")]
   
 
 getLicense : AmuletUser -> Script (ContractId License, License)

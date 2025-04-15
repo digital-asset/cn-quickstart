@@ -149,7 +149,6 @@ public class LedgerApi {
                 .setChoiceArgument(payload);
 
         CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
-                .setApplicationId(APP_ID)
                 .setCommandId(commandId)
                 .addActAs(party)
                 .addReadAs(party)
@@ -172,7 +171,7 @@ public class LedgerApi {
                     TransactionOuterClass.TransactionTree txTree = response.getTransaction();
                     long offset = txTree.getOffset();
                     String workflowId = txTree.getWorkflowId();
-                    String rootEventId = txTree.getRootEventIdsCount() > 0 ? txTree.getRootEventIds(0) : "";
+                    String rootEventId = "";
                     TransactionOuterClass.TreeEvent event = txTree.getEventsByIdMap().get(rootEventId);
                     String eventId = event != null ? rootEventId : null;
 
@@ -232,7 +231,6 @@ public class LedgerApi {
         LoggingSpanHelper.logInfo(logger, "Submitting commands", attrs);
 
         CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
-                .setApplicationId(APP_ID)
                 .setCommandId(commandId)
                 .addActAs(party)
                 .addReadAs(party)
