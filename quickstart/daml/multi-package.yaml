@@ -1,3 +1,6 @@
 packages:
+- ./external-test-sources/splice-token-standard-test
+- ./external-test-sources/splice-amulet-test
+- ./external-test-sources/splice-wallet-test
 - ./licensing
 - ./licensing-tests
