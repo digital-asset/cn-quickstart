@@ -1,16 +1,15 @@
 # for config file options, refer to
 # https://docs.daml.com/tools/assistant.html#project-config-file-daml-yaml
 
-sdk-version: 3.2.0-snapshot.20241106.0
+sdk-version: 3.3.0-snapshot.20250409.13730.0.v6972616a
 name: quickstart-licensing
 source: daml
 version: 0.0.1
 dependencies:
   - daml-prim
   - daml-stdlib
-  - daml-script
 data-dependencies:
   # TODO: fetch as artifacts when integrating gradle-daml-plugin https://github.com/DACH-NY/canton-network-node/issues/16393
-- ../dars/splice-amulet-0.1.6.dar
-- ../dars/splice-util-0.1.1.dar
-- ../dars/splice-wallet-payments-0.1.6.dar
+- ../dars/splice-amulet-0.1.9.dar
+- ../dars/splice-util-0.1.3.dar
+- ../dars/splice-wallet-payments-0.1.9.dar
