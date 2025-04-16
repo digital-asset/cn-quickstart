@@ -188,7 +188,7 @@ public class LicenseApiImpl implements LicensesApi {
                                         r.setUser(rc.payload.getUser.getParty);
                                         r.setDso(rc.payload.getDso.getParty);
                                         r.setLicenseNum(rc.payload.getLicenseNum.intValue());
-                                        r.setLicenseFeeCc(rc.payload.getLicenseFeeCc);
+                                        r.setLicenseFeeCc(rc.payload.getLicenseFeeAmount); // FIXME
                                         r.setIsPaid(rcData.isPaid());
 
                                         long micros = rc.payload.getLicenseExtensionDuration.getMicroseconds;
