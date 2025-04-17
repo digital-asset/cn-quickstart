@@ -149,7 +149,6 @@ public class LedgerApi {
                 .setChoiceArgument(payload);
 
         CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
-                .setApplicationId(APP_ID)
                 .setCommandId(commandId)
                 .addActAs(party)
                 .addReadAs(party)
@@ -232,7 +231,6 @@ public class LedgerApi {
         LoggingSpanHelper.logInfo(logger, "Submitting commands", attrs);
 
         CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
-                .setApplicationId(APP_ID)
                 .setCommandId(commandId)
                 .addActAs(party)
                 .addReadAs(party)
