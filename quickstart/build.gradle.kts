@@ -31,11 +31,11 @@ tasks.register<ConfigureProfilesTask>("configureProfiles") {
 // Task to download published Grafana dashboards for the observability stack
 tasks.register<de.undercouch.gradle.tasks.download.Download>("fetchGrafanaDashboards") {
     val repositoryUrl = "https://digitalasset.jfrog.io/artifactory"
-    val dashboardsDir = "$rootDir/config/o11y/grafana/dashboards"
+    val dashboardsDir = "$rootDir/config/o11y/grafana/dashboards/Participant"
 
     // TODO refactor to use `eachFile { f -> ... }` when we need to download multiple files
     src("$repositoryUrl/scribe/v${VersionFiles.dotenv["SCRIBE_VERSION"]}/grafana/v11.0.0/dashboard.json")
-    dest(file("$dashboardsDir/Participant/pqs.json"))
+    dest(file("$dashboardsDir/pqs.json"))
     overwrite(true)
     onlyIfModified(true)
 
