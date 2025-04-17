@@ -45,6 +45,33 @@ object Credentials {
         }
     }
 
+    fun execFromNetRc(domain: String): Pair<String, String> {
+        val passwordCredentials = object : PasswordCredentials {
+            private var usernameField: String? = null
+            private var passwordField: String? = null
+
+            override fun getUsername(): String? = usernameField
+            override fun setUsername(username: String?) {
+                usernameField = username
+            }
+
+            override fun getPassword(): String? = passwordField
+            override fun setPassword(password: String?) {
+                passwordField = password
+            }
+        }
+
+        fromNetRc(domain).execute(passwordCredentials)
+
+        val username = passwordCredentials.username
+        val password = passwordCredentials.password
+
+        if (username == null || password == null) {
+            throw Exception("Failed to obtain credentials from .netrc")
+        }
+        return username to password
+    }
+
     private fun locateNetrcFile(): java.io.File {
         val home = System.getProperty("user.home")
             ?: throw Exception("Cannot determine user home directory")
