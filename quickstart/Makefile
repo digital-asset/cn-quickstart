@@ -227,7 +227,7 @@ install-daml-sdk: ## Install the Daml SDK
 
 .PHONY: fetch-grafana-dashboards
 fetch-grafana-dashboards: ## Download Grafana dashboards
-	./gradlew :fetchGrafanaDashboards
+	./gradlew fetchGrafanaDashboards
 
 .PHONY: generate-NOTICES
 generate-NOTICES: ## Generate the NOTICES.txt file
