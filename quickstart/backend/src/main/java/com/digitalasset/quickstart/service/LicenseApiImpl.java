@@ -194,7 +194,6 @@ public class LicenseApiImpl implements LicensesApi {
                                         long micros = rc.payload.getLicenseExtensionDuration.getMicroseconds;
                                         String approximateDays = (micros / 1_000_000 / 3600 / 24) + " days";
                                         r.setLicenseExtensionDuration(approximateDays);
-                                        r.setReference(rc.payload.getReference.getContractId);
                                         return r;
                                     })
                                     .collect(Collectors.toList());
@@ -277,11 +276,7 @@ public class LicenseApiImpl implements LicensesApi {
                             choice,
                             commandId
                     ).thenApply(result -> {
-                        Map<String, Object> successAttributes = new HashMap<>(attributes);
-                        successAttributes.put("renewalRequestCid", result.get_1.getContractId);
-                        successAttributes.put("paymentRequestCid", result.get_2.getContractId);
-
-                        LoggingSpanHelper.logInfo(logger, "License renewal request succeeded", successAttributes);
+                        LoggingSpanHelper.logInfo(logger, "License renewal request succeeded", attributes);
                         return ResponseEntity.ok().<Void>build();
                     });
                 });
@@ -337,16 +332,17 @@ public class LicenseApiImpl implements LicensesApi {
         String provider = lrrContract.payload.getProvider.getParty;
         String dso = lrrContract.payload.getDso.getParty;
         Long licenseNum = lrrContract.payload.getLicenseNum;
-        String referenceCid = lrrContract.payload.getReference.getContractId;
-
-        return damlRepository.findSingleActiveAcceptedAppPayment(referenceCid, user, provider)
-                .thenCompose(maybeAcceptedPayment -> {
-                    if (maybeAcceptedPayment.isEmpty()) {
-                        LoggingSpanHelper.logError(logger, "No AcceptedAppPayment found", initialAttrs, null);
-                        return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-                    }
-                    return handleAcceptedAppPayment(actingParty, commandId, lrrContract, maybeAcceptedPayment.get(), dso, licenseNum, initialAttrs, span);
-                });
+//        String referenceCid = lrrContract.payload.getReference.getContractId;
+//
+//        return damlRepository.findSingleActiveAcceptedAppPayment(referenceCid, user, provider)
+//                .thenCompose(maybeAcceptedPayment -> {
+//                    if (maybeAcceptedPayment.isEmpty()) {
+//                        LoggingSpanHelper.logError(logger, "No AcceptedAppPayment found", initialAttrs, null);
+//                        return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+//                    }
+//                    return handleAcceptedAppPayment(actingParty, commandId, lrrContract, maybeAcceptedPayment.get(), dso, licenseNum, initialAttrs, span);
+//                });
+        return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     private CompletableFuture<ResponseEntity<Void>> handleAcceptedAppPayment(

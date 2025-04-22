@@ -17,6 +17,7 @@ import Splice.Api.Token.HoldingV1
 import Splice.Api.Token.AllocationRequestV1
 import Splice.Api.Token.AllocationV1 as Api.Token.AllocationV1
 import Splice.Api.Token.MetadataV1
+import Licensing.Util
 
 -- License contract template
 ----------------------------
@@ -43,7 +44,6 @@ template LicenseRenewalRequest with
     licenseFeeAmount : Decimal
     licenseFeeInstrumentId : InstrumentId
     licenseExtensionDuration : RelTime
-    reference : ContractId AppPaymentRequest
     prepareUntil : Time
     settleBefore : Time
     createdAt : Time
@@ -61,15 +61,14 @@ template LicenseRenewalRequest with
          acceptedPayment <- fetchUncheckedButArchiveLater acceptedPaymentCid
          exercise acceptedPaymentCid (AcceptedAppPayment_Collect transferContext)
          openMiningRound <- exercise @OpenMiningRound transferContext.openMiningRound (OpenMiningRound_Fetch provider)
-         let expectedAcceptedPayment = AcceptedAppPayment with
-               sender = user
-               provider
-               amuletReceiverAmounts = [ReceiverAmuletAmount provider licenseFeeAmount]
-               dso 
-               lockedAmulet = acceptedPayment.lockedAmulet
-               round = openMiningRound.round
-               reference
-         acceptedPayment === expectedAcceptedPayment
+--         let expectedAcceptedPayment = AcceptedAppPayment with
+--               sender = user
+--               provider
+--               amuletReceiverAmounts = [ReceiverAmuletAmount provider licenseFeeAmount]
+--               dso
+--               lockedAmulet = acceptedPayment.lockedAmulet
+--               round = openMiningRound.round
+--         acceptedPayment === expectedAcceptedPayment
          license <- fetchAndArchive Group {user, provider, dso} licenseCid
          licenseNum === license.licenseNum
          now <- getTime
@@ -124,7 +123,7 @@ template License with
   where
     signatory provider, user
     
-    nonconsuming choice License_Renew : (ContractId LicenseRenewalRequest, ContractId AppPaymentRequest)
+    nonconsuming choice License_Renew : ContractId LicenseRenewalRequest
       with
         licenseFeeAmount: Decimal      
         licenseExtensionDuration : RelTime
@@ -132,12 +131,6 @@ template License with
         description: Text
       controller provider
       do now <- getTime
-         paymentRequest <- create AppPaymentRequest with
-           provider, dso
-           sender = user
-           receiverAmounts = [ReceiverAmount provider (PaymentAmount licenseFeeAmount AmuletUnit)]
-           description
-           expiresAt = now `addRelTime` paymentAcceptanceDuration
          renewalOffer <- create LicenseRenewalRequest
            with
              provider, dso, user 
@@ -145,11 +138,10 @@ template License with
              licenseExtensionDuration
              licenseNum
              licenseFeeInstrumentId = InstrumentId { admin = dso, id = "Amulet" }
-             reference = paymentRequest
              prepareUntil = now `addRelTime` paymentAcceptanceDuration -- ????
              settleBefore = now `addRelTime` paymentAcceptanceDuration -- ????
              createdAt = now
-         pure (renewalOffer, paymentRequest)
+         pure renewalOffer
 
 
     choice License_Expire : ()

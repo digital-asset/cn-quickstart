@@ -6,6 +6,7 @@
 module Licensing.AppInstall where
 
 import Licensing.License
+import Licensing.Util
 import Splice.Api.Token.MetadataV1
 import Splice.Util
 
