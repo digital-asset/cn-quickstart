@@ -15,7 +15,7 @@ public class LedgerConfig {
     private String applicationId;
     private String validatorUri;
 
-    // Getters and Setters
+
     public String getHost() {
         return host;
     }

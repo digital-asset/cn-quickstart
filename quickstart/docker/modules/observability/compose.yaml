@@ -1,0 +1,55 @@
+# Copyright (c) 2023, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+x-vars:
+  set-default-logging: &set-default-logging
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:${OTEL_COLLECTOR_FLUENTD_PORT}"
+        fluentd-async: "true"
+  default-logging: &default-logging
+    driver: "fluentd"
+    options:
+      fluentd-address: "localhost:${OTEL_COLLECTOR_FLUENTD_PORT}"
+      fluentd-async: "true"
+
+  canton-metrics-config: &canton-metrics-config |
+    ADDITIONAL_CONFIG_MONITORING=
+      canton.monitoring.metrics {
+        jvm-metrics.enabled = yes
+        reporters = [{
+          type = prometheus
+          address = 0.0.0.0
+          port = ${CANTON_METRICS_PORT}
+        }]
+      }
+
+      canton.monitoring.tracing {
+        propagation = enabled
+        tracer {
+          exporter {
+            type = otlp
+            address = otel-collector
+            port = ${OTEL_COLLECTOR_OTLP_PORT}
+          }
+        }
+      }
+
+services:
+  postgres: *set-default-logging
+  nginx: *set-default-logging
+  canton:
+    logging: *default-logging
+    environment:
+      - *canton-metrics-config
+  splice:
+    logging: *default-logging
+    environment:
+      - *canton-metrics-config
+  wallet-web-ui-app-user: *set-default-logging
+  wallet-web-ui-app-provider: *set-default-logging
+  wallet-web-ui-sv: *set-default-logging
+  sv-web-ui: *set-default-logging
+  scan-web-ui: *set-default-logging

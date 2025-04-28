@@ -13,13 +13,18 @@ services:
     container_name: create-app-install-request
     volumes:
       - ./scripts/start.sh:/app/start.sh
-      - ./scripts/create-app-install-request.sh:/app/create-app-install-request.sh
-      - ./scripts/simulate-user-input.sh:/app/simulate-user-input.sh
+      - ./scripts/create-app-install-request-${AUTH_MODE}.sh:/app/create-app-install-request.sh
       - ./../utils.sh:/app/utils.sh
     env_file:
-      - ./../..//env/ports.env
-      - ./../../env/app-provider.env
-      - ./../../env/app-user.env
+      - ./../../${LOCALNET_ENV_DIR}/common.env
+      - path: ./../../${LOCALNET_ENV_DIR}/app-provider-${AUTH_MODE}.env
+        required: false
+      - path: ./../../${MODULES_DIR}/keycloak/env/app-provider-${AUTH_MODE}.env
+        required: false
+      - path: ./../../${LOCALNET_ENV_DIR}/app-user-${AUTH_MODE}.env
+        required: false
+      - path: ./../../${MODULES_DIR}/keycloak/env/app-user-${AUTH_MODE}.env
+        required: false
     command: /app/start.sh
     networks:
       - ${DOCKER_NETWORK}

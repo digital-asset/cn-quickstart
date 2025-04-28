@@ -1,283 +1,20 @@
 # Copyright (c) 2023, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
----
-x-vars:
-  default-logging: &default-logging
-    driver: "fluentd"
-    options:
-      fluentd-address: "localhost:${OTEL_COLLECTOR_FLUENTD_PORT}"
-      fluentd-async: "true"
-
-  canton-metrics-config: &canton-metrics-config |
-    ADDITIONAL_CONFIG_MONITORING=
-      canton.monitoring.metrics {
-        jvm-metrics.enabled = yes
-        reporters = [{
-          type = prometheus
-          address = 0.0.0.0
-          port = ${CANTON_METRICS_PORT}
-        }]
-      }
-
-      canton.monitoring.tracing {
-        propagation = enabled
-        tracer {
-          exporter {
-            type = otlp
-            address = otel-collector
-            port = ${OTEL_COLLECTOR_OTLP_PORT}
-          }
-        }
-      }
-  log_warning_if_party_hint_undefined: ${PARTY_HINT:?PARTY_HINT is required of format <company>-<role>-<number>}
-
-volumes:
-  postgres:
-  domain-upgrade-dump:
-
-networks:
-  quickstart:
-    name: quickstart
-    driver: bridge
-  splice-sv-private:
-    driver: bridge
-  splice-sv-public:
-    driver: bridge
-
 services:
-###############################################################################################################
-### Common Services
-###############################################################################################################
-  postgres:
-    image: "postgres:${POSTGRES_VERSION}"
-    container_name: postgres
-    volumes:
-      - postgres:/var/lib/postgresql/data
-      - ./docker/postgres/postgres-entrypoint.sh:/postgres-entrypoint.sh
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=postgres
-      - CREATE_DATABASE_01=participant-app-provider
-      - CREATE_DATABASE_02=validator-app-provider
-      - CREATE_DATABASE_03=scribe
-      - CREATE_DATABASE_04=participant-app-user
-      - CREATE_DATABASE_05=validator-app-user
-      - CREATE_DATABASE_06=participant-sv
-      - CREATE_DATABASE_07=validator-sv
-      - CREATE_DATABASE_08=sequencer
-      - CREATE_DATABASE_09=mediator
-      - CREATE_DATABASE_10=scan
-      - CREATE_DATABASE_11=sv
-      - CREATE_DATABASE_12=keycloakdb
-    ports:
-      - "${DB_PORT}:${DB_PORT}"
-    entrypoint: /postgres-entrypoint.sh
-    healthcheck:
-      test: "pg_isready -U ${DB_USER} -d keycloakdb"
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 60s
-    user: "postgres"
-    command:
-      - postgres
-      - -c
-      - max_connections=1000
-    logging: *default-logging
-    networks:
-      - ${DOCKER_NETWORK}
-
-  nginx-keycloak:
-    image: "nginx:${NGINX_VERSION}"
-    container_name: nginx-keycloak
-    volumes:
-      - ./config/nginx-keycloak/nginx.conf:/etc/nginx/nginx.conf
-      - ./config/nginx-keycloak/keycloak.conf:/etc/nginx/conf.d/default.conf
-    ports:
-      - "8082:8082"
-    depends_on:
-      keycloak:
-        condition: service_healthy
-    # Workaround limitation of using localhost subdomains in QS. It is used only in backend-service
-    # to configure frontend facing client otherwise the configuration would be quite difficult.
-    networks:
-      quickstart:
-        aliases:
-          - keycloak.localhost
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.1.0
-    container_name: keycloak
-    volumes:
-      - ${KEYCLOAK_IMPORT_DIR:-./docker/oauth/data}:/opt/keycloak/data/import
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: postgres
-      KC_DB_USERNAME: ${DB_USER}
-      KC_DB_PASSWORD: ${DB_PASSWORD}
-      KC_DB_URL_HOST: postgres
-      KC_DB_URL_DATABASE: keycloakdb
-      KC_HEALTH_ENABLED: true
-    command: ["start-dev", "--import-realm", "--http-port=8082", "--health-enabled=true", "--hostname-strict=false", "--proxy-headers=forwarded"]
-    healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'"]
-      interval: 30s
-      timeout: 10s
-      retries: 50
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - ${DOCKER_NETWORK}
-
-  nginx:
-    image: "nginx:${NGINX_VERSION}"
-    container_name: nginx
-    env_file:
-      - ./env/ports.env
-    volumes:
-      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./frontend/dist/:/usr/share/nginx/html
-      - ./config/nginx/frontend.conf:/etc/nginx/templates/default.conf.template
-      - ./config/nginx/common-backend-proxy-settings.conf:/etc/nginx/templates/common-backend-proxy-settings.conf.template
-      - ./config/nginx/app-provider.conf:/etc/nginx/templates/app-provider.conf.template
-      - ./config/nginx/app-user.conf:/etc/nginx/templates/app-user.conf.template
-      - ${SV_NGINX_CONFIG:-./docker/empty}:/etc/nginx/templates/sv.conf.template
-    ports:
-      - "${SV_UI_PORT}:${SV_UI_PORT}"
-      - "${APP_PROVIDER_UI_PORT}:${APP_PROVIDER_UI_PORT}"
-      - "${APP_USER_UI_PORT}:${APP_USER_UI_PORT}"
-    depends_on:
-      wallet-web-ui-sv:
-        condition: service_healthy
-        required: false
-      wallet-web-ui-app-provider:
-        condition: service_healthy
-      wallet-web-ui-app-user:
-        condition: service_healthy
-      backend-service:
-        condition: service_started
-      splice:
-        condition: service_healthy
-    restart: always
-    logging: *default-logging
-    networks:
-      - ${DOCKER_NETWORK}
-
-  canton:
-    image: "${IMAGE_REPO}canton-participant:${IMAGE_TAG}"
-    env_file:
-      - ./env/ports.env
-      - ./env/app-provider.env
-      - ./env/app-user.env
-    container_name: canton
-    logging: *default-logging
-    volumes:
-      - ./docker/canton/health-check.sh:/app/health-check.sh
-      - ./docker/canton/app.conf:/app/app.conf
-      - ${SV_CANTON_CONFIG:-./docker/empty}:/app/sv.conf
-    environment:
-      - DB_SERVER=${DB_SERVER}
-      - DB_PORT=${DB_PORT}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - LOCALNET_ENABLED=${LOCALNET_ENABLED}
-      - *canton-metrics-config
-    ports:
-      - "4${PARTICIPANT_LEDGER_API_PORT}:4${PARTICIPANT_LEDGER_API_PORT}"
-      - "4${PARTICIPANT_ADMIN_API_PORT}:4${PARTICIPANT_ADMIN_API_PORT}"
-      - "4${PARTICIPANT_JSON_API_PORT}:4${PARTICIPANT_JSON_API_PORT}"
-      - "3${PARTICIPANT_LEDGER_API_PORT}:3${PARTICIPANT_LEDGER_API_PORT}"
-      - "3${PARTICIPANT_ADMIN_API_PORT}:3${PARTICIPANT_ADMIN_API_PORT}"
-      - "3${PARTICIPANT_JSON_API_PORT}:3${PARTICIPANT_JSON_API_PORT}"
-      - "2${PARTICIPANT_LEDGER_API_PORT}:2${PARTICIPANT_LEDGER_API_PORT}"
-      - "2${PARTICIPANT_ADMIN_API_PORT}:2${PARTICIPANT_ADMIN_API_PORT}"
-      - "2${PARTICIPANT_JSON_API_PORT}:2${PARTICIPANT_JSON_API_PORT}"
-    healthcheck:
-      test: ["CMD", "bash", "/app/health-check.sh"]
-      interval: 20s
-      start_interval: 5s
-      timeout: 30s
-      retries: 10
-      start_period: 20s
-    depends_on:
-      postgres:
-        condition: service_healthy
-      keycloak:
-        condition: service_healthy
-    restart: always
-    networks:
-      - ${DOCKER_NETWORK}
-
-  splice:
-    image: "${IMAGE_REPO}validator-app:${IMAGE_TAG}"
-    container_name: splice
-    env_file:
-      - ./env/ports.env
-      - ./env/app-provider.env
-      - ./env/app-user.env
-      - ./env/splice.env
-    volumes:
-      - ./docker/splice/entrypoint.sh:/splice-entrypoint.sh
-      - ./docker/splice/health-check.sh:/app/health-check.sh
-      - ./docker/splice/bootstrap.sc:/app/bootstrap.sc
-      - ./docker/splice/app.conf:/app/app.conf
-      - ${SV_SPLICE_CONFIG:-./docker/empty}:/app/sv.conf
-      - domain-upgrade-dump:/domain-upgrade-dump
-    entrypoint: /splice-entrypoint.sh
-    logging: *default-logging
-    healthcheck:
-      test: ["CMD", "bash", "/app/health-check.sh"]
-      interval: 20s
-      start_interval: 5s
-      timeout: 40s
-      retries: 100
-      start_period: 30s
-    environment:
-      - DB_SERVER=${DB_SERVER}
-      - DB_PORT=${DB_PORT}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - ONBOARDING_SECRET_URL=${ONBOARDING_SECRET_URL}
-      - SPLICE_APP_VALIDATOR_SCAN_ADDRESS=${SCAN_ADDRESS}
-      - SPLICE_APP_VALIDATOR_SV_SPONSOR_ADDRESS=${SPONSOR_SV_ADDRESS}
-      - MIGRATION_ID=${MIGRATION_ID}
-      - APP_PROVIDER_VALIDATOR_ONBOARDING_SECRET=${APP_PROVIDER_VALIDATOR_ONBOARDING_SECRET}
-      - APP_USER_VALIDATOR_ONBOARDING_SECRET=${APP_USER_VALIDATOR_ONBOARDING_SECRET}
-      - LOCALNET_ENABLED=${LOCALNET_ENABLED}
-      - *canton-metrics-config
-    ports:
-      - "4${VALIDATOR_ADMIN_API_PORT}:4${VALIDATOR_ADMIN_API_PORT}"
-      - "3${VALIDATOR_ADMIN_API_PORT}:3${VALIDATOR_ADMIN_API_PORT}"
-      - "2${VALIDATOR_ADMIN_API_PORT}:2${VALIDATOR_ADMIN_API_PORT}"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      keycloak:
-        condition: service_healthy
-      canton:
-        condition: service_healthy
-    restart: always
-    networks:
-      - ${DOCKER_NETWORK}
-
   splice-auto-config:
     build: ./docker/splice-auto-config/
     container_name: splice-auto-config
     env_file:
-      - ./env/ports.env
-      - ./env/app-provider.env
-      - ./env/app-user.env
+      - ${LOCALNET_ENV_DIR}/common.env
+      - ${APP_PROVIDER_AUTH_ENV}
+      - ${APP_USER_AUTH_ENV}
     volumes:
       - ./docker/splice-auto-config/health-check.sh:/app/health-check.sh
-      - ./docker/splice-auto-config/app-provider.sh:/app/app-provider.sh
-      - ./docker/splice-auto-config/app-user.sh:/app/app-user.sh
+      - ./docker/splice-auto-config/app-provider-${AUTH_MODE}.sh:/app/app-provider.sh
+      - ./docker/splice-auto-config/app-user-${AUTH_MODE}.sh:/app/app-user.sh
       - ./docker/utils.sh:/app/utils.sh
       - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
-      - ./daml/assets/.daml/dist/quickstart-assets-0.0.1.dar:/canton/dars/quickstart-assets-0.0.1.dar
     healthcheck:
       test: ["CMD", "bash", "/app/health-check.sh"]
       interval: 5s
@@ -288,29 +25,12 @@ services:
     stdin_open: true
     tty: true
     depends_on:
-      canton:
-        condition: service_healthy
       splice:
         condition: service_healthy
-      keycloak:
-        condition: service_healthy
-    networks:
-      - ${DOCKER_NETWORK}
 ###############################################################################################################
 ### Application User
 ###############################################################################################################
-  wallet-web-ui-app-user:
-    image: "${IMAGE_REPO}wallet-web-ui:${IMAGE_TAG}"
-    container_name: wallet-web-ui-app-user
-    env_file:
-      - ./env/app-user.env
-      - ./env/splice.env
-      - ./env/wallet.app-user.env
-    logging: *default-logging
-    networks:
-      - ${DOCKER_NETWORK}
-#    profiles:
-#      - app-user
+
 ###############################################################################################################
 ### Application Provider
 ###############################################################################################################
@@ -319,9 +39,11 @@ services:
     container_name: pqs
     working_dir: /daml3.2
     env_file:
-      - ./env/ports.env
-      - ./env/app-provider.env
+      - ${LOCALNET_ENV_DIR}/common.env
+      - ${APP_PROVIDER_AUTH_ENV}
       - ./env/pqs.env
+      - path: ./env/pqs-${AUTH_MODE}.env
+        required: false
     environment:
       OTEL_SERVICE_NAME: pqs
       OTEL_TRACES_EXPORTER: otlp
@@ -337,15 +59,11 @@ services:
       - "ledger"
       - "postgres-document"
     depends_on:
-      postgres:
-        condition: service_healthy
       canton:
         condition: service_healthy
       splice-auto-config:
         condition: service_healthy
     restart: on-failure:100
-    networks:
-      - ${DOCKER_NETWORK}
 
   backend-service:
     build:
@@ -355,13 +73,13 @@ services:
     container_name: backend-service
     working_dir: /app
     env_file:
-      - ./env/ports.env
-      - ./env/app-provider.env
+      - ${LOCALNET_ENV_DIR}/common.env
+      - ${APP_PROVIDER_AUTH_ENV}
     environment:
       LEDGER_HOST: "canton"
       LEDGER_PORT: "3${PARTICIPANT_LEDGER_API_PORT}"
       POSTGRES_HOST: "${DB_SERVER}"
-      POSTGRES_DATABASE: "scribe"
+      POSTGRES_DATABASE: "pqs-app-provider"
       POSTGRES_USERNAME: "${DB_USER}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
       OTEL_SERVICE_NAME: backend-service
@@ -371,47 +89,35 @@ services:
       OTEL_METRIC_EXPORT_INTERVAL: 5000
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:${OTEL_COLLECTOR_OTLP_PORT}"
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
-      JAVA_OPTS: "-javaagent:/otel-agent.jar -Dotel.instrumentation.logback-appender.experimental-log-attributes=true -Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true"
+      SPRING_PROFILES_ACTIVE: "${AUTH_MODE}"
+#      JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+#      JAVA_OPTS: "-javaagent:/otel-agent.jar -Dotel.instrumentation.logback-appender.experimental-log-attributes=true -Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true"
     volumes:
       - ./backend/build/distributions/backend.tar:/backend.tar
       - ./backend/build/otel-agent/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar:/otel-agent.jar
       - ./docker/utils.sh:/app/utils.sh
-      - ./docker/backend-service/start.sh:/app/start.sh
+      - ./docker/backend-service/start-${AUTH_MODE}.sh:/app/start.sh
     command: /app/start.sh
     ports:
       - "${BACKEND_PORT}:8080"
+      - "5005:5005"
     depends_on:
       pqs:
         condition: service_started
-      canton:
-        condition: service_healthy
       splice-auto-config:
         condition: service_healthy
-    networks:
-      - ${DOCKER_NETWORK}
-
-  wallet-web-ui-app-provider:
-    image: "${IMAGE_REPO}wallet-web-ui:${IMAGE_TAG}"
-    container_name: wallet-web-ui-app-provider
-    env_file:
-      - ./env/app-provider.env
-      - ./env/splice.env
-      - ./env/wallet.app-provider.env
-    logging: *default-logging
-    networks:
-      - ${DOCKER_NETWORK}
 
   backend-service-auto-config:
     build: ./docker/backend-service-auto-config/
     container_name: backend-service-auto-config
     volumes:
       - ./docker/backend-service-auto-config/health-check.sh:/app/health-check.sh
-      - ./docker/backend-service-auto-config/onboarding.sh:/app/onboarding.sh
+      - ./docker/backend-service-auto-config/onboarding-${AUTH_MODE}.sh:/app/onboarding.sh
       - ./docker/utils.sh:/app/utils.sh
     env_file:
-      - ./env/ports.env
-      - ./env/app-provider.env
-      - ./env/app-user.env
+      - ${LOCALNET_ENV_DIR}/common.env
+      - ${APP_PROVIDER_AUTH_ENV}
+      - ${APP_USER_AUTH_ENV}
     healthcheck:
       test: ["CMD", "bash", "/app/health-check.sh"]
       interval: 5s
@@ -426,41 +132,24 @@ services:
         condition: service_started
       splice-auto-config:
         condition: service_healthy
-    networks:
-      - ${DOCKER_NETWORK}
 
 ###############################################################################################################
 ### SUPER VALIDATOR
 ###############################################################################################################
-  wallet-web-ui-sv:
-    image: "${IMAGE_REPO}wallet-web-ui:${IMAGE_TAG}"
-    container_name: wallet-web-ui-sv
-    env_file:
-      - ./env/splice.env
-    logging: *default-logging
-    networks:
-      - ${DOCKER_NETWORK}
-    profiles:
-      - localnet
 
-  sv-web-ui:
-    image: "${IMAGE_REPO}sv-web-ui:${IMAGE_TAG}"
-    container_name: sv-web-ui
-    env_file:
-      - ./env/splice.env
-    logging: *default-logging
-    networks:
-      - ${DOCKER_NETWORK}
-    profiles:
-      - localnet
+###############################################################################################################
+### OVERRIDES
+###############################################################################################################
+  nginx:
+    volumes:
+      - ./frontend/dist/:/usr/share/nginx/html
+      - ./config/nginx/frontend.conf:/etc/nginx/templates/frontend.conf.template
+      - ./config/nginx/common-backend-proxy-settings.conf:/etc/nginx/templates/common-backend-proxy-settings.conf.template
+    depends_on:
+      backend-service:
+        condition: service_started
 
-  scan-web-ui:
-    image: "${IMAGE_REPO}scan-web-ui:${IMAGE_TAG}"
-    container_name: scan-web-ui
-    env_file:
-      - ./env/splice.env
-    logging: *default-logging
-    networks:
-      - ${DOCKER_NETWORK}
-    profiles:
-      - localnet
+  postgres:
+    environment:
+      - CREATE_DATABASE_pqs_app_provider=pqs-app-provider
+

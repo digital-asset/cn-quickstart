@@ -1,0 +1,68 @@
+# Copyright (c) 2023, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  nginx-keycloak:
+    image: "nginx:${NGINX_VERSION}"
+    container_name: nginx-keycloak
+    volumes:
+      - ${MODULES_DIR}/keycloak/conf/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8082:8082"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    # Workaround limitation of using localhost subdomains in QS. It is used only in backend-service
+    # to configure frontend facing client otherwise the configuration would be quite difficult.
+    networks:
+      default:
+        aliases:
+          - keycloak.localhost
+    profiles:
+      - oauth2
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.0
+    container_name: keycloak
+    volumes:
+      - ${KEYCLOAK_IMPORT_DIR:-${MODULES_DIR}/keycloak/conf/data}:/opt/keycloak/data/import
+    env_file:
+      - ${LOCALNET_ENV_DIR}/common.env
+      - ${MODULES_DIR}/keycloak/env/keycloak.env
+    command: ["start-dev", "--import-realm", "--http-port=8082", "--health-enabled=true", "--hostname-strict=false", "--proxy-headers=forwarded"]
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 30s
+      timeout: 10s
+      retries: 50
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - oauth2
+
+  postgres:
+    environment:
+      - CREATE_DATABASE_keycloakdb=keycloakdb
+
+  canton:
+    depends_on:
+       keycloak:
+         condition: service_healthy
+    volumes:
+      - ${MODULES_DIR}/keycloak/conf/canton-oauth2.conf:/app/app-auth.conf
+
+  splice:
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    volumes:
+      - ${MODULES_DIR}/keycloak/conf/splice-oauth2.conf:/app/app-auth.conf
+
+  wallet-web-ui-app-user:
+    env_file:
+      - ${MODULES_DIR}/keycloak/env/wallet.app-user-oauth2.env
+
+  wallet-web-ui-app-provider:
+    env_file:
+      - ${MODULES_DIR}/keycloak/env/wallet.app-provider-oauth2.env

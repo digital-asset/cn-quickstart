@@ -40,6 +40,7 @@ dependencies {
     implementation(Deps.springBoot.oauth2Client)
     implementation(Deps.springBoot.oauth2ResourceServer)
     implementation(Deps.springBoot.security)
+    implementation("com.auth0:java-jwt:4.1.0")
     runtimeOnly("org.postgresql:postgresql:42.7.3")
     runtimeOnly(Deps.grpc.api)
     runtimeOnly(Deps.grpc.netty)

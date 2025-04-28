@@ -21,39 +21,55 @@ endif
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file env/ports.env
-DOCKER_COMPOSE_FILES := -f compose.yaml
+DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file docker/modules/localnet/env/common.env --env-file docker/modules/localnet/env/docker.env
+DOCKER_COMPOSE_FILES := -f compose.yaml -f docker/modules/localnet/compose.yaml
+#-f docker/modules/localnet/compose.yaml
+#DOCKER_COMPOSE_FILES := -f docker/modules/localnet/compose.yaml
+
 
 # Default to adding resource constraints for Quickstart compose stack.
 RESOURCE_CONSTRAINTS_ENABLED ?= true
 
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
-RESOURCE_CONSTRAINT_CONFIG := -f docker/resource-constraints.yaml
+RESOURCE_CONSTRAINT_CONFIG := -f docker/modules/localnet/resource-constraints.yaml
+  ifeq ($(AUTH_MODE),oauth2)
+  RESOURCE_CONSTRAINT_CONFIG += -f docker/modules/keycloak/resource-constraints.yaml
+  endif
 else
 RESOURCE_CONSTRAINT_CONFIG :=
 endif
 
-
-ifeq ($(KERNEL_NAME), Darwin)
-DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml
-else ifeq ($(KERNEL_NAME), Linux)
-DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml
-else
-DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/compose.yaml
+ifeq ($(OBSERVABILITY_ENABLED),true)
+  ifeq ($(KERNEL_NAME), Darwin)
+  DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml
+  else ifeq ($(KERNEL_NAME), Linux)
+  DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml
+  else
+  DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/compose.yaml
+  endif
+  DOCKER_COMPOSE_OBSERVABILITY_FILES += -f docker/modules/observability/compose.yaml
 endif
 
 # Define DOCKER_COMPOSE_PROFILES based on environment variables
-DOCKER_COMPOSE_PROFILES :=
+ifeq ($(AUTH_MODE),oauth2)
+    DOCKER_COMPOSE_PROFILES += --profile $(AUTH_MODE)
+    DOCKER_COMPOSE_FILES +=  -f docker/modules/keycloak/compose.yaml
+    DOCKER_COMPOSE_ENVFILE += --env-file docker/modules/keycloak/env/docker.env
+else
+    DOCKER_COMPOSE_PROFILES += --profile $(AUTH_MODE)
+endif
 
 ifeq ($(LOCALNET_ENABLED),true)
-    DOCKER_COMPOSE_PROFILES += --profile localnet --env-file env/localnet.env
+    DOCKER_COMPOSE_PROFILES += --profile localnet --env-file docker/modules/localnet/env/localnet.env
 else
-    DOCKER_COMPOSE_PROFILES += --env-file env/devnet.env
+    DOCKER_COMPOSE_PROFILES += --env-file docker/modules/localnet/env/devnet.env
 endif
 
 ifeq ($(OBSERVABILITY_ENABLED),true)
     DOCKER_COMPOSE_PROFILES += --profile observability
 endif
+
+#DOCKER_COMPOSE_FILES += -f docker/modules/quickstart/compose.yaml
 
 # Function to run docker-compose with default files and environment
 define docker-compose
@@ -133,6 +149,35 @@ status: ## Show status of Docker containers
 .PHONY: compose-config
 compose-config:
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) config)
+
+# Log a service's logs to file
+define log_service
+	@echo "Tailing logs for $$1..." \
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) logs -f --no-log-prefix "$$1") >> "./logs/$$1.clog" 2>&1 &
+endef
+
+.PHONY: logf
+logf:
+	@rm -rf "$$PWD/logs"; \
+	mkdir "$$PWD/logs"; \
+	SERVICES=$$( $(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) ps --services) ); \
+	for service in $$SERVICES; do \
+		echo "Tailing logs for $$service..."; \
+		$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) logs -f --no-log-prefix "$$service") >> "./logs/$$service.clog" 2>&1 & \
+# 		$$( $(call log_service, $$service) ); \
+	done \
+	# Watch for container start events; attach logs if it belongs to this compose \
+	docker events --filter type=container --format '{{.Status}} {{.ID}}' | while read -r status cid; do \
+		# If container starts, check if it’s from our compose file \
+		if [ "$$status" = "start" ]; then \
+			service_name=$$(docker inspect --format='{{index .Config.Labels "com.docker.compose.service"}}' "$$cid" 2>/dev/null) ; \
+			echo ">> $$service_name"; \
+			if [ -n "$$service_name" ]; then \
+				$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) logs -f --no-log-prefix "$$service_name") >> "./logs/$$service_name.clog" 2>&1 & \
+# 				$(call log_service, $$service_name) \
+			fi \
+		fi \
+	done
 
 .PHONY: logs
 logs: ## Show logs of Docker containers

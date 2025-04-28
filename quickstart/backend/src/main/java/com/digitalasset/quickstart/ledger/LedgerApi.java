@@ -5,6 +5,7 @@ package com.digitalasset.quickstart.ledger;
 
 import com.daml.ledger.api.v2.*;
 import com.digitalasset.quickstart.config.LedgerConfig;
+import com.digitalasset.quickstart.security.Auth;
 import com.digitalasset.quickstart.security.TokenProvider;
 import com.digitalasset.quickstart.utility.LoggingSpanHelper;
 import com.digitalasset.transcode.Converter;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -45,13 +47,18 @@ public class LedgerApi {
     private final Logger logger = LoggerFactory.getLogger(LedgerApi.class);
 
     @Autowired
-    public LedgerApi(LedgerConfig ledgerConfig, TokenProvider tokenProvider) {
+    public LedgerApi(LedgerConfig ledgerConfig, Auth auth, Optional<TokenProvider> tokenProvider) {
         APP_ID = ledgerConfig.getApplicationId();
-        ManagedChannel channel = ManagedChannelBuilder
+        ManagedChannelBuilder<?> builder = ManagedChannelBuilder
                 .forAddress(ledgerConfig.getHost(), ledgerConfig.getPort())
-                .usePlaintext()
-                .intercept(new Interceptor(tokenProvider))
-                .build();
+                .usePlaintext();
+        if(auth == Auth.OAUTH2) {
+            if (tokenProvider.isEmpty()) {
+                throw new IllegalStateException("TokenProvider is required for OAuth2 authentication");
+            }
+            builder.intercept(new Interceptor(tokenProvider.get()));
+        }
+        ManagedChannel channel = builder.build();
 
         // Single log statement, not duplicating attributes for spans, so leaving as-is:
         logger.atInfo()
