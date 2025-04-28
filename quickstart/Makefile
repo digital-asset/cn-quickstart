@@ -110,9 +110,13 @@ restart-frontend: build-frontend ## Build and start the application
 
 # Run targets
 .PHONY: start
-start: $(FIRST_RUN_DEPENDENCY) build fetch-grafana-dashboards ## Start the application, and observability services if enabled
+ifeq ($(OBSERVABILITY_ENABLED),true)
+ifneq ($(OBSERVABILITY_SKIP_DASHBOARDS_DOWNLOADS),true) # treat “true” (or any non‑empty value) as “enabled”
+start: fetch-grafana-dashboards
+endif
+endif
+start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
-
 
 .PHONY: stop
 stop: ## Stop the application and observability services
