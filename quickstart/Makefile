@@ -110,9 +110,14 @@ restart-frontend: build-frontend ## Build and start the application
 
 # Run targets
 .PHONY: start
+ifeq ($(OBSERVABILITY_ENABLED),true)
+ifneq ($(SKIP_DOWNLOADS),true) # treat “true” (or any non‑empty value) as “enabled”
+start: fetch-grafana-dashboards
+endif
+endif
 start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
-
+#	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
+	@echo "Starting..."
 
 .PHONY: stop
 stop: ## Stop the application and observability services
@@ -224,6 +229,10 @@ clean-all: clean clean-docker ## Stop and remove all build artifacts, Docker con
 .PHONY: install-daml-sdk
 install-daml-sdk: ## Install the Daml SDK
 	./gradlew :daml:installDamlSdk
+
+.PHONY: fetch-grafana-dashboards
+fetch-grafana-dashboards: ## Download Grafana dashboards
+	./gradlew fetchGrafanaDashboards
 
 .PHONY: generate-NOTICES
 generate-NOTICES: ## Generate the NOTICES.txt file
