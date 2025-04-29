@@ -76,9 +76,11 @@ services:
       - ${LOCALNET_ENV_DIR}/common.env
       - ${APP_PROVIDER_AUTH_ENV}
     environment:
+      BACKEND_PORT: "${BACKEND_PORT}"
       LEDGER_HOST: "canton"
       LEDGER_PORT: "3${PARTICIPANT_LEDGER_API_PORT}"
       POSTGRES_HOST: "${DB_SERVER}"
+      POSTGRES_PORT: "${DB_PORT}"
       POSTGRES_DATABASE: "pqs-app-provider"
       POSTGRES_USERNAME: "${DB_USER}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
@@ -145,6 +147,8 @@ services:
       - ./frontend/dist/:/usr/share/nginx/html
       - ./config/nginx/frontend.conf:/etc/nginx/templates/frontend.conf.template
       - ./config/nginx/common-backend-proxy-settings.conf:/etc/nginx/templates/common-backend-proxy-settings.conf.template
+    environment:
+      BACKEND_PORT: "${BACKEND_PORT}"
     depends_on:
       backend-service:
         condition: service_started

@@ -5,7 +5,6 @@
 x-vars:
   log_warning_if_party_hint_undefined: ${PARTY_HINT:?PARTY_HINT is required of format <company>-<role>-<number>}
 
-# KV consider add additional warnings for LOCALNET_ENV_DIR, LOCALNET_DIR, DOCKER_NETWORK, APP_PROVIDER_AUTH_ENV, APP_USER_AUTH_ENV
 volumes:
   postgres:
   domain-upgrade-dump:
@@ -78,9 +77,9 @@ services:
     container_name: canton
     volumes:
       - ${LOCALNET_DIR}/docker/canton/health-check.sh:/app/health-check.sh
-      - ${LOCALNET_DIR}/docker/canton/app.conf:/app/app.conf
-      - ${LOCALNET_DIR}/docker/canton/app-noauth.conf:/app/app-auth.conf
-      - ${LOCALNET_DIR}/docker/canton/sv.conf:/app/${SV_CANTON_CONFIG:-sv.conf}
+      - ${LOCALNET_DIR}/conf/canton/app.conf:/app/app.conf
+      - ${LOCALNET_DIR}/conf/canton/app-noauth.conf:/app/app-auth.conf
+      - ${LOCALNET_DIR}/conf/canton/sv.conf:/app/${SV_CANTON_CONFIG:-sv.conf}
     ports:
       - "4${PARTICIPANT_LEDGER_API_PORT}:4${PARTICIPANT_LEDGER_API_PORT}"
       - "4${PARTICIPANT_ADMIN_API_PORT}:4${PARTICIPANT_ADMIN_API_PORT}"
@@ -115,9 +114,9 @@ services:
       - ${LOCALNET_DIR}/docker/splice/entrypoint.sh:/splice-entrypoint.sh
       - ${LOCALNET_DIR}/docker/splice/health-check.sh:/app/health-check.sh
       - ${LOCALNET_DIR}/docker/splice/bootstrap.sc:/app/bootstrap.sc
-      - ${LOCALNET_DIR}/docker/splice/app.conf:/app/app.conf
-      - ${LOCALNET_DIR}/docker/splice/app-noauth.conf:/app/app-auth.conf
-      - ${LOCALNET_DIR}/docker/splice/sv.conf:/app/${SV_SPLICE_CONFIG:-sv.conf}
+      - ${LOCALNET_DIR}/conf/splice/app.conf:/app/app.conf
+      - ${LOCALNET_DIR}/conf/splice/app-noauth.conf:/app/app-auth.conf
+      - ${LOCALNET_DIR}/conf/splice/sv.conf:/app/${SV_SPLICE_CONFIG:-sv.conf}
       - domain-upgrade-dump:/domain-upgrade-dump
     entrypoint: /splice-entrypoint.sh
     healthcheck:

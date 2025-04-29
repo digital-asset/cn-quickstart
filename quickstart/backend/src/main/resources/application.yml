@@ -1,10 +1,6 @@
 # Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 # SPDX-License-Identifier: 0BSD
 
-#spring:
-#  profiles:
-#    active: ${BACKEND_SERVICE_PROFILE:oauth2}
-
 server:
   forward-headers-strategy: NATIVE
 

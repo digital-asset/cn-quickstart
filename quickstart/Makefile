@@ -21,19 +21,17 @@ endif
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file docker/modules/localnet/env/common.env --env-file docker/modules/localnet/env/docker.env
-DOCKER_COMPOSE_FILES := -f compose.yaml -f docker/modules/localnet/compose.yaml
-#-f docker/modules/localnet/compose.yaml
-#DOCKER_COMPOSE_FILES := -f docker/modules/localnet/compose.yaml
-
+MODULES_DIR := docker/modules
+DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file ${MODULES_DIR}/localnet/compose.env --env-file ${MODULES_DIR}/localnet/env/common.env
+DOCKER_COMPOSE_FILES := -f compose.yaml -f ${MODULES_DIR}/localnet/compose.yaml
 
 # Default to adding resource constraints for Quickstart compose stack.
 RESOURCE_CONSTRAINTS_ENABLED ?= true
 
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
-RESOURCE_CONSTRAINT_CONFIG := -f docker/modules/localnet/resource-constraints.yaml
+RESOURCE_CONSTRAINT_CONFIG := -f ${MODULES_DIR}/localnet/resource-constraints.yaml
   ifeq ($(AUTH_MODE),oauth2)
-  RESOURCE_CONSTRAINT_CONFIG += -f docker/modules/keycloak/resource-constraints.yaml
+  RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/keycloak/resource-constraints.yaml
   endif
 else
 RESOURCE_CONSTRAINT_CONFIG :=
@@ -47,29 +45,27 @@ ifeq ($(OBSERVABILITY_ENABLED),true)
   else
   DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/compose.yaml
   endif
-  DOCKER_COMPOSE_OBSERVABILITY_FILES += -f docker/modules/observability/compose.yaml
+  DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ${MODULES_DIR}/observability/compose.yaml
 endif
 
 # Define DOCKER_COMPOSE_PROFILES based on environment variables
 ifeq ($(AUTH_MODE),oauth2)
     DOCKER_COMPOSE_PROFILES += --profile $(AUTH_MODE)
-    DOCKER_COMPOSE_FILES +=  -f docker/modules/keycloak/compose.yaml
-    DOCKER_COMPOSE_ENVFILE += --env-file docker/modules/keycloak/env/docker.env
+    DOCKER_COMPOSE_FILES +=  -f ${MODULES_DIR}/keycloak/compose.yaml
+    DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/keycloak/compose.env
 else
     DOCKER_COMPOSE_PROFILES += --profile $(AUTH_MODE)
 endif
 
 ifeq ($(LOCALNET_ENABLED),true)
-    DOCKER_COMPOSE_PROFILES += --profile localnet --env-file docker/modules/localnet/env/localnet.env
+    DOCKER_COMPOSE_PROFILES += --profile localnet --env-file ${MODULES_DIR}/localnet/env/localnet.env
 else
-    DOCKER_COMPOSE_PROFILES += --env-file docker/modules/localnet/env/devnet.env
+    DOCKER_COMPOSE_PROFILES += --env-file ${MODULES_DIR}/localnet/env/devnet.env
 endif
 
 ifeq ($(OBSERVABILITY_ENABLED),true)
     DOCKER_COMPOSE_PROFILES += --profile observability
 endif
-
-#DOCKER_COMPOSE_FILES += -f docker/modules/quickstart/compose.yaml
 
 # Function to run docker-compose with default files and environment
 define docker-compose
