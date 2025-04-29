@@ -1,18 +1,18 @@
-# run as localnet
+# run in localnet
 ```
-docker compose --env-file docker/modules/localnet/compose.env \
-               --env-file docker/modules/localnet/env/common.env \
-               --env-file docker/modules/localnet/env/localnet.env \
-               -f docker/modules/localnet/compose.yaml \
-               -f docker/modules/localnet/resource-constraints.yaml \
+docker compose --env-file ${LOCALNET_DIR}/compose.env \
+               --env-file ${LOCALNET_DIR}/env/common.env \
+               --env-file ${LOCALNET_DIR}/env/localnet.env \
+               -f ${LOCALNET_DIR}/compose.yaml \
+               -f ${LOCALNET_DIR}/resource-constraints.yaml \
                --profile localnet up -d
 ```
-# run as devnet
+# run in devnet
 ```
-docker compose --env-file docker/modules/localnet/compose.env \
-               --env-file docker/modules/localnet/env/common.env \
-               --env-file docker/modules/localnet/env/devnet.env \
-               -f docker/modules/localnet/compose.yaml \
-               -f docker/modules/localnet/resource-constraints.yaml \
+docker compose --env-file ${LOCALNET_DIR}/compose.env \
+               --env-file ${LOCALNET_DIR}/env/common.env \
+               --env-file ${LOCALNET_DIR}/env/devnet.env \
+               -f ${LOCALNET_DIR}/compose.yaml \
+               -f ${LOCALNET_DIR}/resource-constraints.yaml \
                up -d
 ```
