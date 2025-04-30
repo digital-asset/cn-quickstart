@@ -45,7 +45,7 @@ create_user() {
   echo "create_user $userId $userName $party $participant" >&2
 
   code=$(curl_status_code "http://$participant/v2/users/$userId" "$token" "application/json")
-  if  [ "$code" == "400" ]; then
+  if  [ "$code" == "404" ]; then
     curl_check "http://$participant/v2/users" "$token" "application/json" \
       --data-raw '{
         "user" : {

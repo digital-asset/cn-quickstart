@@ -36,7 +36,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 public class LedgerApi {
-    private final String APP_ID ;
+    private final String APP_ID;
     private final CommandSubmissionServiceGrpc.CommandSubmissionServiceFutureStub submission;
     private final CommandServiceGrpc.CommandServiceFutureStub commands;
     private final Dictionary<Converter<Object, ValueOuterClass.Value>> dto2Proto;
@@ -149,7 +149,6 @@ public class LedgerApi {
                 .setChoiceArgument(payload);
 
         CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
-                .setApplicationId(APP_ID)
                 .setCommandId(commandId)
                 .addActAs(party)
                 .addReadAs(party)
@@ -172,9 +171,9 @@ public class LedgerApi {
                     TransactionOuterClass.TransactionTree txTree = response.getTransaction();
                     long offset = txTree.getOffset();
                     String workflowId = txTree.getWorkflowId();
-                    String rootEventId = txTree.getRootEventIdsCount() > 0 ? txTree.getRootEventIds(0) : "";
-                    TransactionOuterClass.TreeEvent event = txTree.getEventsByIdMap().get(rootEventId);
-                    String eventId = event != null ? rootEventId : null;
+                    Map<Integer, TransactionOuterClass.TreeEvent> eventsById = txTree.getEventsByIdMap();
+                    Integer eventId = !eventsById.isEmpty() ? eventsById.keySet().iterator().next() : null;
+                    TransactionOuterClass.TreeEvent event = eventId != null ? txTree.getEventsByIdMap().get(eventId) : null;
 
                     Map<String, Object> completionAttrs = new HashMap<>(attrs);
                     completionAttrs.put("ledgerOffset", offset);
@@ -232,7 +231,6 @@ public class LedgerApi {
         LoggingSpanHelper.logInfo(logger, "Submitting commands", attrs);
 
         CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
-                .setApplicationId(APP_ID)
                 .setCommandId(commandId)
                 .addActAs(party)
                 .addReadAs(party)
