@@ -10,9 +10,9 @@ Once you are familiar with the QS, please review the technology choices and the 
 
 If you are impatient, then you can start by following the Engineer Setup below. Alternatively, you can peruse the documentation:
 - [Quickstart Installation](docs/guide/CN-QS-Installation-20250314.pdf)
-- [Exploring The Demo](docs/guide/ExploringTheDemo-20250321.pdf)
+- [Exploring The Demo](docs/guide/ExploringTheDemo-20250404.pdf)
 - [Project Structure](docs/guide/ProjectStructureGuide-20250317.pdf)
-- [FAQ](docs/guide/CN-QS-FAQ-20250314.pdf)
+- [FAQ](docs/guide/CN-QS-FAQ-20250404.pdf)
 - [Observability and Troubleshooting Overview](docs/guide/ObservabilityTroubleshootingOverview-20250220.pdf)
 
 ### Technical Documentation
@@ -54,7 +54,6 @@ password <password>
 
 ```bash
 docker login -u <username> -p <password> digitalasset-docker.jfrog.io
-docker login -u <username> -p <password> digitalasset-canton-network-docker.jfrog.io
 ```
 
 Use the same username and password from your Artifactory credentials.
@@ -115,7 +114,7 @@ Run `make help` to see a list of all available targets, including (but not limit
 
 ## Topology
 
-This diagram summarizes the relationship of services that are started as part of `make start`. The focus of `Canton Network Quickstart` is to provide a development environment for App Providers.
+This diagram summarizes the relationship of services that are started as part of `make start`. The `canton` and `splice` services are configured to serve multiple logically separate components (each component represented with a box in the diagram) from a single container to reduce resource consumption. Similarly the `postgres` service contains multiple databases required by QS services. One `nginx` service is used as proxy for all QS services that needs one except for `keycloak` that has its own `nginx-keycloak` as it needs to be ready before other services start. The focus of `Canton Network Quickstart` is to provide a development environment for App Providers.
 
 ![QS Topology](docs/images/qs-topology.drawio.png)
 
@@ -136,7 +135,7 @@ After starting the application with `make start` you can access the following UI
   - **Description**: Interface for managing user wallets.
 
 - **App Provider Wallet UI**
-  - **URL**: [http://wallet.localhost:2000](http://wallet.localhost:3000)
+  - **URL**: [http://wallet.localhost:3000](http://wallet.localhost:3000)
   - **Description**: Interface for managing user wallets.
 
 ### Super Validator UIs (if LocalNet enabled via `make setup`)
@@ -150,6 +149,8 @@ After starting the application with `make start` you can access the following UI
 - **Scan Web UI**
   - **URL**: [http://scan.localhost:4000](http://scan.localhost:4000)
   - **Description**: Interface to monitor transactions.
+
+  > **Note**: `LocalNet` rounds may take up to 6 rounds (equivalent to one hour) to display in the scan UI.
 
 All the Super Validator UIs are accessible via a gateway at [http://localhost:4000](http://localhost:4000).
 

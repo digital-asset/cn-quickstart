@@ -36,7 +36,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 public class LedgerApi {
-    private final String APP_ID ;
+    private final String APP_ID;
     private final CommandSubmissionServiceGrpc.CommandSubmissionServiceFutureStub submission;
     private final CommandServiceGrpc.CommandServiceFutureStub commands;
     private final Dictionary<Converter<Object, ValueOuterClass.Value>> dto2Proto;

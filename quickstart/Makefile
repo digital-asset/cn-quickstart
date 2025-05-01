@@ -19,13 +19,10 @@ endif
 # Set default goal to 'help' if no target is specified
 .DEFAULT_GOAL := help
 
-# Disable gradle daemon:
-export GRADLE_OPTS = -Dorg.gradle.daemon=false
-
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env
-DOCKER_COMPOSE_FILES := -f compose.yaml
+DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file env/ports.env
+DOCKER_COMPOSE_FILES ?= -f compose.yaml
 
 # Default to adding resource constraints for Quickstart compose stack.
 RESOURCE_CONSTRAINTS_ENABLED ?= true
@@ -49,7 +46,9 @@ endif
 DOCKER_COMPOSE_PROFILES :=
 
 ifeq ($(LOCALNET_ENABLED),true)
-    DOCKER_COMPOSE_PROFILES += --profile localnet --env-file docker/localnet.env
+    DOCKER_COMPOSE_PROFILES += --profile localnet --env-file env/localnet.env
+else
+    DOCKER_COMPOSE_PROFILES += --env-file env/devnet.env
 endif
 
 ifeq ($(OBSERVABILITY_ENABLED),true)
@@ -111,9 +110,13 @@ restart-frontend: build-frontend ## Build and start the application
 
 # Run targets
 .PHONY: start
+ifeq ($(OBSERVABILITY_ENABLED),true)
+ifneq ($(SKIP_DOWNLOADS),true) # treat “true” (or any non‑empty value) as “enabled”
+start: fetch-grafana-dashboards
+endif
+endif
 start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d)
-
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
 
 .PHONY: stop
 stop: ## Stop the application and observability services
@@ -170,7 +173,7 @@ integration-test-ci: integration-test/node_modules start ## Run integration test
 	@# The integration test expects four AppInstallRequests
 	docker run --network host --rm -it --user "$(shell id -u):$(shell id -g)" \
 		-v "$(PWD)/integration-test":/work:ro \
-		--env-file .env \
+		$(foreach f,.env $(wildcard env/*.env),--env-file $(f)) \
 		-e NPM_CONFIG_CACHE=/tmp/.npm \
 		-w /work \
 		mcr.microsoft.com/playwright:v1.51.0-jammy \
@@ -225,6 +228,10 @@ clean-all: clean clean-docker ## Stop and remove all build artifacts, Docker con
 .PHONY: install-daml-sdk
 install-daml-sdk: ## Install the Daml SDK
 	./gradlew :daml:installDamlSdk
+
+.PHONY: fetch-grafana-dashboards
+fetch-grafana-dashboards: ## Download Grafana dashboards
+	./gradlew fetchGrafanaDashboards
 
 .PHONY: generate-NOTICES
 generate-NOTICES: ## Generate the NOTICES.txt file

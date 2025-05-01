@@ -8,76 +8,34 @@ services:
       _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx700m"
   backend-service-auto-config:
     mem_limit: 32mb
-  global-synchronizer:
-    mem_limit: 1g
-    environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx512m"
   nginx-keycloak:
     mem_limit: 32mb
-  nginx-app-provider:
-    mem_limit: 32mb
-  nginx-app-user:
-    mem_limit: 32mb
-  nginx-sv:
+  nginx:
     mem_limit: 32mb
   keycloak:
     mem_limit: 1g
     environment:
       _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx700m"
-  keycloak-postgres:
-    mem_limit: 256mb
-  participant-app-provider:
-    mem_limit: 2g
+  canton:
+    mem_limit: 3g
     environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
-  participant-app-user:
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx2560m"
+  postgres:
     mem_limit: 2g
-    environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
-  participant-sv:
-    mem_limit: 2g
-    environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
-  postgres-splice:
-    mem_limit: 512mb
-  postgres-splice-app-provider:
-    mem_limit: 512mb
-  postgres-splice-app-user:
-    mem_limit: 512mb
-  postgres-splice-sv:
-    mem_limit: 512mb
   pqs:
-    mem_limit: 1g
-    environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
-  scan:
     mem_limit: 1g
     environment:
       _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
   scan-web-ui:
     mem_limit: 256mb
-  sv-app:
-    mem_limit: 1g
-    environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
   sv-web-ui:
     mem_limit: 512mb
-  validator-app-provider:
+  splice:
     mem_limit: 1g
     environment:
       _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
-  validator-app-provider-auto-config:
+  splice-auto-config:
     mem_limit: 32mb
-  validator-app-user:
-    mem_limit: 1g
-    environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
-  validator-app-user-auto-config:
-    mem_limit: 32mb
-  validator-sv:
-    mem_limit: 2g
-    environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
   wallet-web-ui-app-provider:
     mem_limit: 256mb
   wallet-web-ui-app-user:
