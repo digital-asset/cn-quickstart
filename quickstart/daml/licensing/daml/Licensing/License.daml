@@ -47,6 +47,7 @@ template LicenseRenewalRequest with
     prepareUntil : Time
     settleBefore : Time
     createdAt : Time
+    licenseCid : ContractId License
   where 
     signatory user, provider
 
@@ -86,7 +87,7 @@ template LicenseRenewalRequest with
               executor = provider
               settlementRef = Reference with
                 id = "LicenseRenewalRequest"
-                cid = None -- Some (coerceContractId self) FIXME self not available here
+                cid = Some (coerceContractId licenseCid)
               requestedAt = createdAt
               allocateBefore = prepareUntil
               settleBefore = settleBefore
@@ -138,9 +139,10 @@ template License with
              licenseExtensionDuration
              licenseNum
              licenseFeeInstrumentId = InstrumentId { admin = dso, id = "Amulet" }
-             prepareUntil = now `addRelTime` paymentAcceptanceDuration -- ????
-             settleBefore = now `addRelTime` paymentAcceptanceDuration -- ????
+             prepareUntil = now
+             settleBefore = now `addRelTime` paymentAcceptanceDuration
              createdAt = now
+             licenseCid = self
          pure renewalOffer
 
 
