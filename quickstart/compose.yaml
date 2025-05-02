@@ -317,7 +317,7 @@ services:
   pqs:
     image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
     container_name: pqs
-    working_dir: /daml3.2
+    working_dir: /daml3.3
     env_file:
       - ./env/ports.env
       - ./env/app-provider.env
