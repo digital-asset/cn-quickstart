@@ -1,10 +1,7 @@
 # Custom-Generated DAR Files
 
-The DAR files located in this folder are **custom-generated** from the **Canton Network Project** to match the current 
+The DAR files located in this folder are from the **Canton Network Project** to match the current 
 SDK version. These files ensure compatibility with our system until the SDK versions align with the **Canton Network Project**.
-
-## Future Transition
-Once both SDK versions match, these DAR files will be sourced directly from the Canton Network Project, and this folder will no longer contain custom-generated versions.
 
 ## Important Notes
 - These DAR files are temporary and will be deprecated once the official versions are compatible.
