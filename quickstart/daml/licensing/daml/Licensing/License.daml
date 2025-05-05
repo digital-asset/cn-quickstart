@@ -36,8 +36,8 @@ data LicenseRenewalCancel = LicenseRenewalCancel
   with
     actor : Party -- Party that ended the renewal request.
     meta  : Metadata
-    -- ^ Metadata about the cancellation; the reason for the cancellation should  
-    -- be provided in here using key "reason".  
+    -- ^ Metadata about the cancellation; the reason for the cancellation should
+    -- be provided in here using key "reason".
   deriving (Eq, Show)
 
 -- | A template to track one specific license renewal request.
@@ -54,10 +54,10 @@ template LicenseRenewalRequest with
     signatory user, provider
 
     choice LicenseRenewalRequest_Cancel : LicenseRenewalCancel
-      with  
+      with
         actor : Party -- Party that exercises the cancellation.
         meta  : Metadata
-      controller 
+      controller
         actor
       do
         Licensing.Util.require "Actor is a signatory" (actor `elem` signatory this)

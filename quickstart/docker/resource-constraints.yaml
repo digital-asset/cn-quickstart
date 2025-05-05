@@ -17,9 +17,9 @@ services:
     environment:
       _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx700m"
   canton:
-    mem_limit: 2g
+    mem_limit: 3g
     environment:
-      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx1536m"
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx2560m"
   postgres:
     mem_limit: 2g
   pqs:

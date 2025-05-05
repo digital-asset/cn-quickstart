@@ -54,7 +54,6 @@ password <password>
 
 ```bash
 docker login -u <username> -p <password> digitalasset-docker.jfrog.io
-docker login -u <username> -p <password> digitalasset-canton-network-docker.jfrog.io
 ```
 
 Use the same username and password from your Artifactory credentials.

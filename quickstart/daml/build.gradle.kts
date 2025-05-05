@@ -83,31 +83,7 @@ tasks.register<de.undercouch.gradle.tasks.download.Download>("fetchDamlSdk") {
 
     doFirst {
         sdkDir.mkdirs()
-        // Use Credentials.fromNetRc to get username and password
-        val passwordCredentials = object : PasswordCredentials {
-            private var usernameField: String? = null
-            private var passwordField: String? = null
-
-            override fun getUsername(): String? = usernameField
-            override fun setUsername(username: String?) {
-                usernameField = username
-            }
-
-            override fun getPassword(): String? = passwordField
-            override fun setPassword(password: String?) {
-                passwordField = password
-            }
-        }
-
-        Credentials.fromNetRc("digitalasset.jfrog.io").execute(passwordCredentials)
-
-        val username = passwordCredentials.username
-        val password = passwordCredentials.password
-
-        if (username == null || password == null) {
-            throw Exception("Failed to obtain credentials from .netrc")
-        }
-
+        val (username, password) = Credentials.execFromNetRc("digitalasset.jfrog.io")
         username(username)
         password(password)
     }
