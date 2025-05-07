@@ -21,39 +21,57 @@ endif
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file env/ports.env
-DOCKER_COMPOSE_FILES ?= -f compose.yaml
+$(info MODULES_DIR=$(MODULES_DIR))
+DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file ${MODULES_DIR}/localnet/compose.env --env-file ${MODULES_DIR}/localnet/env/common.env
+DOCKER_COMPOSE_FILES := -f compose.yaml -f ${MODULES_DIR}/localnet/compose.yaml
 
 # Default to adding resource constraints for Quickstart compose stack.
 RESOURCE_CONSTRAINTS_ENABLED ?= true
 
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
-RESOURCE_CONSTRAINT_CONFIG := -f docker/resource-constraints.yaml
+RESOURCE_CONSTRAINT_CONFIG := -f ${MODULES_DIR}/localnet/resource-constraints.yaml
+  ifeq ($(AUTH_MODE),oauth2)
+  RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/keycloak/resource-constraints.yaml
+  endif
 else
 RESOURCE_CONSTRAINT_CONFIG :=
 endif
 
-
-ifeq ($(KERNEL_NAME), Darwin)
-DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml
-else ifeq ($(KERNEL_NAME), Linux)
-DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml
-else
-DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/compose.yaml
+ifeq ($(OBSERVABILITY_ENABLED),true)
+  ifeq ($(KERNEL_NAME), Darwin)
+  DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml
+  else ifeq ($(KERNEL_NAME), Linux)
+  DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml
+  else
+  DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/compose.yaml
+  endif
+  DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ${MODULES_DIR}/observability/compose.yaml
 endif
 
 # Define DOCKER_COMPOSE_PROFILES based on environment variables
-DOCKER_COMPOSE_PROFILES :=
-
-ifeq ($(LOCALNET_ENABLED),true)
-    DOCKER_COMPOSE_PROFILES += --profile localnet --env-file env/localnet.env
+DOCKER_COMPOSE_PROFILES := --profile app-provider --profile app-user
+ifeq ($(AUTH_MODE),oauth2)
+    DOCKER_COMPOSE_PROFILES += --profile $(AUTH_MODE)
+    DOCKER_COMPOSE_FILES +=  -f ${MODULES_DIR}/keycloak/compose.yaml
+    DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/keycloak/compose.env
 else
-    DOCKER_COMPOSE_PROFILES += --env-file env/devnet.env
+    DOCKER_COMPOSE_PROFILES += --profile $(AUTH_MODE)
+endif
+
+ifeq ($(ENV),local)
+    DOCKER_COMPOSE_PROFILES += --profile sv --env-file ${MODULES_DIR}/localnet/env/local.env
+else
+    DOCKER_COMPOSE_PROFILES += --env-file ${MODULES_DIR}/localnet/env/dev.env
 endif
 
 ifeq ($(OBSERVABILITY_ENABLED),true)
     DOCKER_COMPOSE_PROFILES += --profile observability
 endif
+
+# KV setup PQS_APP_PROVIDER_PROFILE  and AUTH_MODE for onboarding and maybe in keycloak/compose.env ???
+DOCKER_COMPOSE_PROFILES += --profile pqs-app-provider
+DOCKER_COMPOSE_FILES +=  -f ${MODULES_DIR}/onboarding/compose.yaml -f ${MODULES_DIR}/pqs/compose.yaml
+export PQS_APP_PROVIDER_PROFILE := on
 
 # Function to run docker-compose with default files and environment
 define docker-compose
@@ -138,6 +156,35 @@ status: ## Show status of Docker containers
 compose-config:
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) config)
 
+# Log a service's logs to file
+define log_service
+	@echo "Tailing logs for $$1..." \
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) logs -f --no-log-prefix "$$1") >> "./logs/$$1.clog" 2>&1 &
+endef
+
+.PHONY: logf
+logf:
+	@rm -rf "$$PWD/logs"; \
+	mkdir "$$PWD/logs"; \
+	SERVICES=$$( $(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) ps --services) ); \
+	for service in $$SERVICES; do \
+		echo "Tailing logs for $$service..."; \
+		$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) logs -f --no-log-prefix "$$service") >> "./logs/$$service.clog" 2>&1 & \
+# 		$$( $(call log_service, $$service) ); \
+	done \
+	# Watch for container start events; attach logs if it belongs to this compose \
+	docker events --filter type=container --format '{{.Status}} {{.ID}}' | while read -r status cid; do \
+		# If container starts, check if it’s from our compose file \
+		if [ "$$status" = "start" ]; then \
+			service_name=$$(docker inspect --format='{{index .Config.Labels "com.docker.compose.service"}}' "$$cid" 2>/dev/null) ; \
+			echo ">> $$service_name"; \
+			if [ -n "$$service_name" ]; then \
+				$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) logs -f --no-log-prefix "$$service_name") >> "./logs/$$service_name.clog" 2>&1 & \
+# 				$(call log_service, $$service_name) \
+			fi \
+		fi \
+	done
+
 .PHONY: logs
 logs: ## Show logs of Docker containers
 	$(call docker-compose, logs)
@@ -184,21 +231,13 @@ integration-test/node_modules:
 	cd integration-test && npm install
 
 # Console
-.PHONY: console-app-provider
-console-app-provider: ## Start the Canton console
-	docker compose -f docker/canton-console/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm canton-console-app-provider
+.PHONY: canton-console
+canton-console: ## Start the Canton console
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) run --rm --name canton-console console)
 
-.PHONY: clean-console-app-provider
-clean-console-app-provider: ## Stop and remove the Canton console container
-	docker rm -f quickstart-canton-console-app-provider 2> /dev/null || true
-
-.PHONY: console-app-user
-console-app-user: ## Start the Canton console
-	docker compose -f docker/canton-console/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm canton-console-app-user
-
-.PHONY: clean-console-app-user
-clean-console-app-user: ## Stop and remove the Canton console container
-	docker rm -f quickstart-canton-console-app-user 2> /dev/null || true
+.PHONY: clean-canton-console
+clean-canton-console: ## Stop and remove the Canton console container
+	docker rm -f canton-console 2> /dev/null || true
 
 # Shell
 .PHONY: shell
@@ -215,7 +254,7 @@ clean: ## Clean the build artifacts
 	./gradlew clean
 
 .PHONY: clean-docker
-clean-docker: clean-shell clean-console-app-provider clean-console-app-user ## Stop and remove application Docker containers and volumes
+clean-docker: clean-shell clean-canton-console ## Stop and remove application Docker containers and volumes
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) down -v)
 
 .PHONY: clean-application

@@ -1,0 +1,15 @@
+# Copyright (c) 2023, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  pqs:
+    environment:
+      OTEL_SERVICE_NAME: pqs
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_METRIC_EXPORT_INTERVAL: 5000
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:${OTEL_COLLECTOR_OTLP_PORT}"
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_INSTRUMENTATION_MICROMETER_ENABLED: true
+      OTEL_INSTRUMENTATION_RUNTIME_TELEMETRY_EMIT_EXPERIMENTAL_TELEMETRY: true

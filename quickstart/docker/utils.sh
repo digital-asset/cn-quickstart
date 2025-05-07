@@ -171,6 +171,7 @@ get_user_party() {
 get_dso_party_id() {
   local token=$1
   local validator=$2
+  echo "get_dso_party_id $validator" >&2
   curl_check "http://$validator/api/validator/v0/scan-proxy/dso-party-id" "$token" "application/json" | jq -r .dso_party_id
 }
 
@@ -185,11 +186,13 @@ curl_check() {
     echo "${args[@]}" >&2
   fi
 
-  response=$(curl -s -S -w "\n%{http_code}" "$url" \
-      -H "Authorization: Bearer $token" \
-      -H "Content-Type: $contentType" \
-      "${args[@]}"
-      )
+  curlArgs=(-s -S -w "\n%{http_code}" "$url")
+  if [ -n "$token" ]; then
+    curlArgs+=(-H "Authorization: Bearer $token")
+  fi
+  curlArgs+=(-H "Content-Type: $contentType")
+  curlArgs+=("${args[@]}")
+  response=$(curl "${curlArgs[@]}")
 
   local httpCode=$(echo "$response" | tail -n1 | tr -d '\r')
   local responseBody=$(echo "$response" | sed '$d')

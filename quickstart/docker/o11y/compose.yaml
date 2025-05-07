@@ -2,10 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
-networks:
-  quickstart:
-    name: ${DOCKER_NETWORK}
-
 services:
   otel-collector:
     image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_VERSION}
@@ -29,8 +25,6 @@ services:
       TEMPO_PORT: ${TEMPO_OTLP_PORT}
     volumes:
       - ./config/o11y/otel-collector/collector.yaml:/etc/otel-collector/config.yaml
-    networks:
-      - ${DOCKER_NETWORK}
     profiles:
       - observability
 
@@ -50,8 +44,6 @@ services:
       - --storage.tsdb.path=/prometheus/data
     volumes:
       - ./config/o11y/prometheus/prometheus.yaml:/etc/prometheus/config.yaml
-    networks:
-      - ${DOCKER_NETWORK}
     profiles:
       - observability
 
@@ -67,8 +59,6 @@ services:
       HTTP_LISTEN_PORT: ${LOKI_HTTP_PORT}
     volumes:
       - ./config/o11y/loki/loki.yaml:/etc/loki/config.yaml
-    networks:
-      - ${DOCKER_NETWORK}
     profiles:
       - observability
 
@@ -86,8 +76,6 @@ services:
       PROMETHEUS_PORT: ${PROMETHEUS_HTTP_PORT}
     volumes:
       - ./config/o11y/tempo/tempo.yaml:/etc/tempo/config.yaml
-    networks:
-      - ${DOCKER_NETWORK}
     profiles:
       - observability
 
@@ -106,8 +94,6 @@ services:
       - ./config/o11y/grafana/dashboards:/var/lib/grafana/dashboards
       - ./config/o11y/grafana/provisioning:/etc/grafana/provisioning
       - ./config/o11y/grafana/grafana.ini:/etc/grafana/grafana.ini
-    networks:
-      - ${DOCKER_NETWORK}
     depends_on:
       prometheus:
         condition: service_started
@@ -123,8 +109,6 @@ services:
       - --store_container_labels=false
       - -docker_only
       - -port=${CADVISOR_METRICS_PORT}
-    networks:
-      - ${DOCKER_NETWORK}
     profiles:
       - observability
 
@@ -136,8 +120,6 @@ services:
     command:
       - --nginx.scrape-uri=http://nginx/status
       - --web.listen-address=:${NGINX_EXPORTER_METRICS_PORT}
-    networks:
-      - ${DOCKER_NETWORK}
     profiles:
       - observability
 
@@ -148,11 +130,12 @@ services:
     mem_limit: 32mb
     command:
       - --web.listen-address=:${POSTGRES_EXPORTER_METRICS_PORT}
+    env_file:
+      - ${LOCALNET_ENV_DIR}/common.env
     environment:
       DATA_SOURCE_URI: "${DB_SERVER}:${DB_PORT}/postgres?sslmode=disable"
       DATA_SOURCE_USER: "${DB_USER}"
       DATA_SOURCE_PASS: "${DB_PASSWORD}"
-    networks:
-      - ${DOCKER_NETWORK}
     profiles:
       - observability
+

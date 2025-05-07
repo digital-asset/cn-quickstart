@@ -4,5 +4,55 @@
 
 set -eo pipefail
 
-source /app/simulate-user-input.sh
-/app/create-app-install-request.sh $APP_PROVIDER_PARTY $APP_USER_PARTY $DSO_PARTY "$APP_USER_WALLET_ADMIN_TOKEN"
+source /app/utils.sh
+
+create_app_install_request() {
+  local token=$1
+  local dsoParty=$2
+  local appUserParty=$3
+  local appProviderParty=$4
+  local participantUserId=$5
+  local participant=$6
+
+  # Add a timestamp for a unique command ID to allow resubmission
+  local time="$(date +%s%N)"
+
+  echo "create_app_install_request $dsoParty $appUserParty $appProviderParty $participant" >&2
+
+  curl_check "http://$participant/v2/commands/submit-and-wait" "$token" "application/json" \
+    --data-raw '{
+        "commands": [
+          {
+            "CreateCommand": {
+              "templateId": "#quickstart-licensing:Licensing.AppInstall:AppInstallRequest",
+              "createArguments": {
+                "dso": "'$dsoParty'",
+                "provider": "'$appProviderParty'",
+                "user": "'$appUserParty'",
+                "meta": {
+                  "values": []
+                }
+              }
+            }
+          }
+        ],
+        "workflowId": "create-app-install-request",
+        "applicationId": "'$participantUserId'",
+        "commandId": "create-app-install-request-'$time'",
+        "deduplicationPeriod": {
+          "Empty": {}
+        },
+        "actAs": [
+          "'$appUserParty'"
+        ],
+        "readAs": [
+          "'$appUserParty'"
+        ],
+        "submissionId": "create-app-install-request",
+        "disclosedContracts": [],
+        "domainId": "",
+        "packageIdSelectionPreference": []
+    }'
+}
+
+source /app/create-app-install-request.sh
