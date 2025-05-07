@@ -168,7 +168,7 @@ Alternatively, in the terminal, from quickstart/ run:
 
 make open-app-ui
 
-.. image:: /demo_images/01-logincnqs.png
+.. image:: images/demo_images/01-logincnqs.png
 
 Make note that the AppProvider’s username is “pat” and the password is
 “abc123” (all lowercase).
@@ -177,11 +177,11 @@ Login as the AppProvider.
 
 Fill in the login credentials: username: pat, password: abc123
 
-.. image:: /demo_images/02-appprovider-signin.png
+.. image:: images/demo_images/02-appprovider-signin.png
 
 Select “AppInstalls” in the menu.
 
-.. image:: /demo_images/02a-app-installs-view.png
+.. image:: images/demo_images/02a-app-installs-view.png
 
 Open a terminal.
 
@@ -192,7 +192,8 @@ From /quickstart/ run:
 This command creates an App Installation Request on behalf of the
 Participant.
 
-.. image:: /demo_images/04-create-install-req.png
+.. image:: images/demo_images/04-create-install-req.png
+
 
    If your machine is not powerful enough to host LocalNet or if the
    docker containers are not responsive then the response may show a
@@ -200,7 +201,7 @@ Participant.
    to at least 8 GB should allow the LocalNet containers to operate
    properly.
 
-   .. image:: /demo_images/05-error-app-install.png
+.. image:: images/demo_images/05-error-app-install.png
 
 Return to the browser.
 
@@ -208,43 +209,43 @@ The install request appears in the list.
 
 Click “Accept”.
 
-.. image:: /demo_images/06-install-request.png
+.. image:: images/demo_images/06-install-request.png
 
 The AppInstallRequest is Accepted. The actions update to create or
 cancel the license.
 
-.. image:: /demo_images/07-req-accept.png
+.. image:: images/demo_images/07-req-accept.png
 
 Click “Create License”.
 
 The license is created and the “# Licenses” field is updated.
 
-.. image:: /demo_images/08-create-lic.png
+.. image:: images/demo_images/08-create-lic.png
 
 In the AppProvider, “Pat the provider’s,” account, navigate to the
 **Licenses** menu and select “Actions.”
 
-.. image:: /demo_images/09-licenses-view.png
+.. image:: images/demo_images/09-licenses-view.png
 
 An “Actions for License” modal opens with an option to renew or expire
 the license. Per the Daml contract, licenses are created in an expired
 state. To activate the license, it must be renewed.
 
-.. image:: /demo_images/10-license-modal.png
+.. image:: images/demo_images/10-license-modal.png
 
 To renew the license, enter a description then click the green “Issue
 Renewal Payment Request” button.
 
-.. image:: /demo_images/11-issue-renewal.png
+.. image:: images/demo_images/11-issue-renewal.png
 
 The license renewal process is initiated and ultimately successful.
 
-.. image:: /demo_images/12-init-renewal.png
+.. image:: images/demo_images/12-init-renewal.png
 
 The license is now available for a 30-day extension for a flat fee of
 $100 CC.
 
-.. image:: /demo_images/13-license-available.png
+.. image:: images/demo_images/13-license-available.png
 
 .
 
@@ -260,17 +261,17 @@ renewal fee.
 Navigate to http://localhost:3000/login using a separate browser in
 incognito or private mode.
 
-.. image:: /demo_images/01-login-cnqs.png
+.. image:: images/demo_images/01-login-cnqs.png
 
 Login as AppUser alice.
 
 Note that AppUser’s username is “alice” and the password is “abc123”.
 
-.. image:: /demo_images/14-app-user-signin.png
+.. image:: images/demo_images/14-app-user-signin.png
 
 Go to the **Licenses** View and click the “Pay renewal” button.
 
-.. image:: /demo_images/15-license-view.png
+.. image:: images/demo_images/15-license-view.png
 
 Click on the Pay Renewal button. This navigates to the Canton Coin
 Wallet log in. Click “LOG IN WITH OAUTH2”.
@@ -278,17 +279,17 @@ Wallet log in. Click “LOG IN WITH OAUTH2”.
 💡 If you have any issues with log in, navigate directly to
 http://wallet.localhost:2000/.
 
-.. image:: /demo_images/16-cc-wallet-login.png
+.. image:: images/demo_images/16-cc-wallet-login.png
 
 This navigates to a keycloak login.
 
 Enter the same username and password as before.
 
-.. image:: /demo_images/17-keycloak-login.png
+.. image:: images/demo_images/17-keycloak-login.png
 
 Signing in directs to the Canton Coin Wallet.
 
-.. image:: /demo_images/18-cc-wallet-view.png
+.. image:: images/demo_images/18-cc-wallet-view.png
 
 The wallet must be populated with CC in order to fulfill the
 transaction.
@@ -296,33 +297,33 @@ transaction.
 In CC Wallet, populate the wallet with $100 USD, or the equivalent of
 20,000 CC.
 
-.. image:: /demo_images/19-populate-wallet.png
+.. image:: images/demo_images/19-populate-wallet.png
 
 The wallet was prepopulated with 564 CC so it now contains 20,564 CC.
 
-.. image:: /demo_images/20-wallet-bal.png
+.. image:: images/demo_images/20-wallet-bal.png
 
 Return to the License Renewal Request as Org1. Click “Pay Renewal”.
 
-.. image:: /demo_images/03-select-appinstalls.png
+.. image:: images/demo_images/03-select-appinstalls.png
 
 The CC Wallet balance is sufficient to send payment to the Provider.
 
-.. image:: /demo_images/21-payment-modal.png
+.. image:: images/demo_images/21-payment-modal.png
 
 Return to the AppProvider’s License Renewal Requests View.
 
 The AppProvider may now Complete the Renewal.
 
-.. image:: /demo_images/22-complete-renewal.png
+.. image:: images/demo_images/22-complete-renewal.png
 
 Clicking “Complete Renewal” results in a Success.
 
-.. image:: /demo_images/23-renew-success.png
+.. image:: images/demo_images/23-renew-success.png
 
 Alice’s License view shows the activated license.
 
-.. image:: /demo_images/24-activated-license.png
+.. image:: images/demo_images/24-activated-license.png
 
 Congratulations. You’ve successfully created and activated a license
 with a payment transfer!
@@ -353,13 +354,13 @@ participant
 
 Returns their location in the ledger.
 
-.. image:: /demo_images/25-console-participant.png
+.. image:: images/demo_images/25-console-participant.png
 
 `participant.domains`
 
 Shows the Participant’s synchronizer.
 
-.. image:: /demo_images/26-console-sync.png
+.. image:: images/demo_images/26-console-sync.png
 
 `participant.health.ping(participant)`
 
@@ -367,7 +368,7 @@ Runs a health ping. The ping makes a round trip through the CN
 blockchain. Pinging yourself validates communication throughout the
 entire network.
 
-.. image:: /demo_images/27-console-ping.png
+.. image:: images/demo_images/27-console-ping.png
 
 Daml Shell
 ----------
@@ -386,13 +387,13 @@ Run the following commands to see the data:
 
 Shows unique identifiers and the asset count
 
-.. image:: /demo_images/28-shell-ids.png
+.. image:: images/demo_images/28-shell-ids.png
 
 active quickstart-licensing:Licensing.License:License
 
 List the license details.
 
-.. image:: /demo_images/29-license-details.png
+.. image:: images/demo_images/29-license-details.png
 
 active quickstart-licensing:Licensing.License:LicenseRenewalRequest
 
@@ -402,7 +403,7 @@ archives quickstart-licensing:Licensing.AppInstall:AppInstallRequest
 
 Shows any archived license(s).
 
-.. image:: /demo_images/30-archive-licenses.png
+.. image:: images/demo_images/30-archive-licenses.png
 
 Connect to DevNet
 -----------------
@@ -426,7 +427,7 @@ containers which may require more memory for Docker.
 You may leave the party hint as the default value by tapping ‘return’ on
 the keyboard.
 
-.. image:: /demo_images/31-party-hint.png
+.. image:: images/demo_images/31-party-hint.png
 
 💡Running make setup regenerates `.env.local` but preserves the contents
 of the `.env` file settings.
@@ -446,7 +447,7 @@ the GSF DevNet information section.
 For example, if the SV Node Information shows the migration_id value as
 “0” then update MIGRATION_ID to “0” in your `.env`.
 
-.. image:: /demo_images/32-gsf-sv.png
+.. image:: images/demo_images/32-gsf-sv.png
 
 In `.env`:
 
@@ -482,7 +483,7 @@ quickstart/.env file.
    that the DevNet VPN is active. DevNet VPNs may timeout, especially if
    left unattended for extended periods of time.
 
-In an incognito browser navigate to localhost:3000/login. Login as the
+In an incognito browser navigate to `localhost:3000/login`. Login as the
 Org1 user and create and archive assets, as before. Logout and do the
 same as the AppProvider.
 
@@ -495,16 +496,16 @@ straightforward to navigate.
 
 Login as ‘administrator’.
 
-.. image:: /demo_images/33-sv-ui-login.png
+.. image:: images/demo_images/33-sv-ui-login.png
 
 The UI shows information about the SV and lists the active SVs.
 
-.. image:: /demo_images/34-active-svs.png
+.. image:: images/demo_images/34-active-svs.png
 
 The Validator Onboarding menu allows for the creation of validator
 onboarding secrets.
 
-.. image:: /demo_images/35-validator-onboarding.png
+.. image:: images/demo_images/35-validator-onboarding.png
 
 Canton Coin Scan
 ~~~~~~~~~~~~~~~~
@@ -515,16 +516,16 @@ http://scan.localhost:4000/.
 The default activity view shows the total CC balance and the Validator
 rewards.
 
-.. image:: /demo_images/36-cc-balance.png
+.. image:: images/demo_images/36-cc-balance.png
 
 Select the Network Info menu to view SV identification.
 
-.. image:: /demo_images/34-active-svs.png
+.. image:: images/demo_images/34-active-svs.png
 
 The Validators menu shows that the local validator has been registered
 with the SV.
 
-.. image:: /demo_images/37-registered-validator.png
+.. image:: images/demo_images/37-registered-validator.png
 
 Observability Dashboard
 -----------------------
@@ -532,16 +533,16 @@ Observability Dashboard
 In a web browser, navigate to http://localhost:3030/dashboards to view
 the observability dashboards. Select “Quickstart - consolidated logs”.
 
-.. image:: /demo_images/38-obs-dash.png
+.. image:: images/demo_images/38-obs-dash.png
 
 The default view shows a running stream of all services.
 
-.. image:: /demo_images/39-service-stream.png
+.. image:: images/demo_images/39-service-stream.png
 
 Change the services filter from “All” to “participant” to view
 participant logs. Select any log entry to view its details.
 
-.. image:: /demo_images/40-log-entry-details.png
+.. image:: images/demo_images/40-log-entry-details.png
 
 Development Journey in the CN QS Lifecycle 
 ===========================================
@@ -568,12 +569,12 @@ application evolves.
 **Build System**
 
 The build system integrates Daml smart contract with the Java and
-TypeScript applications. Running ./gradlew build generates code from the
+TypeScript applications. Running `./gradlew` build generates code from the
 Daml model, packages contracts into DAR files, and prepares deployment.
 
 To understand the project structure, dependencies, and root project
-configuration, examine quickstart/build.gradle.kts. For Daml-specific
-build configurations, review quickstart/daml/build.gradle.kts.
+configuration, examine `quickstart/build.gradle.kts`. For Daml-specific
+build configurations, review `quickstart/daml/build.gradle.kts`.
 
 To extend the build system for your application, create parallel project
 structures in quickstart/settings.gradle.kts. These settings allow you
@@ -581,7 +582,7 @@ to maintain your code alongside the original CN QS components while
 leveraging the same build infrastructure.
 
 Customize code generation by modifying the Gradle tasks in
-quickstart/buildSrc/src/main/kotlin/ to target specific languages or
+`quickstart/buildSrc/src/main/kotlin/` to target specific languages or
 adjust output formats.
 
 As your application evolves, you can fine-tune dependency management
@@ -591,7 +592,7 @@ serves as the foundation that connects your Daml models to client
 applications.
 
 When troubleshooting build issues, check the generated code in
-build/generated-daml-bindings/ to verify that your Daml models are
+`build/generated-daml-bindings/` to verify that your Daml models are
 correctly translated to your target languages.
 
 Understanding the build system can save extensive time in development
@@ -654,11 +655,11 @@ Grafana JSON for dashboards), making them easy to edit with standard
 tools.
 
 Override configuration values by setting environment variables in your
-.env files rather than editing the configuration files directly. This
+`.env` files rather than editing the configuration files directly. This
 approach makes it easier to incorporate upstream updates by keeping your
 customizations separate from the base configurations. For example, set
-CANTON_ADMIN_PORT=5022 in your .env file to change the Canton admin API
-port without modifying the app.conf file.
+`CANTON_ADMIN_PORT=5022` in your `.env` file to change the Canton admin API
+port without modifying the `app.conf` file.
 
 When troubleshooting, examine these configuration files to understand
 how services are connected and what parameters control their behavior.
@@ -669,19 +670,19 @@ QS configurations.
 **Utility Tools**
 
 Leverage the CN QS utility tools during development and testing
-workflows. Use the build utilities in quickstart/buildSrc/ to automate
-common development tasks. The UnpackTarGzTask helps extract archive
+workflows. Use the build utilities in `quickstart/buildSrc/` to automate
+common development tasks. The `UnpackTarGzTask` helps extract archive
 files while preserving permissions and symbolic links. The Java
 convention scripts standardize your application's build configuration
 across modules.
 
 Configure your deployment environment by selecting the appropriate
-Docker Compose files in quickstart/docker/. Use compose-validator.yaml
+Docker Compose files in `quickstart/docker/`. Use `compose-validator.yaml`
 for validator nodes and adjust resource allocations with the
-resource-constraints-*.yaml files. Start the observability stack with
-docker-compose -f quickstart/docker/o11y/compose.yaml up to monitor your
+`resource-constraints-*.yaml` files. Start the observability stack with
+`docker-compose -f quickstart/docker/o11y/compose.yaml` up to monitor your
 application's performance. The o11y directory integrates with Grafana
-dashboards defined in quickstart/config/o11y/ to provide real-time
+dashboards defined in `quickstart/config/o11y/` to provide real-time
 metrics visualization.
 
 Examine these utilities early in your development process to understand
@@ -787,81 +788,83 @@ ScratchNet also requires persistent storage directories that are
 accessible across a team. Deploying ScratchNet architecture may use the
 following pattern:
 
-# Clone CN QS repository to server
+::
 
-git clone https://github.com/digital-asset/cn-quickstart.git
+   # Clone CN QS repository to server
 
-`cd cn-quickstart`
+   `git clone https://github.com/digital-asset/cn-quickstart.git`
 
-# Create persistent storage directories
+   `cd cn-quickstart`
 
-`mkdir -p /mnt/scratchnet/postgres-data`
+   # Create persistent storage directories
 
-`mkdir -p /mnt/scratchnet/canton-data`
+   `mkdir -p /mnt/scratchnet/postgres-data`
+
+   `mkdir -p /mnt/scratchnet/canton-data`
 
 Configure external volume mounts in a custom compose override file:
 
-```
-# scratchnet.yaml
+::
 
-version: '3.8'
+   # scratchnet.yaml
 
-services:
+   version: '3.8'
 
-postgres-splice-app-provider:
+   services:
 
-volumes:
+   postgres-splice-app-provider:
 
-- /mnt/scratchnet/postgres-data/app-provider:/var/lib/postgresql/data
+   volumes:
 
-postgres-splice-app-user:
+   - /mnt/scratchnet/postgres-data/app-provider:/var/lib/postgresql/data
 
-volumes:
+   postgres-splice-app-user:
 
-- /mnt/scratchnet/postgres-data/app-user:/var/lib/postgresql/data
+   volumes:
 
-postgres-splice-sv:
+   - /mnt/scratchnet/postgres-data/app-user:/var/lib/postgresql/data
 
-volumes:
+   postgres-splice-sv:
 
-- /mnt/scratchnet/postgres-data/sv:/var/lib/postgresql/data
+   volumes:
 
-participant-app-provider:
+   - /mnt/scratchnet/postgres-data/sv:/var/lib/postgresql/data
 
-volumes:
+   participant-app-provider:
 
-- /mnt/scratchnet/canton-data/app-provider:/canton-data
+   volumes:
 
-participant-app-user:
+   - /mnt/scratchnet/canton-data/app-provider:/canton-data
 
-volumes:
+   participant-app-user:
 
-- /mnt/scratchnet/canton-data/app-user:/canton-data
-```
+   volumes:
+
+   - /mnt/scratchnet/canton-data/app-user:/canton-data
 
 Create a basic environment configuration.
 
-```
-# .env.scratchnet
+::
 
-# Unique network name
+   # .env.scratchnet
 
-DOCKER_NETWORK=scratchnet
+   # Unique network name
 
-# External hostname where ScratchNet is accessible
+   DOCKER_NETWORK=scratchnet
 
-EXTERNAL_HOSTNAME=scratchnet.example.com
+   # External hostname where ScratchNet is accessible
 
-Launch with persistent volumes:
+   EXTERNAL_HOSTNAME=scratchnet.example.com
 
-# Set up environment
+   Launch with persistent volumes:
 
-export ENV_FILE=.env.scratchnet
+   # Set up environment
 
-# Launch with volume persistence
+   export ENV_FILE=.env.scratchnet
 
-COMPOSE_FILE=quickstart/compose.yaml:scratchnet.yaml make start
-```
+   # Launch with volume persistence
+
+   COMPOSE_FILE=quickstart/compose.yaml:scratchnet.yaml make start
 
 If your team is interested in setting up a ScratchNet environment, be
 sure to implement a regular, and preferably automated, backup strategy
@@ -874,30 +877,30 @@ Guide), or you may choose to incorporate your own lightweight tools.
 
 For example, a monitoring script in crontab can offer basic alerting.
 
-```
-#!/bin/bash
+::
 
-# db-monitor.sh - Run daily to monitor database growth
+   #!/bin/bash
 
-THRESHOLD=80
+   # db-monitor.sh - Run daily to monitor database growth
 
-DB_PATH="/mnt/scratchnet/postgres-data"
+   THRESHOLD=80
 
-USAGE=$(df -h $DB_PATH \| grep -v Filesystem \| awk '{ print $5 }' \|
-sed 's/%//')
+   DB_PATH="/mnt/scratchnet/postgres-data"
 
-SIZE=$(du -sh $DB_PATH \| awk '{ print $1 }')
+   USAGE=$(df -h $DB_PATH \| grep -v Filesystem \| awk '{ print $5 }' \|
+   sed 's/%//')
 
-echo "$(date): DB size is $SIZE, volume usage at $USAGE%" >>
-/var/log/scratchnet-storage.log
+   SIZE=$(du -sh $DB_PATH \| awk '{ print $1 }')
 
-if [ $USAGE -gt $THRESHOLD ]; then
+   echo "$(date): DB size is $SIZE, volume usage at $USAGE%" >>
+   /var/log/scratchnet-storage.log
 
-echo "ScratchNet PostgreSQL volume has reached ${USAGE}% capacity
-(${SIZE})"
+   if [ $USAGE -gt $THRESHOLD ]; then
 
-fi
-```
+   echo "ScratchNet PostgreSQL volume has reached ${USAGE}% capacity
+   (${SIZE})"
+
+   fi
 
 Containers can also be configured to automatically prune older data to
 reduce latency and maintain system integrity.
@@ -1057,37 +1060,29 @@ Gradle Settings
 When you develop parallel directories, remember to update your build
 configuration to include both structures.
 
-```
-// In settings.gradle.kts
+::
 
-include("quickstart:daml")
-
-include("quickstart:backend")
-
-include("quickstart:frontend")
-
-include("myapp:daml")
-
-include("myapp:backend")
-
-include("myapp:frontend")
+   // In settings.gradle.kts
+   include("quickstart:daml")
+   include("quickstart:backend")
+   include("quickstart:frontend")
+   include("myapp:daml")
+   include("myapp:backend")
+   include("myapp:frontend")
 
 Maintain separate build files for application components.
 
-// In myapp/backend/build.gradle.kts
+::
 
-dependencies {
+   // In myapp/backend/build.gradle.kts
+   dependencies {
+   // Reference CN QS components if needed
+   implementation(project(":quickstart:daml"))
 
-// Reference CN QS components if needed
+   // Your specific dependencies
+   implementation("your.dependency:library:1.0.0")
 
-implementation(project(":quickstart:daml"))
-
-// Your specific dependencies
-
-implementation("your.dependency:library:1.0.0")
-
-}
-```
+   }
 
 Environment Variables
 ~~~~~~~~~~~~~~~~~~~~~
@@ -1351,7 +1346,7 @@ To log in use the default credentials:
 
 -  **Password**: \`admin\`
 
-.. image:: /demo_images/41-keycloack-login.png
+.. image:: images/demo_images/41-keycloack-login.png
 
 Customization Scenarios
 -----------------------
@@ -1363,41 +1358,41 @@ Add a New User
 
 ..
 
-   .. image:: /demo_images/42-keycloak-new-user.png
+   .. image:: images/demo_images/42-keycloak-new-user.png
 
 2. Select the appropriate realm (AppProvider or AppUser)
 
 ..
 
-   .. image:: /demo_images/43-keycloak-realm.png
+   .. image:: images/demo_images/43-keycloak-realm.png
 
 3. Navigate to the “Users” -> “Add user”
 
 ..
 
-   .. image:: /demo_images/44-keycloak-add-user.png
+   .. image:: images/demo_images/44-keycloak-add-user.png
 
-   .. image:: /demo_images/45-keycloak-user-bob.png
+   .. image:: images/demo_images/45-keycloak-user-bob.png
 
 4. Fill in the user details and click **Create**
 
 ..
 
-   .. image:: /demo_images/46-keycloak-bob-details.png
+   .. image:: images/demo_images/46-keycloak-bob-details.png
 
 5. Go to the **Credentials** tab to set a password
 
 ..
 
-   .. image:: /demo_images/47-keycloak-credentials.png
+   .. image:: images/demo_images/47-keycloak-credentials.png
 
-   .. image:: /demo_images/48-keycloak-set-pw.png
+   .. image:: images/demo_images/48-keycloak-set-pw.png
 
 6. Save the password
 
 ..
 
-   .. image:: /demo_images/49-keycloak-save-pw.png
+   .. image:: images/demo_images/49-keycloak-save-pw.png
 
 7. You can now sign in using the new user and their password.
 
@@ -1405,15 +1400,15 @@ Add a New User
 
 ..
 
-   .. image:: /demo_images/50-keycloak-oauth-login.png
+   .. image:: images/demo_images/50-keycloak-oauth-login.png
 
-   .. image:: /demo_images/51-keycloak-bob-signin.png
+   .. image:: images/demo_images/51-keycloak-bob-signin.png
 
 8. Bob is now a user
 
 ..
 
-   .. image:: /demo_images/52-user-bob.png
+   .. image:: images/demo_images/52-user-bob.png
 
 Modify Client Settings
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -1424,13 +1419,13 @@ Modify Client Settings
 
 ..
 
-   .. image:: /demo_images/53-keycloak-client-settings.png
+   .. image:: images/demo_images/53-keycloak-client-settings.png
 
 3. Update settings per your needs
 
 ..
 
-   .. image:: /demo_images/54-keycloak-update-settings.png
+   .. image:: images/demo_images/54-keycloak-update-settings.png
 
 4. Save changes
 
@@ -1443,22 +1438,22 @@ Add a New Client
 
 ..
 
-   .. image:: /demo_images/55-keycloak-add-client.png
+   .. image:: images/demo_images/55-keycloak-add-client.png
 
 3. Configure the client's general settings. Click **Next** for additional
       configuration options
 
 ..
 
-   .. image:: /demo_images/56-keycloak-config-client.png
+   .. image:: images/demo_images/56-keycloak-config-client.png
 
 4. Configure additional settings
 
 ..
 
-   .. image:: /demo_images/57-config-adt-settings.png
+   .. image:: images/demo_images/57-config-adt-settings.png
 
-   .. image:: /demo_images/58-cofig-settings-2.png
+   .. image:: images/demo_images/58-cofig-settings-2.png
 
 5. Save the client
 
@@ -1488,29 +1483,29 @@ Troubleshooting
 
 ..
 
-   .. image:: /demo_images/59-verify-keycloak-running.png
+   .. image:: images/demo_images/59-verify-keycloak-running.png
 
 Find **keycloak** near **grafana** and **loki** in the list.
 
 **Keycloak** should show as “healthy”
 
-   .. image:: /demo_images/60-keycloak-healthy.png
+   .. image:: images/demo_images/60-keycloak-healthy.png
 
 2. Check keycloak credentials in .env file
 
-```
-AUTH_APP_USER_ISSUER_URL_BACKEND=http://nginx-keycloak:8082/realms/AppUser
-# for backend
+::
+  
+   AUTH_APP_USER_ISSUER_URL_BACKEND=http://nginx-keycloak:8082/realms/AppUser
+   # for backend
 
-AUTH_APP_USER_ISSUER_URL=http://keycloak.localhost:8082/realms/AppUser #
-for backend, wallet-ui
+   AUTH_APP_USER_ISSUER_URL=http://keycloak.localhost:8082/realms/AppUser #
+   for backend, wallet-ui
 
-AUTH_APP_PROVIDER_ISSUER_URL=http://keycloak.localhost:8082/realms/AppProvider
-# for backend oidc client conf, wallet-ui
+   AUTH_APP_PROVIDER_ISSUER_URL=http://keycloak.localhost:8082/realms/AppProvider
+   # for backend oidc client conf, wallet-ui
 
-AUTH_APP_PROVIDER_ISSUER_URL_BACKEND=http://nginx-keycloak:8082/realms/AppProvider
-# for backends
-```
+   AUTH_APP_PROVIDER_ISSUER_URL_BACKEND=http://nginx-keycloak:8082/realms/AppProvider
+   # for backends
 
 3. Check that the Keycloak user ID matches the ledger user ID
 
@@ -1521,7 +1516,7 @@ AUTH_APP_PROVIDER_ISSUER_URL_BACKEND=http://nginx-keycloak:8082/realms/AppProvid
 
 AUTH_APP_USER_WALLET_ADMIN_USER_ID=92a520cb-2f09-4e55-b465-d178c6cfe5e4
 
-   .. image:: /demo_images/61-keycloak-alice.png
+   .. image:: images/demo_images/61-keycloak-alice.png
 
 b. App Provider
 
@@ -1532,7 +1527,7 @@ b. App Provider
 
    AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID=553c6754-8879-41c9-ae80-b302f5af92c9
 
-      .. image:: /demo_images/61-keycloak-participant.png
+      .. image:: images/demo_images/61-keycloak-participant.png
 
 Learn more about using Keycloak through their documentation portal:
 
