@@ -14,6 +14,7 @@ import Splice.Round
 import Splice.Util
 import DA.Time
 import DA.Assert
+import DA.Action (unless)
 
 -- License contract template
 ----------------------------
@@ -28,7 +29,16 @@ data Group = Group
     user : Party
     provider : Party
     dso: Party
-  deriving (Show, Eq)  
+  deriving (Show, Eq)
+
+-- | Information about the license renewal cancellation
+data LicenseRenewalCancel = LicenseRenewalCancel
+  with
+    actor : Party -- Party that ended the renewal request.
+    meta  : Metadata
+    -- ^ Metadata about the cancellation; the reason for the cancellation should
+    -- be provided in here using key "reason".
+  deriving (Eq, Show)
 
 -- | A template to track one specific license renewal request.
 -- Note that multiple of these can be in flight at any point in time.
@@ -43,6 +53,19 @@ template LicenseRenewalRequest with
   where 
     signatory user, provider
 
+    choice LicenseRenewalRequest_Cancel : LicenseRenewalCancel
+      with
+        actor : Party -- Party that exercises the cancellation.
+        meta  : Metadata
+      controller
+        actor
+      do
+        Licensing.Util.require "Actor is a signatory" (actor `elem` signatory this)
+        unless (actor == user || actor == provider) $
+          fail "Actor is not a signatory or the user/provider"
+        pure LicenseRenewalCancel with
+          actor
+          meta
     postconsuming choice LicenseRenewalRequest_CompleteRenewal : ContractId License
       with
         acceptedPaymentCid : ContractId AcceptedAppPayment
