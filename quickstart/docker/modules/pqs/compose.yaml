@@ -26,7 +26,7 @@ services:
   pqs-app-provider:
     image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
     container_name: pqs-app-provider
-    working_dir: /daml3.2
+    working_dir: /daml3.3
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
       - ${MODULES_DIR}/pqs/env/pqs.env
@@ -51,7 +51,7 @@ services:
   pqs-app-user:
     image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
     container_name: pqs-app-user
-    working_dir: /daml3.2
+    working_dir: /daml3.3
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
       - ${MODULES_DIR}/pqs/env/pqs.env
