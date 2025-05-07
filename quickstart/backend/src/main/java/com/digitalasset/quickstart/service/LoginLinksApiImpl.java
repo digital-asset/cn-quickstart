@@ -34,8 +34,6 @@ public class LoginLinksApiImpl implements LoginLinksApi {
 
     private final AuthClientRegistrationRepository clientRegistrationRepository;
 
-    // KV if authOn=false then do just simple login screen? simple link? oauth2=false? shouldn't that be done on the client side?
-    //    problem with client is that it cannot read environment variables easily
     public LoginLinksApiImpl(AuthClientRegistrationRepository clientRegistrationRepository) {
         this.clientRegistrationRepository = clientRegistrationRepository;
     }

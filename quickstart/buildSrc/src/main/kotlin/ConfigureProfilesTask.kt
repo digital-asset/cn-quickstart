@@ -7,7 +7,7 @@ import java.io.File
 
 open class ConfigureProfilesTask : DefaultTask() {
 
-    enum class OptionType { BOOLEAN, PARTY_HINT, AUTH_MODE }
+    enum class OptionType { BOOLEAN, PARTY_HINT, AUTH_MODE, ENV }
 
     data class Option(
         val promptText: String,
@@ -24,7 +24,7 @@ open class ConfigureProfilesTask : DefaultTask() {
     @TaskAction
     fun configure() {
         val options = listOf(
-            Option("Enable LocalNet", "LOCALNET_ENABLED", OptionType.BOOLEAN),
+            Option("Enable LocalNet", "ENV", OptionType.ENV),
             Option("Enable Observability", "OBSERVABILITY_ENABLED", OptionType.BOOLEAN),
             Option("Enable OAUTH2", "AUTH_MODE", OptionType.AUTH_MODE),
             Option(
@@ -40,6 +40,16 @@ open class ConfigureProfilesTask : DefaultTask() {
                     val boolValue = promptForBoolean(option.promptText, default = true)
                     option.value = boolValue.toString()
                     println("  ${option.envVarName} set to '$boolValue'.\n")
+                }
+
+                OptionType.ENV -> {
+                    val boolValue = promptForBoolean(option.promptText, default = true)
+                    option.value = if (boolValue) {
+                        "local"
+                    } else {
+                        "dev"
+                    }
+                    println("  ${option.envVarName} set to '${option.value}'.\n")
                 }
 
                 OptionType.AUTH_MODE -> {

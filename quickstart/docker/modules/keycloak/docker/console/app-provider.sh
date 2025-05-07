@@ -4,10 +4,9 @@
 
 set -eo pipefail
 
-export ACCESS_TOKEN=$(curl -fsS "${TOKEN_URL}" \
+export APP_PROVIDER_TOKEN=$(curl -fsS "${AUTH_APP_PROVIDER_TOKEN_URL}" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "client_id=${CLIENT_ID}" \
-  -d 'client_secret='${SECRET} \
+  -d "client_id=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID}" \
+  -d 'client_secret='${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET} \
   -d "grant_type=client_credentials" \
   -d "scope=openid" | tr -d '\n' | grep -o -E '"access_token"[[:space:]]*:[[:space:]]*"[^"]+' | grep -o -E '[^"]+$')
-/app/bin/canton --no-tty -c /app/app.conf

@@ -1,0 +1,39 @@
+# Copyright (c) 2023, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+x-vars:
+  app-provider-auth-env: &app-provider-auth-env
+    path: ${APP_PROVIDER_AUTH_ENV}
+    required: false
+
+  app-user-auth-env: &app-user-auth-env
+    path: ${APP_USER_AUTH_ENV}
+    required: false
+
+services:
+  splice-onboarding:
+    build: ${MODULES_DIR}/onboarding/docker
+    container_name: splice-onboarding
+    env_file:
+      - ${LOCALNET_ENV_DIR}/common.env
+      - *app-provider-auth-env
+      - *app-user-auth-env
+    environment:
+      - AUTH_MODE=${AUTH_MODE}
+    volumes:
+      - ${MODULES_DIR}/onboarding/docker/health-check.sh:/app/health-check.sh
+      - ${MODULES_DIR}/onboarding/docker/utils.sh:/app/utils.sh
+      - ${MODULES_DIR}/onboarding/docker/app-provider-${AUTH_MODE}.sh:/app/app-provider-auth.sh
+      - ${MODULES_DIR}/onboarding/docker/app-user-${AUTH_MODE}.sh:/app/app-user-auth.sh
+    healthcheck:
+      test: ["CMD", "bash", "/app/health-check.sh"]
+      interval: 5s
+      timeout: 100s
+      retries: 1000
+      start_period: 300s
+    entrypoint: [ "tail", "-f", "/dev/null" ]
+    stdin_open: true
+    tty: true
+    depends_on:
+      splice:
+        condition: service_healthy

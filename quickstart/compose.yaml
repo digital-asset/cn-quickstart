@@ -2,69 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 services:
-  splice-auto-config:
-    build: ./docker/splice-auto-config/
-    container_name: splice-auto-config
-    env_file:
-      - ${LOCALNET_ENV_DIR}/common.env
-      - ${APP_PROVIDER_AUTH_ENV}
-      - ${APP_USER_AUTH_ENV}
-    volumes:
-      - ./docker/splice-auto-config/health-check.sh:/app/health-check.sh
-      - ./docker/splice-auto-config/app-provider-${AUTH_MODE}.sh:/app/app-provider.sh
-      - ./docker/splice-auto-config/app-user-${AUTH_MODE}.sh:/app/app-user.sh
-      - ./docker/utils.sh:/app/utils.sh
-      - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
-    healthcheck:
-      test: ["CMD", "bash", "/app/health-check.sh"]
-      interval: 5s
-      timeout: 100s
-      retries: 1000
-      start_period: 300s
-    entrypoint: [ "tail", "-f", "/dev/null" ]
-    stdin_open: true
-    tty: true
-    depends_on:
-      splice:
-        condition: service_healthy
-###############################################################################################################
-### Application User
-###############################################################################################################
-
-###############################################################################################################
-### Application Provider
-###############################################################################################################
-  pqs:
-    image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
-    container_name: pqs
-    working_dir: /daml3.2
-    env_file:
-      - ${LOCALNET_ENV_DIR}/common.env
-      - ${APP_PROVIDER_AUTH_ENV}
-      - ./env/pqs.env
-      - path: ./env/pqs-${AUTH_MODE}.env
-        required: false
-    environment:
-      OTEL_SERVICE_NAME: pqs
-      OTEL_TRACES_EXPORTER: otlp
-      OTEL_LOGS_EXPORTER: otlp
-      OTEL_METRICS_EXPORTER: otlp
-      OTEL_METRIC_EXPORT_INTERVAL: 5000
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:${OTEL_COLLECTOR_OTLP_PORT}"
-      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
-      OTEL_INSTRUMENTATION_MICROMETER_ENABLED: true
-      OTEL_INSTRUMENTATION_RUNTIME_TELEMETRY_EMIT_EXPERIMENTAL_TELEMETRY: true
-    command:
-      - "pipeline"
-      - "ledger"
-      - "postgres-document"
-    depends_on:
-      canton:
-        condition: service_healthy
-      splice-auto-config:
-        condition: service_healthy
-    restart: on-failure:100
-
   backend-service:
     build:
       context: ./docker/backend-service
@@ -104,9 +41,9 @@ services:
       - "${BACKEND_PORT}:8080"
       - "5005:5005"
     depends_on:
-      pqs:
+      pqs-app-provider:
         condition: service_started
-      splice-auto-config:
+      splice-onboarding:
         condition: service_healthy
 
   backend-service-auto-config:
@@ -132,16 +69,7 @@ services:
     depends_on:
       backend-service:
         condition: service_started
-      splice-auto-config:
-        condition: service_healthy
 
-###############################################################################################################
-### SUPER VALIDATOR
-###############################################################################################################
-
-###############################################################################################################
-### OVERRIDES
-###############################################################################################################
   nginx:
     volumes:
       - ./frontend/dist/:/usr/share/nginx/html
@@ -153,7 +81,7 @@ services:
       backend-service:
         condition: service_started
 
-  postgres:
-    environment:
-      - CREATE_DATABASE_pqs_app_provider=pqs-app-provider
-
+  splice-onboarding:
+    volumes:
+      - ./docker/onboarding.sh:/app/scripts/on/qs-onboarding.sh
+      - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar

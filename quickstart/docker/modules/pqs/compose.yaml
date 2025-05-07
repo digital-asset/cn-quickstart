@@ -1,0 +1,87 @@
+# Copyright (c) 2023, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+---
+x-vars:
+  app-provider-auth-env: &app-provider-auth-env
+    path: ${APP_PROVIDER_AUTH_ENV}
+    required: false
+
+  app-user-auth-env: &app-user-auth-env
+    path: ${APP_USER_AUTH_ENV}
+    required: false
+
+  app-provider-pqs-auth-env: &app-provider-pqs-auth-env
+    path: ${MODULES_DIR}/pqs/env/app-provider-pqs-${PQS_APP_PROVIDER_PROFILE:-off}-${AUTH_MODE}.env
+    required: false
+
+  app-user-pqs-auth-env: &app-user-pqs-auth-env
+    path: ${MODULES_DIR}/pqs/env/app-user-pqs-${PQS_APP_USER_PROFILE:-off}-${AUTH_MODE}.env
+    required: false
+
+  pqs-auth-env: &pqs-auth-env
+    path: ${MODULES_DIR}/pqs/env/pqs-${AUTH_MODE}.env
+    required: false
+
+services:
+  pqs-app-provider:
+    image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
+    container_name: pqs-app-provider
+    working_dir: /daml3.2
+    env_file:
+      - ${LOCALNET_ENV_DIR}/common.env
+      - ${MODULES_DIR}/pqs/env/pqs.env
+      - *app-provider-auth-env
+      - *app-provider-pqs-auth-env
+      - *pqs-auth-env
+    environment:
+      - SCRIBE_TARGET_POSTGRES_DATABASE=pqs-app-provider
+    command:
+      - "pipeline"
+      - "ledger"
+      - "postgres-document"
+    depends_on:
+      canton:
+        condition: service_healthy
+      splice-onboarding:
+        condition: service_healthy
+    restart: on-failure:100
+    profiles:
+      - pqs-app-provider
+
+  pqs-app-user:
+    image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
+    container_name: pqs-app-user
+    working_dir: /daml3.2
+    env_file:
+      - ${LOCALNET_ENV_DIR}/common.env
+      - ${MODULES_DIR}/pqs/env/pqs.env
+      - *app-user-auth-env
+      - *app-user-pqs-auth-env
+      - *pqs-auth-env
+    environment:
+      - SCRIBE_TARGET_POSTGRES_DATABASE=pqs-app-user
+    command:
+      - "pipeline"
+      - "ledger"
+      - "postgres-document"
+    depends_on:
+      canton:
+        condition: service_healthy
+      splice-onboarding:
+        condition: service_healthy
+    restart: on-failure:100
+    profiles:
+      - pqs-app-user
+
+  splice-onboarding:
+    env_file:
+      - *app-provider-pqs-auth-env
+      - *app-user-pqs-auth-env
+    volumes:
+      - ${MODULES_DIR}/pqs/docker/onboard-app-provider-pqs-user.sh:/app/scripts/${PQS_APP_PROVIDER_PROFILE:-off}/onboard-app-provider-pqs-user.sh
+      - ${MODULES_DIR}/pqs/docker/onboard-app-user-pqs-user.sh:/app/scripts/${PQS_APP_USER_PROFILE:-off}/onboard-app-user-pqs-user.sh
+
+  postgres:
+    environment:
+      - CREATE_DATABASE_pqs_app_provider=pqs-app-provider
+      - CREATE_DATABASE_pqs_app_user=pqs-app-user

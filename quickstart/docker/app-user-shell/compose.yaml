@@ -2,6 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ---
+x-vars:
+
+  app-provider-auth-env: &app-provider-auth-env
+    path: ${APP_PROVIDER_AUTH_ENV}
+    required: false
+
+  app-user-auth-env: &app-user-auth-env
+    path: ${APP_USER_AUTH_ENV}
+    required: false
+
 networks:
   quickstart:
     external: true
@@ -14,17 +24,11 @@ services:
     volumes:
       - ./scripts/start.sh:/app/start.sh
       - ./scripts/create-app-install-request-${AUTH_MODE}.sh:/app/create-app-install-request.sh
-      - ./../utils.sh:/app/utils.sh
+      - ${MODULES_DIR}/onboarding/docker/utils.sh:/app/utils.sh
     env_file:
-      - ./../../${LOCALNET_ENV_DIR}/common.env
-      - path: ./../../${LOCALNET_ENV_DIR}/app-provider-${AUTH_MODE}.env
-        required: false
-      - path: ./../../${MODULES_DIR}/keycloak/env/app-provider-${AUTH_MODE}.env
-        required: false
-      - path: ./../../${LOCALNET_ENV_DIR}/app-user-${AUTH_MODE}.env
-        required: false
-      - path: ./../../${MODULES_DIR}/keycloak/env/app-user-${AUTH_MODE}.env
-        required: false
+      - ${LOCALNET_ENV_DIR}/common.env
+      - *app-provider-auth-env
+      - *app-user-auth-env
     command: /app/start.sh
     networks:
       - ${DOCKER_NETWORK}

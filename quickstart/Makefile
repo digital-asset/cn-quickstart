@@ -21,7 +21,7 @@ endif
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-MODULES_DIR := docker/modules
+$(info MODULES_DIR=$(MODULES_DIR))
 DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file ${MODULES_DIR}/localnet/compose.env --env-file ${MODULES_DIR}/localnet/env/common.env
 DOCKER_COMPOSE_FILES := -f compose.yaml -f ${MODULES_DIR}/localnet/compose.yaml
 
@@ -49,6 +49,7 @@ ifeq ($(OBSERVABILITY_ENABLED),true)
 endif
 
 # Define DOCKER_COMPOSE_PROFILES based on environment variables
+DOCKER_COMPOSE_PROFILES := --profile app-provider --profile app-user
 ifeq ($(AUTH_MODE),oauth2)
     DOCKER_COMPOSE_PROFILES += --profile $(AUTH_MODE)
     DOCKER_COMPOSE_FILES +=  -f ${MODULES_DIR}/keycloak/compose.yaml
@@ -57,15 +58,20 @@ else
     DOCKER_COMPOSE_PROFILES += --profile $(AUTH_MODE)
 endif
 
-ifeq ($(LOCALNET_ENABLED),true)
-    DOCKER_COMPOSE_PROFILES += --profile localnet --env-file ${MODULES_DIR}/localnet/env/localnet.env
+ifeq ($(ENV),local)
+    DOCKER_COMPOSE_PROFILES += --profile sv --env-file ${MODULES_DIR}/localnet/env/local.env
 else
-    DOCKER_COMPOSE_PROFILES += --env-file ${MODULES_DIR}/localnet/env/devnet.env
+    DOCKER_COMPOSE_PROFILES += --env-file ${MODULES_DIR}/localnet/env/dev.env
 endif
 
 ifeq ($(OBSERVABILITY_ENABLED),true)
     DOCKER_COMPOSE_PROFILES += --profile observability
 endif
+
+# KV setup PQS_APP_PROVIDER_PROFILE  and AUTH_MODE for onboarding and maybe in keycloak/compose.env ???
+DOCKER_COMPOSE_PROFILES += --profile pqs-app-provider
+DOCKER_COMPOSE_FILES +=  -f ${MODULES_DIR}/onboarding/compose.yaml -f ${MODULES_DIR}/pqs/compose.yaml
+export PQS_APP_PROVIDER_PROFILE := on
 
 # Function to run docker-compose with default files and environment
 define docker-compose
@@ -221,21 +227,13 @@ integration-test/node_modules:
 	cd integration-test && npm install
 
 # Console
-.PHONY: console-app-provider
-console-app-provider: ## Start the Canton console
-	docker compose -f docker/canton-console/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm canton-console-app-provider
+.PHONY: canton-console
+canton-console: ## Start the Canton console
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) run --rm --name canton-console console)
 
-.PHONY: clean-console-app-provider
-clean-console-app-provider: ## Stop and remove the Canton console container
-	docker rm -f quickstart-canton-console-app-provider 2> /dev/null || true
-
-.PHONY: console-app-user
-console-app-user: ## Start the Canton console
-	docker compose -f docker/canton-console/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm canton-console-app-user
-
-.PHONY: clean-console-app-user
-clean-console-app-user: ## Stop and remove the Canton console container
-	docker rm -f quickstart-canton-console-app-user 2> /dev/null || true
+.PHONY: clean-canton-console
+clean-canton-console: ## Stop and remove the Canton console container
+	docker rm -f canton-console 2> /dev/null || true
 
 # Shell
 .PHONY: shell
@@ -252,7 +250,7 @@ clean: ## Clean the build artifacts
 	./gradlew clean
 
 .PHONY: clean-docker
-clean-docker: clean-shell clean-console-app-provider clean-console-app-user ## Stop and remove application Docker containers and volumes
+clean-docker: clean-shell clean-canton-console ## Stop and remove application Docker containers and volumes
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) down -v)
 
 .PHONY: clean-application

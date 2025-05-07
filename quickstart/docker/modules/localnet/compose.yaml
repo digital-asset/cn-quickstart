@@ -5,6 +5,15 @@
 x-vars:
   log_warning_if_party_hint_undefined: ${PARTY_HINT:?PARTY_HINT is required of format <company>-<role>-<number>}
 
+  app-provider-auth-env: &app-provider-auth-env
+    path: ${APP_PROVIDER_AUTH_ENV}
+    required: false
+
+  app-user-auth-env: &app-user-auth-env
+    path: ${APP_USER_AUTH_ENV}
+    required: false
+
+
 volumes:
   postgres:
   domain-upgrade-dump:
@@ -41,6 +50,10 @@ services:
       - postgres
       - -c
       - max_connections=1000
+    profiles:
+      - app-provider
+      - app-user
+      - sv
 
   nginx:
     image: "nginx:${NGINX_VERSION}"
@@ -49,9 +62,9 @@ services:
       - ${LOCALNET_ENV_DIR}/common.env
     volumes:
       - ${LOCALNET_DIR}/conf/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ${LOCALNET_DIR}/conf/nginx/app-provider.conf:/etc/nginx/templates/app-provider.conf.template
-      - ${LOCALNET_DIR}/conf/nginx/app-user.conf:/etc/nginx/templates/app-user.conf.template
-      - ${LOCALNET_DIR}/conf/nginx/sv.conf:/etc/nginx/templates/${SV_NGINX_CONFIG:-sv.conf.template}
+      - ${LOCALNET_DIR}/conf/nginx/app-provider.conf:/etc/nginx/templates/app-provider.c${APP_PROVIDER_PROFILE}f.template
+      - ${LOCALNET_DIR}/conf/nginx/app-user.conf:/etc/nginx/templates/app-user.c${APP_USER_PROFILE}f.template
+      - ${LOCALNET_DIR}/conf/nginx/sv.conf:/etc/nginx/templates/sv.c${SV_PROFILE}f.template
     ports:
       - "${SV_UI_PORT}:${SV_UI_PORT}"
       - "${APP_PROVIDER_UI_PORT}:${APP_PROVIDER_UI_PORT}"
@@ -62,24 +75,31 @@ services:
         required: false
       wallet-web-ui-app-provider:
         condition: service_healthy
+        required: false
       wallet-web-ui-app-user:
         condition: service_healthy
+        required: false
       splice:
         condition: service_healthy
     restart: always
+    profiles:
+      - app-provider
+      - app-user
+      - sv
 
   canton:
-    image: "${IMAGE_REPO}canton-participant:${IMAGE_TAG}"
+    image: "${IMAGE_REPO}canton:${IMAGE_TAG}"
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
-      - ${APP_PROVIDER_AUTH_ENV}
-      - ${APP_USER_AUTH_ENV}
+      - *app-provider-auth-env
+      - *app-user-auth-env
     container_name: canton
     volumes:
       - ${LOCALNET_DIR}/docker/canton/health-check.sh:/app/health-check.sh
       - ${LOCALNET_DIR}/conf/canton/app.conf:/app/app.conf
-      - ${LOCALNET_DIR}/conf/canton/app-noauth.conf:/app/app-auth.conf
-      - ${LOCALNET_DIR}/conf/canton/sv.conf:/app/${SV_CANTON_CONFIG:-sv.conf}
+      - ${LOCALNET_DIR}/conf/canton/app-provider:/app/app-provider/${APP_PROVIDER_PROFILE}
+      - ${LOCALNET_DIR}/conf/canton/app-user:/app/app-user/${APP_USER_PROFILE}
+      - ${LOCALNET_DIR}/conf/canton/sv:/app/sv/${SV_PROFILE}
     ports:
       - "4${PARTICIPANT_LEDGER_API_PORT}:4${PARTICIPANT_LEDGER_API_PORT}"
       - "4${PARTICIPANT_ADMIN_API_PORT}:4${PARTICIPANT_ADMIN_API_PORT}"
@@ -101,22 +121,27 @@ services:
       postgres:
         condition: service_healthy
     restart: always
+    profiles:
+      - app-provider
+      - app-user
+      - sv
 
   splice:
-    image: "${IMAGE_REPO}validator-app:${IMAGE_TAG}"
+    image: "${IMAGE_REPO}splice-app:${IMAGE_TAG}"
     container_name: splice
     env_file:
-      - ${LOCALNET_ENV_DIR}/${ENV}net.env
+      - ${LOCALNET_ENV_DIR}/${ENV}.env
       - ${LOCALNET_ENV_DIR}/common.env
-      - ${APP_PROVIDER_AUTH_ENV}
-      - ${APP_USER_AUTH_ENV}
+      - *app-provider-auth-env
+      - *app-user-auth-env
     volumes:
       - ${LOCALNET_DIR}/docker/splice/entrypoint.sh:/splice-entrypoint.sh
       - ${LOCALNET_DIR}/docker/splice/health-check.sh:/app/health-check.sh
       - ${LOCALNET_DIR}/docker/splice/bootstrap.sc:/app/bootstrap.sc
       - ${LOCALNET_DIR}/conf/splice/app.conf:/app/app.conf
-      - ${LOCALNET_DIR}/conf/splice/app-noauth.conf:/app/app-auth.conf
-      - ${LOCALNET_DIR}/conf/splice/sv.conf:/app/${SV_SPLICE_CONFIG:-sv.conf}
+      - ${LOCALNET_DIR}/conf/splice/app-provider:/app/app-provider/${APP_PROVIDER_PROFILE}
+      - ${LOCALNET_DIR}/conf/splice/app-user:/app/app-user/${APP_USER_PROFILE}
+      - ${LOCALNET_DIR}/conf/splice/sv:/app/sv/${SV_PROFILE}
       - domain-upgrade-dump:/domain-upgrade-dump
     entrypoint: /splice-entrypoint.sh
     healthcheck:
@@ -134,6 +159,29 @@ services:
       canton:
         condition: service_healthy
     restart: always
+    profiles:
+      - app-provider
+      - app-user
+      - sv
+
+  console:
+    image: "${IMAGE_REPO}canton:${IMAGE_TAG}"
+    env_file:
+      - ${LOCALNET_ENV_DIR}/${ENV}.env
+      - ${LOCALNET_ENV_DIR}/common.env
+      - *app-provider-auth-env
+      - *app-user-auth-env
+    volumes:
+      - ${LOCALNET_DIR}/conf/console/app.conf:/app/app.conf
+      - ${LOCALNET_DIR}/conf/console/app-provider.conf:/app/app-provider/${APP_PROVIDER_PROFILE}/app.conf
+      - ${LOCALNET_DIR}/conf/console/app-user.conf:/app/app-user/${APP_USER_PROFILE}/app.conf
+      - ${LOCALNET_DIR}/conf/console/sv.conf:/app/sv/${SV_PROFILE}/app.conf
+      - ${LOCALNET_DIR}/docker/console/entrypoint.sh:/app/entrypoint.sh
+    entrypoint: /app/entrypoint.sh
+    stdin_open: true
+    tty: true
+    profiles:
+      - console
 
   ###############################################################################################################
   ### Application User
@@ -143,7 +191,9 @@ services:
     container_name: wallet-web-ui-app-user
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
-      - ${APP_USER_AUTH_ENV}
+      - *app-user-auth-env
+    profiles:
+      - app-user
 
   ###############################################################################################################
   ### Application Provider
@@ -153,7 +203,9 @@ services:
     container_name: wallet-web-ui-app-provider
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
-      - ${APP_PROVIDER_AUTH_ENV}
+      - *app-provider-auth-env
+    profiles:
+      - app-provider
 
   ###############################################################################################################
   ### SUPER VALIDATOR
@@ -164,7 +216,7 @@ services:
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
     profiles:
-      - localnet
+      - sv
 
   sv-web-ui:
     image: "${IMAGE_REPO}sv-web-ui:${IMAGE_TAG}"
@@ -172,7 +224,7 @@ services:
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
     profiles:
-      - localnet
+      - sv
 
   scan-web-ui:
     image: "${IMAGE_REPO}scan-web-ui:${IMAGE_TAG}"
@@ -180,4 +232,4 @@ services:
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
     profiles:
-      - localnet
+      - sv
