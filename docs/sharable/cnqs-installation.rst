@@ -1,14 +1,13 @@
 =======================
-Quickstart Installation
+Quickstart installation
 =======================
 ---------------------------------------
-Canton Network Quickstart Guide \| 2025
+Canton Network Quickstart guide \| 2025
 ---------------------------------------
 
 **Contents**
 
-`Canton Network Quickstart
-Installation <#canton-network-quickstart-installation>`__
+`Canton Network Quickstart installation <#canton-network-quickstart-installation>`__
 
 `Introduction <#introduction>`__
 
@@ -18,9 +17,9 @@ Installation <#canton-network-quickstart-installation>`__
 
    `Nix Download support <#nix-download-support>`__
 
-`Step-by-step Instructions <#step-by-step-instructions>`__
+`Step-by-step instructions <#step-by-step-instructions>`__
 
-   `Clone From Github <#clone-from-github>`__
+   `Clone from Github <#clone-from-github>`__
 
    `Artifactory <#artifactory>`__
 
@@ -28,71 +27,60 @@ Installation <#canton-network-quickstart-installation>`__
 
    `Install Daml SDK <#install-daml-sdk>`__
 
-   `Deploy a Validator on LocalNet <#deploy-a-validator-on-localnet>`__
+   `Deploy a validator on LocalNet <#deploy-a-validator-on-localnet>`__
 
-   `Closing the Application <#closing-the-application>`__
+   `Closing the application <#closing-the-application>`__
 
-   `Close Canton Console <#close-canton-console>`__
+   `Close Canton console <#close-canton-console>`__
 
-   `Close Daml Shell <#close-daml-shell>`__
+   `Close Daml shell <#close-daml-shell>`__
 
-   `Close the CN-QS <#close-the-cn-qs>`__
+   `Close the CN QS <#close-the-cn-qs>`__
 
 `Next Steps <#next-steps>`__
 
 `Resources <#resources>`__
 
-Canton Network Quickstart Installation
+Canton Network Quickstart installation
 ======================================
 
 Introduction
 ============
 
-The QS is designed to help teams become familiar with CN application
-development by providing scaffolding to kickstart development. The QS
-application is intended to be incrementally extended by you to meet your
-specific business needs. Once you are familiar with the QS, please
-review the technology choices and the application design to determine
-what changes are needed - technology and design decisions are ultimately
-up to you. Please be aware that the Canton Network Quickstart (CN-QS) is
-a rapidly evolving work in progress.
+The QS is designed to help teams become familiar with CN application development by providing scaffolding to kickstart development. 
+The QS application is intended to be incrementally extended by you to meet your specific business needs. 
+Once you are familiar with the QS, please review the technology choices and the application design to determine what changes are needed - 
+technology and design decisions are ultimately up to you. 
+Please be aware that the Canton Network Quickstart (CN QS) is a rapidly evolving work in progress.
 
 Overview
 ========
 
-The CN-QS and its guides are a work-in-progress (WIP). As a result, the
-CN-QS guides may not accurately reflect the state of the application. If
-you find errors or other inconsistencies, please contact your
-representative at Digital Asset.
+The CN QS and its guides are a work-in-progress (WIP). 
+As a result, the CN QS guides may not accurately reflect the state of the application. 
+If you find errors or other inconsistencies, please contact your representative at Digital Asset.
 
-This guide walks through the installation and `LocalNet` deployment of the
-CN-QS.
+This guide walks through the installation and `LocalNet` deployment of the CN QS.
 
 Prerequisites
 =============
 
-Access to the `CN-Quickstart Github
-repository <https://github.com/digital-asset/cn-quickstart>`__ and `CN
-Docker
-repository <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__
-is needed to successfully pull the Digital Asset artifacts from JFrog
-Artifactory.
+Access to the `CN-Quickstart Github repository <https://github.com/digital-asset/cn-quickstart>`__ 
+and `CN Docker repository <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__
+is needed to successfully pull the Digital Asset artifacts from JFrog Artifactory.
 
-Access to the *Daml-VPN* connection or `a SV
-Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
-that is whitelisted on the CN is required to connect to DevNet. The GSF
-publishes a `list of SV nodes <https://sync.global/sv-network/>`__ who
-have the ability to sponsor a Validator node. To access `DevNet`, contact
-your sponsoring SV agent for VPN connection information.
+Access to the *Daml-VPN* connection or `a SV Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
+that is whitelisted on the CN is required to connect to DevNet. 
+The GSF publishes a `list of SV nodes <https://sync.global/sv-network/>`__ 
+who have the ability to sponsor a Validator node. 
+To access `DevNet`, contact your sponsoring SV agent for VPN connection information.
 
-If you need access or additional support, email
-support@digitalasset.com.
+If you need access or additional support, email support@digitalasset.com.
 
-The CN-QS is a Dockerized application and requires `Docker
-Desktop <https://www.docker.com/products/docker-desktop/>`__. Running
-CN-QS is resource intensive. We recommend allocating 8 GB of memory to
-Docker Desktop. If your machine does not have that much memory consider
-declining Observability when prompted.
+The CN QS is a Dockerized application and requires `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__. 
+Running CN QS is resource intensive. 
+We recommend allocating 8 GB of memory to Docker Desktop. 
+If your machine does not have that much memory consider declining Observability when prompted.
 
 Other requirements include:
 
@@ -104,7 +92,7 @@ Other requirements include:
 
 -  Windows users must install and use `WSL 2 <https://learn.microsoft.com/en-us/windows/wsl/install>`__ with administrator privileges.
 
-Nix Download support
+Nix download support
 --------------------
 
    Check for Nix on your machine.
@@ -126,10 +114,10 @@ Nix Download support
 
    `sh <(curl -L https://nixos.org/nix/install) --daemon`
 
-Step-by-Step Instructions
+Step-by-step instructions
 =========================
 
-Clone From Github
+Clone from Github
 -----------------
 
 Clone and cd into the `cn-quickstart` repository into your local machine.
@@ -140,16 +128,13 @@ Clone and cd into the `cn-quickstart` repository into your local machine.
    cd cn-quickstart
    direnv allow
 
-.. figure:: images/cnqs_install_images/01-allow-direnv.png
-   
-   direnv allow output
+.. image:: images/cnqs_install_images/01-allow-direnv.png
 
 Artifactory
 -----------
 
 Necessary artifacts are located in Digital Artifact’s JFrog Artifactory.
-These files are accessed through the repository’s build system using a
-`~/.netrc` configuration file.
+These files are accessed through the repository’s build system using a `~/.netrc` configuration file.
 
 Check if a `~/.netrc` file already exists.
 
@@ -191,8 +176,7 @@ Manually set `.netrc`’s correct permissions.
 
 `chmod 600 ~/.netrc`
 
-Check for Artifactory connectivity using `.netrc` credentials after
-populating the username and password.
+Check for Artifactory connectivity using `.netrc` credentials after populating the username and password.
 
 ::
 
@@ -205,9 +189,8 @@ populating the username and password.
 
 A response of “OK” indicates a successful connection.
 
-Authentication problems often result in a `401` or `403` error. If an error
-response occurs, double check `~/.netrc` to confirm that `.netrc` is a
-source file (in root) and not a local file.
+Authentication problems often result in a `401` or `403` error. 
+If an error response occurs, double check `~/.netrc` to confirm that `.netrc` is a source file (in root) and not a local file.
 
 Docker
 ------
@@ -223,29 +206,28 @@ Login to Docker repositories via the terminal.
    docker login
 
 The last command requires a `Docker Hub <https://app.docker.com/>`__
-username and password or *Personal Access Token (PAT)*. Commands should
-return ‘Login Succeeded’.
+username and password or *Personal Access Token (PAT)*. 
+Commands should return ‘Login Succeeded’.
 
 Install Daml SDK
 ----------------
 
-`cd` into the `quickstart` subdirectory and install the Daml SDK from the
-quickstart subdirectory.
+`cd` into the `quickstart` subdirectory and install the Daml SDK from the quickstart subdirectory.
 
 ::
 
    cd quickstart
    make install-daml-sdk
 
-   The `makefile` providing project choreography is in the `quickstart/`
-   directory. make only operates within `quickstart/`. If you see errors
-   related to `make`, double check your present working directory.
+   The `makefile` providing project choreography is in the `quickstart/` directory. 
+   make only operates within `quickstart/`. 
+   If you see errors related to `make`, double check your present working directory.
 
 The Daml SDK is large and can take several minutes to complete.
 
 .. figure:: images/cnqs_install_images/06-unpack-sdk.png
 
-Deploy a Validator on LocalNet
+Deploy a validator on LocalNet
 ------------------------------
 
 From the quickstart subdirectory, build the application.
@@ -258,18 +240,18 @@ Once complete, start the application, Canton services and Observability.
 
 `make start`
 
-The first time running `make start`, a helper assistant prompts to set up
-a local deployment. It offers the choice of running `DevNet` or `LocalNet`,
-enabling `Observability`, and specifying a party hint. In the future, this
-helper can be accessed by running `make setup`.
+The first time running `make start`, a helper assistant prompts to set up a local deployment. 
+It offers the choice of running `DevNet` or `LocalNet`,
+enabling `Observability`, and specifying a party hint. 
+In the future, this helper can be accessed by running `make setup`.
 
 Begin the first application in `LocalNet` with `Observability` enabled.
 Leave the party hint blank to use the default.
 
-   The party hint is used as a party node’s alias of their
-   identification hash. The Party Hint is not part of the user’s
-   identity. It is a convenience feature. It is possible to have
-   multiple party nodes with the same hint.
+   The party hint is used as a party node’s alias of their identification hash. 
+   The Party Hint is not part of the user’s identity. 
+   It is a convenience feature. 
+   It is possible to have multiple party nodes with the same hint.
 
 | Enable LocalNet? (Y/n): Y
 | LOCALNET_ENABLED set to ‘true’.
@@ -283,8 +265,7 @@ Leave the party hint blank to use the default.
 
 `.env.local` updated successfully.
 
-   Consider declining Observability if your machine has less than 24 GB
-   of memory to allocate to Docker Desktop.
+   Consider declining Observability if your machine has less than 8 GB of memory to allocate to Docker Desktop.
 
 .. image:: images/cnqs_install_images/09-make-setup.png
 
@@ -294,16 +275,14 @@ If prompted to re-run `make start`, do so.
 
 .. image:: images/cnqs_install_images/10-make-start.png
 
-In the future, you may run the following series of commands from `cn-quickstart/`
-to clone and initiate Quickstart:
+In the future, you may run the following series of commands from `cn-quickstart/` to clone and initiate Quickstart:
 
 ::
 
    git pull; cd quickstart; make install-daml-sdk; make setup; make build;
    make start
 
-In a separate shell, from the quickstart subdirectory, run the Canton
-Consoles.
+In a separate shell, from the quickstart subdirectory, run the Canton Consoles.
 
 ::
 
@@ -312,46 +291,42 @@ Consoles.
 
 .. image:: images/cnqs_install_images/11-canton-console.png
 
-In a third shell, from the quickstart subdirectory, begin the Daml
-Shell.
+In a third shell, from the quickstart subdirectory, begin the Daml Shell.
 
 `make shell`
 
 .. image:: images/cnqs_install_images/12-daml-shell.png
 
-Closing the Application
+Closing the application
 -----------------------
 
-*⚠️ (If you plan on immediately using the CN-QS then delay execution of
-this section)*
+*⚠️ (If you plan on immediately using the CN QS then delay execution of this section)*
 
-Close Canton Console
+Close Canton console
 ~~~~~~~~~~~~~~~~~~~~
 
-When complete, open the Canton console terminal. Run `exit` to stop and
-remove the console container.
+When complete, open the Canton console terminal. 
+Run `exit` to stop and remove the console container.
 
-Close Daml Shell
+Close Daml shell
 ~~~~~~~~~~~~~~~~
 
-In the Daml Shell terminal, execute `quit` to stop the Shell container.
+In the Daml shell terminal, execute `quit` to stop the shell container.
 
-Close the CN-QS
+Close the CN QS
 ~~~~~~~~~~~~~~~
 
 Finally, close the application and observability services with:
 
 `make stop && make clean-all`
 
-It is wise to run make `clean-all` during development and at the end of
-each session to avoid conflict errors on subsequent application builds.
+It is wise to run make `clean-all` during development and at the end of each session to avoid conflict errors on subsequent application builds.
 
-Next Steps
+Next steps
 ==========
 
-You have successfully installed the CN-QS. The next section, “Exploring
-The Demo,” provides a demonstration of the application in `LocalNet` and
-`DevNet` environments.
+You have successfully installed the CN QS. 
+The next section, “Exploring The Demo,” provides a demonstration of the application in `LocalNet` and `DevNet` environments.
 
 Resources
 =========
