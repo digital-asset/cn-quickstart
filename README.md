@@ -2,6 +2,9 @@
 
 This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
 
+This quickstart is not a paid product because you can use it under an evaluation license, free of charge.  It is almost open source software. Since it is published under the BSD Zero Clause License you can experiment and adjust it however you want. For example, you can remove the parts that aren't OSS and still get that jumpstart.  Request jFrog access now by clicking  [here](https://www2.digitalasset.com/contact-us-access-to-jfrog) and we will get right back to you.
+
+
 ## Disclaimer
 
 Once you are familiar with the QS, please review the technology choices and the application design to determine what changes are needed. Technology and design decisions are ultimately up to you. Please be aware that the CN QS is a rapidly evolving work in progress. 
@@ -42,7 +45,7 @@ Project files are located in the `quickstart` directory. You can use the `quicks
 
 ### Artifactory Access
 
-Some artifacts are located in Digital Asset's [artifactory](https://digitalasset.jfrog.io). To access these artifacts the build system in this repository will use a `~/.netrc` file. You can get (or create) the necessary credentials on your [user profile](https://digitalasset.jfrog.io/ui/user_profile) page. The `.netrc` file should contain the following:
+As mentioned, Some Docker images are from Digital Asset's [artifactory](https://digitalasset.jfrog.io). To access these artifacts the build system in this repository will use a `~/.netrc` file. You can get (or create) the necessary credentials on your [user profile](https://digitalasset.jfrog.io/ui/user_profile) page. The `.netrc` file should contain the following:
 
 ```sh
 machine digitalasset.jfrog.io
