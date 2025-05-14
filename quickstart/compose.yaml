@@ -277,7 +277,6 @@ services:
       - ./docker/splice-auto-config/app-user.sh:/app/app-user.sh
       - ./docker/utils.sh:/app/utils.sh
       - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
-      - ./daml/assets/.daml/dist/quickstart-assets-0.0.1.dar:/canton/dars/quickstart-assets-0.0.1.dar
     healthcheck:
       test: ["CMD", "bash", "/app/health-check.sh"]
       interval: 5s
