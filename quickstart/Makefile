@@ -92,6 +92,13 @@ build-backend: ## Build the backend service
 build-daml: ## Build the Daml model
 	./gradlew :daml:build distTar
 
+.PHONY: test
+test: test-daml ## Run unit tests
+
+.PHONY: test-daml
+test-daml: ## Run daml tests
+	./gradlew :daml:testDaml
+
 .PHONY: build-docker-images
 build-docker-images:
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) build)
