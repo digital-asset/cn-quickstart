@@ -6,7 +6,7 @@ import java.io.File
 object VersionFiles {
     val dotenv: Map<String, String>
         get() {
-            val rootProjectDir = File(System.getProperty("user.dir"))
+            val rootProjectDir = File(System.getProperty("gradle.root.dir"))
             val dotEnvFile = File(rootProjectDir, ".env")
 
             if (!dotEnvFile.exists()) {
@@ -19,7 +19,7 @@ object VersionFiles {
 
     val damlYamlSdk: String
         get() {
-            val rootProjectDir = File(System.getProperty("user.dir"))
+            val rootProjectDir = File(System.getProperty("gradle.root.dir"))
             val damlYamlFile = File(rootProjectDir, "daml/licensing/daml.yaml")
 
             if (!damlYamlFile.exists()) {
