@@ -21,6 +21,10 @@ tasks.register<Exec>("compileDaml") {
     commandLine("daml", "damlc", "build", "--all")
 }
 
+tasks.register<Exec>("testDaml") {
+    commandLine("daml", "test", "--project-root", "licensing-tests")
+}
+
 tasks.register<com.digitalasset.transcode.codegen.java.gradle.JavaCodegenTask>("codeGen") {
     dar.from("$projectDir/licensing/.daml/dist/quickstart-licensing-0.0.1.dar")
     destination = file("$rootDir/backend/build/generated-daml-bindings")
