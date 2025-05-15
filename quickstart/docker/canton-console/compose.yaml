@@ -16,8 +16,8 @@ services:
       - ../../docker/canton-console/entrypoint.sh:/app/entrypoint.sh
     environment:
       - _JAVA_OPTIONS=-XX:+UseContainerSupport -XX:-UseCompressedOops
-      - PARTICIPANT_LEDGER_API_PORT=${PARTICIPANT_LEDGER_API_PORT}
-      - PARTICIPANT_ADMIN_API_PORT=${PARTICIPANT_ADMIN_API_PORT}
+      - PARTICIPANT_LEDGER_API_PORT=3${PARTICIPANT_LEDGER_API_PORT}
+      - PARTICIPANT_ADMIN_API_PORT=3${PARTICIPANT_ADMIN_API_PORT}
       - LEDGER_API_ADDRESS=canton
       - CLIENT_ID=app-provider-validator
       - SECRET=${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET}
@@ -36,8 +36,8 @@ services:
       - ../../docker/canton-console/entrypoint.sh:/app/entrypoint.sh
     environment:
       - _JAVA_OPTIONS=-XX:+UseContainerSupport -XX:-UseCompressedOops
-      - PARTICIPANT_LEDGER_API_PORT=${PARTICIPANT_LEDGER_API_PORT}
-      - PARTICIPANT_ADMIN_API_PORT=${PARTICIPANT_ADMIN_API_PORT}
+      - PARTICIPANT_LEDGER_API_PORT=2${PARTICIPANT_LEDGER_API_PORT}
+      - PARTICIPANT_ADMIN_API_PORT=2${PARTICIPANT_ADMIN_API_PORT}
       - LEDGER_API_ADDRESS=canton
       - CLIENT_ID=app-user-validator
       - SECRET=${AUTH_APP_USER_VALIDATOR_CLIENT_SECRET}

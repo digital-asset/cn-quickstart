@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -172,7 +173,7 @@ public class LedgerApi {
                     long offset = txTree.getOffset();
                     String workflowId = txTree.getWorkflowId();
                     Map<Integer, TransactionOuterClass.TreeEvent> eventsById = txTree.getEventsByIdMap();
-                    Integer eventId = !eventsById.isEmpty() ? eventsById.keySet().iterator().next() : null;
+                    Integer eventId = eventsById.isEmpty() ? null : Collections.min(eventsById.keySet());
                     TransactionOuterClass.TreeEvent event = eventId != null ? txTree.getEventsByIdMap().get(eventId) : null;
 
                     Map<String, Object> completionAttrs = new HashMap<>(attrs);
