@@ -186,7 +186,7 @@ integration-test/node_modules:
 # Console
 .PHONY: console-app-provider
 console-app-provider: ## Start the Canton console
-	docker compose -f docker/canton-console/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm canton-console-app-provider
+	docker compose -f docker/canton-console/compose.yaml $(DOCKER_COMPOSE_ENVFILE) --env-file env/app-provider.env run --rm canton-console-app-provider
 
 .PHONY: clean-console-app-provider
 clean-console-app-provider: ## Stop and remove the Canton console container
@@ -194,7 +194,7 @@ clean-console-app-provider: ## Stop and remove the Canton console container
 
 .PHONY: console-app-user
 console-app-user: ## Start the Canton console
-	docker compose -f docker/canton-console/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm canton-console-app-user
+	docker compose -f docker/canton-console/compose.yaml $(DOCKER_COMPOSE_ENVFILE) --env-file env/app-user.env run --rm canton-console-app-user
 
 .PHONY: clean-console-app-user
 clean-console-app-user: ## Stop and remove the Canton console container
