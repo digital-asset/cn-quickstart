@@ -21,7 +21,7 @@ endif
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file env/ports.env
+DOCKER_COMPOSE_ENVFILE := --env-file .env --env-file .env.local --env-file env/ports.env
 DOCKER_COMPOSE_FILES ?= -f compose.yaml
 
 # Default to adding resource constraints for Quickstart compose stack.
