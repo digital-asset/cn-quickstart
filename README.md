@@ -6,6 +6,16 @@ This project provides scaffolding to develop a Canton Network application for th
 
 By using this repository, you agree to the [Terms and Conditions](TERMS.md). Please review them carefully before deploying or distributing any derived works.
 
+## Developer Profile Requirement
+
+To use this software, you must create a **Developer Profile** with Digital Asset.
+
+This profile is necessary to access required artifacts hosted on Digital Asset's artifactory.
+
+You can create your Developer Profile by visiting [https://www.digitalasset.com/developers](https://www.digitalasset.com/developers)
+
+Once registered, you will be able to generate your credentials and configure the necessary access as described in the [Engineer Setup](#engineer-setup) section.
+
 ## Disclaimer
 
 Once you are familiar with the QS, please review the technology choices and the application design to determine what changes are needed. Technology and design decisions are ultimately up to you. Please be aware that the CN QS is a rapidly evolving work in progress. 
