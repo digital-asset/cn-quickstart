@@ -2,7 +2,9 @@
 
 This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
 
-This quickstart is not a paid product because you can use it under an evaluation license, free of charge.  It is almost open source software. Since it is published under the BSD Zero Clause License you can experiment and adjust it however you want. For example, you can remove the parts that aren't OSS and still get that jumpstart.  Request jFrog access now by clicking  [here](https://www2.digitalasset.com/contact-us-access-to-jfrog) and we will get right back to you.
+This quickstart is not a paid product because you can use it under an evaluation license, free of charge (see [terms.txt](https://github.com/digital-asset/cn-quickstart/blob/main/terms.txt) ).  It is almost entirely open source software. To run the quickstart you do need some binaries from Artifacctory.  To request Artifactory access click [here](https://www2.digitalasset.com/contact-us-access-to-jfrog) and We will get right back to you.  
+
+Since it is published under the BSD Zero Clause License you can experiment and adjust it however you want. For example, you can remove the parts that aren't OSS and still get that jumpstart. 
 
 
 ## Disclaimer
