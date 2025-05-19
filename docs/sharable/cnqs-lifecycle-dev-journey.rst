@@ -19,7 +19,7 @@ Development journey in the CN QS lifecycle
 
    `Application components <#application-components>`__
 
-The CN QS provides a foundation for developing applications on the GS.
+The CN QS provides a foundation for developing applications on the Global Synchronizer.
 
 CN QS components
 ----------------
@@ -186,7 +186,7 @@ Validator nodes run Canton participant nodes to host your contracts and
 represent user participants. Each validator operates within its own
 preconfigured synchronizer.
 
-The Global Synchronizer (GS) acts as the network coordinator through its
+The Global Synchronizer acts as the network coordinator through its
 Super Validator (SV). It runs a Canton synchronizer node that handles
 transaction ordering and conflict resolution using sequencer and
 mediator services. It verifies that all network participants maintain a

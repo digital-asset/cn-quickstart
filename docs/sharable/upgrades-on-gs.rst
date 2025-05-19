@@ -13,7 +13,7 @@ Upgrades on the Global Synchronizer
 
    `Preparing for upgrades <#preparing-for-upgrades>`__
 
-The SVs periodically implement upgrades to the GS to improve functionality, resolve issues, and introduce new features. 
+The SVs periodically implement upgrades to the Global Synchronizer to improve functionality, resolve issues, and introduce new features. 
 As a node operator or application provider you should be aware of the three types of upgrades that may occur.
 
 Type 1: backward-compatible changes

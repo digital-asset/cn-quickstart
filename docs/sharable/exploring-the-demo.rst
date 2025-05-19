@@ -352,7 +352,7 @@ In DevNet mode, you can configure a non-default SPONSOR_SV_ADDRESS, SCAN_ADDRESS
    Your organization may sponsor another `CN-approved SV <https://sync.global/sv-network/>`__. 
    If this is the case, speak with your administrator for privileged access.
 
-   Review the DevNet Global Synchronizer (GS) documentation to learn more about the `SV onboarding process <https://docs.dev.sync.global/validator_operator/validator_onboarding.html#onboarding-process-overview>`__.
+   Review the DevNet Global Synchronizer documentation to learn more about the `SV onboarding process <https://docs.dev.sync.global/validator_operator/validator_onboarding.html#onboarding-process-overview>`__.
 
    ⏱️ If you run into errors when making DevNet operations, double check that the DevNet VPN is active. 
    DevNet VPNs may timeout, especially if left unattended for extended periods of time.

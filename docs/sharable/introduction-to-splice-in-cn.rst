@@ -44,7 +44,7 @@ shared infrastructure.
 How Splice is Used in the Canton Network
 ----------------------------------------
 
-Splice is deployed on the Global Synchronizer (GS). Its components
+Splice is deployed on the Global Synchronizer. Its components
 include Amulet, a payment utility token, commonly referred to as Canton
 Coin (CC), that services financial transactions between network
 participants. Supporting services include the Amulet Name Service (ANS),
