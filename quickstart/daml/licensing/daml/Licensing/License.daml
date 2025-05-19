@@ -11,7 +11,7 @@ import DA.Assert
 import DA.Action (unless)
 import DA.Optional (listToOptional)
 
-import Splice.Util as Util (require, fetchAndArchive)
+import Splice.Util as Util (require)
 import Splice.Api.Token.MetadataV1
 import Splice.Api.Token.HoldingV1
 import Splice.Api.Token.AllocationRequestV1
