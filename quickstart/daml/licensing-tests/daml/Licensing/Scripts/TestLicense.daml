@@ -4,18 +4,20 @@ import Daml.Script
 
 import DA.Action (unless)
 import DA.Assert
-import DA.Foldable
+-- import DA.Foldable
 import DA.Time
-import DA.List (sortOn)
+import DA.List (sortOn, head)
 
 import Splice.Api.Token.MetadataV1 as Api.Token.MetadataV1
 import Splice.Api.Token.AllocationV1 as Api.Token.AllocationV1
+import Splice.Api.Token.HoldingV1
 import Splice.Api.Token.AllocationRequestV1
 import Splice.Api.Token.AllocationInstructionV1
 
 import Splice.Testing.Registries.AmuletRegistry qualified as AmuletRegistry
 import Splice.Testing.TokenStandard.RegistryApi qualified as RegistryApi
 import Splice.Testing.TokenStandard.WalletClient qualified as WalletClient
+import Splice.Testing.Utils
 
 import Licensing.License
 import Licensing.AppInstall
@@ -116,11 +118,11 @@ testLicenseTokenStandard = script do
 
   -- The provider completes the renewal by finalizing the payment
   let [(allocCid, _)] = allocations
-  let extraArgs = ExtraArgs with context = Nothing; meta = emptyMetadata
+  -- let extraArgs = ExtraArgs with context = Nothing; meta = emptyMetadata
   submit providerParty $
     exerciseCmd renewalRequestCid LicenseRenewalRequest_CompleteRenewal with
       allocationInstructions = [allocCid]
-      extraArgss = [extraArgs]
+      extraArgss = [] -- [extraArgs]
 
   -----------------------------------------------------
   -- Check that the renewal succeeded
