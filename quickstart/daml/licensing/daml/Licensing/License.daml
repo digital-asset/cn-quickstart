@@ -9,7 +9,7 @@ module Licensing.License where
 import DA.Time
 import DA.Assert
 import DA.Action (unless)
-import DA.Optional (listToOptional)
+import DA.List (head)
 
 import Splice.Util as Util (require)
 import Splice.Api.Token.MetadataV1
@@ -137,12 +137,8 @@ template LicenseRenewalRequest
         require "Exactly one allocation instruction" (length allocationInstructions == 1)
         require "Exactly one extraArgs" (length extraArgss == 1)
 
-        let (allocCid, extraArgs) =
-              case (listToOptional allocationInstructions, listToOptional extraArgss) of
-                (Some a, Some b) -> (a, b)
-                _ -> error "Internal error: no allocation instructions or extra args"
-
-        exercise allocCid (Allocation_ExecuteTransfer extraArgs)
+        let allocCid = head allocationInstructions
+        exercise allocCid (Allocation_ExecuteTransfer (head extraArgss))
 
         oldLicense <- fetch licenseCid
         archive licenseCid
