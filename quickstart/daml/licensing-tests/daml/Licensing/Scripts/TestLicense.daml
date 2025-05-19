@@ -2,9 +2,7 @@ module Licensing.Scripts.TestLicense where
 
 import Daml.Script
 
-import DA.Action (unless)
 import DA.Assert
--- import DA.Foldable
 import DA.Time
 import DA.List (sortOn, head)
 
@@ -21,7 +19,6 @@ import Splice.Testing.Utils
 
 import Licensing.License
 import Licensing.AppInstall
-import Licensing.Util
 
 
 -- | New-style test that uses the token standard via 'LicenseRenewalRequest'.
@@ -123,11 +120,16 @@ testLicenseTokenStandard = script do
 
   -- The provider completes the renewal by finalizing the payment
   let [(allocCid, _)] = allocations
-  -- let extraArgs = ExtraArgs with context = Nothing; meta = emptyMetadata
-  submit providerParty $
+  context <- RegistryApi.getAllocationTransferContext registry allocCid emptyMetadata
+  let disclosures = context.disclosures
+  let extraArgs = ExtraArgs with
+        context = context.choiceContext
+        meta = emptyMetadata
+
+  submitWithDisclosures' providerParty disclosures $
     exerciseCmd renewalRequestCid LicenseRenewalRequest_CompleteRenewal with
       allocationInstructions = [allocCid]
-      extraArgss = [] -- [extraArgs]
+      extraArgss = [extraArgs]
 
   -----------------------------------------------------
   -- Check that the renewal succeeded

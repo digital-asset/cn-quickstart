@@ -49,6 +49,8 @@ template License
       controller provider
       do
         now <- getTime
+        let prepareUntil = now `addRelTime` hours 1
+        let settleBefore = now `addRelTime` paymentAcceptanceDuration
         create LicenseRenewalRequest with
           provider
           user
@@ -57,8 +59,8 @@ template License
           licenseFeeAmount
           licenseFeeInstrumentId = InstrumentId { admin = dso, id = "Amulet" }
           licenseExtensionDuration
-          prepareUntil = now
-          settleBefore = now `addRelTime` paymentAcceptanceDuration
+          prepareUntil
+          settleBefore
           createdAt = now
           licenseCid = self
 
