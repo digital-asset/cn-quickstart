@@ -15,7 +15,16 @@ data-dependencies:
 - ../dars/splice-wallet-payments-0.1.9.dar
 - ../external-test-sources/splice-amulet-test/.daml/dist/splice-amulet-test-0.1.9.dar
 - ../external-test-sources/splice-wallet-test/.daml/dist/splice-wallet-test-0.1.9.dar
+- ../external-test-sources/splice-token-standard-test/.daml/dist/splice-token-standard-test-0.0.1.dar
 - ../licensing/.daml/dist/quickstart-licensing-0.0.1.dar
+- ../dars/splice-util-0.1.3.dar
+- ../dars/splice-api-token-metadata-v1-0.0.1.dar
+- ../dars/splice-api-token-holding-v1-0.0.1.dar
+- ../dars/splice-api-token-allocation-v1-0.0.1.dar
+- ../dars/splice-api-token-allocation-request-v1-0.0.1.dar
+- ../dars/splice-api-token-metadata-v1-0.0.1.dar
+- ../dars/splice-api-token-transfer-instruction-v1-0.0.1.dar
+- ../dars/splice-api-token-allocation-instruction-v1-0.0.1.dar
 build-options:
   - --ghc-option=-Wunused-binds
   - --ghc-option=-Wunused-matches
