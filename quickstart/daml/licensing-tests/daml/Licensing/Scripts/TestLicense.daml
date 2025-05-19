@@ -29,40 +29,34 @@ import Licensing.Util
 --   standard flows, mirroring the patterns from 'TestAmuletTokenDvP'.
 testLicenseTokenStandard : Script ()
 testLicenseTokenStandard = script do
-  -- Initialize the registry (in this example, we use an Amulet registry).
   registry <- AmuletRegistry.initialize AmuletRegistry.defaultAmuletRegistryConfig
 
-  -- Allocate parties
   userParty <- allocatePartyExact "user"
   providerParty <- allocatePartyExact "provider"
 
-  -- Feature the app with the provider so that they can receive any fees/rewards.
   AmuletRegistry.featureApp registry providerParty
-
-  -- Give the user some initial amulets to fund the license renewal
   AmuletRegistry.tapLockedAndUnlockedFunds registry userParty 100.0
 
-  -- Create an AppInstall so the user can hold a license
-  installCid <- submit userParty $ createCmd AppInstall with
+  -- Create an AppInstallRequest by the user
+  installReqCid <- submit userParty $ createCmd AppInstallRequest with
     dso = registry.dso
     provider = providerParty
     user = userParty
     meta = emptyMetadata
-    numLicensesCreated = 0
 
-  -- Provider creates a new license for the user
+  -- Provider accepts the request, creating the AppInstall
+  installCid <- submit providerParty $
+    exerciseCmd installReqCid AppInstallRequest_Accept with
+      installMeta = emptyMetadata
+      meta = emptyMetadata
+
   licenseResult <- submit providerParty $
     exerciseCmd installCid AppInstall_CreateLicense with
       params = LicenseParams with
         meta = emptyMetadata
   let licenseCid = licenseResult.licenseId
 
-  -- Time-based bounds for demonstration. The license renewal request uses
-  -- 'paymentAcceptanceDuration' to specify the settlement window.
   now <- getTime
-
-  -- Provider initiates a renewal request that implements the AllocationRequest interface
-  -- We ask for a renewal fee of 20.0 amulets, to be paid by the user to the provider.
   let renewalFee = 20.0
   let paymentWindow = hours 2
   renewalRequestCid <- submit providerParty $
@@ -72,23 +66,14 @@ testLicenseTokenStandard = script do
       paymentAcceptanceDuration = paymentWindow
       description = "Token-standard-based renewal"
 
-  -- Check that the renewal request is present on the ledger
   Some renewalRequest <- queryContractId providerParty renewalRequestCid
 
-  -----------------------------------------------------
-  -- The user sees the allocation request in their wallet
-  --
-  -- Because 'LicenseRenewalRequest' implements 'AllocationRequest', the user has a
-  -- standard "requested allocation" to send 20 amulets to the provider.
-  -----------------------------------------------------
   let instrumentId = InstrumentId { admin = registry.dso, id = "Amulet" }
   [userAlloc] <- WalletClient.listRequestedAllocations userParty instrumentId
   userAlloc.transferLeg.amount === renewalFee
 
-  -- The user obtains their current holding IDs
   userHoldingCids <- WalletClient.listHoldingCids userParty instrumentId
 
-  -- The user then accepts (allocates) this request, passing it through the registry factory
   enrichedChoice <- RegistryApi.getAllocationFactory registry AllocationFactory_Allocate with
     expectedAdmin = registry.dso
     allocation = userAlloc
@@ -98,7 +83,6 @@ testLicenseTokenStandard = script do
   submitWithDisclosures' userParty enrichedChoice.disclosures $
     exerciseCmd enrichedChoice.factoryCid enrichedChoice.arg
 
-  -- Check that the user has locked part of their holding for settlement
   [(_, lockedHolding)] <- WalletClient.listLockedHoldings userParty instrumentId
   let expectedLock = Some $ Lock with
         expiresAt = Some (now `addRelTime` paymentWindow)
@@ -107,33 +91,23 @@ testLicenseTokenStandard = script do
         context = Some "allocation for transfer leg 0 to 'provider'"
   lockedHolding.lock === expectedLock
 
-  -- Advance time to allow the user to finalize their acceptance
   passTime (hours 1)
 
-  -- The provider sees the single allocation in the system, with
-  -- the settlementRef referencing the license renewal request
   let renewalRef = (view $ toInterface @AllocationRequest renewalRequest).settlement.settlementRef
   allocations <- listAllocationsForRenewal providerParty renewalRef
   length allocations === 1
 
-  -- The provider completes the renewal by finalizing the payment
   let [(allocCid, _)] = allocations
-  -- let extraArgs = ExtraArgs with context = Nothing; meta = emptyMetadata
   submit providerParty $
     exerciseCmd renewalRequestCid LicenseRenewalRequest_CompleteRenewal with
       allocationInstructions = [allocCid]
-      extraArgss = [] -- [extraArgs]
+      extraArgss = []
 
-  -----------------------------------------------------
-  -- Check that the renewal succeeded
-  -----------------------------------------------------
-  -- The user should have transferred 20 amulets to the provider.
   userHoldingsAfter <- WalletClient.listHoldings userParty instrumentId
   providerHoldingsAfter <- WalletClient.listHoldings providerParty instrumentId
   debug userHoldingsAfter
   debug providerHoldingsAfter
 
-  -- The old license is replaced with a new license having a year of extended validity
   newLicensesUser <- query @License userParty
   newLicensesProvider <- query @License providerParty
   debug newLicensesUser
