@@ -118,8 +118,39 @@ testLicenseTokenStandard = script do
   allocations <- listAllocationsForRenewal providerParty renewalRef
   length allocations === 1
 
+  -- Compare the actual allocation with the expected allocation view before completing renewal
+  let [(allocCid, actualView)] = allocations
+
+  let singleLeg = Api.Token.AllocationV1.TransferLeg
+        with
+          sender = renewalRequest.user
+          receiver = renewalRequest.provider
+          amount = renewalRequest.licenseFeeAmount
+          instrumentId = renewalRequest.licenseFeeInstrumentId
+          meta = emptyMetadata
+
+  let settlementInfo = SettlementInfo
+        with
+          executor = renewalRequest.provider
+          requestedAt = renewalRequest.createdAt
+          allocateBefore = renewalRequest.prepareUntil
+          settleBefore = renewalRequest.settleBefore
+          settlementRef =
+            Reference
+              with
+                id = "LicenseRenewalRequest"
+                cid = Some (coerceContractId renewalRequest.licenseCid)
+
+  let expectedAllocationView = AllocationView
+        with
+          settlement = settlementInfo
+          transferLegId = 0
+          transferLeg = singleLeg
+          meta = emptyMetadata
+
+  actualView === expectedAllocationView
+
   -- The provider completes the renewal by finalizing the payment
-  let [(allocCid, _)] = allocations
   context <- RegistryApi.getAllocationTransferContext registry allocCid emptyMetadata
   let disclosures = context.disclosures
   let extraArgs = ExtraArgs with
@@ -163,4 +194,3 @@ listAllocationsForRenewal p ref = do
         guard (alloc.settlement.settlementRef == ref)
         pure (cid, alloc)
   pure $ sortOn (\(_, alloc) -> alloc.transferLegId) matchingAllocs
-
