@@ -115,7 +115,7 @@ sourceSets {
     main {
         java {
             srcDirs(
-                "$projectDir/build/generated-spring/src/main",
+                "$projectDir/build/generated-spring/src/main/java",
                 "$projectDir/build/generated-client/src/main/java",
                 "$projectDir/build/generated-daml-bindings" // TODO: remove this line once daml plugin is used
             )

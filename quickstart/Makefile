@@ -21,7 +21,7 @@ endif
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file env/ports.env
+DOCKER_COMPOSE_ENVFILE := --env-file .env --env-file .env.local --env-file env/ports.env
 DOCKER_COMPOSE_FILES ?= -f compose.yaml
 
 # Default to adding resource constraints for Quickstart compose stack.
@@ -91,6 +91,13 @@ build-backend: ## Build the backend service
 .PHONY: build-daml
 build-daml: ## Build the Daml model
 	./gradlew :daml:build distTar
+
+.PHONY: test
+test: test-daml ## Run unit tests
+
+.PHONY: test-daml
+test-daml: ## Run daml tests
+	./gradlew :daml:testDaml
 
 .PHONY: build-docker-images
 build-docker-images:
