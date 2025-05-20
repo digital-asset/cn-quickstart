@@ -159,8 +159,8 @@ testLicenseTokenStandard = script do
 
   submitWithDisclosures' providerParty disclosures $
     exerciseCmd renewalRequestCid LicenseRenewalRequest_CompleteRenewal with
-      allocationInstructions = [allocCid]
-      extraArgss = [extraArgs]
+      allocationInstruction = allocCid
+      extraArgs = extraArgs
 
   -----------------------------------------------------
   -- Check that the renewal succeeded

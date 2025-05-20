@@ -125,21 +125,18 @@ template LicenseRenewalRequest
     --   transfer via Allocation(s) and creating the new license state.
     --
     --   Once the license fee is transferred, the old license is archived
-    --   and replaced with a new license with an updated expiry.
+    --   and replaced with a new license with extended validity.
     postconsuming choice LicenseRenewalRequest_CompleteRenewal : ContractId License
       with
-        allocationInstructions : [ContractId Allocation]
-        extraArgss : [ExtraArgs]
+        allocationInstruction : ContractId Allocation
+        extraArgs : ExtraArgs
       controller provider
       do
         now <- getTime
         require "Preparation time has passed" (now >= prepareUntil)
         require "Settlement deadline has not passed" (now < settleBefore)
-        require "Exactly one allocation instruction" (length allocationInstructions == 1)
-        require "Exactly one extraArgs" (length extraArgss == 1)
 
-        let allocCid = head allocationInstructions
-        exercise allocCid (Allocation_ExecuteTransfer (head extraArgss))
+        exercise allocationInstruction (Allocation_ExecuteTransfer extraArgs)
 
         oldLicense <- fetch licenseCid
 
