@@ -57,6 +57,7 @@ template License
           dso
           licenseNum
           licenseFeeAmount
+          -- TODO: Support multiple instruments (user selects from AppProvider given list)
           licenseFeeInstrumentId = InstrumentId { admin = dso, id = "Amulet" }
           licenseExtensionDuration
           prepareUntil
@@ -141,7 +142,7 @@ template LicenseRenewalRequest
         exercise allocCid (Allocation_ExecuteTransfer (head extraArgss))
 
         oldLicense <- fetch licenseCid
-        
+
         licenseNum === oldLicense.licenseNum
         user === oldLicense.user
         dso === oldLicense.dso
