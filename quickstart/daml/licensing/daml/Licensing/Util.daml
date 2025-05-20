@@ -5,6 +5,9 @@
 module Licensing.Util where
 
 import Splice.Api.Token.MetadataV1
+import qualified DA.Map as Map
+import DA.Text as T
+import DA.Action (unless)
 
 -- | Easy way to enforce metadata limits within choices.
 --
@@ -12,4 +15,7 @@ import Splice.Api.Token.MetadataV1
 -- change on an upgrade, as lowering the limits may make existing data unreadable.
 enforceMetadataLimits : Metadata -> Update ()
 enforceMetadataLimits (Metadata m) = do
-  pure ()
+  let numEntries = Map.size m
+  unless (numEntries <= 128) $ fail $ "Metadata has too many entries " <> show numEntries <> ": max 128"
+  let totalSize = sum [T.length k + T.length v | (k, v) <- Map.toList m]
+  unless (totalSize <= 8192) $ fail $ "Metadata is too large " <> show totalSize <> ": max 8192 chars"

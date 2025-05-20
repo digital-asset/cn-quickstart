@@ -9,7 +9,6 @@ module Licensing.License where
 import DA.Time
 import DA.Assert
 import DA.Action (unless)
-import DA.List (head)
 
 import Splice.Util as Util (require)
 import Splice.Api.Token.MetadataV1
