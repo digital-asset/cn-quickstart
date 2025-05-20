@@ -59,10 +59,8 @@ For each realm create clients:
           - Authentication flow: Service accounts roles 
 
 For each realm create users:    
-  - AppProvider:
-    - Bob Doe
-  - AppUser:
-    - Alice Doe
+  - app-provider
+  - app-user
 
 ### NOTE: if you make changes to keycloak configuration don't forget to change also .env file in the root directory of the project
 

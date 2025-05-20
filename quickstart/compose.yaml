@@ -83,5 +83,5 @@ services:
 
   splice-onboarding:
     volumes:
-      - ./docker/onboarding.sh:/app/scripts/on/qs-onboarding.sh
+      - ./docker/onboarding-${AUTH_MODE}.sh:/app/scripts/on/qs-onboarding.sh
       - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar

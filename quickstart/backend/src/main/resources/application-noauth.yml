@@ -5,7 +5,7 @@ application:
   tenants:
     AppProvider:
       users:
-        - pat
+        - app-provider
 
 security.token-config:
     subject: "anyone"

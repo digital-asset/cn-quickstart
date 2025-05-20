@@ -21,15 +21,16 @@ endif
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
+$(info LOCALNET_DIR=$(LOCALNET_DIR))
 $(info MODULES_DIR=$(MODULES_DIR))
-DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file ${MODULES_DIR}/localnet/compose.env --env-file ${MODULES_DIR}/localnet/env/common.env
-DOCKER_COMPOSE_FILES := -f compose.yaml -f ${MODULES_DIR}/localnet/compose.yaml
+DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file ${LOCALNET_DIR}/compose.env --env-file ${LOCALNET_DIR}/env/common.env
+DOCKER_COMPOSE_FILES := -f compose.yaml -f ${LOCALNET_DIR}/compose.yaml
 
 # Default to adding resource constraints for Quickstart compose stack.
 RESOURCE_CONSTRAINTS_ENABLED ?= true
 
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
-RESOURCE_CONSTRAINT_CONFIG := -f ${MODULES_DIR}/localnet/resource-constraints.yaml
+RESOURCE_CONSTRAINT_CONFIG := -f ${LOCALNET_DIR}/resource-constraints.yaml
   ifeq ($(AUTH_MODE),oauth2)
   RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/keycloak/resource-constraints.yaml
   endif
@@ -59,9 +60,9 @@ else
 endif
 
 ifeq ($(ENV),local)
-    DOCKER_COMPOSE_PROFILES += --profile sv --env-file ${MODULES_DIR}/localnet/env/local.env
+    DOCKER_COMPOSE_PROFILES += --profile sv --env-file ${LOCALNET_DIR}/env/local.env
 else
-    DOCKER_COMPOSE_PROFILES += --env-file ${MODULES_DIR}/localnet/env/dev.env
+    DOCKER_COMPOSE_PROFILES += --env-file ${LOCALNET_DIR}/env/dev.env
 endif
 
 ifeq ($(OBSERVABILITY_ENABLED),true)
