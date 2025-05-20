@@ -141,8 +141,13 @@ template LicenseRenewalRequest
         exercise allocCid (Allocation_ExecuteTransfer (head extraArgss))
 
         oldLicense <- fetch licenseCid
-        archive licenseCid
+        
         licenseNum === oldLicense.licenseNum
+        user === oldLicense.user
+        dso === oldLicense.dso
+        provider === oldLicense.provider
+
+        archive licenseCid
 
         now <- getTime
         create oldLicense with
