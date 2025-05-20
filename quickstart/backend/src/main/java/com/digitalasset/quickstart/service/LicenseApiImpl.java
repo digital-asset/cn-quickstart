@@ -37,8 +37,10 @@ import quickstart_licensing.licensing.license.License.License_Expire;
 import quickstart_licensing.licensing.license.License.License_Renew;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest.LicenseRenewalRequest_CompleteRenewal;
+import splice_api_token_allocation_v1.splice.api.token.allocationv1.Allocation;
+import splice_api_token_metadata_v1.splice.api.token.metadatav1.ChoiceContext;
+import splice_api_token_metadata_v1.splice.api.token.metadatav1.ExtraArgs;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata;
-import splice_amulet.splice.amuletrules.AppTransferContext;
 import splice_wallet_payments.splice.wallet.payment.AcceptedAppPayment;
 
 import java.time.Duration;
@@ -188,7 +190,7 @@ public class LicenseApiImpl implements LicensesApi {
                                         r.setUser(rc.payload.getUser.getParty);
                                         r.setDso(rc.payload.getDso.getParty);
                                         r.setLicenseNum(rc.payload.getLicenseNum.intValue());
-                                        r.setLicenseFeeCc(rc.payload.getLicenseFeeAmount); // FIXME
+                                        r.setLicenseFeeCc(rc.payload.getLicenseFeeAmount);
                                         r.setIsPaid(rcData.isPaid());
 
                                         long micros = rc.payload.getLicenseExtensionDuration.getMicroseconds;
@@ -328,102 +330,41 @@ public class LicenseApiImpl implements LicensesApi {
             Map<String, Object> initialAttrs,
             Span span
     ) {
-        String user = lrrContract.payload.getUser.getParty;
-        String provider = lrrContract.payload.getProvider.getParty;
-        String dso = lrrContract.payload.getDso.getParty;
-        Long licenseNum = lrrContract.payload.getLicenseNum;
-//        String referenceCid = lrrContract.payload.getReference.getContractId;
-//
-//        return damlRepository.findSingleActiveAcceptedAppPayment(referenceCid, user, provider)
-//                .thenCompose(maybeAcceptedPayment -> {
-//                    if (maybeAcceptedPayment.isEmpty()) {
-//                        LoggingSpanHelper.logError(logger, "No AcceptedAppPayment found", initialAttrs, null);
-//                        return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-//                    }
-//                    return handleAcceptedAppPayment(actingParty, commandId, lrrContract, maybeAcceptedPayment.get(), dso, licenseNum, initialAttrs, span);
-//                });
-        return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-    }
+        // In the new flow, the renewal is finalized by referencing a token-standard Allocation
+        // contract that implements the actual fee transfer. Once the Allocation is executed,
+        // the choice LicenseRenewalRequest_CompleteRenewal creates the new license contract.
+        return damlRepository.findActiveAllocationForRenewalRequest(lrrContract.contractId.getContractId)
+                .thenCompose(allocationOpt -> {
+                    if (allocationOpt.isEmpty()) {
+                        LoggingSpanHelper.logError(logger, "No corresponding Allocation for this renewal request", initialAttrs, null);
+                        return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+                    }
 
-    private CompletableFuture<ResponseEntity<Void>> handleAcceptedAppPayment(
-            String actingParty,
-            String commandId,
-            Contract<LicenseRenewalRequest> lrrContract,
-            Contract<AcceptedAppPayment> acceptedPayment,
-            String dso,
-            Long licenseNum,
-            Map<String, Object> initialAttrs,
-            Span span
-    ) {
-        ContractId<AcceptedAppPayment> acceptedPaymentCid = acceptedPayment.contractId;
-        Long miningRound = acceptedPayment.payload.getRound.getNumber;
+                    Contract<Allocation> allocationContract = allocationOpt.get();
 
-        return damlRepository.findSingleActiveLicense(
-                lrrContract.payload.getUser.getParty,
-                lrrContract.payload.getProvider.getParty,
-                licenseNum,
-                dso
-        ).thenCompose(maybeLicense -> {
-            if (maybeLicense.isEmpty()) {
-                LoggingSpanHelper.logError(logger, "No matching License found", initialAttrs, null);
-                return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-            }
-            return finalizeLicenseRenewal(
-                    actingParty,
-                    commandId,
-                    lrrContract,
-                    maybeLicense.get(),
-                    acceptedPaymentCid,
-                    miningRound,
-                    initialAttrs,
-                    span
-            );
-        });
-    }
+                    ExtraArgs extraArgs = new ExtraArgs(
+                            new ChoiceContext(Map.of()),
+                            new Metadata(Map.of())
+                    );
 
-    private CompletableFuture<ResponseEntity<Void>> finalizeLicenseRenewal(
-            String actingParty,
-            String commandId,
-            Contract<LicenseRenewalRequest> lrrContract,
-            Contract<License> licenseContract,
-            ContractId<AcceptedAppPayment> acceptedPaymentCid,
-            Long miningRound,
-            Map<String, Object> initialAttrs,
-            Span span
-    ) {
-        CompletableFuture<CommandsOuterClass.DisclosedContract> amuletRulesFut = fetchAmuletRulesDisclosedContract();
-        CompletableFuture<CommandsOuterClass.DisclosedContract> openMiningRoundFut =
-                fetchOpenMiningRoundDisclosedContract(miningRound);
+                    LicenseRenewalRequest_CompleteRenewal choice =
+                            new LicenseRenewalRequest_CompleteRenewal(
+                                    allocationContract.contractId,
+                                    extraArgs
+                            );
 
-        return CompletableFuture.allOf(amuletRulesFut, openMiningRoundFut).thenCompose(ignored -> {
-            CommandsOuterClass.DisclosedContract amuletRulesDc = amuletRulesFut.join();
-            CommandsOuterClass.DisclosedContract openMiningRoundDc = openMiningRoundFut.join();
-
-            AppTransferContext transferContext = new AppTransferContext(
-                    new ContractId<>(amuletRulesDc.getContractId()),
-                    new ContractId<>(openMiningRoundDc.getContractId()),
-                    Optional.empty()
-            );
-
-            LicenseRenewalRequest_CompleteRenewal choice = new LicenseRenewalRequest_CompleteRenewal(
-                    acceptedPaymentCid,
-                    licenseContract.contractId,
-                    transferContext
-            );
-
-            return ledger.exerciseAndGetResult(
-                    actingParty,
-                    lrrContract.contractId,
-                    choice,
-                    commandId,
-                    List.of(amuletRulesDc, openMiningRoundDc)
-            ).thenApply(newLicenseCid -> {
-                Map<String, Object> successAttrs = new HashMap<>(initialAttrs);
-                successAttrs.put("newLicenseContractId", newLicenseCid.getContractId);
-                LoggingSpanHelper.logInfo(logger, "completeLicenseRenewal: License renewed", successAttrs);
-                return ResponseEntity.ok().<Void>build();
-            });
-        });
+                    return ledger.exerciseAndGetResult(
+                            actingParty,
+                            lrrContract.contractId,
+                            choice,
+                            commandId
+                    ).thenApply(newLicenseCid -> {
+                        Map<String, Object> successAttrs = new HashMap<>(initialAttrs);
+                        successAttrs.put("newLicenseContractId", newLicenseCid.getContractId);
+                        LoggingSpanHelper.logInfo(logger, "completeLicenseRenewal: License renewed", successAttrs);
+                        return ResponseEntity.ok().<Void>build();
+                    });
+                });
     }
 
     /**
@@ -490,41 +431,6 @@ public class LicenseApiImpl implements LicensesApi {
                                 return ResponseEntity.ok("License expired successfully");
                             });
                 });
-    }
-
-    private CompletableFuture<CommandsOuterClass.DisclosedContract> fetchAmuletRulesDisclosedContract() {
-        return scanProxyService.getAmuletRules().thenApply(resp ->
-                buildDisclosedContractFromApi(
-                        resp.getAmuletRules().getContract().getTemplateId(),
-                        resp.getAmuletRules().getContract().getContractId(),
-                        resp.getAmuletRules().getContract().getCreatedEventBlob()
-                )
-        );
-    }
-
-    private CompletableFuture<CommandsOuterClass.DisclosedContract> fetchOpenMiningRoundDisclosedContract(Long roundNumber) {
-        return scanProxyService.getOpenAndIssuingMiningRounds().thenCompose(resp -> {
-            if (resp.getOpenMiningRounds().isEmpty()) {
-                return CompletableFuture.failedFuture(new RuntimeException("No open mining rounds found"));
-            }
-            var maybeContract = resp.getOpenMiningRounds().stream()
-                    .filter(round -> Long.valueOf(round.getContract().getPayload().getRound().getNumber())
-                            .equals(roundNumber))
-                    .findFirst();
-            if (maybeContract.isEmpty()) {
-                return CompletableFuture.failedFuture(
-                        new IllegalStateException("No open mining round found with number: " + roundNumber)
-                );
-            }
-            var contract = maybeContract.get().getContract();
-            return CompletableFuture.completedFuture(
-                    buildDisclosedContractFromApi(
-                            contract.getTemplateId(),
-                            contract.getContractId(),
-                            contract.getCreatedEventBlob()
-                    )
-            );
-        });
     }
 
     private CommandsOuterClass.DisclosedContract buildDisclosedContractFromApi(

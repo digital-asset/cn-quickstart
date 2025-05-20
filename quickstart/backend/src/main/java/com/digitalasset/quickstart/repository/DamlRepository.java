@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import quickstart_licensing.licensing.license.License;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest;
+import splice_api_token_allocation_v1.splice.api.token.allocationv1.Allocation;
 import splice_wallet_payments.splice.wallet.payment.AcceptedAppPayment;
 
 import java.util.List;
@@ -51,10 +52,10 @@ public class DamlRepository {
      */
     public CompletableFuture<List<LicenseRenewalRequestData>> findActiveLicenseRenewalRequestsByParty(String party) {
         String joinCondition = """
-            prim.payload->>'reference' = sec.payload->>'reference'
-            AND prim.payload->>'user' = sec.payload->>'sender'
-            AND prim.payload->>'provider' = sec.payload->>'provider'
-        """;
+                    prim.payload->>'reference' = sec.payload->>'reference'
+                    AND prim.payload->>'user' = sec.payload->>'sender'
+                    AND prim.payload->>'provider' = sec.payload->>'provider'
+                """;
         String whereClause = "prim.payload->>'user' = ? OR prim.payload->>'provider' = ?";
 
         return pqs.activeLeftJoinWhere(
@@ -116,21 +117,16 @@ public class DamlRepository {
         return pqs.singleActiveWhere(License.class, whereClause, user, provider, licenseNum, dso);
     }
 
-    /**
-     * Fetches a single active AcceptedAppPayment matching the given reference, user, and provider.
-     */
-    public CompletableFuture<Optional<Contract<AcceptedAppPayment>>> findSingleActiveAcceptedAppPayment(
-            String referenceCid,
-            String user,
-            String provider
-    ) {
-        String whereClause =
-                "payload->>'reference' = ? "
-                        + "AND payload->>'sender' = ? "
-                        + "AND payload->>'provider' = ?";
 
-        return pqs.singleActiveWhere(AcceptedAppPayment.class, whereClause, referenceCid, user, provider);
+    /**
+     * Finds the active allocation for a given renewal request reference
+     */
+    public CompletableFuture<Optional<Contract<Allocation>>> findActiveAllocationForRenewalRequest(String referenceCid) {
+        String whereClause = "payload->>'reference' = ?";
+
+        return pqs.singleActiveWhere(Allocation.class, whereClause, referenceCid);
     }
+
 
     /**
      * Finds all active AppInstall contracts.
