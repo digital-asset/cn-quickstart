@@ -330,9 +330,6 @@ public class LicenseApiImpl implements LicensesApi {
             Map<String, Object> initialAttrs,
             Span span
     ) {
-        // The renewal is finalized by referencing a token-standard Allocation contract that implements the actual fee
-        // transfer contract that implements the actual fee transfer. Once the Allocation is executed,
-        // the choice LicenseRenewalRequest_CompleteRenewal creates the new license contract.
         return damlRepository.findActiveAllocationForRenewalRequest(lrrContract.contractId.getContractId)
                 .thenCompose(allocationOpt -> {
                     if (allocationOpt.isEmpty()) {
