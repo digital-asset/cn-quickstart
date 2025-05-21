@@ -244,6 +244,124 @@ testLicenseTokenStandard_RenewalRejection = script do
 
   pure ()
 
+
+-- | Test renewing a license that has already expired. Users should not pay for
+--   time that has already passed. The new license should extend from the current
+--   time if the old license is already expired.
+testLicenseTokenStandard_ExpiredLicenseRenewal : Script ()
+testLicenseTokenStandard_ExpiredLicenseRenewal = script do
+  -- Initialize the registry (in this example, we use an Amulet registry).
+  registry <- AmuletRegistry.initialize AmuletRegistry.defaultAmuletRegistryConfig
+
+  -- Allocate parties
+  userParty <- allocatePartyExact "user"
+  providerParty <- allocatePartyExact "provider"
+
+  -- Feature the app with the provider so they can receive fees/rewards.
+  AmuletRegistry.featureApp registry providerParty
+
+  -- Give the user some initial amulets to fund the license renewal
+  AmuletRegistry.tapLockedAndUnlockedFunds registry userParty 100.0
+
+  -- Create an AppInstallRequest by the user
+  installReqCid <- submit userParty $ createCmd AppInstallRequest with
+    dso = registry.dso
+    provider = providerParty
+    user = userParty
+    meta = emptyMetadata
+
+  -- Provider accepts the request, creating the AppInstall
+  installCid <- submit providerParty $
+    exerciseCmd installReqCid AppInstallRequest_Accept with
+      installMeta = emptyMetadata
+      meta = emptyMetadata
+
+  -- Provider creates a new license for the user
+  licenseResult <- submit providerParty $
+    exerciseCmd installCid AppInstall_CreateLicense with
+      params = LicenseParams with
+        meta = emptyMetadata
+  let licenseCid = licenseResult.licenseId
+
+  -- Advance time enough so that the created license is expired
+  passTime (days 365)
+
+  -- Check that the license is indeed expired
+  Some oldLicense <- queryContractId userParty licenseCid
+  let oldExpiry = oldLicense.expiresAt
+
+  now <- getTime
+  assertMsg "Expiry was in the past" $ oldExpiry < now
+
+  -- Provider initiates a renewal request. We ask for a renewal fee of 20.0 amulets.
+  let renewalFee = 20.0
+  let paymentWindow = hours 2
+  let instrumentId = InstrumentId { admin = registry.dso, id = "Amulet" }
+  renewalRequestCid <- submit providerParty $
+    exerciseCmd licenseCid License_Renew with
+      licenseFeeInstrumentId = instrumentId
+      licenseFeeAmount = renewalFee
+      licenseExtensionDuration = days 365
+      paymentAcceptanceDuration = paymentWindow
+      requestedAt = now
+      prepareUntil = now `addRelTime` hours 1
+      settleBefore = now `addRelTime` paymentWindow
+      description = "Token-standard-based renewal for expired license"
+
+  -- The user sees the allocation request in their wallet
+  [userAlloc] <- WalletClient.listRequestedAllocations userParty instrumentId
+  userAlloc.transferLeg.amount === renewalFee
+
+  userHoldingCids <- WalletClient.listHoldingCids userParty instrumentId
+
+  -- The user accepts the request
+  enrichedChoice <- RegistryApi.getAllocationFactory registry AllocationFactory_Allocate with
+    expectedAdmin = registry.dso
+    allocation = userAlloc
+    inputHoldingCids = userHoldingCids
+    extraArgs = emptyExtraArgs
+
+  submitWithDisclosures' userParty enrichedChoice.disclosures $
+    exerciseCmd enrichedChoice.factoryCid enrichedChoice.arg
+
+  -- Advance time to allow the user to finalize acceptance
+  passTime (hours 1)
+
+  renewalTime <- getTime
+
+  -- Provider completes the renewal
+  Some renewalRequest <- queryContractId providerParty renewalRequestCid
+  let renewalRef = (view $ toInterface @AllocationRequest renewalRequest).settlement.settlementRef
+  allocations <- listAllocationsForRenewal providerParty renewalRef
+  let [(allocCid, _)] = allocations
+
+  context <- RegistryApi.getAllocationTransferContext registry allocCid emptyMetadata
+  submitWithDisclosures' providerParty context.disclosures $
+    exerciseCmd renewalRequestCid LicenseRenewalRequest_CompleteRenewal with
+      allocationInstruction = allocCid
+      extraArgs = ExtraArgs with
+        context = context.choiceContext
+        meta = emptyMetadata
+
+  -- Now verify that a new license was created, with an expiresAt = max(now, oldLicense.expiresAt) + licenseExtensionDuration.
+  newLicensesUser <- query @License userParty
+  newLicensesProvider <- query @License providerParty
+  length newLicensesUser === 1
+  length newLicensesProvider === 1
+  let (_, newLicense) = DA.List.head newLicensesUser
+
+  let expectedExpiry = addRelTime renewalTime (days 365)
+  newLicense.expiresAt === expectedExpiry
+
+  -- Check final balances
+  userHoldingsAfter <- WalletClient.listHoldings userParty instrumentId
+  providerHoldingsAfter <- WalletClient.listHoldings providerParty instrumentId
+  debug userHoldingsAfter
+  debug providerHoldingsAfter
+  WalletClient.checkBalanceApprox userParty instrumentId 80.0
+  WalletClient.checkBalanceApprox providerParty instrumentId 20.0
+  pure ()
+
 -- | For convenience, filter all allocations referencing a particular 'Reference'.
 listAllocationsForRenewal : Party -> Reference -> Script [(ContractId Allocation, AllocationView)]
 listAllocationsForRenewal p ref = do
