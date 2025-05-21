@@ -37,8 +37,7 @@ template License
 
     -- | Renews this license by collecting a fee from the user
     --   via the token standard. The actual settlement flow
-    --   is defined by the corresponding LicenseRenewalRequest,
-    --   which is an AllocationRequest.
+    --   is defined by the corresponding LicenseRenewalRequest.
     nonconsuming choice License_Renew : ContractId LicenseRenewalRequest
       with
         licenseFeeAmount : Decimal
