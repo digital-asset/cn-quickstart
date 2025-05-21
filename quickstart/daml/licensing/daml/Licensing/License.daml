@@ -15,7 +15,6 @@ import Splice.Api.Token.MetadataV1
 import Splice.Api.Token.HoldingV1
 import Splice.Api.Token.AllocationRequestV1
 import Splice.Api.Token.AllocationV1 as Api.Token.AllocationV1
-import Licensing.Util
 
 -- | Parameters determining the license behavior.
 data LicenseParams = LicenseParams
@@ -74,7 +73,6 @@ template License
         now <- getTime
         require "Actor is a signatory" (actor `elem` signatory this)
         require "License is not expired yet" (now > expiresAt)
-        enforceMetadataLimits meta
 
 -- | Groups together the signatories so that we can reference them in fetch calls.
 data Group = Group
