@@ -10,7 +10,7 @@ import DA.Time
 import DA.Assert
 import DA.Action (unless)
 
-import Splice.Util as Util (require)
+import Splice.Util as Util (require, assertWithinDeadline, assertDeadlineExceeded)
 import Splice.Api.Token.MetadataV1
 import Splice.Api.Token.HoldingV1
 import Splice.Api.Token.AllocationRequestV1
@@ -42,24 +42,26 @@ template License
         licenseFeeAmount : Decimal
         licenseExtensionDuration : RelTime
         paymentAcceptanceDuration : RelTime
+        requestedAt : Time
+        prepareUntil : Time
+        settleBefore : Time
         description : Text
       controller provider
       do
-        now <- getTime
-        let prepareUntil = now `addRelTime` hours 1
-        let settleBefore = now `addRelTime` paymentAcceptanceDuration
+        assertDeadlineExceeded "requestedAt" requestedAt
+        assertWithinDeadline "prepareUntil" prepareUntil
+        require "prepareUntil < settleBefore" (prepareUntil < settleBefore)
         create LicenseRenewalRequest with
           provider
           user
           dso
           licenseNum
           licenseFeeAmount
-          -- TODO: Support multiple instruments (user selects from AppProvider given list)
           licenseFeeInstrumentId = InstrumentId { admin = dso, id = "Amulet" }
           licenseExtensionDuration
           prepareUntil
           settleBefore
-          createdAt = now
+          createdAt = requestedAt
           licenseCid = self
 
     -- | Used if a provider/user chooses to mark the license as expired

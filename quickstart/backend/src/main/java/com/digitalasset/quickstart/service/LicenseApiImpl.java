@@ -44,8 +44,10 @@ import splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata;
 import splice_wallet_payments.splice.wallet.payment.AcceptedAppPayment;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -269,6 +271,10 @@ public class LicenseApiImpl implements LicensesApi {
                             licenseRenewRequest.getLicenseFeeCc(),
                             licenseExtensionDuration,
                             paymentAcceptanceDuration,
+                            Instant.now(),
+                            // TODO: Make prepareUntil / setUntil offsets configurable
+                            Instant.now().plus(1, ChronoUnit.HOURS),
+                            Instant.now().plus(2, ChronoUnit.HOURS),
                             licenseRenewRequest.getDescription()
                     );
 

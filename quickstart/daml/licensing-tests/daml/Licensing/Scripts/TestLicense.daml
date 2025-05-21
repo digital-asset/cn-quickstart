@@ -72,6 +72,9 @@ testLicenseTokenStandard = script do
       licenseFeeAmount = renewalFee
       licenseExtensionDuration = days 365
       paymentAcceptanceDuration = paymentWindow
+      requestedAt = now
+      prepareUntil = now `addRelTime` hours 1
+      settleBefore = now `addRelTime` paymentWindow
       description = "Token-standard-based renewal"
 
   -- Check that the renewal request is present on the ledger
@@ -220,6 +223,9 @@ testLicenseTokenStandard_RenewalRejection = script do
       licenseFeeAmount = renewalFee
       licenseExtensionDuration = days 365
       paymentAcceptanceDuration = paymentWindow
+      requestedAt = now
+      prepareUntil = now `addRelTime` hours 1
+      settleBefore = now `addRelTime` paymentWindow
       description = "Token-standard-based renewal"
 
   Some renewalRequest <- queryContractId providerParty renewalRequestCid
