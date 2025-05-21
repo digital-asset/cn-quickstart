@@ -402,6 +402,144 @@ testLicenseTokenStandard_ExpiredLicenseRenewal = script do
 
   pure ()
 
+
+{- |
+  Test that the user can renew the same license twice concurrently by creating two
+  `LicenseRenewalRequest` contracts against the same original license. The user
+  allocates both renewal fees in parallel, and then the provider completes each
+  renewal in sequence, where the second renewal must reference the newly-created
+  license from the first renewal completion.
+-}
+testLicenseTokenStandard_ConcurrentRenewals : Script ()
+testLicenseTokenStandard_ConcurrentRenewals = script do
+  -----------------------------------------------------
+  -- 1. Setup the environment & create a base License
+  -----------------------------------------------------
+  ((registry, userParty, providerParty), originalLicenseCid) <- setupLicenseTest
+
+  now <- getTime
+  Some originalLicense <- queryContractId userParty originalLicenseCid
+  let originalExpiry = originalLicense.expiresAt
+
+  -----------------------------------------------------
+  -- 2. Provider initiates two renewal requests
+  -----------------------------------------------------
+  let fee = 20.0
+  let ext = days 180
+  (renewalRequestCid1, instrumentId) <-
+    initiateLicenseRenewal
+      "First concurrent renewal"
+      fee
+      ext
+      (registry, userParty, providerParty)
+      originalLicenseCid
+
+  (renewalRequestCid2, _) <-
+    initiateLicenseRenewal
+      "Second concurrent renewal"
+      fee
+      ext
+      (registry, userParty, providerParty)
+      originalLicenseCid
+
+  -----------------------------------------------------
+  -- 3. The user sees both requested allocations & accepts them
+  -----------------------------------------------------
+  userAllocs <- WalletClient.listRequestedAllocations userParty instrumentId
+  length userAllocs === 2
+  let [userAlloc1, userAlloc2] = userAllocs
+
+  userAlloc1.transferLeg.amount === fee
+  userAlloc2.transferLeg.amount === fee
+
+  userHoldingCids <- WalletClient.listHoldingCids userParty instrumentId
+
+  enrichedChoice1 <- RegistryApi.getAllocationFactory registry AllocationFactory_Allocate with
+    expectedAdmin = registry.dso
+    allocation = userAlloc1
+    inputHoldingCids = userHoldingCids
+    extraArgs = emptyExtraArgs
+
+  enrichedChoice2 <- RegistryApi.getAllocationFactory registry AllocationFactory_Allocate with
+    expectedAdmin = registry.dso
+    allocation = userAlloc2
+    inputHoldingCids = userHoldingCids
+    extraArgs = emptyExtraArgs
+
+  submitWithDisclosures' userParty enrichedChoice1.disclosures $
+    exerciseCmd enrichedChoice1.factoryCid enrichedChoice1.arg
+
+  submitWithDisclosures' userParty enrichedChoice2.disclosures $
+    exerciseCmd enrichedChoice2.factoryCid enrichedChoice2.arg
+
+  -- Advance time to allow both user allocations to be finalized
+  passTime (hours 1)
+
+  -----------------------------------------------------
+  -- 4. Provider completes the first renewal
+  -----------------------------------------------------
+  Some renewalRequest1 <- queryContractId providerParty renewalRequestCid1
+  allocations1 <- listAllocationsForRenewal providerParty $
+    (view $ toInterface @AllocationRequest renewalRequest1).settlement.settlementRef
+  length allocations1 === 1
+  let [(allocCid1, _)] = allocations1
+
+  context1 <- RegistryApi.getAllocationTransferContext registry allocCid1 emptyMetadata
+  submitWithDisclosures' providerParty context1.disclosures $
+    exerciseCmd renewalRequestCid1 LicenseRenewalRequest_CompleteRenewal with
+      allocationInstruction = allocCid1
+      licenseCid = originalLicenseCid
+      extraArgs = ExtraArgs with
+        context = context1.choiceContext
+        meta = emptyMetadata
+
+  -- Query the new license created by the first renewal
+  newLicenses1 <- query @License providerParty
+  length newLicenses1 === 1
+  let (newLicenseCid1, newLicense1) = head newLicenses1
+
+  -----------------------------------------------------
+  -- 5. Provider completes the second renewal,
+  --    referencing the newly-created license
+  -----------------------------------------------------
+  Some renewalRequest2 <- queryContractId providerParty renewalRequestCid2
+  allocations2 <- listAllocationsForRenewal providerParty $
+    (view $ toInterface @AllocationRequest renewalRequest2).settlement.settlementRef
+  length allocations2 === 1
+  let [(allocCid2, _)] = allocations2
+
+  context2 <- RegistryApi.getAllocationTransferContext registry allocCid2 emptyMetadata
+  submitWithDisclosures' providerParty context2.disclosures $
+    exerciseCmd renewalRequestCid2 LicenseRenewalRequest_CompleteRenewal with
+      allocationInstruction = allocCid2
+      licenseCid = newLicenseCid1
+      extraArgs = ExtraArgs with
+        context = context2.choiceContext
+        meta = emptyMetadata
+
+  -- Query the final license created by the second renewal
+  newLicenses2User <- query @License userParty
+  newLicenses2Provider <- query @License providerParty
+  length newLicenses2User === 1
+  length newLicenses2Provider === 1
+  let (_, finalLicense) = head newLicenses2User
+
+  -----------------------------------------------------
+  -- 6. Check the final license’s expiry and balances
+  -----------------------------------------------------
+  let totalExtension = ext + ext
+  finalLicense.expiresAt === addRelTime originalExpiry totalExtension
+
+  userHoldingsAfter <- WalletClient.listHoldings userParty instrumentId
+  providerHoldingsAfter <- WalletClient.listHoldings providerParty instrumentId
+  debug userHoldingsAfter
+  debug providerHoldingsAfter
+  WalletClient.checkBalanceApprox userParty instrumentId (100.0 - fee - fee)
+  WalletClient.checkBalanceApprox providerParty instrumentId (fee + fee)
+
+  pure ()
+
+
 -------------------------------------------------------------------------------
 -- Utility for matching allocations by 'Reference'
 -------------------------------------------------------------------------------
