@@ -1,4 +1,4 @@
--- Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates.
 -- SPDX-License-Identifier: 0BSD
 --
 -- | A license contract for a CN application that allows the app provider
@@ -9,6 +9,7 @@ module Licensing.License where
 import DA.Time
 import DA.Assert
 import DA.Action (unless)
+import DA.Optional (fromOptional)
 
 import Splice.Util as Util (require, assertWithinDeadline, assertDeadlineExceeded)
 import Splice.Api.Token.MetadataV1
@@ -31,6 +32,7 @@ template License
     expiresAt : Time
     licenseNum : Int
     params : LicenseParams
+    originalLicenseCid : Optional (ContractId License)
   where
     signatory provider, user
 
@@ -63,7 +65,7 @@ template License
           prepareUntil
           settleBefore
           createdAt = requestedAt
-          licenseCid = self
+          originalLicenseCid = fromOptional self originalLicenseCid
 
     -- | Used if a provider/user chooses to mark the license as expired
     --   once the time has actually passed.
@@ -93,7 +95,7 @@ template LicenseRenewalRequest
     prepareUntil : Time
     settleBefore : Time
     createdAt : Time
-    licenseCid : ContractId License
+    originalLicenseCid : ContractId License
   where
     signatory user, provider
 
@@ -118,6 +120,7 @@ template LicenseRenewalRequest
     postconsuming choice LicenseRenewalRequest_CompleteRenewal : ContractId License
       with
         allocationInstruction : ContractId Allocation
+        licenseCid : ContractId License
         extraArgs : ExtraArgs
       controller provider
       do
@@ -128,6 +131,8 @@ template LicenseRenewalRequest
 
         oldLicense <- fetch licenseCid
 
+        require "licenseCid's originalLicenseCid matches request" (fromOptional licenseCid oldLicense.originalLicenseCid == originalLicenseCid)
+
         licenseNum === oldLicense.licenseNum
         user === oldLicense.user
         dso === oldLicense.dso
@@ -136,8 +141,10 @@ template LicenseRenewalRequest
         archive licenseCid
 
         now <- getTime
-        create oldLicense with
-          expiresAt = (max now oldLicense.expiresAt) `addRelTime` licenseExtensionDuration
+        create oldLicense
+          with
+            expiresAt = (max now oldLicense.expiresAt) `addRelTime` licenseExtensionDuration
+            originalLicenseCid = oldLicense.originalLicenseCid
 
     interface instance AllocationRequest for LicenseRenewalRequest where
       view =
@@ -154,7 +161,7 @@ template LicenseRenewalRequest
                     Reference
                       with
                         id = "LicenseRenewalRequest"
-                        cid = Some (coerceContractId licenseCid)
+                        cid = Some (coerceContractId originalLicenseCid)
             transferLegs =
               [ Api.Token.AllocationV1.TransferLeg
                   with
@@ -172,4 +179,3 @@ template LicenseRenewalRequest
 
       allocationRequest_WithdrawImpl _ _ =
         pure ChoiceExecutionMetadata with meta = emptyMetadata
-

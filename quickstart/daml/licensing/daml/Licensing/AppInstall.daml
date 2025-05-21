@@ -42,6 +42,7 @@ template AppInstall with
           params
           expiresAt = now
           licenseNum = numLicensesCreated + 1
+          originalLicenseCid = None
 
         -- count the number of created licenses for ease of tracking
         installId <- create this with

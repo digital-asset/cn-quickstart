@@ -357,6 +357,7 @@ public class LicenseApiImpl implements LicensesApi {
                     LicenseRenewalRequest_CompleteRenewal choice =
                             new LicenseRenewalRequest_CompleteRenewal(
                                     allocationContract.contractId,
+                                    null, // TODO: Get currently active license with same licenseNum
                                     extraArgs
                             );
 

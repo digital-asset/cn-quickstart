@@ -81,7 +81,6 @@ setupLicenseTest = script do
   Helper that initiates a license renewal request (by the provider), returning
   both the contract ID and the instrument ID used for payment.
 
-  In summary:
   1. The provider exercises `License_Renew`.
   2. A `LicenseRenewalRequest` contract is created (which implements `AllocationRequest`).
   3. The user will eventually need to allocate funds to pay the renewal fee.
@@ -134,10 +133,15 @@ initiateLicenseRenewal description renewalFee extensionDuration (registry, userP
 acceptAndCompleteLicenseRenewal
   : (AmuletRegistry.AmuletRegistry, Party, Party)
   -> ContractId LicenseRenewalRequest
+  -> ContractId License
   -> Decimal
   -> InstrumentId
   -> Script ()
-acceptAndCompleteLicenseRenewal (registry, userParty, providerParty) renewalRequestCid renewalFee instrumentId = script do
+acceptAndCompleteLicenseRenewal (registry, userParty, providerParty)
+                                renewalRequestCid
+                                licenseCid
+                                renewalFee
+                                instrumentId = script do
   ----------------------------------------------------------------------------
   -- 1. The user sees the allocation request in their wallet
   ----------------------------------------------------------------------------
@@ -185,6 +189,7 @@ acceptAndCompleteLicenseRenewal (registry, userParty, providerParty) renewalRequ
   submitWithDisclosures' providerParty context.disclosures $
     exerciseCmd renewalRequestCid LicenseRenewalRequest_CompleteRenewal with
       allocationInstruction = allocCid
+      licenseCid = licenseCid
       extraArgs = extraArgs
 
   pure ()
@@ -234,6 +239,7 @@ testLicenseTokenStandard = script do
   acceptAndCompleteLicenseRenewal
     (registry, userParty, providerParty)
     renewalRequestCid
+    licenseCid
     20.0
     instrumentId
 
@@ -342,7 +348,6 @@ testLicenseTokenStandard_ExpiredLicenseRenewal = script do
   -----------------------------------------------------
   -- 3. The user accepts & finalizes the renewal
   -----------------------------------------------------
-  -- The user sees the requested allocation of 20.0 amulets
   [userAlloc] <- WalletClient.listRequestedAllocations userParty instrumentId
   userAlloc.transferLeg.amount === 20.0
 
@@ -360,7 +365,6 @@ testLicenseTokenStandard_ExpiredLicenseRenewal = script do
   passTime (hours 1)
   renewalTime <- getTime
 
-  -- Provider completes the renewal by finalizing payment
   Some renewalRequest <- queryContractId providerParty renewalRequestCid
   let renewalRef = (view $ toInterface @AllocationRequest renewalRequest).settlement.settlementRef
   allocations <- listAllocationsForRenewal providerParty renewalRef
@@ -370,6 +374,7 @@ testLicenseTokenStandard_ExpiredLicenseRenewal = script do
   submitWithDisclosures' providerParty context.disclosures $
     exerciseCmd renewalRequestCid LicenseRenewalRequest_CompleteRenewal with
       allocationInstruction = allocCid
+      licenseCid = licenseCid
       extraArgs = ExtraArgs with
         context = context.choiceContext
         meta = emptyMetadata
