@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 import quickstart_licensing.licensing.license.License;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest;
 import splice_api_token_allocation_v1.splice.api.token.allocationv1.Allocation;
-import splice_wallet_payments.splice.wallet.payment.AcceptedAppPayment;
+import splice_api_token_allocation_v1.splice.api.token.allocationv1.AllocationView;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,16 +51,17 @@ public class DamlRepository {
      * Finds active LicenseRenewalRequest contracts alongside a flag indicating if each request is paid.
      */
     public CompletableFuture<List<LicenseRenewalRequestData>> findActiveLicenseRenewalRequestsByParty(String party) {
+        // TODO: Confirm that this join is correct - cannot currently be tested due to lacking Wallet UI
         String joinCondition = """
-                    prim.payload->>'reference' = sec.payload->>'reference'
-                    AND prim.payload->>'user' = sec.payload->>'sender'
-                    AND prim.payload->>'provider' = sec.payload->>'provider'
+                    prim.payload->>'licenseCid' = sec.payload->'settlement'->'settlementRef'->>'cid'
+                    AND prim.payload->>'user' = sec.payload->'transferLeg'->>'sender'
+                    AND prim.payload->>'provider' = sec.payload->'transferLeg'->>'receiver'
                 """;
         String whereClause = "prim.payload->>'user' = ? OR prim.payload->>'provider' = ?";
 
         return pqs.activeLeftJoinWhere(
                 LicenseRenewalRequest.class,
-                AcceptedAppPayment.class,
+                Allocation.class,
                 joinCondition,
                 whereClause,
                 (rs, rowNum) -> {

@@ -99,7 +99,7 @@ template LicenseRenewalRequest
 
     -- | Cancels this renewal request (e.g. if the user rejects or the
     --   provider withdraws the request).
-    choice LicenseRenewalRequest_Cancel : LicenseRenewalCancel
+    choice LicenseRenewalRequest_Cancel : ()
       with
         actor : Party
         meta : Metadata
@@ -108,9 +108,7 @@ template LicenseRenewalRequest
         require "Actor is a signatory" (actor `elem` signatory this)
         unless (actor == user || actor == provider) $
           fail "Actor is not a signatory or the user/provider"
-        pure LicenseRenewalCancel with
-          actor
-          meta
+        pure ()
 
     -- | Completes the renewal by finalizing the token-standard-based fee
     --   transfer via Allocation(s) and creating the new license state.
@@ -176,9 +174,3 @@ template LicenseRenewalRequest
       allocationRequest_WithdrawImpl _ _ =
         pure ChoiceExecutionMetadata with meta = emptyMetadata
 
--- | Information about a renewal cancellation, storing who cancelled and why.
-data LicenseRenewalCancel = LicenseRenewalCancel
-  with
-    actor : Party
-    meta : Metadata
-  deriving (Eq, Show)
