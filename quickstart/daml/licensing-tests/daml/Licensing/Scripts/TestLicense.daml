@@ -184,6 +184,67 @@ testLicenseTokenStandard = script do
 
   pure ()
 
+testLicenseTokenStandard_RenewalRejection : Script ()
+testLicenseTokenStandard_RenewalRejection = script do
+  registry <- AmuletRegistry.initialize AmuletRegistry.defaultAmuletRegistryConfig
+  userParty <- allocatePartyExact "user"
+  providerParty <- allocatePartyExact "provider"
+
+  AmuletRegistry.featureApp registry providerParty
+  AmuletRegistry.tapLockedAndUnlockedFunds registry userParty 100.0
+
+  installReqCid <- submit userParty $ createCmd AppInstallRequest with
+    dso = registry.dso
+    provider = providerParty
+    user = userParty
+    meta = emptyMetadata
+
+  installCid <- submit providerParty $
+    exerciseCmd installReqCid AppInstallRequest_Accept with
+      installMeta = emptyMetadata
+      meta = emptyMetadata
+
+  licenseResult <- submit providerParty $
+    exerciseCmd installCid AppInstall_CreateLicense with
+      params = LicenseParams with
+        meta = emptyMetadata
+
+  let licenseCid = licenseResult.licenseId
+
+  now <- getTime
+
+  let renewalFee = 20.0
+  let paymentWindow = hours 2
+  renewalRequestCid <- submit providerParty $
+    exerciseCmd licenseCid License_Renew with
+      licenseFeeAmount = renewalFee
+      licenseExtensionDuration = days 365
+      paymentAcceptanceDuration = paymentWindow
+      description = "Token-standard-based renewal"
+
+  Some renewalRequest <- queryContractId providerParty renewalRequestCid
+
+  let instrumentId = InstrumentId { admin = registry.dso, id = "Amulet" }
+  [userAlloc] <- WalletClient.listRequestedAllocations userParty instrumentId
+  userAlloc.transferLeg.amount === renewalFee
+
+  userHoldingsBefore <- WalletClient.listHoldings userParty instrumentId
+  providerHoldingsBefore <- WalletClient.listHoldings providerParty instrumentId
+
+  -- User rejects the renewal allocation request using the AllocationRequest interface
+  let renewalRequestIid = toInterfaceContractId @AllocationRequest renewalRequestCid
+  submit userParty $ exerciseCmd renewalRequestIid AllocationRequest_Reject with
+    actor = userParty
+    extraArgs = ExtraArgs with
+      context = emptyChoiceContext
+      meta = emptyMetadata
+
+  -- Confirm the renewal request is archived
+  mRenewalRequest <- queryContractId providerParty renewalRequestCid
+  assertEq None mRenewalRequest
+
+  pure ()
+
 
 -- | For convenience, filter all allocations referencing a particular 'Reference'.
 listAllocationsForRenewal : Party -> Reference -> Script [(ContractId Allocation, AllocationView)]
