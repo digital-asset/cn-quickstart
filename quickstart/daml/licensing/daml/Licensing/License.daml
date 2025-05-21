@@ -121,9 +121,8 @@ template LicenseRenewalRequest
         extraArgs : ExtraArgs
       controller provider
       do
-        now <- getTime
-        require "Preparation time has passed" (now >= prepareUntil)
-        require "Settlement deadline has not passed" (now < settleBefore)
+        assertDeadlineExceeded "prepareUntil" prepareUntil
+        assertWithinDeadline "settleBefore" settleBefore
 
         exercise allocationInstruction (Allocation_ExecuteTransfer extraArgs)
 
