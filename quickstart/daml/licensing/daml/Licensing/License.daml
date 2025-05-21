@@ -77,14 +77,6 @@ template License
         require "Actor is a signatory" (actor `elem` signatory this)
         require "License is not expired yet" (now > expiresAt)
 
--- | Groups together the signatories so that we can reference them in fetch calls.
-data Group = Group
-  with
-    user : Party
-    provider : Party
-    dso : Party
-  deriving (Show, Eq)
-
 -- | A request to renew a license. This is where the token-standard-based
 --   fee settlement is driven. The user is asked to pay the renewal fee
 --   to the provider. Once settled, the old license is archived and a new
