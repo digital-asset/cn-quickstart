@@ -39,6 +39,7 @@ template License
     --   is defined by the corresponding LicenseRenewalRequest.
     nonconsuming choice License_Renew : ContractId LicenseRenewalRequest
       with
+        licenseFeeInstrumentId : InstrumentId
         licenseFeeAmount : Decimal
         licenseExtensionDuration : RelTime
         paymentAcceptanceDuration : RelTime
@@ -57,7 +58,7 @@ template License
           dso
           licenseNum
           licenseFeeAmount
-          licenseFeeInstrumentId = InstrumentId { admin = dso, id = "Amulet" }
+          licenseFeeInstrumentId
           licenseExtensionDuration
           prepareUntil
           settleBefore

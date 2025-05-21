@@ -67,8 +67,10 @@ testLicenseTokenStandard = script do
   -- We ask for a renewal fee of 20.0 amulets, to be paid by the user to the provider.
   let renewalFee = 20.0
   let paymentWindow = hours 2
+  let instrumentId = InstrumentId { admin = registry.dso, id = "Amulet" }
   renewalRequestCid <- submit providerParty $
     exerciseCmd licenseCid License_Renew with
+      licenseFeeInstrumentId = instrumentId
       licenseFeeAmount = renewalFee
       licenseExtensionDuration = days 365
       paymentAcceptanceDuration = paymentWindow
@@ -86,7 +88,6 @@ testLicenseTokenStandard = script do
   -- Because 'LicenseRenewalRequest' implements 'AllocationRequest', the user has a
   -- standard "requested allocation" to send 20 amulets to the provider.
   -----------------------------------------------------
-  let instrumentId = InstrumentId { admin = registry.dso, id = "Amulet" }
   [userAlloc] <- WalletClient.listRequestedAllocations userParty instrumentId
   userAlloc.transferLeg.amount === renewalFee
 
@@ -218,8 +219,10 @@ testLicenseTokenStandard_RenewalRejection = script do
 
   let renewalFee = 20.0
   let paymentWindow = hours 2
+  let instrumentId = InstrumentId { admin = registry.dso, id = "Amulet" }
   renewalRequestCid <- submit providerParty $
     exerciseCmd licenseCid License_Renew with
+      licenseFeeInstrumentId = instrumentId
       licenseFeeAmount = renewalFee
       licenseExtensionDuration = days 365
       paymentAcceptanceDuration = paymentWindow
@@ -230,7 +233,6 @@ testLicenseTokenStandard_RenewalRejection = script do
 
   Some renewalRequest <- queryContractId providerParty renewalRequestCid
 
-  let instrumentId = InstrumentId { admin = registry.dso, id = "Amulet" }
   [userAlloc] <- WalletClient.listRequestedAllocations userParty instrumentId
   userAlloc.transferLeg.amount === renewalFee
 
@@ -250,7 +252,6 @@ testLicenseTokenStandard_RenewalRejection = script do
   assertEq None mRenewalRequest
 
   pure ()
-
 
 -- | For convenience, filter all allocations referencing a particular 'Reference'.
 listAllocationsForRenewal : Party -> Reference -> Script [(ContractId Allocation, AllocationView)]

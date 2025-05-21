@@ -16,7 +16,6 @@ import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.quickstart.repository.DamlRepository.LicenseRenewalRequestData;
 import com.digitalasset.quickstart.security.AuthenticatedPartyProvider;
 import com.digitalasset.quickstart.utility.LoggingSpanHelper;
-import com.digitalasset.transcode.java.ContractId;
 import com.digitalasset.transcode.java.Party;
 import com.google.protobuf.ByteString;
 import daml_stdlib_da_time_types.da.time.types.RelTime;
@@ -38,10 +37,10 @@ import quickstart_licensing.licensing.license.License.License_Renew;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest.LicenseRenewalRequest_CompleteRenewal;
 import splice_api_token_allocation_v1.splice.api.token.allocationv1.Allocation;
+import splice_api_token_holding_v1.splice.api.token.holdingv1.InstrumentId;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.ChoiceContext;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.ExtraArgs;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata;
-import splice_wallet_payments.splice.wallet.payment.AcceptedAppPayment;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -131,7 +130,8 @@ public class LicenseApiImpl implements LicensesApi {
                 );
     }
 
-    private static record RenewalKey(String dso, String provider, String user, int licenseNum) {}
+    private static record RenewalKey(String dso, String provider, String user, int licenseNum) {
+    }
 
     /**
      * Builds a list of License objects by associating each license contract with its matching renewals.
@@ -257,37 +257,41 @@ public class LicenseApiImpl implements LicensesApi {
     ) {
         LoggingSpanHelper.addEventWithAttributes(span, "Exercising License_Renew", attributes);
 
-        return damlRepository.findLicenseById(contractId)
-                .thenCompose(contract -> {
-                    Duration extDuration = Duration.parse(licenseRenewRequest.getLicenseExtensionDuration());
-                    long extensionMicros = extDuration.toNanos() / 1_000;
-                    RelTime licenseExtensionDuration = new RelTime(extensionMicros);
+        return scanProxyService.getDsoPartyId()
+                .thenCompose(dsoResponse ->
+                        damlRepository.findLicenseById(contractId)
+                                .thenCompose(contract -> {
+                                    Duration extDuration = Duration.parse(licenseRenewRequest.getLicenseExtensionDuration());
+                                    long extensionMicros = extDuration.toNanos() / 1_000;
+                                    RelTime licenseExtensionDuration = new RelTime(extensionMicros);
 
-                    Duration payDuration = Duration.parse(licenseRenewRequest.getPaymentAcceptanceDuration());
-                    long payDurationMicros = payDuration.toNanos() / 1_000;
-                    RelTime paymentAcceptanceDuration = new RelTime(payDurationMicros);
+                                    Duration payDuration = Duration.parse(licenseRenewRequest.getPaymentAcceptanceDuration());
+                                    long payDurationMicros = payDuration.toNanos() / 1_000;
+                                    RelTime paymentAcceptanceDuration = new RelTime(payDurationMicros);
 
-                    License_Renew choice = new License_Renew(
-                            licenseRenewRequest.getLicenseFeeCc(),
-                            licenseExtensionDuration,
-                            paymentAcceptanceDuration,
-                            Instant.now(),
-                            // TODO: Make prepareUntil / setUntil offsets configurable
-                            Instant.now().plus(1, ChronoUnit.HOURS),
-                            Instant.now().plus(2, ChronoUnit.HOURS),
-                            licenseRenewRequest.getDescription()
-                    );
+                                    License_Renew choice = new License_Renew(
+                                            new InstrumentId(new Party(dsoResponse.getDsoPartyId()), "Amulet"),
+                                            licenseRenewRequest.getLicenseFeeCc(),
+                                            licenseExtensionDuration,
+                                            paymentAcceptanceDuration,
+                                            Instant.now(),
+                                            // TODO: Make prepareUntil / setUntil offsets configurable
+                                            Instant.now().plus(1, ChronoUnit.HOURS),
+                                            Instant.now().plus(2, ChronoUnit.HOURS),
+                                            licenseRenewRequest.getDescription()
+                                    );
 
-                    return ledger.exerciseAndGetResult(
-                            providerParty,
-                            contract.contractId,
-                            choice,
-                            commandId
-                    ).thenApply(result -> {
-                        LoggingSpanHelper.logInfo(logger, "License renewal request succeeded", attributes);
-                        return ResponseEntity.ok().<Void>build();
-                    });
-                });
+                                    return ledger.exerciseAndGetResult(
+                                            providerParty,
+                                            contract.contractId,
+                                            choice,
+                                            commandId
+                                    ).thenApply(result -> {
+                                        LoggingSpanHelper.logInfo(logger, "License renewal request succeeded", attributes);
+                                        return ResponseEntity.ok().<Void>build();
+                                    });
+                                })
+                );
     }
 
     @Override
