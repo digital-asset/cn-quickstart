@@ -131,7 +131,7 @@ template LicenseRenewalRequest
 
         oldLicense <- fetch licenseCid
 
-        require "licenseCid's originalLicenseCid matches request" (fromOptional licenseCid oldLicense.originalLicenseCid == originalLicenseCid)
+        require "license originalLicenseCid matches request" (fromOptional licenseCid oldLicense.originalLicenseCid == originalLicenseCid)
 
         licenseNum === oldLicense.licenseNum
         user === oldLicense.user
@@ -144,7 +144,7 @@ template LicenseRenewalRequest
         create oldLicense
           with
             expiresAt = (max now oldLicense.expiresAt) `addRelTime` licenseExtensionDuration
-            originalLicenseCid = oldLicense.originalLicenseCid
+            originalLicenseCid = Some originalLicenseCid
 
     interface instance AllocationRequest for LicenseRenewalRequest where
       view =

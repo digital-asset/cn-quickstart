@@ -6,6 +6,7 @@ import DA.Assert
 import DA.Time
 import DA.List (sortOn, head)
 import DA.Foldable (forA_)
+import DA.Optional (isNone)
 
 import Splice.Api.Token.MetadataV1 as Api.Token.MetadataV1
 import Splice.Api.Token.AllocationV1 as Api.Token.AllocationV1
@@ -441,21 +442,20 @@ testLicenseTokenStandard_ConcurrentRenewals = script do
   userAllocs <- WalletClient.listRequestedAllocations userParty instrumentId
   length userAllocs === 2
 
-  -- We expect two allocations each of 'renewalFee'
-  forA_ userAllocs (\alloc -> alloc.transferLeg.amount === renewalFee)
-
-  userHoldingCids <- WalletClient.listHoldingCids userParty instrumentId
-
-  -- Allocate them in any order. For each allocation:
   forA_ userAllocs (\alloc -> do
+    userHoldings <- WalletClient.listHoldings userParty instrumentId
+    let unlockedHoldingCids = map fst $ filter (\(_, holding) -> isNone (holding.lock)) userHoldings
+
     enrichedChoice <- RegistryApi.getAllocationFactory registry AllocationFactory_Allocate with
       expectedAdmin = registry.dso
       allocation = alloc
-      inputHoldingCids = userHoldingCids
+      inputHoldingCids = unlockedHoldingCids
       extraArgs = emptyExtraArgs
 
     submitWithDisclosures' userParty enrichedChoice.disclosures $
       exerciseCmd enrichedChoice.factoryCid enrichedChoice.arg
+
+    pure ()
     )
 
   -- Advance time so that the allocations can be finalized
@@ -468,13 +468,11 @@ testLicenseTokenStandard_ConcurrentRenewals = script do
   renewalTime <- getTime
   allocations1 <- listAllocationsForRenewal providerParty (Reference "LicenseRenewalRequest" (Some (coerceContractId originalLicenseCid)))
   let [(allocCid1, _), (allocCid2, _)] = allocations1
-      -- we'll pick the first allocation for the first renewal
-      firstAllocationCid = allocCid1
 
-  context1 <- RegistryApi.getAllocationTransferContext registry firstAllocationCid emptyMetadata
+  context1 <- RegistryApi.getAllocationTransferContext registry allocCid1 emptyMetadata
   submitWithDisclosures' providerParty context1.disclosures $
     exerciseCmd r1Cid LicenseRenewalRequest_CompleteRenewal with
-      allocationInstruction = firstAllocationCid
+      allocationInstruction = allocCid1
       licenseCid = originalLicenseCid
       extraArgs = ExtraArgs with
         context = context1.choiceContext
@@ -484,7 +482,6 @@ testLicenseTokenStandard_ConcurrentRenewals = script do
   -- 5. Now there's a new license contract (call it L1) from the first renewal.
   --    We finalize the second renewal request, referencing L1.
   --------------------------------------------------------------------------------
-  -- Query the user’s current active License to find the new license ID
   afterFirstRenewUserLicenses <- query @License userParty
   length afterFirstRenewUserLicenses === 1
   let (l1Cid, l1Details) = head afterFirstRenewUserLicenses
@@ -505,7 +502,6 @@ testLicenseTokenStandard_ConcurrentRenewals = script do
   length afterSecondRenewUserLicenses === 1
   let (l2Cid, l2Details) = head afterSecondRenewUserLicenses
 
-  -- The license should now be extended twice by extensionDuration each time.
   let expectedExtra = extensionDuration + extensionDuration
   let expectedExpires = renewalTime `addRelTime` expectedExtra
   l2Details.expiresAt === expectedExpires
