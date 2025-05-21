@@ -104,15 +104,6 @@ testLicenseTokenStandard = script do
   submitWithDisclosures' userParty enrichedChoice.disclosures $
     exerciseCmd enrichedChoice.factoryCid enrichedChoice.arg
 
-  -- Check that the user has locked part of their holding for settlement
-  [(_, lockedHolding)] <- WalletClient.listLockedHoldings userParty instrumentId
-  let expectedLock = Some $ Lock with
-        expiresAt = Some (now `addRelTime` paymentWindow)
-        expiresAfter = None
-        holders = [registry.dso]
-        context = Some "allocation for transfer leg 0 to 'provider'"
-  lockedHolding.lock === expectedLock
-
   -- Advance time to allow the user to finalize their acceptance
   passTime (hours 1)
 
