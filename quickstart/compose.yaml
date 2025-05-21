@@ -148,7 +148,7 @@ services:
       - ${SV_NGINX_CONFIG:-./docker/empty}:/etc/nginx/templates/sv.conf.template
     ports:
       - "${SV_UI_PORT}:${SV_UI_PORT}"
-      - "${APP_PROVIDER_UI_PORT}:${APP_PROVIDER_UI_PORT}"
+      - "${APP_PROVIDER_UI_PORT}:3000"
       - "${APP_USER_UI_PORT}:${APP_USER_UI_PORT}"
     depends_on:
       wallet-web-ui-sv:

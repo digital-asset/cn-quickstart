@@ -1,6 +1,8 @@
-import {defineConfig} from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import ViteYaml from '@modyfi/vite-plugin-yaml'
+
+const portFromEnv = process.env.APP_PROVIDER_UI_PORT || '3000'
 
 export default defineConfig({
     plugins: [
@@ -9,20 +11,20 @@ export default defineConfig({
     ],
     server: {
         host: true,
+        port: 3000,
         proxy: {
             '/api': {
-                target: 'http://localhost:3000/',
-                changeOrigin: true,
+                target: `http://localhost:${portFromEnv}/`,
+                changeOrigin: false,
             },
             '/login/oauth2': {
-                target: 'http://localhost:3000/',
-                changeOrigin: true,
+                target: `http://localhost:${portFromEnv}/`,
+                changeOrigin: false,
             },
             '/oauth2': {
-                target: 'http://localhost:3000/',
-                changeOrigin: true,
-            }
-        }
+                target: `http://localhost:${portFromEnv}/`,
+                changeOrigin: false,
+            },
+        },
     },
 })
-
