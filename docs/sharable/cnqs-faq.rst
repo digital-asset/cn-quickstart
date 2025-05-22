@@ -36,7 +36,7 @@ Canton Network Quickstart FAQ \| 2025
 
 **Have the best technologies been selected for the CN QS?**
 
-The QS is designed to help teams become familiar with CN application development by providing scaffolding to kickstart development. 
+The Quickstart (QS) is designed to help teams become familiar with Canton Network (CN) application development by providing scaffolding to kickstart development. 
 The QS application is intended to be incrementally extended by you to meet your specific business needs. 
 Once you are familiar with the QS, please review the technology choices and the application design to determine what changes are needed - technology and design decisions are ultimately up to you. 
 Please be aware that the Canton Network Quickstart (CN QS) is a rapidly evolving work in progress.
@@ -74,10 +74,7 @@ For more information see the Installation Guide.
 **Why is Nix-shell unable to download my SSL certificate?**
 
 The Nix prerequisite may introduce hurdles to installation if your enterprise runs behind a corporate proxy. 
-If nix-shell is not found, then verify that
-
-`/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt`
-
+If nix-shell is not found, then verify that `/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt`
 contains your corporate CA.
 
 CN, PQS, Daml Shell and other CN QS related services run on a user-supplied JVM. 

@@ -120,7 +120,7 @@ Step-by-step instructions
 Clone from Github
 -----------------
 
-Clone and cd into the `cn-quickstart` repository into your local machine.
+Clone and `cd` into the `cn-quickstart` repository into your local machine.
 
 ::
 
@@ -129,11 +129,16 @@ Clone and cd into the `cn-quickstart` repository into your local machine.
    direnv allow
 
 .. image:: images/cnqs_install_images/01-allow-direnv.png
+   :alt: allow direnv
 
 Artifactory
 -----------
 
-Necessary artifacts are located in Digital Artifact’s JFrog Artifactory.
+Check the ~/.netrc file
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Necessary artifacts are located in 
+`Digital Asset's JFrog Artifactory <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__.
 These files are accessed through the repository’s build system using a `~/.netrc` configuration file.
 
 Check if a `~/.netrc` file already exists.
@@ -144,35 +149,63 @@ Create or edit the `~/.netrc` file at root.
 
 `vim ~/.netrc`
 
-Add the Artifactory’s login and password.
+Paste the boiler plate content into `~/.netrc`.
 
 ::
 
    machine digitalasset.jfrog.io
    login <username>
-   password <password>
+   password <identity_token>
 
+Locate login for ~/.netrc
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Log into JFrog. 
+Click the profile icon in the top right corner and then click **Edit Profile**.
+
+Your email address is the login username in `~/.netrc`.
 Replace `<username>` with the JFrog Artifactory user profile email.
 
-.. figure:: images/cnqs_install_images/02-jfrog-username.png
+.. image:: images/cnqs_install_images/02-jfrog-user-profile.png
+   :alt: JFrog user profile
+   :width: 50%
 
-   JFrog Artifactory user profile
+Create an Identity Token
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-Replace `<password>` with the API Key. Create an API Key if none exists.
+Toward the bottom of the same profile page, click "Generate an Identity Token."
 
-.. figure:: images/cnqs_install_images/03-jfrog-api-key.png
+.. image:: images/cnqs_install_images/03-generate-jfrog-token.png
+   :alt: JFrog generate identity token
+   :width: 30%
 
-   JFrog API Key
+Add an identity token description.
 
-The `~/.netrc` configuration file should look something like:
+.. image:: images/cnqs_install_images/03b-gen-id-token.png
+   :alt: JFrog API Key
+   :width: 30%
+
+Copy the Identity Token as shown under "Reference Token." 
+The Identity Token is also referred to as the "Reference Token" and the "API key" in JFrog and is the password in `~/.netrc`.
+
+.. image:: images/cnqs_install_images/03c-copy-ref-token.png
+   :alt: New Reference Token
+   :width: 30%
+
+Complete ~/.netrc
+~~~~~~~~~~~~~~~~~
+
+The Identity Token is stored as the password in `~/.netrc`. 
+Replace `<identity_token>` with the Identity Token (also referred to as the Reference Token) from your JFrog profile. 
+When complete, the `~/.netrc` file will look similar to:
 
 ::
 
    machine digitalasset.jfrog.io
    login email@domain.com
-   password plain_text_api_key_or_password
+   password cmVmdGtuOjAxOjE3Nzg5NTQzNjc6UmhYaFNaZWpUNGtFMzJyYXRyWEQya...
 
-Manually set `.netrc`’s correct permissions.
+Manually set `.netrc`’s permissions.
 
 `chmod 600 ~/.netrc`
 
@@ -183,9 +216,8 @@ Check for Artifactory connectivity using `.netrc` credentials after populating t
    curl -v --netrc 
    "https://digitalasset.jfrog.io/artifactory/api/system/ping"`
 
-.. figure:: images/cnqs_install_images/04-jfrog-ping.png
-
-   JFrog OK Response
+.. image:: images/cnqs_install_images/04-jfrog-ping.png
+   :alt: JFrog connection ping
 
 A response of “OK” indicates a successful connection.
 
@@ -219,13 +251,14 @@ Install Daml SDK
    cd quickstart
    make install-daml-sdk
 
-   The `makefile` providing project choreography is in the `quickstart/` directory. 
-   make only operates within `quickstart/`. 
-   If you see errors related to `make`, double check your present working directory.
+.. note:: The `makefile` providing project choreography is in the `quickstart/` directory. 
+          `make` only operates within `quickstart/`. 
+          If you see errors related to `make`, double check your present working directory.
 
 The Daml SDK is large and can take several minutes to complete.
 
-.. figure:: images/cnqs_install_images/06-unpack-sdk.png
+.. image:: images/cnqs_install_images/06-unpack-sdk.png
+   :alt: Daml SDK unpacking
 
 Deploy a validator on LocalNet
 ------------------------------
@@ -235,6 +268,7 @@ From the quickstart subdirectory, build the application.
 `make build`
 
 .. image:: images/cnqs_install_images/07-build-success-1.png
+   :alt: Build success
 
 Once complete, start the application, Canton services and Observability.
 
@@ -268,12 +302,14 @@ Leave the party hint blank to use the default.
    Consider declining Observability if your machine has less than 8 GB of memory to allocate to Docker Desktop.
 
 .. image:: images/cnqs_install_images/09-make-setup.png
+   :alt: Make setup
 
 If prompted to re-run `make start`, do so.
 
 `make start`
 
 .. image:: images/cnqs_install_images/10-make-start.png
+   :alt: Make start
 
 In the future, you may run the following series of commands from `cn-quickstart/` to clone and initiate Quickstart:
 
@@ -290,12 +326,14 @@ In a separate shell, from the quickstart subdirectory, run the Canton Consoles.
    make console-app-user
 
 .. image:: images/cnqs_install_images/11-canton-console.png
+   :alt: Canton console
 
 In a third shell, from the quickstart subdirectory, begin the Daml Shell.
 
 `make shell`
 
 .. image:: images/cnqs_install_images/12-daml-shell.png
+   :alt: Daml shell
 
 Closing the application
 -----------------------

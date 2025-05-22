@@ -78,6 +78,7 @@ To log in use the default credentials:
 -  **Password**: \`admin\`
 
 .. image:: images/demo_images/41-keycloack-login.png
+   :alt: Keycloak sign in
 
 Customization scenarios
 -----------------------
@@ -90,73 +91,93 @@ Add a new user
 ..
 
    .. image:: images/demo_images/42-keycloak-new-user.png
+      :alt: Keycloak admin console
+      :width: 30%
 
 2. Select the appropriate realm (AppProvider or AppUser)
 
 ..
 
    .. image:: images/demo_images/43-keycloak-realm.png
+      :alt: Select Keycloak realm
 
 3. Navigate to the “Users” -> “Add user”
 
 ..
 
    .. image:: images/demo_images/44-keycloak-add-user.png
+      :alt: Keycloak users view
+
+Click **Add user**
 
    .. image:: images/demo_images/45-keycloak-user-bob.png
+      :alt: add user
 
 4. Fill in the user details and click **Create**
 
 ..
 
    .. image:: images/demo_images/46-keycloak-bob-details.png
+      :alt: user details
 
 5. Go to the **Credentials** tab to set a password
 
 ..
 
    .. image:: images/demo_images/47-keycloak-credentials.png
+      :alt: user password credentials
+
+Set the password
 
    .. image:: images/demo_images/48-keycloak-set-pw.png
+      :alt: set password
 
 6. Save the password
 
 ..
 
    .. image:: images/demo_images/49-keycloak-save-pw.png
+      :alt: save password
 
 7. You can now sign in using the new user and their password.
 
-   a. Click **AppUser**
+   a. Return to the login page and click **AppUser**
 
 ..
 
    .. image:: images/demo_images/50-keycloak-oauth-login.png
+      :alt: login screen
+
+Log in as Bob
 
    .. image:: images/demo_images/51-keycloak-bob-signin.png
+      :alt: sign in screen
 
 8. Bob is now a user
 
 ..
 
    .. image:: images/demo_images/52-user-bob.png
+      :alt: logged in as Bob
 
 Modify client settings
 ~~~~~~~~~~~~~~~~~~~~~~
 
-1. Select the appropriate realm
+1. Return to the realm selection view
 
 2. Navigate to **Clients** -> Select the client to modify
 
 ..
 
    .. image:: images/demo_images/53-keycloak-client-settings.png
+      :alt: modify client settings
 
 3. Update settings per your needs
 
 ..
 
    .. image:: images/demo_images/54-keycloak-update-settings.png
+      :alt: update user settings
 
 4. Save changes
 
@@ -170,6 +191,7 @@ Add a new client
 ..
 
    .. image:: images/demo_images/55-keycloak-add-client.png
+      :alt: client list
 
 3. Configure the client's general settings. Click **Next** for additional
       configuration options
@@ -177,14 +199,19 @@ Add a new client
 ..
 
    .. image:: images/demo_images/56-keycloak-config-client.png
+      :alt: client details
 
 4. Configure additional settings
 
 ..
 
    .. image:: images/demo_images/57-config-adt-settings.png
+      :alt: additional settings
+
+Click **Next** for additional configuration options
 
    .. image:: images/demo_images/58-cofig-settings-2.png
+      :alt: additional settings 2
 
 5. Save the client
 
@@ -201,26 +228,28 @@ After making changes to Keycloak configuration, you may need to update the corre
 
 4. Restart the services to apply the changes:
 
-make stop && make start
+`make stop && make start`
 
 Troubleshooting
 ---------------
 
 **Login Failures**:
 
-1. Verify Keycloak is running: make status
+1. Verify Keycloak is running: `make status`
 
 ..
 
    .. image:: images/demo_images/59-verify-keycloak-running.png
+      :alt: verify keycloak running
 
 Find **keycloak** near **grafana** and **loki** in the list.
 
 **Keycloak** should show as “healthy”
 
    .. image:: images/demo_images/60-keycloak-healthy.png
+      :alt: keycloak healthy
 
-2. Check keycloak credentials in .env file
+2. Check keycloak credentials in `.env` file
 
 ::
   
@@ -238,25 +267,24 @@ Find **keycloak** near **grafana** and **loki** in the list.
 
 3. Check that the Keycloak user ID matches the ledger user ID
 
-   a. App User
+**App User**
 
-      i. Compare the **ID** value in Keycloak’s User Details with the
-            AUTH_APP_USER_WALLET_ADMIN_USER_ID value in .env.
+Compare the **ID** value in Keycloak’s User Details with the `AUTH_APP_USER_WALLET_ADMIN_USER_ID` value in `.env`.
 
-AUTH_APP_USER_WALLET_ADMIN_USER_ID=92a520cb-2f09-4e55-b465-d178c6cfe5e4
+.. note:: In this example, `AUTH_APP_USER_WALLET_ADMIN_USER_ID=92a520cb-2f09-4e55-b465-d178c6cfe5e4`
 
-   .. image:: images/demo_images/61-keycloak-alice.png
 
-b. App Provider
+.. image:: images/demo_images/61-keycloak-alice.png
+   :alt: Keycloak user details
 
-..
+**App Provider**
 
-   Compare the **ID** value in Keycloak’s User Details with the
-   AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID value in .env.
+Compare the **ID** value in Keycloak’s User Details with the `AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID` value in `.env`.
 
-   AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID=553c6754-8879-41c9-ae80-b302f5af92c9
+.. note:: In this example, `AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID=553c6754-8879-41c9-ae80-b302f5af92c9`
 
-      .. image:: images/demo_images/61-keycloak-participant.png
+.. image:: images/demo_images/61-keycloak-participant.png
+   :alt: Keycloak user details
 
 Learn more about using Keycloak through their documentation portal:
 
