@@ -11,6 +11,9 @@ export default defineConfig({
     ],
     server: {
         host: true,
+        // This port needs to match the port of the oauth redirectUris. This is normally APP_PROVIDER_UI_PORT, but
+        // vite puts a reverse proxy in front of the app, so we need to set APP_PROVIDER_UI_PORT to something else
+        // and then reverse proxy to APP_PROVIDER_UI_PORT on the port that the redirectUris expect.
         port: 3000,
         proxy: {
             '/api': {
