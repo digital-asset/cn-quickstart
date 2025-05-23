@@ -4,11 +4,13 @@ This frontend enables interaction with the backend components of the Canton Netw
 
 ## Development Server Setup
 
-1. In the parent directory, start all services as described in the [main README](../README.md).
+1. In the parent directory, run.
 
     ```sh
-    make start
+    make start-vite-dev
     ```
+   
+    This is the equivalent of `make start`, but with a vite live reload server.
     
     2. In this directory, start the frontend development server, which will reverse proxy requests to the backend.
     

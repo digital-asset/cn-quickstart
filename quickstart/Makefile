@@ -125,6 +125,11 @@ endif
 start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
 
+.PHONY: start-vite-dev
+start-vite-dev: ## Start the frontend application in development mode
+	@echo "Starting application and Vite frontend development server..."
+	export APP_PROVIDER_UI_PORT=3001 && make start && cd frontend && npm run dev
+
 .PHONY: stop
 stop: ## Stop the application and observability services
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) down)
