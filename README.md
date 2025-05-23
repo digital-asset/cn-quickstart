@@ -1,8 +1,8 @@
-# Canton Network Application Quickstart
+# Canton Network application quickstart
 
 This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
  
-To run the Quickstart you need some binaries from Artifacctory.  Request Artifactory access by clicking [here](https://www2.digitalasset.com/contact-us-access-to-jfrog) and we will get right back to you.  
+To run the Quickstart you need some binaries from Artifactory.  Request Artifactory access by clicking [here](https://www2.digitalasset.com/contact-us-access-to-jfrog) and we will get right back to you.  
 The terms and conditions for the binaries can be found [here](https://github.com/digital-asset/cn-quickstart/blob/main/terms.md). 
 
 The is licensed under the BSD Zero Clause License.
@@ -11,7 +11,7 @@ The is licensed under the BSD Zero Clause License.
 
 Once you are familiar with the QS, please review the technology choices and the application design to determine what changes are needed. Technology and design decisions are ultimately up to you. Please be aware that the CN QS is a rapidly evolving work in progress. 
 
-## Docs and Guides
+## Docs and guides
 
 If you are impatient, then you can start by following the Engineer Setup below. Alternatively, you can peruse the documentation:
 - [Quickstart Installation](docs/guide/CN-QS-Installation-20250516.pdf)
@@ -20,7 +20,7 @@ If you are impatient, then you can start by following the Engineer Setup below. 
 - [FAQ](docs/guide/CN-QS-FAQ-20250516.pdf)
 - [Observability and Troubleshooting Overview](docs/guide/ObservabilityTroubleshootingOverview-20250220.pdf)
 
-### Technical Documentation
+### Technical documentation
 
 - [Observability](docs/user/001-observability.md)
 - [Topology](docs/user/002-topology.md)
@@ -29,7 +29,7 @@ Additional documentation and updates are planned weekly.
 
 This project will be rapidly enhanced, so please check back often for updates.
 
-## Engineer Setup
+## Engineer setup
 
 This repository uses `direnv`, `nix`, and `docker-compose` to provide development dependencies:
 
@@ -45,14 +45,14 @@ make install-daml-sdk
 
 Project files are located in the `quickstart` directory. You can use the `quickstart` directory as a standalone project without nix, but you will need to provide binary dependencies manually.
 
-### Artifactory Access
+### Artifactory access
 
-As mentioned, Some Docker images are from Digital Asset's [artifactory](https://digitalasset.jfrog.io). To access these artifacts the build system in this repository will use a `~/.netrc` file. You can get (or create) the necessary credentials on your [user profile](https://digitalasset.jfrog.io/ui/user_profile) page. The `.netrc` file should contain the following:
+As mentioned, Some Docker images are from Digital Asset's [artifactory](https://digitalasset.jfrog.io). To access these artifacts the build system in this repository uses a `~/.netrc` file. You can get (or create) the necessary credentials on your [user profile](https://digitalasset.jfrog.io/ui/user_profile) page. The `.netrc` file should contain the following:
 
 ```sh
 machine digitalasset.jfrog.io
 login <username>
-password <password>
+password <identity_token>
 ```
 
 **Additionally,** to pull licensed docker images you must also log into the following Docker registries:
@@ -96,7 +96,7 @@ In `DevNet` mode, you can configure a non-default `SPONSOR_SV_ADDRESS`, `SCAN_AD
 
 **Note**: Access to the Super Validator endpoints on DevNet may require a VPN setup.
 
-## Available Make Targets
+## Available make targets
 
 Run `make help` to see a list of all available targets, including (but not limited to):
 
@@ -125,21 +125,21 @@ This diagram summarizes the relationship of services that are started as part of
 
 For more information and detailed diagrams, please refer to the [Topology](docs/user/002-topology.md) documentation.
 
-## Accessing Frontends
+## Accessing frontends
 
 After starting the application with `make start` you can access the following UIs:
 
 ### Application UIs
 
-- **Application User Frontend**
+- **Application user frontend**
   - **URL**: [http://app-provider.localhost:3000](http://app-provider.localhost:3000)
   - **Description**: The main web interface of the application.
 
-- **App User (`Org1`) Wallet UI**
+- **App user wallet UI**
   - **URL**: [http://wallet.localhost:2000](http://wallet.localhost:2000)
   - **Description**: Interface for managing user wallets.
 
-- **App Provider Wallet UI**
+- **App provider wallet UI**
   - **URL**: [http://wallet.localhost:3000](http://wallet.localhost:3000)
   - **Description**: Interface for managing user wallets.
 
@@ -147,7 +147,7 @@ After starting the application with `make start` you can access the following UI
 
 > **Note**: These interfaces are only accessible when starting in **LocalNet** mode. Run `make setup` to switch between `LocalNet` and `DevNet`.
 
-- **Super Validator Web UI**
+- **Super Validator web UI**
   - **URL**: [http://sv.localhost:4000](http://sv.localhost:4000)
   - **Description**: Interface for super validator functionalities.
 
@@ -165,10 +165,10 @@ The `*.localhost` domains will resolve to your local host IP `127.0.0.1`.
 
 To perform operations such as creating, editing, and archiving assets, users must be authenticated and authorized. The endpoints that perform these operations are protected by OAuth2 Authorization Code Grant Flow. GRPC communication between the backend service and participant is secured by OAuth2 Client Credentials Flow.
 
-### Port Mappings
+### Port mappings
 
 The LocalNet configuration includes port mappings for local development that should not be exposed in production deployments.
-See the [Project Structure](docs/guide/ProjectStructureGuide-20250317.pdf) for more details.
+See the [Project structure](docs/guide/ProjectStructureGuide-20250317.pdf) for more details.
 
 ## License
 
