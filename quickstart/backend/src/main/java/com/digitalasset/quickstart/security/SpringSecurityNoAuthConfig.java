@@ -120,12 +120,8 @@ public class SpringSecurityNoAuthConfig {
 
     @Bean
     public TokenProvider tokenProvider() {
-        var conf = securityConfig.getTokenConfig();
-        return () -> JWT
-                .create()
-                .withSubject(conf.getSubject())
-                .withAudience(conf.getAudience())
-                .sign(Algorithm.HMAC256(conf.getSecret()));
+        // KV remove dependency on auth0 as we don't need it anymore
+        return () -> securityConfig.getToken();
     }
 
     @Bean

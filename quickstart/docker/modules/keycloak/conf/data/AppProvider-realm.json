@@ -548,7 +548,7 @@
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "redirectUris" : [ "http://app-provider.localhost:3000/*" ],
+    "redirectUris" : [ "http://app-provider.localhost:*" ],
     "webOrigins" : [ "*" ],
     "notBefore" : 0,
     "bearerOnly" : false,

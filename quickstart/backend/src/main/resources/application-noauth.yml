@@ -7,8 +7,5 @@ application:
       users:
         - app-provider
 
-security.token-config:
-    subject: "anyone"
-    audience: ${AUTH_APP_PROVIDER_AUDIENCE}
-    secret: "unsafe"
+security.token: "${APP_PROVIDER_BACKEND_USER_TOKEN}"
 

@@ -3,15 +3,13 @@
 
 services:
   backend-service:
-    build:
-      context: ./docker/backend-service
-      args:
-        JAVA_VERSION: ${JAVA_VERSION}
+    image: "eclipse-temurin:${JAVA_VERSION}"
     container_name: backend-service
     working_dir: /app
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
       - ${APP_PROVIDER_AUTH_ENV}
+      - ./docker/backend-service/env/${AUTH_MODE}.env
     environment:
       BACKEND_PORT: "${BACKEND_PORT}"
       LEDGER_HOST: "canton"
@@ -29,13 +27,13 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:${OTEL_COLLECTOR_OTLP_PORT}"
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       SPRING_PROFILES_ACTIVE: "${AUTH_MODE}"
-#      JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+#      JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
 #      JAVA_OPTS: "-javaagent:/otel-agent.jar -Dotel.instrumentation.logback-appender.experimental-log-attributes=true -Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true"
     volumes:
       - ./backend/build/distributions/backend.tar:/backend.tar
       - ./backend/build/otel-agent/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar:/otel-agent.jar
-      - ./docker/utils.sh:/app/utils.sh
-      - ./docker/backend-service/start-${AUTH_MODE}.sh:/app/start.sh
+      - ./docker/backend-service/start.sh:/app/start.sh
+      - onboarding:/onboarding
     command: /app/start.sh
     ports:
       - "${BACKEND_PORT}:8080"
@@ -46,26 +44,16 @@ services:
       splice-onboarding:
         condition: service_healthy
 
-  backend-service-auto-config:
-    build: ./docker/backend-service-auto-config/
-    container_name: backend-service-auto-config
+  register-app-user-tenant:
+    extends:
+        file: ${MODULES_DIR}/splice-onboarding/compose.yaml
+        service: splice-onboarding
+    container_name: register-app-user-tenant
     volumes:
-      - ./docker/backend-service-auto-config/health-check.sh:/app/health-check.sh
-      - ./docker/backend-service-auto-config/onboarding-${AUTH_MODE}.sh:/app/onboarding.sh
-      - ./docker/utils.sh:/app/utils.sh
+      - ./docker/register-app-user-tenant/${AUTH_MODE}.sh:/app/scripts/on/register-app-user-tenant.sh
     env_file:
-      - ${LOCALNET_ENV_DIR}/common.env
-      - ${APP_PROVIDER_AUTH_ENV}
-      - ${APP_USER_AUTH_ENV}
-    healthcheck:
-      test: ["CMD", "bash", "/app/health-check.sh"]
-      interval: 5s
-      timeout: 100s
-      retries: 1000
-      start_period: 300s
-    entrypoint: [ "tail", "-f", "/dev/null" ]
-    stdin_open: true
-    tty: true
+      - ./docker/backend-service/env/${AUTH_MODE}.env
+    entrypoint: [ "/entrypoint.sh", "--exit-on-finish" ]
     depends_on:
       backend-service:
         condition: service_started
@@ -82,6 +70,8 @@ services:
         condition: service_started
 
   splice-onboarding:
+    env_file:
+      - ./docker/backend-service/env/${AUTH_MODE}.env
     volumes:
-      - ./docker/onboarding-${AUTH_MODE}.sh:/app/scripts/on/qs-onboarding.sh
+      - ./docker/backend-service/onboarding/${AUTH_MODE}.sh:/app/scripts/on/backend-service.sh
       - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar

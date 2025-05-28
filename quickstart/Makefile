@@ -69,9 +69,9 @@ ifeq ($(OBSERVABILITY_ENABLED),true)
     DOCKER_COMPOSE_PROFILES += --profile observability
 endif
 
-# KV setup PQS_APP_PROVIDER_PROFILE  and AUTH_MODE for onboarding and maybe in keycloak/compose.env ???
 DOCKER_COMPOSE_PROFILES += --profile pqs-app-provider
-DOCKER_COMPOSE_FILES +=  -f ${MODULES_DIR}/onboarding/compose.yaml -f ${MODULES_DIR}/pqs/compose.yaml
+DOCKER_COMPOSE_FILES +=  -f ${MODULES_DIR}/splice-onboarding/compose.yaml -f ${MODULES_DIR}/pqs/compose.yaml
+DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/pqs/compose.env
 export PQS_APP_PROVIDER_PROFILE := on
 
 # Function to run docker-compose with default files and environment
@@ -116,8 +116,10 @@ build-docker-images:
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) build)
 
 .PHONY: create-app-install-request
+create-app-install-request: DOCKER_COMPOSE_FILES = -f docker/create-app-install-request/compose.yaml
+create-app-install-request: DOCKER_COMPOSE_PROFILES =
 create-app-install-request: ## Submit an App Install Request from the App User participant node
-	docker compose -f docker/app-user-shell/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm create-app-install-request || true
+	$(call docker-compose, run --rm create-app-install-request)
 
 .PHONY: restart-backend
 restart-backend: build-backend ## Build and start the application
@@ -242,8 +244,10 @@ clean-canton-console: ## Stop and remove the Canton console container
 
 # Shell
 .PHONY: shell
+shell: DOCKER_COMPOSE_FILES = -f ${MODULES_DIR}/daml-shell/compose.yaml
+shell: DOCKER_COMPOSE_PROFILES =
 shell: ## Start Daml Shell
-	docker compose -f docker/daml-shell/compose.yaml $(DOCKER_COMPOSE_ENVFILE) run --rm daml-shell || true
+	$(call docker-compose, run --rm daml-shell)
 
 .PHONY: clean-shell
 clean-shell: ## Stop and remove the Daml Shell container

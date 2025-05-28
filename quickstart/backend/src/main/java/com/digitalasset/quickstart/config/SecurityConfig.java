@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 public class SecurityConfig {
 
     private String issuerUrl;
-    private TokenConfig tokenConfig;
+    private String token;
 
     public String getIssuerUrl() {
         return issuerUrl;
@@ -19,42 +19,12 @@ public class SecurityConfig {
         this.issuerUrl = issuerUrl;
     }
 
-    public TokenConfig getTokenConfig() {
-        return tokenConfig;
+    public String getToken() {
+        return token;
     }
 
-    public void setTokenConfig(TokenConfig tokenConfig) {
-        this.tokenConfig = tokenConfig;
-    }
-
-    public static class TokenConfig {
-        private String subject;
-        private String audience;
-        private String secret;
-
-        public String getSubject() {
-            return subject;
-        }
-
-        public void setSubject(String subject) {
-            this.subject = subject;
-        }
-
-        public String getAudience() {
-            return audience;
-        }
-
-        public void setAudience(String audience) {
-            this.audience = audience;
-        }
-
-        public String getSecret() {
-            return secret;
-        }
-
-        public void setSecret(String secret) {
-            this.secret = secret;
-        }
+    public void setToken(String token) {
+        this.token = token;
     }
 }
 

@@ -47,6 +47,20 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
+    "id" : "eecd72be-b6a6-44ed-834a-9305ad22f610",
+    "username" : "service-account-app-user-pqs",
+    "emailVerified" : false,
+    "createdTimestamp" : 1748398373576,
+    "enabled" : true,
+    "totp" : false,
+    "serviceAccountClientId" : "app-user-pqs",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-appuser" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
     "id" : "97bb6cef-a7a9-410b-ba8c-ada08451a5c9",
     "username" : "service-account-app-user-validator",
     "emailVerified" : false,

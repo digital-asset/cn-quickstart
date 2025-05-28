@@ -83,7 +83,5 @@ services:
 
   console:
     volumes:
-      - ${MODULES_DIR}/keycloak/conf/console/app-provider.conf:/app/app-provider/${APP_PROVIDER_PROFILE}/app-auth.conf
-      - ${MODULES_DIR}/keycloak/conf/console/app-user.conf:/app/app-user/${APP_USER_PROFILE}/app-auth.conf
       - ${MODULES_DIR}/keycloak/docker/console/app-provider.sh:/app/pre-startup/${APP_PROVIDER_PROFILE}/app-provider.sh
       - ${MODULES_DIR}/keycloak/docker/console/app-user.sh:/app/pre-startup/${APP_USER_PROFILE}/app-user.sh

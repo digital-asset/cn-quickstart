@@ -47,18 +47,17 @@ public class LedgerApi {
 
     private final Logger logger = LoggerFactory.getLogger(LedgerApi.class);
 
+    // KV Auth not needed anymore
     @Autowired
     public LedgerApi(LedgerConfig ledgerConfig, Auth auth, Optional<TokenProvider> tokenProvider) {
         APP_ID = ledgerConfig.getApplicationId();
         ManagedChannelBuilder<?> builder = ManagedChannelBuilder
                 .forAddress(ledgerConfig.getHost(), ledgerConfig.getPort())
                 .usePlaintext();
-        if(auth == Auth.OAUTH2) {
-            if (tokenProvider.isEmpty()) {
-                throw new IllegalStateException("TokenProvider is required for OAuth2 authentication");
-            }
-            builder.intercept(new Interceptor(tokenProvider.get()));
+        if (tokenProvider.isEmpty()) {
+            throw new IllegalStateException("TokenProvider is required for authentication");
         }
+        builder.intercept(new Interceptor(tokenProvider.get()));
         ManagedChannel channel = builder.build();
 
         // Single log statement, not duplicating attributes for spans, so leaving as-is:
