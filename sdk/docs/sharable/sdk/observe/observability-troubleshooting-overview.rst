@@ -1,10 +1,6 @@
-========================================
-Observability & troubleshooting overview
-========================================
----------------------------------------
-Canton Network quickstart guide \| 2025
----------------------------------------
-
+==================================================================
+Canton Network quickstart observability & troubleshooting overview
+==================================================================
 
 .. Note:: The screenshots in this guide are currently taken from
    multiple sessions over multiple days and therefore are inconsistent
