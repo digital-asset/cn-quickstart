@@ -1,44 +1,5 @@
-Quickstart Application
-======================
+.. Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+.. SPDX-License-Identifier: Apache-2.0
 
-Overview
-~~~~~~~~
-
-Download
-~~~~~~~~
-
-Install
-~~~~~~~
-
-Configure
-~~~~~~~~~
-
-Secure
-~~~~~~
-
-Operate
-~~~~~~~
-
-Optimize
-~~~~~~~~
-
-Observe
-~~~~~~~
-
-Upgrade
-~~~~~~~
-
-Recover
-~~~~~~~
-
-Decommission
-~~~~~~~~~~~~
-
-Troubleshoot
-~~~~~~~~~~~~
-
-Contribute
-~~~~~~~~~~
-
-References
-~~~~~~~~~~
+Canton Network Quickstart
+=========================

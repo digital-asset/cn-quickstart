@@ -259,16 +259,16 @@ A few of the key identifiers to be aware of are:
      -   `Identifies an individual ledger submission to a participant node.`
    * -   `TransactionId`
      -   `Daml Ledger`
-     -   `Global identifier for a committed transaction to the ledger. Only visible to participant nodes that witness or are informed of the transaction [5]_.`
+     -   `Global identifier for a committed transaction to the ledger. Only visible to participant nodes that witness or are informed of the transaction.` [5]_
    * -   `LedgerEventId`
      -   `Daml Ledger`
      -   `Global identifier for a node within a committed transaction tree corresponding to a ledger event.`
-   * -   `Trace/SpanId [6]_`
+   * -   `Trace/SpanId` [6]_
      -   `Ledger Client (or upstream)`
      -   `Accepted by GRPC/HTTP ledger interfaces and honoured throughout the Canton Network code. Where one is not provided may sometimes be generated internally to provide tracing support within the network.`
    * -   `LedgerOffset`
      -   `Participant Node`
-     -   `The height of a transaction within the local linearization of the ledger by a participant node [7]_.`
+     -   `The height of a transaction within the local linearization of the ledger by a participant node.` [7]_
    * -   `ContractId`
      -   `Daml Ledger`
      -   `Global identifier for a contract that was created successfully on the ledger at some point. If the contract has been subsequently archived the id remains a stable and valid way to refer to it even though the associated contract can no longer be used.`
@@ -277,7 +277,7 @@ A few of the key identifiers to be aware of are:
      -   `Combined with a PackageId this provides a global identifier for a Daml smart contract.`
    * -   `PartyId`
      -   `Participant Node`
-     -   `Global, potentially non-unique, identifier for a legal entity on the Canton ledger [8]_.`
+     -   `Global, potentially non-unique, identifier for a legal entity on the Canton ledger.` [8]_
 
 
 The goal of the observability configuration is to make it easier to
