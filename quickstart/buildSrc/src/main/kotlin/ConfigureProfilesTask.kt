@@ -57,7 +57,7 @@ open class ConfigureProfilesTask : DefaultTask() {
                     option.value = if (boolValue) {
                         "oauth2"
                     } else {
-                        "noauth"
+                        "shared-secret"
                     }
                     println("  ${option.envVarName} set to '${option.value}'.\n")
                 }

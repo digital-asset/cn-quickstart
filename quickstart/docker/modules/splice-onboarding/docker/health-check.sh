@@ -29,7 +29,7 @@ if [ ! -f /tmp/all-done ]; then
 
   if [ "$APP_USER_PROFILE" == "on" ]; then
     source /app/app-user-auth.sh
-    if [ "$DO_INIT" == "true" ] && [ ! -f /tmp/app-user-int-dars-uploaded ]; then
+    if [ "$DO_INIT" == "true" ] && [ ! -f /tmp/app-user-init-dars-uploaded ]; then
       upload_dars "$APP_USER_PARTICIPANT_ADMIN_TOKEN" "canton:2${PARTICIPANT_JSON_API_PORT}"
       touch /tmp/app-user-init-dars-uploaded
     fi

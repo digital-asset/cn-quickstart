@@ -41,7 +41,7 @@ public class FeatureFlagsImpl implements com.digitalasset.quickstart.api.Feature
                             methodSpan.addEvent("Building feature flags object");
 
                             FeatureFlags featureFlags = new FeatureFlags();
-                            featureFlags.authMode(auth == Auth.OAUTH2 ? FeatureFlags.AuthModeEnum.OAUTH2 : FeatureFlags.AuthModeEnum.NOAUTH);
+                            featureFlags.authMode(auth == Auth.OAUTH2 ? FeatureFlags.AuthModeEnum.OAUTH2 : FeatureFlags.AuthModeEnum.SHARED_SECRET);
                             return ResponseEntity.ok(featureFlags);
                         })
                 )

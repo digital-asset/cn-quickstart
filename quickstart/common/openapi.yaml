@@ -731,4 +731,4 @@ components:
           type: string
           enum:
             - oauth2
-            - noauth
+            - shared-secret

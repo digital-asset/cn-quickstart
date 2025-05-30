@@ -20,8 +20,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,20 +27,20 @@ import java.util.Optional;
 
 @Configuration
 @EnableWebSecurity
-@Profile("noauth")
-public class SpringSecurityNoAuthConfig {
+@Profile("shared-secret")
+public class SpringSecuritySharedSecretConfig {
 
     private final TenantPropertiesRepository tenantPropertiesRepository;
     private final SecurityConfig securityConfig;
 
-    public SpringSecurityNoAuthConfig(TenantPropertiesRepository tenantPropertiesRepository, SecurityConfig securityConfig) {
+    public SpringSecuritySharedSecretConfig(TenantPropertiesRepository tenantPropertiesRepository, SecurityConfig securityConfig) {
         this.tenantPropertiesRepository = tenantPropertiesRepository;
         this.securityConfig = securityConfig;
     }
 
     @Bean
     public Auth auth() {
-        return Auth.NONE;
+        return Auth.SHARED_SECRET;
     }
 
     @Bean

@@ -2,5 +2,5 @@ package com.digitalasset.quickstart.security;
 
 public enum Auth {
     OAUTH2,
-    NONE
+    SHARED_SECRET
 }

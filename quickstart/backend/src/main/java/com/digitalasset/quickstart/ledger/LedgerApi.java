@@ -5,7 +5,6 @@ package com.digitalasset.quickstart.ledger;
 
 import com.daml.ledger.api.v2.*;
 import com.digitalasset.quickstart.config.LedgerConfig;
-import com.digitalasset.quickstart.security.Auth;
 import com.digitalasset.quickstart.security.TokenProvider;
 import com.digitalasset.quickstart.utility.LoggingSpanHelper;
 import com.digitalasset.transcode.Converter;
@@ -47,9 +46,8 @@ public class LedgerApi {
 
     private final Logger logger = LoggerFactory.getLogger(LedgerApi.class);
 
-    // KV Auth not needed anymore
     @Autowired
-    public LedgerApi(LedgerConfig ledgerConfig, Auth auth, Optional<TokenProvider> tokenProvider) {
+    public LedgerApi(LedgerConfig ledgerConfig, Optional<TokenProvider> tokenProvider) {
         APP_ID = ledgerConfig.getApplicationId();
         ManagedChannelBuilder<?> builder = ManagedChannelBuilder
                 .forAddress(ledgerConfig.getHost(), ledgerConfig.getPort())

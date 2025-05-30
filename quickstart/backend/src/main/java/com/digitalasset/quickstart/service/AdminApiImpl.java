@@ -57,9 +57,9 @@ public class AdminApiImpl implements AdminApi {
             Auth auth
     ) {
         if (auth == Auth.OAUTH2 && authClientRegistrationRepository.isEmpty()) {
-            throw new IllegalStateException("Authentication is enabled but AuthClientRegistrationRepository is not configured");
-        } else if (auth == Auth.NONE && userDetailsManager.isEmpty()) {
-            throw new IllegalStateException("Authentication is disabled but UserDetailsManager is not configured");
+            throw new IllegalStateException("OAuth2 authentication is enabled but AuthClientRegistrationRepository is not configured");
+        } else if (auth == Auth.SHARED_SECRET && userDetailsManager.isEmpty()) {
+            throw new IllegalStateException("Shared secret authentication is enabled but UserDetailsManager is not configured");
         }
         this.auth = auth;
         this.authClientRegistrationRepository = authClientRegistrationRepository.orElse(null);

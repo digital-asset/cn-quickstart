@@ -5,7 +5,7 @@
 set -eo pipefail
 exec > /proc/1/fd/1 2>&1
 
-echo "Start onboarding mode $1"
+echo "Start with mode $1"
 
 if [ "$1" == "--init" ] || [ "$1" == "--run-forever" ]; then
   if [ "$1" == "--init" ]; then

@@ -30,21 +30,21 @@ DOCKER_COMPOSE_FILES := -f compose.yaml -f ${LOCALNET_DIR}/compose.yaml
 RESOURCE_CONSTRAINTS_ENABLED ?= true
 
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
-RESOURCE_CONSTRAINT_CONFIG := -f ${LOCALNET_DIR}/resource-constraints.yaml
+  RESOURCE_CONSTRAINT_CONFIG := -f ${LOCALNET_DIR}/resource-constraints.yaml
   ifeq ($(AUTH_MODE),oauth2)
-  RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/keycloak/resource-constraints.yaml
+    RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/keycloak/resource-constraints.yaml
   endif
 else
-RESOURCE_CONSTRAINT_CONFIG :=
+  RESOURCE_CONSTRAINT_CONFIG :=
 endif
 
 ifeq ($(OBSERVABILITY_ENABLED),true)
   ifeq ($(KERNEL_NAME), Darwin)
-  DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml
+    DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml
   else ifeq ($(KERNEL_NAME), Linux)
-  DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml
+    DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml
   else
-  DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/compose.yaml
+    DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/compose.yaml
   endif
   DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ${MODULES_DIR}/observability/compose.yaml
 endif

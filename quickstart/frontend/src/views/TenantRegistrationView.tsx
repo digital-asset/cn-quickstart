@@ -153,7 +153,7 @@ const TenantRegistrationView: React.FC = () => {
                         onChange={handleChange}
                     />
                 </div>
-                {featureFlags?.authMode === 'noauth' && (
+                {featureFlags?.authMode === 'shared-secret' && (
                   <div className="mb-3">
                       <label htmlFor="users" className="form-label">
                           Users (comma-separated):
@@ -187,7 +187,7 @@ const TenantRegistrationView: React.FC = () => {
                           </>
                         )}
                         <th>Wallet URL</th>
-                        {featureFlags?.authMode === 'noauth' && <th>Users</th>}
+                        {featureFlags?.authMode === 'shared-secret' && <th>Users</th>}
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -203,7 +203,7 @@ const TenantRegistrationView: React.FC = () => {
                                 </>
                             )}
                             <td>{registration.walletUrl}</td>
-                            {featureFlags?.authMode === 'noauth' && <td>{registration.users}</td>}
+                            {featureFlags?.authMode === 'shared-secret' && <td>{registration.users}</td>}
                             <td>
                                 <button
                                     className="btn btn-danger"
