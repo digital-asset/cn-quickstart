@@ -1,6 +1,8 @@
 Keycloak in the CN QS
 =====================
 
+.. wip::
+
 **Contents**
 
 `Keycloak in the CN QS <#keycloak-in-the-cn-qs>`__
@@ -25,18 +27,18 @@ Keycloak in the CN QS
 
    `Troubleshooting <#troubleshooting>`__
 
-Keycloak is an open-source Identity and Access Management (IAM) solution that provides authentication, authorization, and user management for modern applications and services. 
+Keycloak is an open-source Identity and Access Management (IAM) solution that provides authentication, authorization, and user management for modern applications and services.
 It acts as a centralized authentication server that handles user logins, session management, and security token issuance.
 
-The CN QS uses Keycloak to provide secure authentication across its distributed architecture. 
+The CN QS uses Keycloak to provide secure authentication across its distributed architecture.
 Keycloak maintains separation between authentication concerns and business logic.
 
 Realm structure
 ---------------
 
-The CN QS defines two Keycloak realms. 
-The AppProvider realm manages authentication for services and users on the provider side of the application. 
-The AppUser realm handles authentication for the consumer side. 
+The CN QS defines two Keycloak realms.
+The AppProvider realm manages authentication for services and users on the provider side of the application.
+The AppUser realm handles authentication for the consumer side.
 When components like validators or participant nodes receive requests, they validate the authentication tokens against the appropriate realm.
 
 Keycloak configuration
@@ -252,7 +254,7 @@ Find **keycloak** near **grafana** and **loki** in the list.
 2. Check keycloak credentials in `.env` file
 
 ::
-  
+
    AUTH_APP_USER_ISSUER_URL_BACKEND=http://nginx-keycloak:8082/realms/AppUser
    # for backend
 

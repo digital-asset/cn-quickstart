@@ -1,6 +1,8 @@
 Development lifecycle
 =====================
 
+.. wip::
+
 **Contents**
 
 `Development lifecycle <#development-lifecycle>`__
@@ -20,11 +22,11 @@ Development lifecycle
    `Separation phase <#separation-phase>`__
 
    `Ongoing updates <#ongoing-updates>`__
-   
+
 We’ve observed five distinct phases of the CN QS development journey.
 Each phase presents unique strategies for interacting with the CN QS.
 
-Learning phase 
+Learning phase
 ---------------
 
 (½ - 2 weeks)
@@ -246,11 +248,11 @@ historical development record.
 Ongoing updates
 ---------------
 
-By now, your application is likely to outgrow the capabilities of the CN QS. 
-However, you may want the ability to update the development tooling or LocalNet support. 
+By now, your application is likely to outgrow the capabilities of the CN QS.
+However, you may want the ability to update the development tooling or LocalNet support.
 The CN QS continuously adds more tooling features and updates existing tool versions.
 
-This process includes periodically checking into CN QS, reviewing the ChangeLog to see what is new, and then selecting components you’d like to include in your application. 
+This process includes periodically checking into CN QS, reviewing the ChangeLog to see what is new, and then selecting components you’d like to include in your application.
 You’ll find the CN QS to be a source for improvements, rather than a direct dependency.
 
 We recommend establishing a regular schedule (monthly or quarterly) to review CN QS updates.
