@@ -22,8 +22,8 @@ If you are impatient, then you can start by following the Engineer Setup below. 
 
 ### Technical documentation
 
-- [Observability](docs/user/001-observability.md)
-- [Topology](docs/user/002-topology.md)
+- [Observability](sdk/docs/user/001-observability.md)
+- [Topology](sdk/docs/user/002-topology.md)
 
 Additional documentation and updates are planned weekly.
 
@@ -121,9 +121,9 @@ Run `make help` to see a list of all available targets, including (but not limit
 
 This diagram summarizes the relationship of services that are started as part of `make start`. The `canton` and `splice` services are configured to serve multiple logically separate components (each component represented with a box in the diagram) from a single container to reduce resource consumption. Similarly the `postgres` service contains multiple databases required by QS services. One `nginx` service is used as proxy for all QS services that needs one except for `keycloak` that has its own `nginx-keycloak` as it needs to be ready before other services start. The focus of `Canton Network Quickstart` is to provide a development environment for App Providers.
 
-![QS Topology](docs/images/qs-topology.drawio.png)
+![QS Topology](sdk/docs/images/qs-topology.drawio.png)
 
-For more information and detailed diagrams, please refer to the [Topology](docs/user/002-topology.md) documentation.
+For more information and detailed diagrams, please refer to the [Topology](sdk/docs/user/002-topology.md) documentation.
 
 ## Accessing frontends
 
@@ -168,7 +168,7 @@ To perform operations such as creating, editing, and archiving assets, users mus
 ### Port mappings
 
 The LocalNet configuration includes port mappings for local development that should not be exposed in production deployments.
-See the [Project structure](docs/guide/ProjectStructureGuide-20250317.pdf) for more details.
+See the [Project structure](sdk/docs/guide/ProjectStructureGuide-20250317.pdf) for more details.
 
 ## License
 
