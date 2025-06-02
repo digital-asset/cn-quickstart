@@ -119,7 +119,7 @@ build-docker-images:
 create-app-install-request: DOCKER_COMPOSE_FILES = -f docker/create-app-install-request/compose.yaml
 create-app-install-request: DOCKER_COMPOSE_PROFILES =
 create-app-install-request: ## Submit an App Install Request from the App User participant node
-	$(call docker-compose, run --rm create-app-install-request)
+	$(call docker-compose, run --rm container)
 
 .PHONY: restart-backend
 restart-backend: build-backend ## Build and start the application
@@ -129,7 +129,42 @@ restart-backend: build-backend ## Build and start the application
 restart-frontend: build-frontend ## Build and start the application
 	$(call docker-compose, restart nginx-app-provider)
 
+.PHONY: capture-logs
+capture-logs: ## Monitor docker events and capture logs
+	@network_name="quickstart"; \
+	canton_services=("canton" "splice"); \
+	docker events -f type=container \
+	    -f event=start \
+	    -f event=stop \
+	    -f event=restart \
+	    -f event=kill \
+	    -f event=die \
+	    -f event=destroy \
+	    -f event=health_status \
+	    -f event=oom \
+	    --format '{{.ID}} {{.Time}} {{.Actor.Attributes.name}} {{.Status}}' | \
+	while read -r cid time service_name status; do \
+	    network_attached=$$(docker inspect --format '{{json .NetworkSettings.Networks}}' "$$cid" 2>/dev/null | \
+	        jq -r 'keys[] | select(. | contains ("'"$$network_name"'"))'); \
+	    if [ -z "$$network_attached" ]; then \
+	        continue; \
+	    fi; \
+	    echo "$$(date -u -d "@$$time" +"%Y-%m-%dT%H:%M:%S") $$service_name $$status"; \
+	    if [ "$$status" = "start" ]; then \
+	        echo ">> $$service_name"; \
+	        ext=".log"; \
+	        for svc in "$${canton_services[@]}"; do \
+	            if [ "$$service_name" = "$$svc" ]; then \
+	                ext=".clog"; \
+	                break; \
+	            fi; \
+	        done; \
+	        docker logs -f "$$cid" >> "./logs/$$service_name$$ext" 2>&1 & \
+	    fi; \
+done | tee -a "logs/compose.log" 2>&1
+
 # Run targets
+
 .PHONY: start
 ifeq ($(OBSERVABILITY_ENABLED),true)
 ifneq ($(SKIP_DOWNLOADS),true) # treat “true” (or any non‑empty value) as “enabled”
@@ -158,35 +193,6 @@ status: ## Show status of Docker containers
 .PHONY: compose-config
 compose-config:
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) config)
-
-# Log a service's logs to file
-define log_service
-	@echo "Tailing logs for $$1..." \
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) logs -f --no-log-prefix "$$1") >> "./logs/$$1.clog" 2>&1 &
-endef
-
-.PHONY: logf
-logf:
-	@rm -rf "$$PWD/logs"; \
-	mkdir "$$PWD/logs"; \
-	SERVICES=$$( $(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) ps --services) ); \
-	for service in $$SERVICES; do \
-		echo "Tailing logs for $$service..."; \
-		$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) logs -f --no-log-prefix "$$service") >> "./logs/$$service.clog" 2>&1 & \
-# 		$$( $(call log_service, $$service) ); \
-	done \
-	# Watch for container start events; attach logs if it belongs to this compose \
-	docker events --filter type=container --format '{{.Status}} {{.ID}}' | while read -r status cid; do \
-		# If container starts, check if it’s from our compose file \
-		if [ "$$status" = "start" ]; then \
-			service_name=$$(docker inspect --format='{{index .Config.Labels "com.docker.compose.service"}}' "$$cid" 2>/dev/null) ; \
-			echo ">> $$service_name"; \
-			if [ -n "$$service_name" ]; then \
-				$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) logs -f --no-log-prefix "$$service_name") >> "./logs/$$service_name.clog" 2>&1 & \
-# 				$(call log_service, $$service_name) \
-			fi \
-		fi \
-	done
 
 .PHONY: logs
 logs: ## Show logs of Docker containers

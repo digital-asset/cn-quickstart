@@ -10,13 +10,12 @@ volumes:
   onboarding:
 
 services:
-  create-app-install-request:
+  container:
     extends:
       file: ${MODULES_DIR}/splice-onboarding/compose.yaml
       service: splice-onboarding
-    container_name: create-app-install-request
     volumes:
-      - ./create-app-install-request.sh:/app/scripts/on/create-app-install-request.sh
+      - ./run.sh:/app/scripts/on/create-app-install-request.sh
     entrypoint: [ "/entrypoint.sh", "--exit-on-finish" ]
     networks:
       - ${DOCKER_NETWORK}
