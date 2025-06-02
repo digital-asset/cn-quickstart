@@ -2,9 +2,22 @@
 # SPDX-License-Identifier: Apache-2.0
 
 services:
-  pqs:
+  pqs-app-provider:
     environment:
-      OTEL_SERVICE_NAME: pqs
+      OTEL_SERVICE_NAME: pqs-app-provider
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: otlp
+      OTEL_METRIC_EXPORT_INTERVAL: 5000
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:${OTEL_COLLECTOR_OTLP_PORT}"
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_INSTRUMENTATION_MICROMETER_ENABLED: true
+      OTEL_INSTRUMENTATION_RUNTIME_TELEMETRY_EMIT_EXPERIMENTAL_TELEMETRY: true
+
+
+  pqs-app-user:
+    environment:
+      OTEL_SERVICE_NAME: pqs-app-user
       OTEL_TRACES_EXPORTER: otlp
       OTEL_LOGS_EXPORTER: otlp
       OTEL_METRICS_EXPORTER: otlp

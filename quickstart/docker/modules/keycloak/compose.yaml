@@ -30,11 +30,10 @@ services:
         aliases:
           - keycloak.localhost
     profiles:
-      - oauth2
+      - keycloak
 
   keycloak:
-    # KV allow overriding the image version
-    image: quay.io/keycloak/keycloak:26.1.0
+    image: "${KEYCLOAK_IMAGE}:${KEYCLOAK_VERSION}"
     container_name: keycloak
     volumes:
       - ${MODULES_DIR}/keycloak/conf/data:/opt/keycloak/data/import
@@ -51,7 +50,7 @@ services:
       postgres:
         condition: service_healthy
     profiles:
-      - oauth2
+      - keycloak
 
   postgres:
     environment:

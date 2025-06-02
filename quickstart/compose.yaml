@@ -9,35 +9,15 @@ services:
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
       - ${APP_PROVIDER_AUTH_ENV}
+      - ./docker/backend-service/env/app.env
       - ./docker/backend-service/env/${AUTH_MODE}.env
-    environment:
-      BACKEND_PORT: "${BACKEND_PORT}"
-      LEDGER_HOST: "canton"
-      LEDGER_PORT: "3${PARTICIPANT_LEDGER_API_PORT}"
-      POSTGRES_HOST: "${DB_SERVER}"
-      POSTGRES_PORT: "${DB_PORT}"
-      POSTGRES_DATABASE: "pqs-app-provider"
-      POSTGRES_USERNAME: "${DB_USER}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD}"
-      OTEL_SERVICE_NAME: backend-service
-      OTEL_TRACES_EXPORTER: otlp
-      OTEL_LOGS_EXPORTER: otlp
-      OTEL_METRICS_EXPORTER: otlp
-      OTEL_METRIC_EXPORT_INTERVAL: 5000
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:${OTEL_COLLECTOR_OTLP_PORT}"
-      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
-      SPRING_PROFILES_ACTIVE: "${AUTH_MODE}"
-#      JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
-#      JAVA_OPTS: "-javaagent:/otel-agent.jar -Dotel.instrumentation.logback-appender.experimental-log-attributes=true -Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true"
     volumes:
       - ./backend/build/distributions/backend.tar:/backend.tar
-      - ./backend/build/otel-agent/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar:/otel-agent.jar
       - ./docker/backend-service/start.sh:/app/start.sh
       - onboarding:/onboarding
     command: /app/start.sh
     ports:
       - "${BACKEND_PORT}:8080"
-      - "5005:5005"
     depends_on:
       pqs-app-provider:
         condition: service_started

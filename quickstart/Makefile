@@ -40,19 +40,18 @@ endif
 
 ifeq ($(OBSERVABILITY_ENABLED),true)
   ifeq ($(KERNEL_NAME), Darwin)
-    DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-darwin.yaml -f docker/o11y/compose.yaml
+    DOCKER_COMPOSE_OBSERVABILITY_FILES := -f ${MODULES_DIR}/observability/cadvisor-darwin.yaml
   else ifeq ($(KERNEL_NAME), Linux)
-    DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/cadvisor-linux.yaml -f docker/o11y/compose.yaml
-  else
-    DOCKER_COMPOSE_OBSERVABILITY_FILES := -f docker/o11y/compose.yaml
+    DOCKER_COMPOSE_OBSERVABILITY_FILES := -f ${MODULES_DIR}/observability/cadvisor-linux.yaml
   endif
-  DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ${MODULES_DIR}/observability/compose.yaml
+  DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ${MODULES_DIR}/observability/compose.yaml -f ${MODULES_DIR}/observability/observability.yaml -f ${MODULES_DIR}/pqs/observability.yaml -f ./docker/backend-service/observability.yaml
+  DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/observability/compose.env
 endif
 
 # Define DOCKER_COMPOSE_PROFILES based on environment variables
 DOCKER_COMPOSE_PROFILES := --profile app-provider --profile app-user
 ifeq ($(AUTH_MODE),oauth2)
-    DOCKER_COMPOSE_PROFILES += --profile $(AUTH_MODE)
+    DOCKER_COMPOSE_PROFILES += --profile keycloak
     DOCKER_COMPOSE_FILES +=  -f ${MODULES_DIR}/keycloak/compose.yaml
     DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/keycloak/compose.env
 else
@@ -251,6 +250,7 @@ clean-canton-console: ## Stop and remove the Canton console container
 # Shell
 .PHONY: shell
 shell: DOCKER_COMPOSE_FILES = -f ${MODULES_DIR}/daml-shell/compose.yaml
+shell: DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/daml-shell/compose.env
 shell: DOCKER_COMPOSE_PROFILES =
 shell: ## Start Daml Shell
 	$(call docker-compose, run --rm daml-shell)
@@ -290,7 +290,7 @@ generate-NOTICES: ## Generate the NOTICES.txt file
 .PHONY: start-swagger-ui
 start-swagger-ui: ## Start Swagger UI docker container for Canton JSON API OpenAPI Docs
 	@echo "Starting Swagger UI on http://localhost:9080"
-	docker compose -f docker/swagger/compose.yaml $(DOCKER_COMPOSE_ENVFILE) up || true
+	docker compose -f ${MODULES_DIR}/swagger/compose.yaml $(DOCKER_COMPOSE_ENVFILE) up || true
 
 # Help target
 .PHONY: help
