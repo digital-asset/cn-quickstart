@@ -21,8 +21,14 @@ endif
 
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
-$(info LOCALNET_DIR=$(LOCALNET_DIR))
+ifndef MODULES_DIR
+export MODULES_DIR=$(shell pwd)/docker/modules
+endif
+ifndef LOCALNET_DIR
+export LOCALNET_DIR=$(MODULES_DIR)/localnet
+endif
 $(info MODULES_DIR=$(MODULES_DIR))
+$(info LOCALNET_DIR=$(LOCALNET_DIR))
 DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file ${LOCALNET_DIR}/compose.env --env-file ${LOCALNET_DIR}/env/common.env
 DOCKER_COMPOSE_FILES := -f compose.yaml -f ${LOCALNET_DIR}/compose.yaml
 
