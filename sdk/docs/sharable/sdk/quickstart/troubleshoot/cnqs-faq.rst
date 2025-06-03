@@ -2,6 +2,8 @@
 Canton Network quickstart FAQ
 =============================
 
+.. wip::
+
 **Contents**
 
 `CN QS Frequently Asked Questions <#cn-qs-frequently-asked-questions>`__
@@ -33,20 +35,20 @@ Canton Network quickstart FAQ
 
 **Have the best technologies been selected for the CN QS?**
 
-The Quickstart (QS) is designed to help teams become familiar with Canton Network (CN) application development by providing scaffolding to kickstart development. 
-The QS application is intended to be incrementally extended by you to meet your specific business needs. 
-Once you are familiar with the QS, please review the technology choices and the application design to determine what changes are needed - technology and design decisions are ultimately up to you. 
+The Quickstart (QS) is designed to help teams become familiar with Canton Network (CN) application development by providing scaffolding to kickstart development.
+The QS application is intended to be incrementally extended by you to meet your specific business needs.
+Once you are familiar with the QS, please review the technology choices and the application design to determine what changes are needed - technology and design decisions are ultimately up to you.
 Please be aware that the Canton Network Quickstart (CN QS) is a rapidly evolving work in progress.
 
 **What are the minimum system requirements to run CN QS LocalNet?**
 
-The CN QS requires Docker Desktop with at least 8 GB of memory allocated to run `LocalNet` properly. 
+The CN QS requires Docker Desktop with at least 8 GB of memory allocated to run `LocalNet` properly.
 If your machine has less memory, consider declining Observability when prompted during setup.
 
 **Which browsers are supported for running CN QS?**
 
-Chromium browsers such as Chrome, Edge, and Firefox are recommended. 
-Safari has known issues with local URLs and should be avoided. 
+Chromium browsers such as Chrome, Edge, and Firefox are recommended.
+Safari has known issues with local URLs and should be avoided.
 You may also use the same browser with one user in incognito mode and the other in standard mode.
 
 **How should I test** Participant **and** User **interactions on**
@@ -70,12 +72,12 @@ For more information see the Installation Guide.
 
 **Why is Nix-shell unable to download my SSL certificate?**
 
-The Nix prerequisite may introduce hurdles to installation if your enterprise runs behind a corporate proxy. 
+The Nix prerequisite may introduce hurdles to installation if your enterprise runs behind a corporate proxy.
 If nix-shell is not found, then verify that `/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt`
 contains your corporate CA.
 
-CN, PQS, Daml Shell and other CN QS related services run on a user-supplied JVM. 
-CN QS assumes that you have access to JVM v17+ with access to the internet. 
+CN, PQS, Daml Shell and other CN QS related services run on a user-supplied JVM.
+CN QS assumes that you have access to JVM v17+ with access to the internet.
 If your organization operates behind a web proxy then JVM may not have automatic knowledge of the corporate certificate.
 In these instances, JVM must be instructed to trust the certificate.
 
@@ -95,7 +97,7 @@ If the log returns an error message such as:
    error: unable to download 'https://nixos.org/channels/nixpkgs-unstable':
    SSL peer certificate or SSH remote key was not OK (60)
 
-Then the required corporate CA does not exist. 
+Then the required corporate CA does not exist.
 Request your corporate CA from your organization’s tech administrator and merge the certificate into the Nix `certs ca-bundle.crt`.
 
 If you need additional support, the `Nix reference manual <https://nix.dev/manual/nix/2.24/command-ref/conf-file.html#conf-ssl-cert-file>`__
@@ -103,15 +105,15 @@ offers guidance regarding the order at which cert files are detected and used on
 
 Graham Christensen’s Determinate Systems blog offers a solution for Nix
 `corporate TLS certificates <https://determinate.systems/posts/zscaler-macos-and-nix-on-corporate-networks/>`__
-problems on MacOS. 
-The NixOS team forked this solution as an `experimental installer <https://github.com/NixOS/experimental-nix-installer>`__ 
+problems on MacOS.
+The NixOS team forked this solution as an `experimental installer <https://github.com/NixOS/experimental-nix-installer>`__
 that is stable on most operating systems.
 
 **Should I build with make or gradle?**
 
 The gradle daemon has been disabled to prevent parallel processing of transcodegen.
 
-Gradle tasks had been known to create order and concurrency issues which caused files to get cleaned too early. 
+Gradle tasks had been known to create order and concurrency issues which caused files to get cleaned too early.
 Always prefer to use the make commands.
 
 **How do I resolve a “build failed with an exception failure”?**
@@ -123,7 +125,7 @@ If `make install-daml-sdk` results in:
    Task :daml:unpackDamlSdk FAILED
    FAILURE: Build failed with an exception
 
-Then you may have a corrupted `daml-sdk snapshot`. 
+Then you may have a corrupted `daml-sdk snapshot`.
 In most cases, deleting the identified tarball snapshot will resolve the issue in subsequent installation attempts.
 
 This error may occur if `make install-daml-sdk` is interrupted.
@@ -231,7 +233,7 @@ Run `make setup` to create the `.env.local` file.
 
 **How do I access the Daml Shell for debugging?**
 
-Run `make shell` from the quickstart directory. 
+Run `make shell` from the quickstart directory.
 This provides access to useful commands like:
 
 -  `active` - shows summary of contracts
@@ -257,16 +259,16 @@ The CN QS provides several observability options:
 
 `LocalNet` runs everything locally including a Super Validator and Canton Coin wallet, making it more resource intensive but self-contained.
 
-`DevNet` connects to actual decentralized Global Synchronizer infrastructure operated by Super Validators. 
+`DevNet` connects to actual decentralized Global Synchronizer infrastructure operated by Super Validators.
 `DevNet` requires less local resources but needs whitelisted VPN access and connectivity.
 
 For more information see the Project Structure Guide.
 
 **What is ScratchNet?**
 
-`ScratchNet` is a persistent Canton Network environment that supports team collaboration while maintaining centralized control. 
-It fills the gap between a single-developer LocalNet (constrained by one laptop's resources) and a fully decentralized DevNet (maintained by Super Validators). 
-Development teams typically deploy `ScratchNet` on a shared server to enable longer-running instances with persistent data storage across development sessions. 
+`ScratchNet` is a persistent Canton Network environment that supports team collaboration while maintaining centralized control.
+It fills the gap between a single-developer LocalNet (constrained by one laptop's resources) and a fully decentralized DevNet (maintained by Super Validators).
+Development teams typically deploy `ScratchNet` on a shared server to enable longer-running instances with persistent data storage across development sessions.
 Learn more about `ScratchNet` in the Exploring the Demo Guide.
 
 **How can I find out the migration_id of DevNet?**
@@ -275,7 +277,7 @@ Go to https://sync.global/sv-network/ and look for the `migration_id` value.
 
 **Do I need VPN access to use CN QS?**
 
-VPN access is only required for `DevNet` connections. 
+VPN access is only required for `DevNet` connections.
 You need either:
 
 -  Access to the DAML-VPN
@@ -286,7 +288,7 @@ For more information see the Exploring the Demo Guide.
 
 **How do I log in with Keycloak?**
 
-The CN QS uses Keycloak for authentication. 
+The CN QS uses Keycloak for authentication.
 If you have issues with logging in with Keycloak credentials, you may begin troubleshooting by running make status to verify the Keycloak service is running.
 
 Keycloak should show healthy.
@@ -303,7 +305,7 @@ Keycloak credentials are set in `.env` with the following credentials:
    Username: AUTH_APP_USER_WALLET_ADMIN_USER_NAME (e.g. alice)
    Password: AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD (e.g. abc123)
 
-The Keycloak user must have the same ID as the ledger user’s ID. 
+The Keycloak user must have the same ID as the ledger user’s ID.
 This should be reflected in the default behavior.
 
 **Best practices & common pitfalls**
@@ -453,5 +455,5 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 | http://localhost:5003         | Validator API service                |
 +-------------------------------+--------------------------------------+
 
-In `DevNet` mode, Super Validator and wallet services are hosted externally rather than locally. 
+In `DevNet` mode, Super Validator and wallet services are hosted externally rather than locally.
 The exact URLs for those services are provided by your sponsoring Super Validator.

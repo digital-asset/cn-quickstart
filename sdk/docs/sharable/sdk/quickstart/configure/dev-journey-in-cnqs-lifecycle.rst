@@ -1,5 +1,7 @@
-Development journey in the CN QS lifecycle 
+Development journey in the CN QS lifecycle
 ===========================================
+
+.. wip::
 
 **Contents**
 
@@ -387,7 +389,7 @@ CANTON_PARAMETERS:
 Sample application
 ------------------
 
-The CN QS includes a complete reference application that demonstrates Canton Network application patterns. 
+The CN QS includes a complete reference application that demonstrates Canton Network application patterns.
 While you'll likely replace this component entirely, understanding its architecture provides valuable insights for your own application design.
 
 Application components
@@ -421,5 +423,5 @@ Application components
 
 **Technical implementation**
 
-The API Design is defined in quickstart/common/openapi.yaml. 
+The API Design is defined in quickstart/common/openapi.yaml.
 It contains the RESTful API definitions, establishes the JSON schema for request/response objects, provides error handling conventions, and creates authentication patterns.

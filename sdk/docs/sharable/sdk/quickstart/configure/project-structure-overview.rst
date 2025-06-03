@@ -2,6 +2,8 @@
 Canton Network quickstart project structure guide
 =================================================
 
+.. wip::
+
 **Contents**
 
 `Project structure overview <#project-structure-overview>`__
@@ -396,7 +398,7 @@ four-digit port number associated with the relevant service.
      - Application Provider
    * - `4${PORT}`
      - Super Validator
-    
+
 `LocalNet` port suffixes are as follows:
 
 .. list-table:: LocalNet Port Suffixes
@@ -625,7 +627,7 @@ Create command to Org1’s participant node via its HTTP Ledger JSON API
             ]
         }'
     }
-   
+
    create_app_install_request "$LEDGER_API_ADMIN_USER_TOKEN_APP_USER" \
    $DSO_PARTY $APP_USER_PARTY $APP_PROVIDER_PARTY participant-app-user
 
@@ -688,7 +690,7 @@ ledger.
     |                       ║ user: Org1: :12203a9a79d8f72b8cce37813713af7a51296def8...   │
     |                       ║ provider: AppProvider: :122030b08cfebb8c87c16793cba3783...  │
     ╚═══════════════════════╩═════════════════════════════════════════════════════════════╝
-    postgres-splice-app-provider:5432/scribe 3f → 42> 
+    postgres-splice-app-provider:5432/scribe 3f → 42>
 
 Exercising the `AppInstallRequest_Accept` choice completes the onboarding.
 The Frontend UI provides a way to do this.
@@ -860,7 +862,7 @@ Typescript [34]_. It accesses the Backend web services using the
 generator-less Axios client to handle the lowest level transport,
 configured in `src/api.ts`:
 
-.. code-block:: 
+.. code-block::
 
    import OpenAPIClientAxios from 'openapi-client-axios';
    import openApi from '../../common/openapi.yaml';
@@ -871,7 +873,7 @@ configured in `src/api.ts`:
    });
 
    api.init();
-   
+
    export default api;
 
 Authentication is handled using OAuth2 against a mock OAuth server [35]_
@@ -901,7 +903,7 @@ The basic format of a make build target is:
    <target>: <dependency list (space separated)>
          shell commands, make macros, and gnu-make function invocations
 
-For instance to build the front-end you can run `npm install && npm run build` 
+For instance to build the front-end you can run `npm install && npm run build`
 from the `frontend/` directory; or, make build-frontend from the
 quickstart/ directory via the following target in quickstart/Makefile:
 
@@ -955,7 +957,7 @@ browser interaction targets (try `make open-app-ui` once the application
 is started for an example). The file also includes:
 
 .. code-block:: text
-   
+
    # Function to run docker-compose with default files and environment
    define docker-compose
    docker compose $(DOCKER_COMPOSE_FILES) $(DOCKER_COMPOSE_ENVFILE) \
