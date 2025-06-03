@@ -105,7 +105,7 @@ function grant_rights() {
   local partyId=$3
   local rights=$4
   local participant=$5
-  echo "grant_rights token:$token user:$userId party:$partyId $rights $participant" >&2
+  echo "grant_rights user:$userId party:$partyId $rights $participant" >&2
 
   read -ra rightsAsArr <<< "$rights"
   local rightsArr=()

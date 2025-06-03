@@ -10,7 +10,7 @@ services:
       - ${LOCALNET_ENV_DIR}/common.env
       - ${APP_PROVIDER_AUTH_ENV}
       - ./docker/backend-service/env/app.env
-      - ./docker/backend-service/env/${AUTH_MODE}.env
+      - ./docker/backend-service/onboarding/env/${AUTH_MODE}.env
     volumes:
       - ./backend/build/distributions/backend.tar:/backend.tar
       - ./docker/backend-service/start.sh:/app/start.sh
@@ -32,7 +32,7 @@ services:
     volumes:
       - ./docker/register-app-user-tenant/${AUTH_MODE}.sh:/app/scripts/on/register-app-user-tenant.sh
     env_file:
-      - ./docker/backend-service/env/${AUTH_MODE}.env
+      - ./docker/backend-service/onboarding/env/${AUTH_MODE}.env
     entrypoint: [ "/entrypoint.sh", "--exit-on-finish" ]
     depends_on:
       backend-service:
@@ -51,7 +51,7 @@ services:
 
   splice-onboarding:
     env_file:
-      - ./docker/backend-service/env/${AUTH_MODE}.env
+      - ./docker/backend-service/onboarding/env/${AUTH_MODE}.env
     volumes:
       - ./docker/backend-service/onboarding/onboarding.sh:/app/scripts/on/backend-service.sh
       - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
