@@ -29,7 +29,7 @@ export LOCALNET_DIR=$(MODULES_DIR)/localnet
 endif
 $(info MODULES_DIR=$(MODULES_DIR))
 $(info LOCALNET_DIR=$(LOCALNET_DIR))
-DOCKER_COMPOSE_ENVFILE := --env-file .env.local --env-file .env --env-file ${LOCALNET_DIR}/compose.env --env-file ${LOCALNET_DIR}/env/common.env
+DOCKER_COMPOSE_ENVFILE := --env-file .env --env-file .env.local --env-file ${LOCALNET_DIR}/compose.env --env-file ${LOCALNET_DIR}/env/common.env
 DOCKER_COMPOSE_FILES := -f compose.yaml -f ${LOCALNET_DIR}/compose.yaml
 
 # Default to adding resource constraints for Quickstart compose stack.
@@ -116,6 +116,13 @@ build-backend: ## Build the backend service
 build-daml: ## Build the Daml model
 	./gradlew :daml:build distTar
 
+.PHONY: test
+test: test-daml ## Run unit tests
+
+.PHONY: test-daml
+test-daml: ## Run daml tests
+	./gradlew :daml:testDaml
+
 .PHONY: build-docker-images
 build-docker-images:
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) build)
@@ -169,7 +176,6 @@ capture-logs: ## Monitor docker events and capture logs
 done | tee -a "logs/compose.log" 2>&1
 
 # Run targets
-
 .PHONY: start
 ifeq ($(OBSERVABILITY_ENABLED),true)
 ifneq ($(SKIP_DOWNLOADS),true) # treat “true” (or any non‑empty value) as “enabled”
@@ -178,6 +184,11 @@ endif
 endif
 start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
+
+.PHONY: start-vite-dev
+start-vite-dev: ## Start the frontend application in development mode
+	@echo "Starting application and Vite frontend development server..."
+	export APP_PROVIDER_UI_PORT=3001 && make start && cd frontend && npm run dev
 
 .PHONY: stop
 stop: ## Stop the application and observability services
