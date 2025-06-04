@@ -3,6 +3,7 @@
 This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
  
 To run the Quickstart you need some binaries from Artifactory.  Request Artifactory access by clicking [here](https://www2.digitalasset.com/contact-us-access-to-jfrog) and we will get right back to you.  
+
 The terms and conditions for the binaries can be found [here](https://github.com/digital-asset/cn-quickstart/blob/main/terms.md). 
 
 The is licensed under the BSD Zero Clause License.
@@ -29,7 +30,7 @@ Additional documentation and updates are planned weekly.
 
 This project will be rapidly enhanced, so please check back often for updates.
 
-## Engineer setup
+## Setup
 
 This repository uses `direnv`, `nix`, and `docker-compose` to provide development dependencies:
 
@@ -88,7 +89,11 @@ $ make console-app-provider
 $ make shell
 ```
 
-If containers fail to start, ensure docker compose is configured to allocate enough memory (recommended minimum total of 32gb).
+If a container fails to start there are a couple of things to try:
+
+- Ensure docker compose is configured to allocate enough memory (recommended minimum total of 8 GB).
+- Start fresh with `make clean-all` and then delete all the Docker images and volumes as well.  
+- You may need to upgrade to a more recent DAML SDK installation so try `make install-daml-sdk`.
 
 When running `make start` for the first time, an assistant will help you setting up the local deployment. You can choose to run the application in `DevNet` or `LocalNet` mode (recommended) for local development and testing, the latter meaning that a transient Super Validator is set up locally. You can change this later by running `make setup`.
 
