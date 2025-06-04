@@ -89,7 +89,7 @@ $ make console-app-provider
 $ make shell
 ```
 
-If a container fails to start there are a couple of things to try:
+If a container fails to start, there are a few things to try:
 
 - Ensure Docker Compose is configured to allocate enough memory. The recommended minimum total memory is 8 GB.
 - Start fresh with `make clean-all` and then delete all the Docker images and volumes as well.  
