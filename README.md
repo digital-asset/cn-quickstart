@@ -92,7 +92,7 @@ $ make shell
 If a container fails to start, there are a few things to try:
 
 - Ensure Docker Compose is configured to allocate enough memory. The recommended minimum total memory is 8 GB.
-- Start fresh with `make clean-all` and then delete all the Docker images and volumes as well.  
+- Start fresh with `make clean-all` and then delete all Docker images and volumes.  
 - You may need to upgrade to a more recent DAML SDK installation so try `make install-daml-sdk`.
 
 When running `make start` for the first time, an assistant will help you setting up the local deployment. You can choose to run the application in `DevNet` or `LocalNet` mode (recommended) for local development and testing, the latter meaning that a transient Super Validator is set up locally. You can change this later by running `make setup`.
