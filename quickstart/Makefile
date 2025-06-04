@@ -5,6 +5,9 @@ ifneq (,$(wildcard .env))
     include .env
 endif
 
+# export SPLICE_VERSION as IMAGE_TAG mandatory for Splice LocalNet
+export IMAGE_TAG=$(SPLICE_VERSION)
+
 ifneq (,$(wildcard .env.local))
     include .env.local
 endif
@@ -40,6 +43,7 @@ ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
   ifeq ($(AUTH_MODE),oauth2)
     RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/keycloak/resource-constraints.yaml
   endif
+  RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/splice-onboarding/resource-constraints.yaml -f ${MODULES_DIR}/pqs/resource-constraints.yaml -f ./docker/backend-service/resource-constraints.yaml
 else
   RESOURCE_CONSTRAINT_CONFIG :=
 endif

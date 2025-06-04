@@ -17,7 +17,7 @@ services:
       - onboarding:/onboarding
     command: /app/start.sh
     ports:
-      - "${BACKEND_PORT}:8080"
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
     depends_on:
       pqs-app-provider:
         condition: service_started
@@ -32,7 +32,9 @@ services:
     volumes:
       - ./docker/register-app-user-tenant/${AUTH_MODE}.sh:/app/scripts/on/register-app-user-tenant.sh
     env_file:
-      - ./docker/backend-service/onboarding/env/${AUTH_MODE}.env
+      - ./docker/register-app-user-tenant/env/${AUTH_MODE}.env
+    environment:
+      - BACKEND_PORT=${BACKEND_PORT}
     entrypoint: [ "/entrypoint.sh", "--exit-on-finish" ]
     depends_on:
       backend-service:
@@ -44,7 +46,7 @@ services:
       - ./config/nginx/frontend.conf:/etc/nginx/templates/frontend.conf.template
       - ./config/nginx/common-backend-proxy-settings.conf:/etc/nginx/templates/common-backend-proxy-settings.conf.template
     environment:
-      BACKEND_PORT: "${BACKEND_PORT}"
+      - BACKEND_PORT=${BACKEND_PORT}
     depends_on:
       backend-service:
         condition: service_started

@@ -14,15 +14,15 @@ register_tenant() {
 
   curl -c cookies.txt -X POST \
     -d "username=${providerAdmin}" \
-    http://backend-service:8080/login
+    "http://backend-service:${BACKEND_PORT}/login"
 
-  curl_check "http://backend-service:8080/admin/tenant-registrations" "" "application/json" \
+  curl_check "http://backend-service:${BACKEND_PORT}/admin/tenant-registrations" "" "application/json" \
    -b cookies.txt \
    -H 'Authorization: Custom' \
    --data-raw '{
      "tenantId": "AppUser",
      "partyId": "'$partyId'",
-     "walletUrl": "http://wallet.localhost:2000/",
+     "walletUrl": "http://wallet.localhost:'${APP_USER_UI_PORT}'/",
      "clientId": "",
      "issuerUrl": "",
      "internal": false,

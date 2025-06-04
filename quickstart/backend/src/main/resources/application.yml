@@ -3,6 +3,7 @@
 
 server:
   forward-headers-strategy: NATIVE
+  port: ${BACKEND_PORT}
 
 logging:
   level:
