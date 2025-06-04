@@ -91,7 +91,7 @@ $ make shell
 
 If a container fails to start there are a couple of things to try:
 
-- Ensure docker compose is configured to allocate enough memory (recommended minimum total of 8 GB).
+- Ensure Docker Compose is configured to allocate enough memory. The recommended minimum total memory is 8 GB.
 - Start fresh with `make clean-all` and then delete all the Docker images and volumes as well.  
 - You may need to upgrade to a more recent DAML SDK installation so try `make install-daml-sdk`.
 
