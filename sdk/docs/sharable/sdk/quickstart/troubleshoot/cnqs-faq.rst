@@ -116,6 +116,27 @@ The gradle daemon has been disabled to prevent parallel processing of transcodeg
 Gradle tasks had been known to create order and concurrency issues which caused files to get cleaned too early.
 Always prefer to use the make commands.
 
+**What version of the Java SDK does the CN Quickstart use?**
+
+The CN QS uses Java SDK version `Eclipse Temurin JDK version 17.0.12+7`.
+The Java SDK runs within the Docker container.
+
+This information is specified in `quickstart/compose.yaml` and `.env`, respectively.
+
+`quickstart/compose.yaml`
+
+::
+
+   services:
+   backend-service:
+      image: "eclipse-temurin:${JAVA_VERSION}"
+   
+`.env`
+
+::
+
+   JAVA_VERSION=17.0.12_7-jdk
+
 **How do I resolve a “build failed with an exception failure”?**
 
 If `make install-daml-sdk` results in:
@@ -150,10 +171,9 @@ To resolve this error, copy the faulty `.tar.gz` file with directory path as sho
 
 ::
 
-   rm
-   /Users/USER/Code/cn-quickstart/quickstart/daml/.sdk/daml-sdk-3.2.0-snapshot.20241031.13398.0.vf95d2607-macos-x86_64-ee.tar.gz
+   rm /Users/USER/Code/cn-quickstart/quickstart/daml/.sdk/daml-sdk-3.2.0-snapshot.20241031.13398.0.vf95d2607-macos-x86_64-ee.tar.gz
 
-💡 USER in /Users/USER/ will display your username. Copy and paste from your terminal. NOT this FAQ.
+.. note:: `USER` in `/Users/USER/` will display your username. Copy and paste from your terminal. NOT this FAQ.
 
 Reattempt make install-daml-sdk.
 
