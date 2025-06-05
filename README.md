@@ -14,21 +14,19 @@ Once you are familiar with the QS, please review the technology choices and the 
 
 ## Docs and guides
 
-If you are impatient, then you can start by following the Engineer Setup below. Alternatively, you can peruse the documentation:
-- [Quickstart Installation](docs/guide/CN-QS-Installation-20250516.pdf)
-- [Exploring The Demo](docs/guide/ExploringTheDemo-20250516.pdf)
-- [Project Structure](docs/guide/ProjectStructureGuide-20250317.pdf)
-- [FAQ](docs/guide/CN-QS-FAQ-20250516.pdf)
-- [Observability and Troubleshooting Overview](docs/guide/ObservabilityTroubleshootingOverview-20250220.pdf)
+You can find Quickstart documentation in the Canton Network documentation portal.
+- [Quickstart Installation](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation)
+- [Exploring The Demo](https://docs.digitalasset.com/build/3.3/quickstart/operate/explore-the-demo)
+- [Project Structure](https://docs.digitalasset.com/build/3.3/quickstart/configure/project-structure-overview)
+- [FAQ](https://docs.digitalasset.com/build/3.3/quickstart/troubleshoot/cnqs-faq.html)
+- [Observability and Troubleshooting Overview](https://docs.digitalasset.com/build/3.3/quickstart/observe/observability-troubleshooting-overview.html)
 
 ### Technical documentation
 
 - [Observability](sdk/docs/user/001-observability.md)
 - [Topology](sdk/docs/user/002-topology.md)
 
-Additional documentation and updates are planned weekly.
-
-This project will be rapidly enhanced, so please check back often for updates.
+This project is rapidly enhanced, so please check back often for updates.
 
 ## Setup
 
@@ -100,6 +98,10 @@ When running `make start` for the first time, an assistant will help you setting
 In `DevNet` mode, you can configure a non-default `SPONSOR_SV_ADDRESS`, `SCAN_ADDRESS` and `ONBOARDING_SECRET_URL` or `ONBOARDING_SECRET` in the `quickstart/.env` file.
 
 **Note**: Access to the Super Validator endpoints on DevNet may require a VPN setup.
+
+**Note**: The CN QS uses Java SDK version `Eclipse Temurin JDK version 17.0.12+7`.
+The Java SDK runs within the Docker container.
+This information is specified in `quickstart/compose.yaml` and `.env`.
 
 ## Available make targets
 

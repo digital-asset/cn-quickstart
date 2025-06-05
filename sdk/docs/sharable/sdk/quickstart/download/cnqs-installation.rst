@@ -255,6 +255,9 @@ The Daml SDK is large and can take several minutes to complete.
 .. image:: images/06-unpack-sdk.png
    :alt: Daml SDK unpacking
 
+.. note:: The CN QS uses Java SDK version `Eclipse Temurin JDK version 17.0.12+7`.
+   The Java SDK runs within the Docker container.
+
 Deploy a validator on LocalNet
 ------------------------------
 
