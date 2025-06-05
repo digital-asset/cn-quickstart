@@ -2,5 +2,5 @@
 * @digital-asset/etx
 
 # Documentation
-/docs/ @hrischuk-da @digital-asset/etx
-/README.md @hrischuk-da @digital-asset/etx
+/docs/ @hrischuk-da @digital-asset/etx @digital-asset/daml-docs
+/README.md @hrischuk-da @digital-asset/etx @digital-asset/daml-docs
