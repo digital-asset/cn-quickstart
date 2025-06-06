@@ -144,6 +144,9 @@ acceptAndCompleteLicenseRenewal (registry, userParty, providerParty)
                                 licenseCid
                                 renewalFee
                                 instrumentId = script do
+
+  now <- getTime
+
   ----------------------------------------------------------------------------
   -- 1. The user sees the allocation request in their wallet
   ----------------------------------------------------------------------------
@@ -159,6 +162,7 @@ acceptAndCompleteLicenseRenewal (registry, userParty, providerParty)
   enrichedChoice <- RegistryApi.getAllocationFactory registry AllocationFactory_Allocate with
     expectedAdmin = registry.dso
     allocation = userAlloc
+    requestedAt = now
     inputHoldingCids = userHoldingCids
     extraArgs = emptyExtraArgs
 
@@ -183,7 +187,7 @@ acceptAndCompleteLicenseRenewal (registry, userParty, providerParty)
   ----------------------------------------------------------------------------
   -- 4. The provider completes the renewal payment by finalizing the allocation
   ----------------------------------------------------------------------------
-  context <- RegistryApi.getAllocationTransferContext registry allocCid emptyMetadata
+  context <- RegistryApi.getAllocation_TransferContext registry allocCid emptyMetadata
   let extraArgs = ExtraArgs with
         context = context.choiceContext
         meta = emptyMetadata
@@ -357,6 +361,7 @@ testLicenseTokenStandard_ExpiredLicenseRenewal = script do
   enrichedChoice <- RegistryApi.getAllocationFactory registry AllocationFactory_Allocate with
     expectedAdmin = registry.dso
     allocation = userAlloc
+    requestedAt = now
     inputHoldingCids = userHoldingCids
     extraArgs = emptyExtraArgs
 
@@ -372,7 +377,7 @@ testLicenseTokenStandard_ExpiredLicenseRenewal = script do
   allocations <- listAllocationsForRenewal providerParty renewalRef
   let [(allocCid, _)] = allocations
 
-  context <- RegistryApi.getAllocationTransferContext registry allocCid emptyMetadata
+  context <- RegistryApi.getAllocation_TransferContext registry allocCid emptyMetadata
   submitWithDisclosures' providerParty context.disclosures $
     exerciseCmd renewalRequestCid LicenseRenewalRequest_CompleteRenewal with
       allocationInstruction = allocCid
@@ -449,6 +454,7 @@ testLicenseTokenStandard_ConcurrentRenewals = script do
     enrichedChoice <- RegistryApi.getAllocationFactory registry AllocationFactory_Allocate with
       expectedAdmin = registry.dso
       allocation = alloc
+      requestedAt = now
       inputHoldingCids = unlockedHoldingCids
       extraArgs = emptyExtraArgs
 
@@ -469,7 +475,7 @@ testLicenseTokenStandard_ConcurrentRenewals = script do
   allocations1 <- listAllocationsForRenewal providerParty (Reference "LicenseRenewalRequest" (Some (coerceContractId originalLicenseCid)))
   let [(allocCid1, _), (allocCid2, _)] = allocations1
 
-  context1 <- RegistryApi.getAllocationTransferContext registry allocCid1 emptyMetadata
+  context1 <- RegistryApi.getAllocation_TransferContext registry allocCid1 emptyMetadata
   submitWithDisclosures' providerParty context1.disclosures $
     exerciseCmd r1Cid LicenseRenewalRequest_CompleteRenewal with
       allocationInstruction = allocCid1
@@ -486,7 +492,7 @@ testLicenseTokenStandard_ConcurrentRenewals = script do
   length afterFirstRenewUserLicenses === 1
   let (l1Cid, l1Details) = head afterFirstRenewUserLicenses
 
-  context2 <- RegistryApi.getAllocationTransferContext registry allocCid2 emptyMetadata
+  context2 <- RegistryApi.getAllocation_TransferContext registry allocCid2 emptyMetadata
   submitWithDisclosures' providerParty context2.disclosures $
     exerciseCmd r2Cid LicenseRenewalRequest_CompleteRenewal with
       allocationInstruction = allocCid2
@@ -534,6 +540,6 @@ listAllocationsForRenewal p ref = do
   allocs <- queryInterface @Allocation p
   let matchingAllocs = do
         (cid, Some alloc) <- allocs
-        guard (alloc.settlement.settlementRef == ref)
+        guard (alloc.allocation.settlement.settlementRef == ref)
         pure (cid, alloc)
-  pure $ sortOn (\(_, alloc) -> alloc.transferLegId) matchingAllocs
+  pure $ sortOn (\(_, alloc) -> alloc.allocation.transferLegId) matchingAllocs

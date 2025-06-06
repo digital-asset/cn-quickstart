@@ -7,11 +7,12 @@
 module Licensing.License where
 
 import DA.Time
-import DA.Assert
+import DA.Assert (assertWithinDeadline, assertDeadlineExceeded, (===))
 import DA.Action (unless)
 import DA.Optional (fromOptional)
+import DA.TextMap as TextMap
 
-import Splice.Util as Util (require, assertWithinDeadline, assertDeadlineExceeded)
+import Splice.Util as Util (require)
 import Splice.Api.Token.MetadataV1
 import Splice.Api.Token.HoldingV1
 import Splice.Api.Token.AllocationRequestV1
@@ -162,14 +163,15 @@ template LicenseRenewalRequest
                       with
                         id = "LicenseRenewalRequest"
                         cid = Some (coerceContractId originalLicenseCid)
-            transferLegs =
-              [ Api.Token.AllocationV1.TransferLeg
+                  meta = emptyMetadata
+            transferLegs = TextMap.fromList
+              [("leg0", Api.Token.AllocationV1.TransferLeg
                   with
                     sender = user
                     receiver = provider
                     amount = licenseFeeAmount
                     instrumentId = licenseFeeInstrumentId
-                    meta = emptyMetadata
+                    meta = emptyMetadata)
               ]
             meta = emptyMetadata
 

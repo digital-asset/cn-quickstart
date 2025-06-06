@@ -1,7 +1,7 @@
 # for config file options, refer to
 # https://docs.daml.com/tools/assistant.html#project-config-file-daml-yaml
 
-sdk-version: 3.3.0-snapshot.20250410.0
+sdk-version: 3.3.0-snapshot.20250502.13767.0.v2fc6c7e2
 name: quickstart-licensing-tests
 source: daml
 version: 0.0.1
@@ -11,16 +11,15 @@ dependencies:
   - daml-script
 data-dependencies:
   # TODO: fetch as artifacts when integrating gradle-daml-plugin https://github.com/DACH-NY/canton-network-node/issues/16393
-- ../external-test-sources/splice-token-standard-test/.daml/dist/splice-token-standard-test-0.0.1.dar
+- ../external-test-sources/splice-token-standard-test/.daml/dist/splice-token-standard-test-1.0.0.dar
 - ../licensing/.daml/dist/quickstart-licensing-0.0.1.dar
 - ../dars/splice-util-0.1.3.dar
-- ../dars/splice-api-token-metadata-v1-0.0.1.dar
-- ../dars/splice-api-token-holding-v1-0.0.1.dar
-- ../dars/splice-api-token-allocation-v1-0.0.1.dar
-- ../dars/splice-api-token-allocation-request-v1-0.0.1.dar
-- ../dars/splice-api-token-metadata-v1-0.0.1.dar
-- ../dars/splice-api-token-transfer-instruction-v1-0.0.1.dar
-- ../dars/splice-api-token-allocation-instruction-v1-0.0.1.dar
+- ../dars/splice-api-token-metadata-v1-1.0.0.dar
+- ../dars/splice-api-token-holding-v1-1.0.0.dar
+- ../dars/splice-api-token-allocation-v1-1.0.0.dar
+- ../dars/splice-api-token-allocation-request-v1-1.0.0.dar
+- ../dars/splice-api-token-transfer-instruction-v1-1.0.0.dar
+- ../dars/splice-api-token-allocation-instruction-v1-1.0.0.dar
 build-options:
   - --ghc-option=-Wunused-binds
   - --ghc-option=-Wunused-matches
