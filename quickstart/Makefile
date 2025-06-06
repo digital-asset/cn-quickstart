@@ -1,6 +1,12 @@
 # Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 # SPDX-License-Identifier: 0BSD
 
+# Set default goal to 'help' if no target is specified
+.DEFAULT_GOAL := help
+
+# Determine the operating system
+KERNEL_NAME := $(shell uname -s)
+
 ifneq (,$(wildcard .env))
     include .env
 endif
@@ -19,69 +25,95 @@ else
 FIRST_RUN_DEPENDENCY := first-run-setup
 endif
 
-# Set default goal to 'help' if no target is specified
-.DEFAULT_GOAL := help
-
-# Determine the operating system
-KERNEL_NAME := $(shell uname -s)
 ifndef MODULES_DIR
-export MODULES_DIR=$(shell pwd)/docker/modules
-endif
-ifndef LOCALNET_DIR
-export LOCALNET_DIR=$(MODULES_DIR)/localnet
+  export MODULES_DIR=$(shell pwd)/docker/modules
 endif
 $(info MODULES_DIR=$(MODULES_DIR))
+
+ifndef LOCALNET_DIR
+  export LOCALNET_DIR=$(MODULES_DIR)/localnet
+endif
 $(info LOCALNET_DIR=$(LOCALNET_DIR))
-DOCKER_COMPOSE_ENVFILE := --env-file .env --env-file .env.local --env-file ${LOCALNET_DIR}/compose.env --env-file ${LOCALNET_DIR}/env/common.env
-DOCKER_COMPOSE_FILES := -f compose.yaml -f ${LOCALNET_DIR}/compose.yaml
 
 # Default to adding resource constraints for Quickstart compose stack.
 RESOURCE_CONSTRAINTS_ENABLED ?= true
 
-ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
-  RESOURCE_CONSTRAINT_CONFIG := -f ${LOCALNET_DIR}/resource-constraints.yaml
-  ifeq ($(AUTH_MODE),oauth2)
-    RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/keycloak/resource-constraints.yaml
-  endif
-  RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/splice-onboarding/resource-constraints.yaml -f ${MODULES_DIR}/pqs/resource-constraints.yaml -f ./docker/backend-service/resource-constraints.yaml
-else
-  RESOURCE_CONSTRAINT_CONFIG :=
-endif
+# project main compose file
+DOCKER_COMPOSE_FILES := -f compose.yaml
 
-ifeq ($(OBSERVABILITY_ENABLED),true)
-  ifeq ($(KERNEL_NAME), Darwin)
-    DOCKER_COMPOSE_OBSERVABILITY_FILES := -f ${MODULES_DIR}/observability/cadvisor-darwin.yaml
-  else ifeq ($(KERNEL_NAME), Linux)
-    DOCKER_COMPOSE_OBSERVABILITY_FILES := -f ${MODULES_DIR}/observability/cadvisor-linux.yaml
-  endif
-  DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ${MODULES_DIR}/observability/compose.yaml -f ${MODULES_DIR}/observability/observability.yaml -f ${MODULES_DIR}/pqs/observability.yaml -f ./docker/backend-service/observability.yaml
-  DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/observability/compose.env
-endif
-
-# Define DOCKER_COMPOSE_PROFILES based on environment variables
-DOCKER_COMPOSE_PROFILES := --profile app-provider --profile app-user
-ifeq ($(AUTH_MODE),oauth2)
-    DOCKER_COMPOSE_PROFILES += --profile keycloak
-    DOCKER_COMPOSE_FILES +=  -f ${MODULES_DIR}/keycloak/compose.yaml
-    DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/keycloak/compose.env
-else
-    DOCKER_COMPOSE_PROFILES += --profile $(AUTH_MODE)
-endif
-
+############################################################################
+####  Setup Splice LocalNet
+############################################################################
+DOCKER_COMPOSE_FILES += -f ${LOCALNET_DIR}/compose.yaml
+DOCKER_COMPOSE_PROFILES := --profile app-provider --profile app-user --profile swagger-ui
+DOCKER_COMPOSE_ENVFILE := --env-file .env --env-file .env.local --env-file ${LOCALNET_DIR}/compose.env --env-file ${LOCALNET_DIR}/env/common.env
 ifeq ($(ENV),local)
-    DOCKER_COMPOSE_PROFILES += --profile sv --env-file ${LOCALNET_DIR}/env/local.env
+    DOCKER_COMPOSE_PROFILES += --profile sv
+    DOCKER_COMPOSE_ENVFILE += --env-file ${LOCALNET_DIR}/env/local.env
 else
     DOCKER_COMPOSE_PROFILES += --env-file ${LOCALNET_DIR}/env/dev.env
 endif
-
+ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
+  RESOURCE_CONSTRAINT_CONFIG := -f ${LOCALNET_DIR}/resource-constraints.yaml
+endif
 ifeq ($(OBSERVABILITY_ENABLED),true)
-    DOCKER_COMPOSE_PROFILES += --profile observability
+  DOCKER_COMPOSE_OBSERVABILITY_FILES = -f ${MODULES_DIR}/observability/compose.yaml -f ${MODULES_DIR}/observability/observability.yaml
+  DOCKER_COMPOSE_PROFILES += --profile observability
+  DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/observability/compose.env
+  ifeq ($(KERNEL_NAME), Darwin)
+    DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ${MODULES_DIR}/observability/cadvisor-darwin.yaml
+  else ifeq ($(KERNEL_NAME), Linux)
+    DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ${MODULES_DIR}/observability/cadvisor-linux.yaml
+  endif
 endif
 
+############################################################################
+####  Keycloak (optional)
+############################################################################
+ifeq ($(AUTH_MODE),oauth2)
+    DOCKER_COMPOSE_FILES += -f ${MODULES_DIR}/keycloak/compose.yaml
+    DOCKER_COMPOSE_PROFILES += --profile keycloak
+    DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/keycloak/compose.env
+
+    ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
+      RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/keycloak/resource-constraints.yaml
+    endif
+endif
+
+############################################################################
+####  Splice Onboarding
+############################################################################
+DOCKER_COMPOSE_FILES += -f ${MODULES_DIR}/splice-onboarding/compose.yaml
+ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
+  RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/splice-onboarding/resource-constraints.yaml
+endif
+
+############################################################################
+####  PQS
+############################################################################
+DOCKER_COMPOSE_FILES += -f ${MODULES_DIR}/pqs/compose.yaml
 DOCKER_COMPOSE_PROFILES += --profile pqs-app-provider
-DOCKER_COMPOSE_FILES +=  -f ${MODULES_DIR}/splice-onboarding/compose.yaml -f ${MODULES_DIR}/pqs/compose.yaml
 DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/pqs/compose.env
-export PQS_APP_PROVIDER_PROFILE := on
+ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
+  RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/pqs/resource-constraints.yaml
+endif
+ifeq ($(OBSERVABILITY_ENABLED),true)
+  DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ${MODULES_DIR}/pqs/observability.yaml
+endif
+
+############################################################################
+####  backend-service
+############################################################################
+ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
+  RESOURCE_CONSTRAINT_CONFIG += -f ./docker/backend-service/resource-constraints.yaml
+endif
+ifeq ($(OBSERVABILITY_ENABLED),true)
+  DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ./docker/backend-service/observability.yaml
+endif
+
+# Custom overrides if needed
+#DOCKER_COMPOSE_FILES += -f <your_custom_compose_overrides.yaml>
+#DOCKER_COMPOSE_ENVFILE += --env-file <your_custom_env_overrides_file>
 
 # Function to run docker-compose with default files and environment
 define docker-compose
@@ -145,40 +177,6 @@ restart-backend: build-backend ## Build and start the application
 restart-frontend: build-frontend ## Build and start the application
 	$(call docker-compose, restart nginx-app-provider)
 
-.PHONY: capture-logs
-capture-logs: ## Monitor docker events and capture logs
-	@network_name="quickstart"; \
-	canton_services=("canton" "splice"); \
-	docker events -f type=container \
-	    -f event=start \
-	    -f event=stop \
-	    -f event=restart \
-	    -f event=kill \
-	    -f event=die \
-	    -f event=destroy \
-	    -f event=health_status \
-	    -f event=oom \
-	    --format '{{.ID}} {{.Time}} {{.Actor.Attributes.name}} {{.Status}}' | \
-	while read -r cid time service_name status; do \
-	    network_attached=$$(docker inspect --format '{{json .NetworkSettings.Networks}}' "$$cid" 2>/dev/null | \
-	        jq -r 'keys[] | select(. | contains ("'"$$network_name"'"))'); \
-	    if [ -z "$$network_attached" ]; then \
-	        continue; \
-	    fi; \
-	    echo "$$(date -u -d "@$$time" +"%Y-%m-%dT%H:%M:%S") $$service_name $$status"; \
-	    if [ "$$status" = "start" ]; then \
-	        echo ">> $$service_name"; \
-	        ext=".log"; \
-	        for svc in "$${canton_services[@]}"; do \
-	            if [ "$$service_name" = "$$svc" ]; then \
-	                ext=".clog"; \
-	                break; \
-	            fi; \
-	        done; \
-	        docker logs -f "$$cid" >> "./logs/$$service_name$$ext" 2>&1 & \
-	    fi; \
-done | tee -a "logs/compose.log" 2>&1
-
 # Run targets
 .PHONY: start
 ifeq ($(OBSERVABILITY_ENABLED),true)
@@ -222,6 +220,40 @@ logs: ## Show logs of Docker containers
 tail: ## Tail logs of Docker containers
 	$(call docker-compose, logs -f)
 
+.PHONY: capture-logs
+capture-logs: ## Monitor docker events and capture logs
+	@network_name="quickstart"; \
+	canton_services=("canton" "splice"); \
+	docker events -f type=container \
+	    -f event=start \
+	    -f event=stop \
+	    -f event=restart \
+	    -f event=kill \
+	    -f event=die \
+	    -f event=destroy \
+	    -f event=health_status \
+	    -f event=oom \
+	    --format '{{.ID}} {{.Time}} {{.Actor.Attributes.name}} {{.Status}}' | \
+	while read -r cid time service_name status; do \
+	    network_attached=$$(docker inspect --format '{{json .NetworkSettings.Networks}}' "$$cid" 2>/dev/null | \
+	        jq -r 'keys[] | select(. | contains ("'"$$network_name"'"))'); \
+	    if [ -z "$$network_attached" ]; then \
+	        continue; \
+	    fi; \
+	    echo "$$(date -u -d "@$$time" +"%Y-%m-%dT%H:%M:%S") $$service_name $$status"; \
+	    if [ "$$status" = "start" ]; then \
+	        echo ">> $$service_name"; \
+	        ext=".log"; \
+	        for svc in "$${canton_services[@]}"; do \
+	            if [ "$$service_name" = "$$svc" ]; then \
+	                ext=".clog"; \
+	                break; \
+	            fi; \
+	        done; \
+	        docker logs -f "$$cid" >> "./logs/$$service_name$$ext" 2>&1 & \
+	    fi; \
+done | tee -a "logs/compose.log" 2>&1
+
 # Development environment
 .PHONY: setup
 setup: ## Configure the local development environment (enable DevNet/LocalNet, Observability)
@@ -257,6 +289,8 @@ integration-test-ci: integration-test/node_modules start ## Run integration test
 
 .PHONY: integration-test/node_modules
 integration-test/node_modules:
+	@echo "Sorry integration tests are disabled. They will be enabled in a future release. https://github.com/digital-asset/cn-quickstart/issues/149"
+	exit 1
 	cd integration-test && npm install
 
 # Console
@@ -308,11 +342,6 @@ fetch-grafana-dashboards: ## Download Grafana dashboards
 generate-NOTICES: ## Generate the NOTICES.txt file
 	./gradlew generateNotices
 
-.PHONY: start-swagger-ui
-start-swagger-ui: ## Start Swagger UI docker container for Canton JSON API OpenAPI Docs
-	@echo "Starting Swagger UI on http://localhost:9080"
-	docker compose -f ${MODULES_DIR}/swagger/compose.yaml $(DOCKER_COMPOSE_ENVFILE) up || true
-
 # Help target
 .PHONY: help
 help: ## Show this help message
@@ -339,11 +368,9 @@ run-command:
 
 # Helpers to open URLs in the browser
 # open-app-ui: ## Open the Application UI in the active browser
-$(eval $(call open-url-target,open-app-ui,http://localhost:3000))
+$(eval $(call open-url-target,open-app-ui,http://app-provider.localhost:3000))
 # open-observe: ## Open the Grafana UI in the active browser
 $(eval $(call open-url-target,open-observe,http://localhost:3030))
-# open-sv-gateway: ## Open the Super Validator gateway UI in the active browser
-$(eval $(call open-url-target,open-sv-gateway,http://localhost:4000))
 # open-sv-wallet: ## Open the Super Validator wallet UI in the active browser
 $(eval $(call open-url-target,open-sv-wallet,http://wallet.localhost:4000))
 # open-sv-interface: ## Open the Super Validator interface UI in the active browser
@@ -353,4 +380,4 @@ $(eval $(call open-url-target,open-sv-scan,http://scan.localhost:4000))
 # open-app-user-wallet: ## Open the App User wallet UI in the active browser
 $(eval $(call open-url-target,open-app-user-wallet,http://wallet.localhost:2000))
 # open-swagger-ui: ## Open Swagger UI to view Canton JSON API V2 Open API in the active browser
-$(eval $(call open-url-target,open-swagger-ui,http://localhost:9080))
+$(eval $(call open-url-target,open-swagger-ui,http://localhost:9090))

@@ -659,7 +659,7 @@
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "redirectUris" : [ "http://wallet.localhost:2000" ],
+    "redirectUris" : [ "http://wallet.localhost:*" ],
     "webOrigins" : [ "*" ],
     "notBefore" : 0,
     "bearerOnly" : false,
