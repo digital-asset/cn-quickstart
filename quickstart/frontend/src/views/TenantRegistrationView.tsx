@@ -7,6 +7,11 @@ import {
     TenantRegistration,
 } from '../stores/tenantRegistrationStore'
 
+import {useToast} from '../stores/toastStore';
+import api from '../api';
+import {Client, FeatureFlags} from "../openapi";
+
+
 const TenantRegistrationView: React.FC = () => {
     const {
         registrations,
@@ -22,9 +27,24 @@ const TenantRegistrationView: React.FC = () => {
         issuerUrl: '',
         internal: false,
         walletUrl: '',
+        users: []
     })
 
+    const toast = useToast();
+    const [featureFlags, setFeatureFlags] = useState<FeatureFlags | null>(null);
+
+    const fetchFeatureFlags = async () => {
+        try {
+            const client: Client = await api.getClient();
+            const response = await client.getFeatureFlags();
+            setFeatureFlags(response.data);
+        } catch (error) {
+            toast.displayError('Error fetching feature flags');
+        }
+    };
+
     useEffect(() => {
+        fetchFeatureFlags();
         fetchTenantRegistrations()
     }, [fetchTenantRegistrations])
 
@@ -32,7 +52,7 @@ const TenantRegistrationView: React.FC = () => {
         const { name, value } = e.target
         setFormData((prev) => ({
             ...prev,
-            [name]: value,
+            [name]: name === 'users' ? value.split(',').map(user => user.trim()) : value,
         }))
     }
 
@@ -46,6 +66,7 @@ const TenantRegistrationView: React.FC = () => {
             issuerUrl: '',
             internal: false,
             walletUrl: '',
+            users: []
 
         })
     }
@@ -87,34 +108,38 @@ const TenantRegistrationView: React.FC = () => {
                         required
                     />
                 </div>
-                <div className="mb-3">
-                    <label htmlFor="clientId" className="form-label">
-                        Client ID:
-                    </label>
-                    <input
-                        type="text"
-                        id="clientId"
-                        name="clientId"
-                        className="form-control"
-                        value={formData.clientId}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-                <div className="mb-3">
-                    <label htmlFor="issuerUrl" className="form-label">
-                        Issuer URL:
-                    </label>
-                    <input
-                        type="text"
-                        id="issuerUrl"
-                        name="issuerUrl"
-                        className="form-control"
-                        value={formData.issuerUrl}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
+                {featureFlags?.authMode === 'oauth2' && (
+                    <>
+                        <div className="mb-3">
+                            <label htmlFor="clientId" className="form-label">
+                                Client ID:
+                            </label>
+                            <input
+                                type="text"
+                                id="clientId"
+                                name="clientId"
+                                className="form-control"
+                                value={formData.clientId}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                        <div className="mb-3">
+                            <label htmlFor="issuerUrl" className="form-label">
+                                Issuer URL:
+                            </label>
+                            <input
+                                type="text"
+                                id="issuerUrl"
+                                name="issuerUrl"
+                                className="form-control"
+                                value={formData.issuerUrl}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                    </>
+                )}
                 <div className="mb-3">
                     <label htmlFor="walletUrl" className="form-label">
                         Wallet URL:
@@ -128,6 +153,21 @@ const TenantRegistrationView: React.FC = () => {
                         onChange={handleChange}
                     />
                 </div>
+                {featureFlags?.authMode === 'shared-secret' && (
+                  <div className="mb-3">
+                      <label htmlFor="users" className="form-label">
+                          Users (comma-separated):
+                      </label>
+                      <input
+                          type="text"
+                          id="users"
+                          name="users"
+                          className="form-control"
+                          value={formData.users}
+                          onChange={handleChange}
+                      />
+                  </div>
+                )}
                 <button type="submit" className="btn btn-primary">
                     Submit
                 </button>
@@ -140,9 +180,14 @@ const TenantRegistrationView: React.FC = () => {
                     <tr>
                         <th>Tenant ID</th>
                         <th>Party ID</th>
-                        <th>Client ID</th>
-                        <th>Issuer URL</th>
+                        {featureFlags?.authMode === 'oauth2' && (
+                          <>
+                            <th>Client ID</th>
+                            <th>Issuer URL</th>
+                          </>
+                        )}
                         <th>Wallet URL</th>
+                        {featureFlags?.authMode === 'shared-secret' && <th>Users</th>}
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -151,9 +196,14 @@ const TenantRegistrationView: React.FC = () => {
                         <tr key={index}>
                             <td>{registration.tenantId}</td>
                             <td>{registration.partyId}</td>
-                            <td>{registration.clientId}</td>
-                            <td>{registration.issuerUrl}</td>
+                            {featureFlags?.authMode === 'oauth2' && (
+                                <>
+                                    <td>{registration.clientId}</td>
+                                    <td>{registration.issuerUrl}</td>
+                                </>
+                            )}
                             <td>{registration.walletUrl}</td>
+                            {featureFlags?.authMode === 'shared-secret' && <td>{registration.users}</td>}
                             <td>
                                 <button
                                     className="btn btn-danger"

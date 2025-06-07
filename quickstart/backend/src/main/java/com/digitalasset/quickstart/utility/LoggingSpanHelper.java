@@ -9,6 +9,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import org.slf4j.Logger;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Map;
 
 /**
@@ -198,6 +200,7 @@ public final class LoggingSpanHelper {
             logBuilder.setCause(t);
         }
         logBuilder.log(message);
+        logger.error(message + " WHY THIS WAS NOT LOGGED: " + t.getMessage(), t);
     }
 
     /**
@@ -211,11 +214,15 @@ public final class LoggingSpanHelper {
         if (logger == null) {
             return;
         }
+
         var logBuilder = logger.atError();
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
         if (t != null) {
             logBuilder.setCause(t);
+            t.printStackTrace(pw);
         }
-        logBuilder.log(message);
+        logBuilder.log(message + " WHY THIS WAS NOT LOGGED: " +t.getMessage() + "\n" + sw);
     }
 
     /**

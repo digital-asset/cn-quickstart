@@ -15,6 +15,7 @@ export interface TenantRegistration {
     issuerUrl: string
     walletUrl: string
     internal: boolean
+    users: string[]
 }
 
 interface TenantRegistrationState {

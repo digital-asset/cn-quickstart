@@ -6,6 +6,7 @@ package com.digitalasset.quickstart.repository;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,6 +21,7 @@ public class TenantPropertiesRepository {
         private boolean internal;
         private String partyId;
         private String walletUrl;
+        private List<String> users;
 
         public String getTenantId() {
             return tenantId;
@@ -52,6 +54,14 @@ public class TenantPropertiesRepository {
 
         public void setInternal(boolean internal) {
             this.internal = internal;
+        }
+
+        public List<String> getUsers() {
+            return users;
+        }
+
+        public void setUsers(List<String> users) {
+            this.users = users;
         }
     }
 
