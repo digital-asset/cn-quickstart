@@ -33,6 +33,11 @@ Explore the Canton Network quickstart demo
 Exploring the demo
 ==================
 
+Explore the demo is intended to help you become familiar with a CN business operation within the CN QS.
+The QS application is intended to be incrementally extended by your team to meet your business needs.
+When you are familiar with the QS, review the technology choices and application design to determine what changes are needed.
+Technology and design decisions are ultimately up to you.
+
 .. wip::
 
 As a result, the CN QS guides may be a little out of step with the application.
@@ -320,6 +325,8 @@ When prompted to enable `LocalNet`, enter “n”. This enables `DevNet`
 
 Optionally, enter “Y” to enable observability. This starts additional containers which may require more memory for Docker.
 
+.. note:: Observability may no longer work while QS is under revisions. If you experience unexpected errors, set observability to "n". 
+
 You may leave the party hint as the default value by tapping ‘return’ on the keyboard.
 
 .. image:: images/31-party-hint.png
@@ -338,6 +345,8 @@ Check the current migration ID at https://sync.global/sv-network/ under the GSF 
 
 For example, if the SV Node Information shows the `migration_id` value as “0” then update `MIGRATION_ID` to “0” in your `.env`.
 
+.. note:: Some `env` vars will be in different files. For example, `/env/dev.env`
+
 .. image:: images/32-gsf-sv.png
    :alt: GSF SV information
 
@@ -355,6 +364,8 @@ In `.env`:
 
 Configuring non-default DevNet sponsors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note:: Configuration files are currently under revision and may not be in the stated locations.
 
 In `DevNet` mode, you can configure a non-default `SPONSOR_SV_ADDRESS`, `SCAN_ADDRESS` and `ONBOARDING_SECRET_URL` or `ONBOARDING_SECRET` in the `quickstart/.env` file.
 
@@ -396,6 +407,8 @@ The Validators menu shows that the local validator has been registered with the 
 
 Observability Dashboard
 -----------------------
+
+.. note:: Observability may no longer work while QS is under revisions.
 
 In a web browser, navigate to http://localhost:3030/dashboards to view
 the observability dashboards. Select “Quickstart - consolidated logs”.
