@@ -25,9 +25,9 @@ endif
 
 # Determine if the local environment has been configured, if not inject the first-run-setup target
 ifneq ($(strip $(PARTY_HINT)),)
-  FIRST_RUN_DEPENDENCY :=
+  STARTUP_DEPENDENCIES :=
 else
-  FIRST_RUN_DEPENDENCY := first-run-setup
+  STARTUP_DEPENDENCIES := first-run-setup
 endif
 
 ifndef MODULES_DIR
@@ -82,6 +82,11 @@ ifeq ($(OBSERVABILITY_ENABLED),true)
     DOCKER_COMPOSE_FILES  += ${MODULES_DIR}/observability/cadvisor-darwin.yaml
   else ifeq ($(KERNEL_NAME), Linux)
     DOCKER_COMPOSE_FILES  += ${MODULES_DIR}/observability/cadvisor-linux.yaml
+  endif
+
+  # Download grafana dashboards
+  ifneq ($(SKIP_DOWNLOADS),true) # treat “true” (or any non‑empty value) as “enabled”
+  STARTUP_DEPENDENCIES += fetch-grafana-dashboards
   endif
 
 endif
@@ -167,7 +172,7 @@ SETUP_COMMAND := ./gradlew configureProfiles --no-daemon --console=plain --quiet
 
 # Build targets
 .PHONY: build
-build: $(FIRST_RUN_DEPENDENCY) build-frontend build-backend build-daml build-docker-images ## Build frontend, backend, Daml model and docker images
+build: $(STARTUP_DEPENDENCIES) build-frontend build-backend build-daml build-docker-images ## Build frontend, backend, Daml model and docker images
 
 .PHONY: build-frontend
 build-frontend: ## Build the frontend application
@@ -208,12 +213,7 @@ restart-frontend: build-frontend ## Build and start the application
 
 # Run targets
 .PHONY: start
-ifeq ($(OBSERVABILITY_ENABLED),true)
-ifneq ($(SKIP_DOWNLOADS),true) # treat “true” (or any non‑empty value) as “enabled”
-start: fetch-grafana-dashboards
-endif
-endif
-start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
+start: $(STARTUP_DEPENDENCIES) build ## Start the application, and observability services if enabled
 	$(call docker-compose, up -d --no-recreate)
 
 .PHONY: start-vite-dev
