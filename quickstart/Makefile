@@ -39,85 +39,117 @@ $(info LOCALNET_DIR=$(LOCALNET_DIR))
 RESOURCE_CONSTRAINTS_ENABLED ?= true
 
 # project main compose file
-DOCKER_COMPOSE_FILES := -f compose.yaml
+DOCKER_COMPOSE_FILES := compose.yaml
 
 ############################################################################
 ####  Setup Splice LocalNet
 ############################################################################
-DOCKER_COMPOSE_FILES += -f ${LOCALNET_DIR}/compose.yaml
-DOCKER_COMPOSE_PROFILES := --profile app-provider --profile app-user --profile swagger-ui
-DOCKER_COMPOSE_ENVFILE := --env-file .env --env-file .env.local --env-file ${LOCALNET_DIR}/compose.env --env-file ${LOCALNET_DIR}/env/common.env
+DOCKER_COMPOSE_FILES    += ${LOCALNET_DIR}/compose.yaml
+DOCKER_COMPOSE_PROFILES := app-provider app-user swagger-ui
+DOCKER_COMPOSE_ENVFILES := .env .env.local ${LOCALNET_DIR}/compose.env ${LOCALNET_DIR}/env/common.env
+
 ifeq ($(ENV),local)
-    DOCKER_COMPOSE_PROFILES += --profile sv
-    DOCKER_COMPOSE_ENVFILE += --env-file ${LOCALNET_DIR}/env/local.env
+    DOCKER_COMPOSE_PROFILES += sv
+    DOCKER_COMPOSE_ENVFILES += ${LOCALNET_DIR}/env/local.env
 else
-    DOCKER_COMPOSE_PROFILES += --env-file ${LOCALNET_DIR}/env/dev.env
+    DOCKER_COMPOSE_ENVFILES += ${LOCALNET_DIR}/env/dev.env
 endif
+
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
-  RESOURCE_CONSTRAINT_CONFIG := -f ${LOCALNET_DIR}/resource-constraints.yaml
+  DOCKER_COMPOSE_FILES += ${LOCALNET_DIR}/resource-constraints.yaml
 endif
+
+############################################################################
+####  Observability
+############################################################################
+
 ifeq ($(OBSERVABILITY_ENABLED),true)
-  DOCKER_COMPOSE_OBSERVABILITY_FILES = -f ${MODULES_DIR}/observability/compose.yaml -f ${MODULES_DIR}/observability/observability.yaml
-  DOCKER_COMPOSE_PROFILES += --profile observability
-  DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/observability/compose.env
+  DOCKER_COMPOSE_FILES    += ${MODULES_DIR}/observability/compose.yaml ${MODULES_DIR}/observability/observability.yaml
+  DOCKER_COMPOSE_PROFILES += observability
+  DOCKER_COMPOSE_ENVFILES += ${MODULES_DIR}/observability/compose.env
+
   ifeq ($(KERNEL_NAME), Darwin)
-    DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ${MODULES_DIR}/observability/cadvisor-darwin.yaml
+    DOCKER_COMPOSE_FILES  += ${MODULES_DIR}/observability/cadvisor-darwin.yaml
   else ifeq ($(KERNEL_NAME), Linux)
-    DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ${MODULES_DIR}/observability/cadvisor-linux.yaml
+    DOCKER_COMPOSE_FILES  += ${MODULES_DIR}/observability/cadvisor-linux.yaml
   endif
+
 endif
 
 ############################################################################
 ####  Keycloak (optional)
 ############################################################################
-ifeq ($(AUTH_MODE),oauth2)
-    DOCKER_COMPOSE_FILES += -f ${MODULES_DIR}/keycloak/compose.yaml
-    DOCKER_COMPOSE_PROFILES += --profile keycloak
-    DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/keycloak/compose.env
 
-    ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
-      RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/keycloak/resource-constraints.yaml
-    endif
+ifeq ($(AUTH_MODE),oauth2)
+  DOCKER_COMPOSE_FILES    += ${MODULES_DIR}/keycloak/compose.yaml
+  DOCKER_COMPOSE_PROFILES += keycloak
+  DOCKER_COMPOSE_ENVFILES += ${MODULES_DIR}/keycloak/compose.env
+
+  ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
+    RESOURCE_CONSTRAINT_CONFIG += ${MODULES_DIR}/keycloak/resource-constraints.yaml
+  endif
 endif
 
 ############################################################################
 ####  Splice Onboarding
 ############################################################################
-DOCKER_COMPOSE_FILES += -f ${MODULES_DIR}/splice-onboarding/compose.yaml
+
+DOCKER_COMPOSE_FILES += ${MODULES_DIR}/splice-onboarding/compose.yaml
+
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
-  RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/splice-onboarding/resource-constraints.yaml
+  DOCKER_COMPOSE_FILES += ${MODULES_DIR}/splice-onboarding/resource-constraints.yaml
 endif
 
 ############################################################################
 ####  PQS
 ############################################################################
-DOCKER_COMPOSE_FILES += -f ${MODULES_DIR}/pqs/compose.yaml
-DOCKER_COMPOSE_PROFILES += --profile pqs-app-provider
-DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/pqs/compose.env
+
+DOCKER_COMPOSE_FILES    += ${MODULES_DIR}/pqs/compose.yaml
+DOCKER_COMPOSE_PROFILES += pqs-app-provider
+DOCKER_COMPOSE_ENVFILES += ${MODULES_DIR}/pqs/compose.env
+
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
-  RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/pqs/resource-constraints.yaml
+  DOCKER_COMPOSE_FILES  += ${MODULES_DIR}/pqs/resource-constraints.yaml
 endif
+
 ifeq ($(OBSERVABILITY_ENABLED),true)
-  DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ${MODULES_DIR}/pqs/observability.yaml
+  DOCKER_COMPOSE_FILES += ${MODULES_DIR}/pqs/observability.yaml
 endif
 
 ############################################################################
 ####  backend-service
 ############################################################################
+
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
-  RESOURCE_CONSTRAINT_CONFIG += -f ./docker/backend-service/resource-constraints.yaml
+  DOCKER_COMPOSE_FILES += ./docker/backend-service/resource-constraints.yaml
 endif
 ifeq ($(OBSERVABILITY_ENABLED),true)
-  DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ./docker/backend-service/observability.yaml
+  DOCKER_COMPOSE_FILES += ./docker/backend-service/observability.yaml
 endif
 
 # Custom overrides if needed
 #DOCKER_COMPOSE_FILES += -f <your_custom_compose_overrides.yaml>
-#DOCKER_COMPOSE_ENVFILE += --env-file <your_custom_env_overrides_file>
+#DOCKER_COMPOSE_ENVFILES += --env-file <your_custom_env_overrides_file>
 
-# Function to run docker-compose with default files and environment
+############################################################################
+####  Helper Functions
+############################################################################
+
+## Function takes a list and maps each item to a provided argument:
+## $(1) == argument flag
+## $(2) == arg values
+define return_as_args
+$(addprefix $(1) ,$(2))
+endef
+
+## Function constructrs docker compose commands using the values of:
+## - $COMPOSE_FILES
+## - $COMPOSE_ENVS
+## - $COMPOSE_PROFILES 
+## Usage:
+## $(1) == arguments to be passed to constructed docker compose command
 define docker-compose
-	docker compose $(DOCKER_COMPOSE_FILES) $(DOCKER_COMPOSE_ENVFILE) $(DOCKER_COMPOSE_PROFILES) $(1)
+	docker compose $(call return_as_args,-f,$(DOCKER_COMPOSE_FILES)) $(call return_as_args,--env-file,$(DOCKER_COMPOSE_ENVFILES)) $(call return_as_args,--profile,$(DOCKER_COMPOSE_PROFILES)) $(1)
 endef
 
 # Helper to generate an "open URL" target
@@ -133,6 +165,10 @@ else
 	@echo $(2)
 endif
 endef
+
+############################################################################
+####  Targets Start Here
+############################################################################
 
 SETUP_COMMAND := ./gradlew configureProfiles --no-daemon --console=plain --quiet
 
@@ -161,21 +197,21 @@ test-daml: ## Run daml tests
 
 .PHONY: build-docker-images
 build-docker-images:
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) build)
+	$(call docker-compose,build)
 
 .PHONY: create-app-install-request
-create-app-install-request: DOCKER_COMPOSE_FILES = -f docker/create-app-install-request/compose.yaml
+create-app-install-request: DOCKER_COMPOSE_FILES = docker/create-app-install-request/compose.yaml
 create-app-install-request: DOCKER_COMPOSE_PROFILES =
 create-app-install-request: ## Submit an App Install Request from the App User participant node
-	$(call docker-compose, run --rm container)
+	$(call docker-compose,run --rm container)
 
 .PHONY: restart-backend
 restart-backend: build-backend ## Build and start the application
-	$(call docker-compose, restart backend-service)
+	$(call docker-compose,restart backend-service)
 
 .PHONY: restart-frontend
 restart-frontend: build-frontend ## Build and start the application
-	$(call docker-compose, restart nginx-app-provider)
+	$(call docker-compose,restart nginx-app-provider)
 
 # Run targets
 .PHONY: start
@@ -185,7 +221,7 @@ start: fetch-grafana-dashboards
 endif
 endif
 start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
+	$(call docker-compose, up -d --no-recreate)
 
 .PHONY: start-vite-dev
 start-vite-dev: ## Start the frontend application in development mode
@@ -194,7 +230,7 @@ start-vite-dev: ## Start the frontend application in development mode
 
 .PHONY: stop
 stop: ## Stop the application and observability services
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) down)
+	$(call docker-compose, down)
 
 .PHONY: stop-application
 stop-application: ## Stop the application, leaving observability services running
@@ -206,11 +242,11 @@ restart: stop start ## Restart the application
 # Utility targets
 .PHONY: status
 status: ## Show status of Docker containers
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) ps)
+	$(call docker-compose, ps)
 
 .PHONY: compose-config
 compose-config:
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) config)
+	$(call docker-compose, config)
 
 .PHONY: logs
 logs: ## Show logs of Docker containers
@@ -296,7 +332,7 @@ integration-test/node_modules:
 # Console
 .PHONY: canton-console
 canton-console: ## Start the Canton console
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) run --rm --name canton-console console)
+	$(call docker-compose, run --rm --name canton-console console)
 
 .PHONY: clean-canton-console
 clean-canton-console: ## Stop and remove the Canton console container
@@ -304,8 +340,8 @@ clean-canton-console: ## Stop and remove the Canton console container
 
 # Shell
 .PHONY: shell
-shell: DOCKER_COMPOSE_FILES = -f ${MODULES_DIR}/daml-shell/compose.yaml
-shell: DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/daml-shell/compose.env
+shell: DOCKER_COMPOSE_FILES = ${MODULES_DIR}/daml-shell/compose.yaml
+shell: DOCKER_COMPOSE_ENVFILES += ${MODULES_DIR}/daml-shell/compose.env
 shell: DOCKER_COMPOSE_PROFILES =
 shell: ## Start Daml Shell
 	$(call docker-compose, run --rm daml-shell)
@@ -321,7 +357,7 @@ clean: ## Clean the build artifacts
 
 .PHONY: clean-docker
 clean-docker: clean-shell clean-canton-console ## Stop and remove application Docker containers and volumes
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) down -v)
+	$(call docker-compose, down -v)
 
 .PHONY: clean-application
 clean-application: ## like clean-docker, but leave observability services running
