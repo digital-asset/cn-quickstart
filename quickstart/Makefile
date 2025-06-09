@@ -4,6 +4,9 @@
 # Set default goal to 'help' if no target is specified
 .DEFAULT_GOAL := help
 
+# Include docker compose module functions
+include docker-compose.mk
+
 # Determine users operating system
 KERNEL_NAME := $(shell uname -s)
 
@@ -141,27 +144,6 @@ endif
 ############################################################################
 ####  Helper Functions
 ############################################################################
-
-## Function takes a list and maps each item to a provided argument:
-## $(1) == argument flag
-## $(2) == arg values
-define return_as_args
-  $(addprefix $(1) ,$(2))
-endef
-
-## Function constructrs docker compose commands using the values of:
-## - $COMPOSE_FILES
-## - $COMPOSE_ENVS
-## - $COMPOSE_PROFILES 
-## Usage:
-## $(1) == arguments to be passed to constructed docker compose command
-define docker-compose
-	docker compose \
-	  $(call return_as_args,-f,$(DOCKER_COMPOSE_FILES)) \
-	  $(call return_as_args,--env-file,$(DOCKER_COMPOSE_ENVFILES)) \
-		$(call return_as_args,--profile,$(DOCKER_COMPOSE_PROFILES)) \
-		$(1)
-endef
 
 # Helper to generate an "open URL" target
 define open-url-target # $(1) = target name, $(2) = URL to open
