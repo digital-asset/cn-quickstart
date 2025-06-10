@@ -13,7 +13,7 @@ import Splice.AmuletRules (AppTransferContext(..))
 import Splice.Round
 import Splice.Util
 import DA.Time
-import DA.Assert
+import DA.Assert ((===)) -- (assertWithinDeadline, assertDeadlineExceeded, (===))
 import DA.Action (unless)
 
 -- License contract template

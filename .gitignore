@@ -32,5 +32,8 @@ gradle-app.setting
 # backups
 *.bak
 
+# VS Code
+.vscode/
+
 # MacOS
 .DS_Store
