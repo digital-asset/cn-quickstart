@@ -73,19 +73,19 @@ and `CN Docker repository <https://digitalasset.jfrog.io/ui/native/canton-networ
 is needed to successfully pull the Digital Asset artifacts from JFrog
 Artifactory.
 
-Access to the *Daml-VPN* connection or
+Access to the two repositories above is sufficient to run the CN Quickstart in a LocalNet configuration. Access to the *Daml-VPN* connection or
 `a SV Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
-that is whitelisted on the CN is required to connect to DevNet.  The GSF
+that is whitelisted on the CN is required to connect to DevNet. The GSF
 publishes a `list of SV nodes <https://sync.global/sv-network/>`__ who have the
-ability to sponsor a Validator node.  To access `DevNet`, contact your
+ability to sponsor a Validator node. To access DevNet`, contact your
 sponsoring SV agent for VPN connection information.
 
 If you need access or additional support, email support@digitalasset.com.
 
 The CN QS is a Dockerized application and requires
-`Docker Desktop <https://www.docker.com/products/docker-desktop/>`__.  Running
-CN QS is resource intensive.  We recommend allocating 8 GB of memory to Docker
-Desktop.  If your machine does not have that much memory consider declining
+`Docker Desktop <https://www.docker.com/products/docker-desktop/>`__. Running
+CN QS is resource intensive. We recommend allocating 8 GB of memory to Docker
+Desktop. If your machine does not have that much memory consider declining
 Observability when prompted.
 
 Other requirements include:
@@ -94,7 +94,7 @@ Other requirements include:
 
   -  `Direnv <https://direnv.net/docs/installation.html>`__
 
-  -  `Nix <https://nixos.org/download/>`__
+  -  `Nix (package manager) <https://nixos.org/download/>`__
 
   -  Windows users must install and use
      `WSL 2 <https://learn.microsoft.com/en-us/windows/wsl/install>`__ with
@@ -113,17 +113,21 @@ Nix download support
 
    Congratulations, you’re done.
 
-   Recommended installation for MacOS.
+   If Nix is not currently installed on your machine, follow the instructions provided by the `download` site above.
 
-   `sh <(curl -L https://nixos.org/nix/install)`
+   The currently recommended installation for MacOS is:
 
-   | Recommended installation for Linux.
+   `sh <(curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install)`
+
+   | and for Linux.
    | (Windows users should run this and all following commands in WSL 2).
 
-   `sh <(curl -L https://nixos.org/nix/install) --daemon`
+   `sh <(curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install) --no-daemon`
 
 Step-by-step instructions
 =========================
+
+Once the prerequisite requirements are installed the following procedure will install and configure the Quickstart Project; and, run the Quickstart Example Application.
 
 Clone from Github
 -----------------
@@ -169,12 +173,13 @@ Paste the boiler plate content into `~/.netrc`.
 Locate login for ~/.netrc
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
+To obtain the `<username>` and `<identity_token>` values required by the `~/.netrc` file:
+
 Log into JFrog. 
 
 Click the profile icon in the top right corner and then click **Edit Profile**.
 
-Your email address is the login username in `~/.netrc`.
-Replace `<username>` with the JFrog Artifactory user profile email.
+Your login `<username>` is your JFrog Artifactory user profile email.
 
 .. image:: images/02-jfrog-user-profile.png
    :alt: JFrog user profile
@@ -198,7 +203,7 @@ Add an identity token description.
 Copy the Identity Token as shown under "Reference Token." 
 
 The Identity Token is also referred to as the "Reference Token" and the "API
-key" in JFrog and is the password in `~/.netrc`.
+key" in JFrog and is the password `<identity_token>` in `~/.netrc`.
 
 .. image:: images/03c-copy-ref-token.png
    :alt: New Reference Token
@@ -206,11 +211,6 @@ key" in JFrog and is the password in `~/.netrc`.
 
 Complete ~/.netrc
 ~~~~~~~~~~~~~~~~~
-
-The Identity Token is stored as the password in `~/.netrc`. 
-
-Replace `<identity_token>` with the Identity Token (also referred to as the
-Reference Token) from your JFrog profile.
 
 When complete, the `~/.netrc` file will look similar to:
 
@@ -224,8 +224,8 @@ Manually set `.netrc`’s permissions.
 
 `chmod 600 ~/.netrc`
 
-Check for Artifactory connectivity using `.netrc` credentials after populating
-the username and password.
+To check Artifactory is correctly using `.netrc` credentials after populating
+the username and password use the following `curl` command:
 
 ::
 
@@ -240,7 +240,7 @@ A response of “OK” indicates a successful connection.
 Authentication problems often result in a `401` or `403` error. 
 
 If an error response occurs, double check `~/.netrc` to confirm that `.netrc` is
-a source file (in root) and not a local file.
+in the correct location (in the root of your home directory, and not local to the quickstart or another directory).
 
 Docker
 ------
@@ -263,6 +263,13 @@ Commands should return ‘Login Succeeded’.
 Install Daml SDK
 ----------------
 
+CN Quickstart tracks specific versions of the Daml SDK. To ensure you have the correct version available, CN Quickstart
+provides a gradle target that will download and install the expected version. This version will not interfere
+with other Daml SDK versions, and will be installed safely alongside any other SDK versions you may be using for other
+projects on your machine.
+
+The easiest way to run the gradle target is via the project choreographer `make`:
+
 `cd` into the `quickstart` subdirectory and install the Daml SDK from the
 quickstart subdirectory.
 
@@ -271,8 +278,8 @@ quickstart subdirectory.
    cd quickstart
    make install-daml-sdk
 
-.. note:: The `makefile` providing project choreography is in the `quickstart/`
-          directory.  `make` only operates within `quickstart/`.
+.. note:: The `Makefile` providing project choreography is in the `quickstart/`
+          directory. `make` only operates within `quickstart/`.
    
           If you see errors related to `make`, double check your present working
           directory.
@@ -284,6 +291,8 @@ The Daml SDK is large and can take several minutes to complete.
 
 Deploy a validator on LocalNet
 ------------------------------
+
+The project choreography also includes shortcuts to deploy the example application to a Docker-hosted LocalNet:
 
 From the quickstart subdirectory, build the application.
 
@@ -297,23 +306,30 @@ Once complete, start the application, Canton services and Observability.
 `make start`
 
 The first time running `make start`, a helper assistant prompts to set up a
-local deployment.  It offers the choice of running `DevNet` or `LocalNet`,
-enabling `Observability`, and specifying a party hint. 
+local deployment. It offers the following choices
 
-In the future, this helper can be accessed by running `make setup`.
+  - running `DevNet` or `LocalNet`
+  - enabling the `Observability` stack
+  - chosing between production-style OAuth2 or bypassing authentication with using shared secrets
+  - specifying a party hint.
 
-Begin the first application in `LocalNet` with `Observability` enabled.
-Leave the party hint blank to use the default.
+Should you need to change any of the choices, rerun the helper using `make setup`.
+
+The default is to run in `LocalNet` with `Observability`  and `OAuth2` enabled.
+Leave the party hint blank to use a default based on your local username.
 
   The party hint is used as a party node’s alias of their identification hash.
-  The Party Hint is not part of the user’s identity.  It is a convenience
-  feature.  It is possible to have multiple party nodes with the same hint.
+  The Party Hint is not part of the user’s identity. It is a convenience
+  feature. It is possible to have multiple party nodes with the same hint.
 
 | Enable LocalNet? (Y/n): Y
-| LOCALNET_ENABLED set to ‘true’.
+|   LOCALNET_ENABLED set to ‘true’.
 
 | Enable Observability? (Y/n): Y
-| OBSERVABILITY_ENABLED set to ‘true’.
+|   OBSERVABILITY_ENABLED set to ‘true’.
+
+| Enable OAUTH2? (Y/n): Y
+|   AUTH_MODE set to 'oauth2'.
 
 | Specify a party hint (this will identify the participant in the
   network) [quickstart-USERNAME-1]:
