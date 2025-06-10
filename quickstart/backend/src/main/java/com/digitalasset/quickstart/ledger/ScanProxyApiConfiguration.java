@@ -20,7 +20,6 @@ public class ScanProxyApiConfiguration {
         apiClient.setRequestInterceptor(requestBuilder -> {
             requestBuilder.header("Authorization", "Bearer " + tokenProvider.getToken());
         });
-
         return new ScanProxyApi(apiClient);
     }
 }

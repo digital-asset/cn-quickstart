@@ -1,0 +1,232 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 23,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 12,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{service_name=~\"$services\"} | service_name=~\"(db-migration)|(domain.*)|(splice.*)|(app.*)|(canton.*)|(scan.*)|(sv.*)|(sequencer.*)|(mediator.*)\" | detected_level=~\"(?i)$log_level\" | json | line_format \"[{{.service_name}}] {{.message}}\" | trace_id=~\"(?i)$traceId\" |~ `(?i)$search`",
+          "hide": false,
+          "queryType": "range",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{service_name=~\"$services\"} | service_name=~\"(backend-service)|(pqs.*)|(postgres.*)|(.*web-ui.*)\" | label_format level=detected_level | level=~\"(?i)$log_level\" | line_format \"[{{.service_name}}] {{ __line__ }}\" | trace_id=~\"(?i)$traceId\" or correlation_id=~\"(?i)$traceId\" |~ `(?i)$search`",
+          "hide": false,
+          "queryType": "range",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{service_name=~\"$services\"} | service_name=~\"nginx.*\" |~ \"^{.*}$\" | json | line_format \"[{{.service_name}}] {{ .request }} {{ .status }}\" | trace_id=~\"(?i)$traceId\" |~ `(?i)$search`",
+          "hide": false,
+          "queryType": "range",
+          "refId": "nginx-json"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "{service_name=~\"$services\"} | service_name=~\"nginx.*\" !~ \"^{.*}$\" | label_format level=detected_level | line_format \"[{{.service_name}}] {{ __line__ }}\" | trace_id=~\"(?i)$traceId\" |~ `(?i)$search`",
+          "hide": false,
+          "queryType": "range",
+          "refId": "nginx-stderr"
+        }
+      ],
+      "title": "Logs",
+      "type": "logs"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": [
+    "logs",
+    "loki"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Services",
+        "multi": true,
+        "name": "services",
+        "options": [],
+        "query": {
+          "label": "service_name",
+          "refId": "LokiVariableQueryEditor-VariableQuery",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "description": "Log levels",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Levels",
+        "multi": true,
+        "name": "log_level",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "Trace",
+            "value": "Trace"
+          },
+          {
+            "selected": false,
+            "text": "Debug",
+            "value": "Debug"
+          },
+          {
+            "selected": false,
+            "text": "Info",
+            "value": "Info"
+          },
+          {
+            "selected": false,
+            "text": "Warn",
+            "value": "Warn"
+          },
+          {
+            "selected": false,
+            "text": "Error",
+            "value": "Error"
+          },
+          {
+            "selected": false,
+            "text": "Fatal",
+            "value": "Fatal"
+          }
+        ],
+        "query": "Trace, Debug, Info, Warn, Error, Fatal",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "description": "Display logs containing search term",
+        "hide": 0,
+        "name": "search",
+        "label": "Search",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "description": "Display logs containing trace/correlation ID reference",
+        "hide": 0,
+        "name": "traceId",
+        "label": "Trace ID",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Quickstart - consolidated logs",
+  "uid": "quickstart-consolidated-logs"
+}

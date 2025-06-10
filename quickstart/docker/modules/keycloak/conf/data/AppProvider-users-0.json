@@ -1,0 +1,92 @@
+{
+  "realm" : "AppProvider",
+  "users" : [ {
+    "id" : "3c467325-772f-4f93-8972-711ec75634b1",
+    "username" : "beatris",
+    "firstName" : "Beatris",
+    "lastName" : "Doe",
+    "email" : "beatris@app-provider.localhost",
+    "emailVerified" : true,
+    "createdTimestamp" : 1738819268084,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "24f86845-e755-4ab4-bbb4-28a049d663f4",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1738819283347,
+      "secretData" : "{\"value\":\"+V9AEY0wotcSlaYx8FOO+Csq0sHxFYrJ/z1Qk7IVdCw=\",\"salt\":\"1Ob1aDdjPVE77bHoDt1R+g==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-quickstart" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "553c6754-8879-41c9-ae80-b302f5af92c9",
+    "username" : "app-provider",
+    "firstName" : "app",
+    "lastName" : "provider",
+    "email" : "app-provider@app-provider.localhost",
+    "emailVerified" : true,
+    "createdTimestamp" : 1738819160124,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "f859100f-1e83-4523-9317-f74a952221a3",
+      "type" : "password",
+      "userLabel" : "My password",
+      "createdDate" : 1741843993234,
+      "secretData" : "{\"value\":\"WOszj9LuazI5jcHu6gMn9mZVV7AdZkfsNUgFp1J/gVU=\",\"salt\":\"ZRe0DbVqrxAOwDGHUALxjw==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-quickstart" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "1a36eb86-4ccc-4ec6-b7b7-caa08b354989",
+    "username" : "service-account-app-provider-backend",
+    "emailVerified" : false,
+    "createdTimestamp" : 1738819518410,
+    "enabled" : true,
+    "totp" : false,
+    "serviceAccountClientId" : "app-provider-backend",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-quickstart" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "0145df12-c560-40fa-bef3-caff2c5c2224",
+    "username" : "service-account-app-provider-pqs",
+    "emailVerified" : false,
+    "createdTimestamp" : 1738821305957,
+    "enabled" : true,
+    "totp" : false,
+    "serviceAccountClientId" : "app-provider-pqs",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-quickstart" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "c87743ab-80e0-4b83-935a-4c0582226691",
+    "username" : "service-account-app-provider-validator",
+    "emailVerified" : false,
+    "createdTimestamp" : 1738821248220,
+    "enabled" : true,
+    "totp" : false,
+    "serviceAccountClientId" : "app-provider-validator",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-quickstart" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  } ]
+}
