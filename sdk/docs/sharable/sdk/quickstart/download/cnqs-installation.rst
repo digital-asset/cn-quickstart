@@ -44,15 +44,15 @@ Canton Network quickstart installation
 Introduction
 ============
 
-The QS is designed to help teams become familiar with CN application development
-by providing scaffolding to kickstart development. The QS application is
-intended to be incrementally extended by you to meet your specific business
-needs. Once you are familiar with the QS, please review the technology choices
-and the application design to determine what changes are needed - technology and
-design decisions are ultimately up to you.
+The QS is designed to help teams become familiar with CN application
+development by providing scaffolding to kickstart development. The QS
+application is intended to be incrementally extended by you to meet your
+specific business needs. Once you are familiar with the QS, please review the
+technology choices and the application design to determine what changes are
+needed - technology and design decisions are ultimately up to you.
 
-Please be aware that the Canton Network Quickstart (CN QS) is a rapidly evolving
-work in progress.
+Please be aware that the Canton Network Quickstart (CN QS) is a rapidly
+evolving work in progress.
 
 Overview
 ========
@@ -73,20 +73,21 @@ and `CN Docker repository <https://digitalasset.jfrog.io/ui/native/canton-networ
 is needed to successfully pull the Digital Asset artifacts from JFrog
 Artifactory.
 
-Access to the two repositories above is sufficient to run the CN Quickstart in a LocalNet configuration. Access to the *Daml-VPN* connection or
+Access to the two repositories above is sufficient to run the CN Quickstart in
+a LocalNet configuration. Access to the *Daml-VPN* connection or
 `a SV Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
 that is whitelisted on the CN is required to connect to DevNet. The GSF
 publishes a `list of SV nodes <https://sync.global/sv-network/>`__ who have the
-ability to sponsor a Validator node. To access DevNet`, contact your
-sponsoring SV agent for VPN connection information.
+ability to sponsor a Validator node. To access DevNet`, contact your sponsoring
+SV agent for VPN connection information.
 
 If you need access or additional support, email support@digitalasset.com.
 
 The CN QS is a Dockerized application and requires
-`Docker Desktop <https://www.docker.com/products/docker-desktop/>`__. Running
-CN QS is resource intensive. We recommend allocating 8 GB of memory to Docker
-Desktop. If your machine does not have that much memory consider declining
-Observability when prompted.
+`Docker Desktop <https://www.docker.com/products/docker-desktop/>`__.
+Running CN QS is resource intensive. We recommend allocating 8 GB of memory to
+Docker Desktop. If your machine does not have that much memory consider
+declining Observability when prompted.
 
 Other requirements include:
 
@@ -113,7 +114,8 @@ Nix download support
 
    Congratulations, you’re done.
 
-   If Nix is not currently installed on your machine, follow the instructions provided by the `download` site above.
+   If Nix is not currently installed on your machine, follow the instructions
+   provided by the `download` site above.
 
    The currently recommended installation for MacOS is:
 
@@ -127,7 +129,9 @@ Nix download support
 Step-by-step instructions
 =========================
 
-Once the prerequisite requirements are installed the following procedure will install and configure the Quickstart Project; and, run the Quickstart Example Application.
+Once the prerequisite requirements are installed the following procedure will
+install and configure the Quickstart Project; and, run the Quickstart Example
+Application.
 
 Clone from Github
 -----------------
@@ -173,7 +177,8 @@ Paste the boiler plate content into `~/.netrc`.
 Locate login for ~/.netrc
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To obtain the `<username>` and `<identity_token>` values required by the `~/.netrc` file:
+To obtain the `<username>` and `<identity_token>` values required by the
+`~/.netrc` file:
 
 Log into JFrog. 
 
@@ -239,8 +244,9 @@ A response of “OK” indicates a successful connection.
 
 Authentication problems often result in a `401` or `403` error. 
 
-If an error response occurs, double check `~/.netrc` to confirm that `.netrc` is
-in the correct location (in the root of your home directory, and not local to the quickstart or another directory).
+If an error response occurs, double check `~/.netrc` to confirm that `.netrc`
+is in the correct location (in the root of your home directory, and not local
+to the quickstart or another directory).
 
 Docker
 ------
@@ -263,12 +269,14 @@ Commands should return ‘Login Succeeded’.
 Install Daml SDK
 ----------------
 
-CN Quickstart tracks specific versions of the Daml SDK. To ensure you have the correct version available, CN Quickstart
-provides a gradle target that will download and install the expected version. This version will not interfere
-with other Daml SDK versions, and will be installed safely alongside any other SDK versions you may be using for other
-projects on your machine.
+CN Quickstart tracks specific versions of the Daml SDK. To ensure you have the
+correct version available, CN Quickstart provides a gradle target that will
+download and install the expected version. This version will not interfere with
+other Daml SDK versions, and will be installed safely alongside any other SDK
+versions you may be using for other projects on your machine.
 
-The easiest way to run the gradle target is via the project choreographer `make`:
+The easiest way to run the gradle target is via the project choreographer
+`make`:
 
 `cd` into the `quickstart` subdirectory and install the Daml SDK from the
 quickstart subdirectory.
@@ -292,7 +300,8 @@ The Daml SDK is large and can take several minutes to complete.
 Deploy a validator on LocalNet
 ------------------------------
 
-The project choreography also includes shortcuts to deploy the example application to a Docker-hosted LocalNet:
+The project choreography also includes shortcuts to deploy the example
+application to a Docker-hosted LocalNet:
 
 From the quickstart subdirectory, build the application.
 
@@ -310,10 +319,12 @@ local deployment. It offers the following choices
 
   - running `DevNet` or `LocalNet`
   - enabling the `Observability` stack
-  - chosing between production-style OAuth2 or bypassing authentication with using shared secrets
+  - chosing between production-style OAuth2 or bypassing authentication with
+    using shared secrets
   - specifying a party hint.
 
-Should you need to change any of the choices, rerun the helper using `make setup`.
+Should you need to change any of the choices, rerun the helper using `make
+setup`.
 
 The default is to run in `LocalNet` with `Observability`  and `OAuth2` enabled.
 Leave the party hint blank to use a default based on your local username.
@@ -337,8 +348,8 @@ Leave the party hint blank to use a default based on your local username.
 
 `.env.local` updated successfully.
 
-   Consider declining Observability if your machine has less than 8 GB of memory
-   to allocate to Docker Desktop.
+   Consider declining Observability if your machine has less than 8 GB of
+   memory to allocate to Docker Desktop.
 
 .. image:: images/09-make-setup.png
    :alt: Make setup
@@ -383,8 +394,8 @@ Closing the application
 Close Canton console
 ~~~~~~~~~~~~~~~~~~~~
 
-When complete, open the Canton console terminal. 
-Run `exit` to stop and remove the console container.
+When complete, open the Canton console terminal and use `exit` to stop and
+remove the console container.
 
 Close Daml shell
 ~~~~~~~~~~~~~~~~
