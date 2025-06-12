@@ -166,8 +166,6 @@ After starting the application with `make start` you can access the following UI
 
   > **Note**: `LocalNet` rounds may take up to 6 rounds (equivalent to one hour) to display in the scan UI.
 
-All the Super Validator UIs are accessible via a gateway at [http://localhost:4000](http://localhost:4000).
-
 The `*.localhost` domains will resolve to your local host IP `127.0.0.1`.
 
 ### Auth
