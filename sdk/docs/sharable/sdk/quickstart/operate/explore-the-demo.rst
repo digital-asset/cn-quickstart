@@ -52,9 +52,9 @@ is needed to successfully pull the Digital Asset artifacts from JFrog Artifactor
 If you need support accessing the JFrog Artifactory, please email support@digitalasset.com.
 
 Access to the *Daml-VPN* connection or `a SV Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
-that is whitelisted on the CN is required to connect to `DevNet`.
+that is whitelisted on the CN is required to connect to ``DevNet``.
 The GSF publishes a `list of SV nodes <https://sync.global/sv-network/>`__ who have the ability to sponsor a Validator node.
-To access `DevNet`, contact your sponsoring SV agent for VPN connection information.
+To access ``DevNet``, contact your sponsoring SV agent for VPN connection information.
 
 If you need support accessing the SV or VPN email support@digitalasset.com.
 
@@ -62,7 +62,7 @@ The CN QS is a Dockerized application and requires `Docker Desktop <https://www.
 It is recommended to allocate 8 GB of memory and 3 GB of Swap memory to properly run the required Docker containers.
 If you witness unhealthy containers, please consider allocating additional resources, if possible.
 
-`DevNet` is less intensive because the SVs and other `LocalNet` containers are hosted outside of your local machine.
+``DevNet`` is less intensive because the SVs and other ``LocalNet`` containers are hosted outside of your local machine.
 
 Walkthrough
 ===========
@@ -79,14 +79,14 @@ localhost:3000/login
 
 Alternatively, in the terminal, from quickstart/ run:
 
-`make open-app-ui`
+``make open-app-ui``
 
 .. image:: images/01-login-cnqs.png
    :alt: CNQS Login screen
 
-Make note that the `AppProvider`’s username is “pat” and the password is “abc123” (all lowercase).
+Make note that the ``AppProvider``’s username is “pat” and the password is “abc123” (all lowercase).
 
-Login as the `AppProvider`.
+Login as the ``AppProvider``.
 
 Fill in the login credentials: username: pat, password: abc123
 
@@ -100,16 +100,16 @@ Select “AppInstalls” in the menu.
 
 Open a terminal.
 
-From `/quickstart/` run:
+From ``/quickstart/`` run:
 
-`make create-app-install-request`
+``make create-app-install-request``
 
 This command creates an App Installation Request on behalf of the Participant.
 
 .. image:: images/04-create-install-req.png
    :alt: App Install Request
 
-.. note:: If your machine is not powerful enough to host `LocalNet` or if the docker containers are not responsive then the response may show a failure with status code 404 or 000 (as shown in the image below). Increasing Docker memory limit to at least 8 GB should allow the `LocalNet` containers to operate properly.
+.. note:: If your machine is not powerful enough to host ``LocalNet`` or if the docker containers are not responsive then the response may show a failure with status code 404 or 000 (as shown in the image below). Increasing Docker memory limit to at least 8 GB should allow the ``LocalNet`` containers to operate properly.
 
 .. image:: images/05-error-app-install.png
    :alt: App Install Request error
@@ -123,7 +123,7 @@ Click “Accept”.
 .. image:: images/06-install-request.png
    :alt: install request
 
-The `AppInstallRequest` is Accepted. The actions update to create or cancel the license.
+The ``AppInstallRequest`` is Accepted. The actions update to create or cancel the license.
 
 .. image:: images/07-req-accept.png
    :alt: accept request
@@ -135,7 +135,7 @@ The license is created and the “# Licenses” field is updated.
 .. image:: images/08-create-lic.png
    :alt: create license
 
-In the `AppProvider`, “Pat the provider’s,” account, navigate to the **Licenses** menu and select “Actions.”
+In the ``AppProvider``, “Pat the provider’s,” account, navigate to the **Licenses** menu and select “Actions.”
 
 .. image:: images/09-licenses-view.png
    :alt: Licenses view
@@ -166,16 +166,16 @@ Pat the provider has done as much as they are able until Alice pays the renewal 
 
    💡For the next step we recommend opening a separate browser in incognito mode.
    Each user should be logged into separate browsers for most consistent results.
-   For example, if you logged into `AppProvider` using Chrome, you would use Firefox when logging into `AppUser`.
+   For example, if you logged into ``AppProvider`` using Chrome, you would use Firefox when logging into ``AppUser``.
 
 Navigate to http://localhost:3000/login using a separate browser in incognito or private mode.
 
 .. image:: images/01-login-cnqs.png
    :alt: login screen
 
-Login as `AppUser` alice.
+Login as ``AppUser`` alice.
 
-Note that `AppUser`’s username is “alice” and the password is “abc123”.
+Note that ``AppUser``’s username is “alice” and the password is “abc123”.
 
 .. image:: images/14-app-user-signin.png
    :alt: AppUser login screen
@@ -206,8 +206,8 @@ Click **Send Payment**.
 .. image:: images/18-canton-preloaded-wallet.png
    :alt: CC Wallet view
 
-Return to the `AppProvider`’s License Renewal Requests View.
-The `AppProvider` may now Complete the Renewal.
+Return to the ``AppProvider``’s License Renewal Requests View.
+The ``AppProvider`` may now Complete the Renewal.
 
 .. image:: images/22-complete-renewal.png
    :alt: complete renewal
@@ -232,32 +232,32 @@ The console allows a developer to bypass the UI to interact with the CN in a mor
 For example, in Canton Console you can connect to the Participant to see the location of the Participant and their synchronizer domain.
 
 The app provider and the app user each have their own console.
-To activate the app provider’s Canton Console in a terminal from the `quickstart/` directory.
+To activate the app provider’s Canton Console in a terminal from the ``quickstart/`` directory.
 Run:
 
-`make console-app-provider`
+``make console-app-provider``
 
 Open the participant’s Canton Console with
 
-`make console-app-user`
+``make console-app-user``
 
-After the console initiates, run the `participant` and `participant.domains` commands, respectively.
+After the console initiates, run the ``participant`` and ``participant.domains`` commands, respectively.
 
-`participant`
+``participant``
 
 Returns their location in the ledger.
 
 .. image:: images/25-console-participant.png
    :alt: Participant location in the ledger
 
-`participant.domains`
+``participant.domains``
 
 Shows the Participant’s synchronizer.
 
 .. image:: images/26-console-sync.png
    :alt: Participant synchronizer
 
-`participant.health.ping(participant)`
+``participant.health.ping(participant)``
 
 Runs a health ping.
 The ping makes a round trip through the CN blockchain.
@@ -274,29 +274,29 @@ In the Shell, the assets and their details are available in real time.
 
 Run the shell from quickstart/ in the terminal with:
 
-`make shell`
+``make shell``
 
 Run the following commands to see the data:
 
-`active`
+``active``
 
 Shows unique identifiers and the asset count
 
 .. image:: images/28-shell-ids.png
    :alt: Active identifiers
 
-`active quickstart-licensing:Licensing.License:License`
+``active quickstart-licensing:Licensing.License:License``
 
 List the license details.
 
 .. image:: images/29-license-details.png
    :alt: License details
 
-`active quickstart-licensing:Licensing.License:LicenseRenewalRequest`
+``active quickstart-licensing:Licensing.License:LicenseRenewalRequest``
 
 Displays license renewal request details.
 
-`archives quickstart-licensing:Licensing.AppInstall:AppInstallRequest`
+``archives quickstart-licensing:Licensing.AppInstall:AppInstallRequest``
 
 Shows any archived license(s).
 
@@ -306,17 +306,17 @@ Shows any archived license(s).
 Connect to DevNet
 -----------------
 
-Stop the `LocalNet` containers to change the connection from `LocalNet` to `DevNet`.
+Stop the ``LocalNet`` containers to change the connection from ``LocalNet`` to ``DevNet``.
 
 In the terminal, run:
 
-`make stop && make clean-all`
+``make stop && make clean-all``
 
 To edit the connection and observability parameters run:
 
-`make setup`
+``make setup``
 
-When prompted to enable `LocalNet`, enter “n”. This enables `DevNet`
+When prompted to enable ``LocalNet``, enter “n”. This enables ``DevNet``
 
 Optionally, enter “Y” to enable observability. This starts additional containers which may require more memory for Docker.
 
@@ -325,23 +325,23 @@ You may leave the party hint as the default value by tapping ‘return’ on the
 .. image:: images/31-party-hint.png
    :alt: Party hint
 
-💡Running make setup regenerates `.env.local` but preserves the contents of the `.env` file settings.
+💡Running make setup regenerates ``.env.local`` but preserves the contents of the ``.env`` file settings.
 
-The application is now connected to `DevNet`.
+The application is now connected to ``DevNet``.
 
 Important: Migration ID for DevNet connections
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When connecting to `DevNet`, verify that the `MIGRATION_ID` value in `.env` matches the current network migration ID for your `DevNet` Super Validator (SV).
+When connecting to ``DevNet``, verify that the ``MIGRATION_ID`` value in ``.env`` matches the current network migration ID for your ``DevNet`` Super Validator (SV).
 
-Check the current migration ID at https://sync.global/sv-network/ under the GSF `DevNet` information section.
+Check the current migration ID at https://sync.global/sv-network/ under the GSF ``DevNet`` information section.
 
-For example, if the SV Node Information shows the `migration_id` value as “0” then update `MIGRATION_ID` to “0” in your `.env`.
+For example, if the SV Node Information shows the ``migration_id`` value as “0” then update ``MIGRATION_ID`` to “0” in your ``.env``.
 
 .. image:: images/32-gsf-sv.png
    :alt: GSF SV information
 
-In `.env`:
+In ``.env``:
 
 ..
 
@@ -356,27 +356,27 @@ In `.env`:
 Configuring non-default DevNet sponsors
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In `DevNet` mode, you can configure a non-default `SPONSOR_SV_ADDRESS`, `SCAN_ADDRESS` and `ONBOARDING_SECRET_URL` or `ONBOARDING_SECRET` in the `quickstart/.env` file.
+In ``DevNet`` mode, you can configure a non-default ``SPONSOR_SV_ADDRESS``, ``SCAN_ADDRESS`` and ``ONBOARDING_SECRET_URL`` or ``ONBOARDING_SECRET`` in the ``quickstart/.env`` file.
 
-   💡 Connecting to `DevNet` requires a connection to an `approved SV <https://sync.global/docs/>`__.
+   💡 Connecting to ``DevNet`` requires a connection to an `approved SV <https://sync.global/docs/>`__.
    If your organization provides access to the DAML-VPN, then connect to it to access the Digital Asset-sponsored SV.
 
    Your organization may sponsor another `CN-approved SV <https://sync.global/sv-network/>`__.
    If this is the case, speak with your administrator for privileged access.
 
-   Review the `DevNet` Global Synchronizer documentation to learn more about the `SV onboarding process <https://docs.dev.sync.global/validator_operator/validator_onboarding.html#onboarding-process-overview>`__.
+   Review the ``DevNet`` Global Synchronizer documentation to learn more about the `SV onboarding process <https://docs.dev.sync.global/validator_operator/validator_onboarding.html#onboarding-process-overview>`__.
 
-   ⏱️ If you run into errors when making `DevNet` operations, double check that the `DevNet` VPN is active.
-   `DevNet` VPNs may timeout, especially if left unattended for extended periods of time.
+   ⏱️ If you run into errors when making ``DevNet`` operations, double check that the ``DevNet`` VPN is active.
+   ``DevNet`` VPNs may timeout, especially if left unattended for extended periods of time.
 
-In an incognito browser navigate to `localhost:3000/login`.
+In an incognito browser navigate to ``localhost:3000/login``.
 Login as the Org1 user and create and archive assets, as before.
-Logout and do the same as the `AppProvider`.
+Logout and do the same as the ``AppProvider``.
 
 Canton Coin Scan
 ~~~~~~~~~~~~~~~~
 
-While connected to `DevNet`, navigate to the CC Scan Web UI at http://scan.localhost:4000/.
+While connected to ``DevNet``, navigate to the CC Scan Web UI at http://scan.localhost:4000/.
 
 The default activity view shows the total CC balance and the Validator rewards.
 

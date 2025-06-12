@@ -80,7 +80,7 @@ click E "https://grafana.com/oss/grafana/" _blank
 
 # Running
 
-To start the observability services, set `OBSERVABILITY_ENABLED` to `true` in `.env.local` in the `quickstart` directory, and it will be started together with the application services when you run
+To start the observability services, set ``OBSERVABILITY_ENABLED`` to ``true`` in ``.env.local`` in the ``quickstart`` directory, and it will be started together with the application services when you run
 ```shell
 $ make start
 ```

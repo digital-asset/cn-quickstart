@@ -44,19 +44,19 @@ your local copy of the CN QS by making a git pull from the main branch.
 
 ::
 
-   `git clone https://github.com/digital-asset/cn-quickstart.git`
+   ``git clone https://github.com/digital-asset/cn-quickstart.git``
 
-   `cd cn-quickstart`
+   ``cd cn-quickstart``
 
    # Regular updates during learning
 
-   `git pull origin main`
+   ``git pull origin main``
 
    # Environment customization (only if needed)
 
-   `echo 'export PARTY_HINT="company-name"' > .envrc.private`
+   ``echo 'export PARTY_HINT="company-name"' > .envrc.private``
 
-   `direnv allow`
+   ``direnv allow``
 
 Experimentation phase
 ---------------------
@@ -80,13 +80,13 @@ selectively incorporate changes.
 
    # Create a branch for experiments
 
-   `git checkout -b experiments`
+   ``git checkout -b experiments``
 
    # Periodically incorporate upstream changes
 
-   `git fetch upstream`
+   ``git fetch upstream``
 
-   `git merge upstream/main`
+   ``git merge upstream/main``
 
 Development phase
 -----------------
@@ -149,27 +149,27 @@ Maintain separate build files for application components.
 Environment variables
 ~~~~~~~~~~~~~~~~~~~~~
 
-Use `.envrc.private` for local overrides.
+Use ``.envrc.private`` for local overrides.
 
 ::
 
    # Override CN QS defaults
 
-   `export PARTY_HINT="your-company"`
+   ``export PARTY_HINT="your-company"``
 
-   `export DAML_SDK_VERSION="your-version"`
+   ``export DAML_SDK_VERSION="your-version"``
 
    # Add your application-specific variables
 
-   `export MY_APP_CONFIG="/path/to/config"`
+   ``export MY_APP_CONFIG="/path/to/config"``
 
    Create separate environment files for your application.
 
    # In myapp/.env
 
-   `MY_APP_PORT=8080`
+   ``MY_APP_PORT=8080``
 
-   `MY_APP_DB_URL=jdbc:postgresql://localhost:5432/myapp`
+   ``MY_APP_DB_URL=jdbc:postgresql://localhost:5432/myapp``
 
 Docker compose
 ~~~~~~~~~~~~~~
@@ -236,10 +236,10 @@ historical development record.
 ::
 
    # Remove the CN QS remote
-   `git remote remove upstream`
+   ``git remote remove upstream``
 
    # Clean up unused directories (after backing up if needed)
-   `rm -rf quickstart/`
+   ``rm -rf quickstart/``
 
    # Update build files to remove CN QS references
 
@@ -266,15 +266,15 @@ Your update strategy may include creating a temporary clone of the CN QS to revi
    git clone https://github.com/digital-asset/cn-quickstart.git
    cn-quickstart-temp
 
-   `cd cn-quickstart-temp`
+   ``cd cn-quickstart-temp``
 
-   `git log --since="3 months ago" --pretty=format:"%h - %an, %ar : %s"`
+   ``git log --since="3 months ago" --pretty=format:"%h - %an, %ar : %s"``
 
    # After identifying useful changes, manually incorporate them into your project
 
    # Then remove the temporary clone
 
-   `cd ..`
+   ``cd ..``
 
    rm -rf cn-quickstart-temp
 

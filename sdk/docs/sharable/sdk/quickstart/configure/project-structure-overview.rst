@@ -192,27 +192,27 @@ Topology
 ~~~~~~~~
 
 The Canton Quickstart project bootstrap provides two “deployment” modes:
-`DevNet` and `LocalNet`. The local topology of the `DevNet` configuration is
-intended for testing against the Canton `DevNet`, and provides only those
+``DevNet`` and ``LocalNet``. The local topology of the ``DevNet`` configuration is
+intended for testing against the Canton ``DevNet``, and provides only those
 nodes that would be necessary to run the application in production. The
-`LocalNet` configuration is a superset of `DevNet` and also runs local
+``LocalNet`` configuration is a superset of ``DevNet`` and also runs local
 versions of a super validator, and the canton coin wallet application.
 This allows running/testing/demonstrating the application entirely on a
-single machine. Please note that this version of `LocalNet` will need
+single machine. Please note that this version of ``LocalNet`` will need
 considerable memory resources [5]_.
 
-In addition to the `DevNet` vs `LocalNet` distinction, there is also an
+In addition to the ``DevNet`` vs ``LocalNet`` distinction, there is also an
 optional Observability configuration that will work with either mode.
 This will bring up a fully configured OpenTelemetry deployment with
 metrics, monitoring, log aggregation, and trace analysis.
 
-Running `make setup` in the `quickstart/` directory will allow you to select
+Running ``make setup`` in the ``quickstart/`` directory will allow you to select
 between these various configurations.
 
-Once your configuration is built and running, `make status` in `quickstart/`
+Once your configuration is built and running, ``make status`` in ``quickstart/``
 will display the associated running docker containers.
 
-See the Topology documentation in the `docs/` directory for more detailed
+See the Topology documentation in the ``docs/`` directory for more detailed
 information on the various nodes in each configuration and their
 relationship to each other/.
 
@@ -248,33 +248,33 @@ The current toplevel directory contents for a fresh checkout include:
    -rw-r--r-- 1 881 Feb 11 17:20 shell.nix
 
 
-`.git\*` The usual git files and directories. In particular, `.gitignore` is
+``.git\*`` The usual git files and directories. In particular, ``.gitignore`` is
 configured to exclude build artifacts for the current build systems in
 use; Daml SDK support files; and, IDE project artifacts for Visual Code
 or other IDEs.
 
-`.envrc` This is a part of the Direnv configuration. Specifically it
-activates the Nix environment for the project via a call to `use nix`
-which uses the `shell.nix` file to set up the development environment
+``.envrc`` This is a part of the Direnv configuration. Specifically it
+activates the Nix environment for the project via a call to ``use nix``
+which uses the ``shell.nix`` file to set up the development environment
 using nix-shell [9]_.
 
-`LICENSE`, `Security.md`, and `README.md`. The License is 0BSD.
+``LICENSE``, ``Security.md``, and ``README.md``. The License is 0BSD.
 
-`docs/` contains some engineering documentation for the example app.
+``docs/`` contains some engineering documentation for the example app.
 
-`quickstart/` is the main project directory. If you do not wish to use
+``quickstart/`` is the main project directory. If you do not wish to use
 Nix, this directory can be made the toplevel directory for your project
 — although you will then need to manage your binary dependencies
 manually. The next section covers this directory in detail.
 
-`shell.nix` [10]_ and `nix/` contain the Nix configuration. Familiarity with
+``shell.nix`` [10]_ and ``nix/`` contain the Nix configuration. Familiarity with
 shell.nix is essential, as it manages new dependencies. Note
-`nix/sources.json` pins the nix release to ensure determinacy across
+``nix/sources.json`` pins the nix release to ensure determinacy across
 builds. You will want to ensure this gets updated at an appropriate
 cadence that balances staying up to date with development environment
 stability.
 
-**Current Dependencies declared in `shell.nix`**
+**Current Dependencies declared in ``shell.nix``**
    - npins
    - jdk17
    - nodejs_18
@@ -316,8 +316,8 @@ Build Configuration
 -------------------
 
 The primary build tool used by the example project is Gradle. As is
-recommended, this is managed via the Gradle wrappers `gradlew` and
-`gradlew.bat`. This is used for the Java-based web services in `backend/`.
+recommended, this is managed via the Gradle wrappers ``gradlew`` and
+``gradlew.bat``. This is used for the Java-based web services in ``backend/``.
 It is also used to build Daml smart contracts via a simple wrapper that
 calls the Daml Assistant [12]_.
 
@@ -325,9 +325,9 @@ The backend takes advantage of classes generated from the Daml model to
 simplify interactions with the Ledger API. These are generated directly
 from the DAR files using the Transcode code generator. The Gradle plugin
 to run the generator is part of the Transcode package, and is
-incorporated into the build process in `daml/build.gradle.kts`.
+incorporated into the build process in ``daml/build.gradle.kts``.
 
-`buildSrc/` contains some custom Gradle plugins in `buildSrc/src/main/kotlin/`:
+``buildSrc/`` contains some custom Gradle plugins in ``buildSrc/src/main/kotlin/``:
 
 .. list-table::
    :widths: 20 80
@@ -335,28 +335,28 @@ incorporated into the build process in `daml/build.gradle.kts`.
 
    * - File
      - Description
-   * - `ConfigureProfilesTask.kt`
-     - Interactive generation of `.env.local` file for the project.
-   * - `Credentials.kt`
-     - Allows access to credentials stored in `~/.netrc`.
-   * - `Dependencies.kt`
-     - Propagates version config from `.env` to Gradle.
-   * - `Repositories.kt`
-     - Adds `digitalasset.jfrog.io` to the Maven artifact repositories.
-   * - `UnpackTarGzTask.kt`
-     - Provides (required) symlink support for unpacking `.tgz` files.
-   * - `VersionFiles.kt`
-     - Provides access to `.env` files and `daml.yaml` files from Gradle.
+   * - ``ConfigureProfilesTask.kt``
+     - Interactive generation of ``.env.local`` file for the project.
+   * - ``Credentials.kt``
+     - Allows access to credentials stored in ``~/.netrc``.
+   * - ``Dependencies.kt``
+     - Propagates version config from ``.env`` to Gradle.
+   * - ``Repositories.kt``
+     - Adds ``digitalasset.jfrog.io`` to the Maven artifact repositories.
+   * - ``UnpackTarGzTask.kt``
+     - Provides (required) symlink support for unpacking ``.tgz`` files.
+   * - ``VersionFiles.kt``
+     - Provides access to ``.env`` files and ``daml.yaml`` files from Gradle.
 
 The project also uses Make [13]_ as a project choreographer, providing a
 convenient command-line interface to the various scripts and build tools
 as well as docker-compose commands. This is similar to the common
 practice of defining aliases for common dev-loop tasks. Make has the
 advantage of documenting and sharing these tasks under revision
-control. [14]_ Use `make help` to view the currently supported tasks. The
-`Makefile` itself is intended to be implicit documentation of how each of
-these steps is performed. By default, `make` also prints any commands it
-executes to `stdout` and this can also help familiarize new developers to
+control. [14]_ Use ``make help`` to view the currently supported tasks. The
+``Makefile`` itself is intended to be implicit documentation of how each of
+these steps is performed. By default, ``make`` also prints any commands it
+executes to ``stdout`` and this can also help familiarize new developers to
 how the dev-loop is structured. If your team is unfamiliar with Make, at
 the end of this guide [15]_, we have documented the Make features used
 in the current Makefile with links to additional documentation.
@@ -365,22 +365,22 @@ Local Deployment (LocalNet) Configuration
 -----------------------------------------
 
 Local deployment is handled via Docker [16]_ and Docker Compose [17]_ in
-the usual fashion. Like other blockchains, it constructs a `LocalNet` on
+the usual fashion. Like other blockchains, it constructs a ``LocalNet`` on
 your laptop. In summary:
 
-`.env` and `.env.local` define the necessary environment variables.
+``.env`` and ``.env.local`` define the necessary environment variables.
 
-`compose.yaml` is the toplevel Docker Compose configuration file
+``compose.yaml`` is the toplevel Docker Compose configuration file
 
-`config/` contains all the various service configuration files required by
+``config/`` contains all the various service configuration files required by
 the various docker containers.
 
-`docker/` contains the various docker image configurations.
+``docker/`` contains the various docker image configurations.
 
 LocalNet Port Mappings
 ~~~~~~~~~~~~~~~~~~~~~~
 
-For convenience, the `LocalNet` configuration exposes a number of ports to
+For convenience, the ``LocalNet`` configuration exposes a number of ports to
 localhost. For ease of use, the ports are configured using a
 prefix|suffix arrangement. A single-digit prefix is used to identify the
 “entity” associated with the relevant node; and, the suffix is the usual
@@ -392,14 +392,14 @@ four-digit port number associated with the relevant service.
 
    * - Prefix
      - Entity
-   * - `2${PORT}`
+   * - ``2${PORT}``
      - Application User
-   * - `3${PORT}`
+   * - ``3${PORT}``
      - Application Provider
-   * - `4${PORT}`
+   * - ``4${PORT}``
      - Super Validator
 
-`LocalNet` port suffixes are as follows:
+``LocalNet`` port suffixes are as follows:
 
 .. list-table:: LocalNet Port Suffixes
    :widths: 30 70
@@ -407,34 +407,34 @@ four-digit port number associated with the relevant service.
 
    * - Suffix
      - Service
-   * - `5001`
+   * - ``5001``
      - Participant Ledger API Port
-   * - `5002`
+   * - ``5002``
      - Participant Admin API Port
-   * - `5003`
+   * - ``5003``
      - Validator Admin API Port
-   * - `7575`
+   * - ``7575``
      - Participant JSON API Port
-   * - `5432`
+   * - ``5432``
      - Postgres Port
 
-So for example the `JSON API Port` for the Application User is `27575`;
-while the `Ledger API Port` for the Super Validator is `25001`.
+So for example the ``JSON API Port`` for the Application User is ``27575``;
+while the ``Ledger API Port`` for the Super Validator is ``25001``.
 
 Important Security Note Regarding Port Mappings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Be aware that the port mappings for `LocalNet` include exposing both the
-`AdminAPI` port and the `Postgres` port, both of which would normally be a
+Be aware that the port mappings for ``LocalNet`` include exposing both the
+``AdminAPI`` port and the ``Postgres`` port, both of which would normally be a
 security risk. Having direct access to these ports when running on a
 local developers machine can be useful. **These ports should not be
 exposed when preparing deployment configurations for non-local
 deployments.**
 
-Should you wish to disable these mappings even for the `LocalNet`
+Should you wish to disable these mappings even for the ``LocalNet``
 deployment, the port suffixes are defined as environment variables in
-the `.env`. For any port mappings you wish to disable, you can find and
-remove the relevant Docker `port`: entry in the `compose.yaml` file.
+the ``.env``. For any port mappings you wish to disable, you can find and
+remove the relevant Docker ``port``: entry in the ``compose.yaml`` file.
 
 Application Source
 ==================
@@ -449,16 +449,16 @@ categories:
    * - Directory
      - Tech Stack
      - Contents
-   * - `daml/`
+   * - ``daml/``
      - Daml
      - The Daml model and DAR dependencies
-   * - `frontend/`
+   * - ``frontend/``
      - React, Vite, Axios, Typescript
      - Web front end code
-   * - `backend/`
+   * - ``backend/``
      - Java, Springboot, Protobuf
      - Back end code. Currently PQS backed OpenAPI endpoints for the front end [18]_.
-   * - `common/`
+   * - ``common/``
      - OpenAPI
      - Interface definitions shared by one or more of the previous three categories.
        Currently an openapi.yaml file defining the interface between Front and Back ends.
@@ -579,7 +579,7 @@ Daml Model Structure
 The example application is a simple license management application that
 allows the application provider to issue licenses to application users;
 with license fees paid using Canton Coin. It uses a Daml model
-consisting of two modules. The `AppInstall` module has two
+consisting of two modules. The ``AppInstall`` module has two
 responsibilities:
 
 1. The on-ledger component of user onboarding using the
@@ -589,7 +589,7 @@ responsibilities:
    application using the AppInstall template
 
 For the purposes of testing and experimentation there is a make
-target [21]_ to create the `AppInstallRequest` on behalf of the app user
+target [21]_ to create the ``AppInstallRequest`` on behalf of the app user
 party.
 
 .. code-block:: text
@@ -601,7 +601,7 @@ party.
 
 This uses curl via a utility function curl_check [22]_ to submit a Daml
 Create command to Org1’s participant node via its HTTP Ledger JSON API
-(`v2/commands/submit-and-wait`).
+(``v2/commands/submit-and-wait``).
 
 .. code-block:: text
 
@@ -692,7 +692,7 @@ ledger.
     ╚═══════════════════════╩═════════════════════════════════════════════════════════════╝
     postgres-splice-app-provider:5432/scribe 3f → 42>
 
-Exercising the `AppInstallRequest_Accept` choice completes the onboarding.
+Exercising the ``AppInstallRequest_Accept`` choice completes the onboarding.
 The Frontend UI provides a way to do this.
 
 Key Daml Templates
@@ -701,63 +701,63 @@ Key Daml Templates
 AppInstallRequest Contract
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The `AppInstallRequest` contract initiates the app user onboarding process
+The ``AppInstallRequest`` contract initiates the app user onboarding process
 by capturing a user’s request to install the application. The contract
 gives the application provider (henceforth just *provider*) control over
 application access to accept or reject installation requests. This
 contract offers three choices that extend the Propose/Accept
 pattern [24]_ to allow the user to cancel the request.
 
-The `AppInstallRequest_Accept` choice allows the provider to accept the
+The ``AppInstallRequest_Accept`` choice allows the provider to accept the
 request. When the choice is executed, it creates a new AppInstall
 contract and makes the provider and user signatories.
 
-The `AppInstallRequest_Reject` choice allows the provider to decline the
+The ``AppInstallRequest_Reject`` choice allows the provider to decline the
 request. It archives the request contract and also records in the ledger
 exercise event, metadata about why the request was rejected.
 
-The `AppInstallRequest_Cancel` choice allows the user to withdraw their
+The ``AppInstallRequest_Cancel`` choice allows the user to withdraw their
 request any time before the provider accepts the contract.
 
 AppInstall Contract
 ^^^^^^^^^^^^^^^^^^^
 
-The `AppInstall` contract maintains the formal relationship between the
+The ``AppInstall`` contract maintains the formal relationship between the
 provider and user. It tracks installation status and manages license
-creation. The contract has two choices, `AppInstall_CreateLicense` and
-`AppInstall_Cancel`.
+creation. The contract has two choices, ``AppInstall_CreateLicense`` and
+``AppInstall_Cancel``.
 
-`AppInstall_CreateLicense` allows the provider to create a new license for
-the user. When the `CreateLicense` choice is exercised it creates a new
-License contract. It also increments `numLicensesCreated` to track how
+``AppInstall_CreateLicense`` allows the provider to create a new license for
+the user. When the ``CreateLicense`` choice is exercised it creates a new
+License contract. It also increments ``numLicensesCreated`` to track how
 many licenses exist which is used to assign each licence a licence
 number. **Note:** Daml smart contracts are immutable, so “incrementing”
-the counter results in archiving the current `AppInstall` contract and
+the counter results in archiving the current ``AppInstall`` contract and
 creating a new one with the updated counter, within the same atomic
 transaction.
 
-`AppInstall_Cancel` lets the provider or user cancel the installation.
+``AppInstall_Cancel`` lets the provider or user cancel the installation.
 
 License Contract
 ^^^^^^^^^^^^^^^^
 
-The `License` contract is the on ledger record supporting the core
-business case for the application. One critical field is the `expiresAt`
+The ``License`` contract is the on ledger record supporting the core
+business case for the application. One critical field is the ``expiresAt``
 field, which both determines the duration of the license’s validity, and
 is used to ensure that neither actor can revoke (ie. archive) the
 license contract before expiry. The contract also has two choices:
 
-`License_Renew` can be exercised by the license provider. It creates a
-Splice [25]_ `AppPaymentRequest` and a `LicenseRenewalRequest` contract. The
+``License_Renew`` can be exercised by the license provider. It creates a
+Splice [25]_ ``AppPaymentRequest`` and a ``LicenseRenewalRequest`` contract. The
 former is a part of the Splice Wallet Application, and is used to
 request an amulet transfer. The choice of which amulet is made via the
-dso party used in the `AppInstall` contract. The current deployment
+dso party used in the ``AppInstall`` contract. The current deployment
 configuration will result in this being Canton Coin; however, there is
 nothing in the Daml model, or the backend code that prevents a different
 amulet being used.
 
-The `License_Expire` choice allows either party to archive an expired
-`License` contract. This has the benefit of allowing an expired license to
+The ``License_Expire`` choice allows either party to archive an expired
+``License`` contract. This has the benefit of allowing an expired license to
 be renewed without having to reissue it. It is also necessary because
 Daml smart contracts do not have any facility to self-execute or
 self-archive. Every change to the ledger originates from a command
@@ -785,7 +785,7 @@ backend to centralise authentication and access control code.
 
 This does necessitate defining an API between the back and front ends.
 For this example application, we have chosen to use OpenAPI [27]_. The
-API definition is in `common/openapi.yaml`. It uses GET to access the
+API definition is in ``common/openapi.yaml``. It uses GET to access the
 query services in the backend; and, POST to execute choices on contracts
 identified by contract-id in the URL.
 
@@ -810,32 +810,32 @@ Most of this code is standard Java SQL-backed JSON-encoded HTTP web
 service fare. The code itself is divided into seven modules under
 com.digitalasset.quickstart.*:
 
-`config`: Mostly standard SpringBoot @ConfigurationProperties based
+``config``: Mostly standard SpringBoot @ConfigurationProperties based
 components; however, SecurityConfig may be worth looking at for how the
 example application handles CSRF tokens and OAuth2 authentication of
 login and logout requests.
 
-`oauth`: Amongst other things, provides a client interceptor to
+``oauth``: Amongst other things, provides a client interceptor to
 authenticate the backend services to the Ledger API.
 
-`service`: Implements the openAPI endpoints. Mostly a roughly equal split
+``service``: Implements the openAPI endpoints. Mostly a roughly equal split
 between read-only calls to PQS via the DamlRepository spring component;
 and, GRPC calls to the relevant validator via the LedgerApi spring
 component.
 
-`ledger`: The main class here is `LedgerApi` which handles the details of
+``ledger``: The main class here is ``LedgerApi`` which handles the details of
 calling the relevant GRPC endpoints required to submit Daml commands and
 other requests to the Canton Validator.
 
-`repository`: Includes \`DamlRepository`. A `@Repository` component
+``repository``: Includes \``DamlRepository``. A ``@Repository`` component
 providing business-logic level query and retrieval facilities against
 the ledger via PQS (the Participant Query Store).
 
-`pqs`: The main class is `Pqs`, which provides data-model level query and
+``pqs``: The main class is ``Pqs``, which provides data-model level query and
 retrieval. This encapsulates the necessary SQL generation, and the JDBC
 queries against the PQS Postgres database.
 
-`utility`: For the moment this is restricted to the `ObjectMapper` required
+``utility``: For the moment this is restricted to the ``ObjectMapper`` required
 for JSON transcoding in the web services.
 
 Ultimately the main recommendation embedded in this code is to orient
@@ -860,7 +860,7 @@ MVVM, FRP, or similar front end architecture style.
 The example application is a naive React web frontend [33]_ written in
 Typescript [34]_. It accesses the Backend web services using the
 generator-less Axios client to handle the lowest level transport,
-configured in `src/api.ts`:
+configured in ``src/api.ts``:
 
 .. code-block::
 
@@ -903,8 +903,8 @@ The basic format of a make build target is:
    <target>: <dependency list (space separated)>
          shell commands, make macros, and gnu-make function invocations
 
-For instance to build the front-end you can run `npm install && npm run build`
-from the `frontend/` directory; or, make build-frontend from the
+For instance to build the front-end you can run ``npm install && npm run build``
+from the ``frontend/`` directory; or, make build-frontend from the
 quickstart/ directory via the following target in quickstart/Makefile:
 
 .. code-block:: text
@@ -951,9 +951,9 @@ command is executed.
 Other Make features that are currently used in the existing file
 include:
 
-`define` [39]_ which is used to define multiline variables. In this case
-to define a simple macro (`open-url-target`) to define crossplatform
-browser interaction targets (try `make open-app-ui` once the application
+``define`` [39]_ which is used to define multiline variables. In this case
+to define a simple macro (``open-url-target``) to define crossplatform
+browser interaction targets (try ``make open-app-ui`` once the application
 is started for an example). The file also includes:
 
 .. code-block:: text
@@ -964,18 +964,18 @@ is started for an example). The file also includes:
    $(DOCKER_COMPOSE_PROFILES) $(1)
    endef
 
-This provides DRY abstraction around calls to `docker-compose`.
+This provides DRY abstraction around calls to ``docker-compose``.
 
-`call` [40]_ which is used to invoke a variable as a function.
+``call`` [40]_ which is used to invoke a variable as a function.
 
-Note the format of a call invocation is: `$(call <cmd>[, <args>]*)`. So
-`$(call open-url-target`, `open-app-ui`, http://localhost:3000) calls
-`open-url-target` with `$(1)` set to the string `open-app-ui` and `$(2)` set to
+Note the format of a call invocation is: ``$(call <cmd>[, <args>]*)``. So
+``$(call open-url-target``, ``open-app-ui``, http://localhost:3000) calls
+``open-url-target`` with ``$(1)`` set to the string ``open-app-ui`` and ``$(2)`` set to
 the url.
 
-Similarly, the `make status` target uses `$(call docker-compose, ps)` to run
-`docker-compose ps` with the default arguments. This happens via the
-`docker-compose` function discussed above. Removing the `@` will allow you
+Similarly, the ``make status`` target uses ``$(call docker-compose, ps)`` to run
+``docker-compose ps`` with the default arguments. This happens via the
+``docker-compose`` function discussed above. Removing the ``@`` will allow you
 to see the expanded command.
 
 .. code-block:: text
@@ -984,7 +984,7 @@ to see the expanded command.
     docker compose -f compose.yaml --env-file .env --profile localnet \
     --env-file docker/localnet.env --profile observability ps
 
-`eval` [41]_ which is used to treat the result of calling `open-url-target`
+``eval`` [41]_ which is used to treat the result of calling ``open-url-target``
 as a macro to define dynamic make targets.
 
 .. [1]
