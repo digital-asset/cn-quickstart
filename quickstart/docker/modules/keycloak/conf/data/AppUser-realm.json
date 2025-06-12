@@ -79,6 +79,7 @@
     } ],
     "client" : {
       "app-provider-backend-oidc" : [ ],
+      "app-user-ans" : [ ],
       "realm-management" : [ {
         "id" : "9c678036-a48c-4535-9c53-7a5fa9e14612",
         "name" : "manage-users",
@@ -532,6 +533,45 @@
     "defaultClientScopes" : [ "web-origins", "acr", "audience_canton_network", "roles", "profile", "basic", "email" ],
     "optionalClientScopes" : [ "address", "phone", "offline_access", "organization", "microprofile-jwt" ]
   }, {
+    "id" : "17628a44-0800-4a46-bda9-6830d4af033c",
+    "clientId" : "app-user-ans",
+    "name" : "client_app-user-ans",
+    "description" : "",
+    "rootUrl" : "",
+    "adminUrl" : "",
+    "baseUrl" : "",
+    "surrogateAuthRequired" : false,
+    "enabled" : true,
+    "alwaysDisplayInConsole" : false,
+    "clientAuthenticatorType" : "client-secret",
+    "redirectUris" : [ "http://ans.localhost:*" ],
+    "webOrigins" : [ "http://ans.localhost:*" ],
+    "notBefore" : 0,
+    "bearerOnly" : false,
+    "consentRequired" : false,
+    "standardFlowEnabled" : true,
+    "implicitFlowEnabled" : false,
+    "directAccessGrantsEnabled" : false,
+    "serviceAccountsEnabled" : false,
+    "publicClient" : true,
+    "frontchannelLogout" : true,
+    "protocol" : "openid-connect",
+    "attributes" : {
+      "realm_client" : "false",
+      "oidc.ciba.grant.enabled" : "false",
+      "backchannel.logout.session.required" : "true",
+      "frontchannel.logout.session.required" : "true",
+      "post.logout.redirect.uris" : "+",
+      "oauth2.device.authorization.grant.enabled" : "false",
+      "display.on.consent.screen" : "false",
+      "backchannel.logout.revoke.offline.tokens" : "false"
+    },
+    "authenticationFlowBindingOverrides" : { },
+    "fullScopeAllowed" : true,
+    "nodeReRegistrationTimeout" : -1,
+    "defaultClientScopes" : [ "web-origins", "audience_canton_network", "acr", "roles", "profile", "basic", "email" ],
+    "optionalClientScopes" : [ "address", "phone", "offline_access", "organization", "microprofile-jwt" ]
+  }, {
     "id" : "265b9214-178e-4d2d-b896-7707ad7a24c5",
     "clientId" : "app-user-pqs",
     "name" : "client_app-user-pqs",
@@ -561,6 +601,7 @@
       "oidc.ciba.grant.enabled" : "false",
       "client.secret.creation.time" : "1748398373",
       "backchannel.logout.session.required" : "true",
+      "post.logout.redirect.uris" : "+",
       "oauth2.device.authorization.grant.enabled" : "false",
       "backchannel.logout.revoke.offline.tokens" : "false"
     },
@@ -1499,7 +1540,7 @@
       "subType" : "anonymous",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper", "oidc-address-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-property-mapper", "oidc-usermodel-property-mapper", "saml-user-attribute-mapper", "saml-role-list-mapper" ]
+        "allowed-protocol-mapper-types" : [ "oidc-usermodel-property-mapper", "saml-role-list-mapper", "oidc-full-name-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-property-mapper", "saml-user-attribute-mapper", "oidc-address-mapper", "oidc-usermodel-attribute-mapper" ]
       }
     }, {
       "id" : "ccfcbc2f-f784-4127-96b4-81c2505af014",
@@ -1524,7 +1565,7 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-property-mapper", "oidc-full-name-mapper", "oidc-usermodel-attribute-mapper", "saml-role-list-mapper", "saml-user-property-mapper", "saml-user-attribute-mapper", "oidc-address-mapper" ]
+        "allowed-protocol-mapper-types" : [ "saml-user-property-mapper", "saml-user-attribute-mapper", "oidc-full-name-mapper", "oidc-usermodel-attribute-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-property-mapper", "saml-role-list-mapper", "oidc-address-mapper" ]
       }
     }, {
       "id" : "531aeda8-720d-47bf-a080-c89710679d2d",
