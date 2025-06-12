@@ -75,9 +75,9 @@ http://keycloak.localhost:8082/admin/master/console/#/master
 
 To log in use the default credentials:
 
--  **Username**: \`admin\`
+-  **Username**: \``admin\``
 
--  **Password**: \`admin\`
+-  **Password**: \``admin\``
 
 .. image:: images/41-keycloack-login.png
    :alt: Keycloak sign in
@@ -220,7 +220,7 @@ Click **Next** for additional configuration options
 Update environment variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After making changes to Keycloak configuration, you may need to update the corresponding environment variables in the `.env` file:
+After making changes to Keycloak configuration, you may need to update the corresponding environment variables in the ``.env`` file:
 
 1. The Keycloak user must have the same ID as the ledger user's ID. This is not the party id.
 
@@ -230,14 +230,14 @@ After making changes to Keycloak configuration, you may need to update the corre
 
 4. Restart the services to apply the changes:
 
-`make stop && make start`
+``make stop && make start``
 
 Troubleshooting
 ---------------
 
 **Login failures**:
 
-1. Verify Keycloak is running: `make status`
+1. Verify Keycloak is running: ``make status``
 
 ..
 
@@ -251,7 +251,7 @@ Find **keycloak** near **grafana** and **loki** in the list.
    .. image:: images/60-keycloak-healthy.png
       :alt: keycloak healthy
 
-2. Check keycloak credentials in `.env` file
+2. Check keycloak credentials in ``.env`` file
 
 ::
 
@@ -271,18 +271,18 @@ Find **keycloak** near **grafana** and **loki** in the list.
 
 **App User**
 
-Compare the **ID** value in Keycloak’s User Details with the `AUTH_APP_USER_WALLET_ADMIN_USER_ID` value in `.env`.
+Compare the **ID** value in Keycloak’s User Details with the ``AUTH_APP_USER_WALLET_ADMIN_USER_ID`` value in ``.env``.
 
-.. note:: In this example, `AUTH_APP_USER_WALLET_ADMIN_USER_ID=92a520cb-2f09-4e55-b465-d178c6cfe5e4`
+.. note:: In this example, ``AUTH_APP_USER_WALLET_ADMIN_USER_ID=92a520cb-2f09-4e55-b465-d178c6cfe5e4``
 
 .. image:: images/61-keycloak-alice.png
    :alt: Keycloak user details
 
 **App Provider**
 
-Compare the **ID** value in Keycloak’s User Details with the `AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID` value in `.env`.
+Compare the **ID** value in Keycloak’s User Details with the ``AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID`` value in ``.env``.
 
-.. note:: In this example, `AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID=553c6754-8879-41c9-ae80-b302f5af92c9`
+.. note:: In this example, ``AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID=553c6754-8879-41c9-ae80-b302f5af92c9``
 
 .. image:: images/61-keycloak-participant.png
    :alt: Keycloak user details
