@@ -2,6 +2,10 @@
 Canton Network quickstart installation
 ======================================
 
+.. review(sm): use "Install" as the title to align with the Component how-to structure
+   - see the template here: https://docs.google.com/document/d/1XauuMZaR-TtPmk9Ux1rKiRLA-vTKcFTkWjY7xhTtSYk/edit?tab=t.0#bookmark=id.it9qp9p4f3yh
+   - and PQS example here: https://docs.digitalasset-staging.com/build/3.3/component-howtos/pqs/
+
 **Contents**
 
 `Canton Network quickstart installation <#canton-network-quickstart-installation>`__
@@ -13,6 +17,10 @@ Canton Network quickstart installation
 `Prerequisites <#prerequisites>`__
 
    `Nix download support <#nix-download-support>`__
+
+.. review(sm): check the right side-bar for https://docs.digitalasset-staging.com/build/3.3/quickstart/download/cnqs-installation
+   They seem off. I would expect them to list exactly the steps required to successfully install the CN QS.
+   ==> adjust the title levels so that the right side-bar lists the steps
 
 `Step-by-step instructions <#step-by-step-instructions>`__
 
@@ -41,6 +49,8 @@ Canton Network quickstart installation
 Canton Network quickstart installation
 ======================================
 
+.. review(sm): move introduction to index.rst page of the component overview
+
 Introduction
 ============
 
@@ -57,7 +67,11 @@ The CN QS and its guides are a work-in-progress (WIP).
 As a result, the CN QS guides may not accurately reflect the state of the application.
 If you find errors or other inconsistencies, please contact your representative at Digital Asset.
 
+.. review(sm): why not link to raising issues on the public GitHub repository?
+
 This guide walks through the installation and ``LocalNet`` deployment of the CN QS.
+
+.. review(sm): split this into two sections, one for installation and one for deployment
 
 Prerequisites
 =============
@@ -68,7 +82,18 @@ is needed to successfully pull the Digital Asset artifacts from JFrog Artifactor
 
 If you need access to the JFrog Artifactory, email support@digitalasset.com.
 
-Access to the *Daml-VPN* connection or `a SV Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
+.. review(sm): use the JFrog form from the README: Request Artifactory access by clicking [here](https://www2.digitalasset.com/contact-us-access-to-jfrog) and we will get right back to you.
+
+.. review(sm):
+  - is the VPN that DA operates really named "Daml-VPN"?
+  - be clear about how to get access to it
+  - consider using the more generic formulation from the splice docs (https://docs.dev.sync.global/validator_operator/validator_compose.html#requirements):
+      Your machine should either be connected to a VPN that is whitelisted on the network (contact your sponsor SV to obtain access), or have a static egress IP address.
+
+    and then explain how to contact DA as one way to get access to the VPN
+
+
+Access to the *Daml-VPN* connection or a `Validator Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
 that is whitelisted on the CN is required to connect to DevNet.
 The GSF publishes a `list of SV nodes <https://sync.global/sv-network/>`__
 who have the ability to sponsor a Validator node.
@@ -83,13 +108,17 @@ If your machine does not have that much memory consider declining Observability 
 
 Other requirements include:
 
--  `Curl <https://curl.se/download.html>`__
+-  `curl <https://curl.se/download.html>`__
 
--  `Direnv <https://direnv.net/docs/installation.html>`__
+-  `direnv <https://direnv.net/docs/installation.html>`__
 
--  `Nix <https://nixos.org/download/>`__
+-  `nix <https://nixos.org/download/>`__
 
 -  Windows users must install and use `WSL 2 <https://learn.microsoft.com/en-us/windows/wsl/install>`__ with administrator privileges.
+
+.. review(sm): this section comes a bit out of the blue, given that you already mention ``nix`` above
+    contextualize it better. Also use review the rendering. I suspect code-blocks would work better.
+    also: this is not download support, but installation support.
 
 Nix download support
 --------------------
@@ -113,6 +142,8 @@ Nix download support
 
    ``sh <(curl -L https://nixos.org/nix/install) --daemon``
 
+.. review(sm): title "Step-by-step installation instructions"
+
 Step-by-step instructions
 =========================
 
@@ -130,8 +161,13 @@ Clone and ``cd`` into the ``cn-quickstart`` repository into your local machine.
 .. image:: images/01-allow-direnv.png
    :alt: allow direnv
 
+.. review(sm): use active voice: "Setup artifactory access"
+
 Artifactory
 -----------
+
+.. review(sm): summarize the goal of the steps here: setup access to the Digital Asset JFrog Artifactory
+   by adding the right credentials to the ``~/.netrc`` file.
 
 Check the ~/.netrc file
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -219,6 +255,8 @@ A response of “OK” indicates a successful connection.
 Authentication problems often result in a ``401`` or ``403`` error.
 If an error response occurs, double check ``~/.netrc`` to confirm that ``.netrc`` is a source file (in root) and not a local file.
 
+.. review(sm): use active voice: "Setup Docker access". Consider numbering the steps to make it easier to follow.
+
 Docker
 ------
 
@@ -257,6 +295,15 @@ The Daml SDK is large and can take several minutes to complete.
 
 .. note:: The CN QS uses Java SDK version ``Eclipse Temurin JDK version 17.0.12+7``.
    The Java SDK runs within the Docker container.
+
+.. review(sm): this does more than deploy only a validator. It also starts a LocalNet instance, and
+  it deploys an application to the validator.
+  I'd suggest to:
+   - split this section off from the installation section
+   - and split it into three sections, one for starting LocalNet and one for deploying a validator, one for deploying the application
+   - ideally deploying a validator against DevNet is a small addendum to deploying it against LocalNet
+
+   - Also consider exposing these sections as tutorials that build on each other
 
 Deploy a validator on LocalNet
 ------------------------------
@@ -336,6 +383,8 @@ In a third shell, from the quickstart subdirectory, begin the Daml Shell.
 Closing the application
 -----------------------
 
+.. review(sm): not sure whether this comment is required. It's not clear what "using" means.
+
 *⚠️ (If you plan on immediately using the CN QS then delay execution of this section)*
 
 Close Canton console
@@ -352,6 +401,8 @@ In the Daml shell terminal, execute ``quit`` to stop the shell container.
 Close the CN QS
 ~~~~~~~~~~~~~~~
 
+.. review(sm): why are all these small steps necessary? Why not just run ``make stop``?
+
 Finally, close the application and observability services with:
 
 ``make stop && make clean-all``
@@ -361,8 +412,16 @@ It is wise to run make ``clean-all`` during development and at the end of each s
 Next steps
 ==========
 
+.. review(sm): we've done more than install ;-)
+   - also: link to the demo section
+
 You have successfully installed the CN QS.
 The next section, “Exploring The Demo,” provides a demonstration of the application in ``LocalNet`` and ``DevNet`` environments.
+
+.. review(sm): why are these listed here? Don't we have inline links where they are needed?
+   there seem to be some resources that are not linked to in the text. Consider linking to them in
+   the text, or at least not listing the ones linked to in the text here.
+
 
 Resources
 =========

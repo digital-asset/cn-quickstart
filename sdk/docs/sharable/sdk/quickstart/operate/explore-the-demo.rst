@@ -8,6 +8,8 @@ Explore the Canton Network quickstart demo
 
 `Prerequisites <#prerequisites>`__
 
+.. review(sm): ideally the walkthrough steps were listed as top-level sections in the right-hand side-bar
+
 `Walkthrough <#walkthrough>`__
 
    `Canton Console <#canton-console>`__
@@ -33,6 +35,8 @@ Explore the Canton Network quickstart demo
 Exploring the demo
 ==================
 
+.. review(sm): let's work to get rid of this disclaimer. Or at least rediret them to creating issues on the https://github.com/digital-asset/cn-quickstart repo
+
 .. wip::
 
 As a result, the CN QS guides may be a little out of step with the application.
@@ -43,8 +47,12 @@ This section works through a complete business operation within the CN QS.
 Prerequisites
 =============
 
+.. review(sm): use active voice: "Install the CN QS"
+
 You should have successfully `installed the CN QS <../download/cnqs-installation.html>`__
 before beginning this demonstration.
+
+.. review(sm): do not repeat the prerequisites that are already in the installation guide
 
 Access to the `CN Docker repository <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__
 is needed to successfully pull the Digital Asset artifacts from JFrog Artifactory.
@@ -62,10 +70,18 @@ The CN QS is a Dockerized application and requires `Docker Desktop <https://www.
 It is recommended to allocate 8 GB of memory and 3 GB of Swap memory to properly run the required Docker containers.
 If you witness unhealthy containers, please consider allocating additional resources, if possible.
 
-``DevNet`` is less intensive because the SVs and other ``LocalNet`` containers are hosted outside of your local machine.
+``DevNet`` is less intensive because the SV Nodes and other ``LocalNet`` containers are hosted outside of your local machine.
 
 Walkthrough
 ===========
+
+.. review(sm): "and running" is a bit a non-sequitur here, given that above you only talked about installing QS
+   - be clear about what commands to use to start the demo app
+   - also consider giving a short explanation of the three components in CN QS: LocalNet deployment, validator deployments, demo app
+
+
+.. review(sm): the steps are somewhat hard to follow. Consider explaining up-front what the steps achieve: pay for license using CC.
+   And provide a graphical representation of the steps to guide the reader, e.g. a flowchart.
 
 After the QS is installed and running, confirm that you are in the quickstart subdirectory of the CN QS.
 
@@ -224,6 +240,9 @@ Alice’s License view shows the activated license.
 
 Congratulations. You’ve successfully created and activated a license with a payment transfer!
 
+.. review(sm): it's not clear why this is here. I'd suggest to move it under "Component How-To > App QS > Operate"
+   Also it's content needs to be reviewed. The examples are wrong, as they use local references.
+
 Canton Console
 --------------
 
@@ -244,6 +263,8 @@ Open the participant’s Canton Console with
 After the console initiates, run the ``participant`` and ``participant.domains`` commands, respectively.
 
 ``participant``
+
+.. review(sm): this is not the "location" this is just a reference
 
 Returns their location in the ledger.
 
@@ -302,6 +323,8 @@ Shows any archived license(s).
 
 .. image:: images/30-archive-licenses.png
    :alt: Archived licenses
+
+.. review(sm): push this into a separate tutorial
 
 Connect to DevNet
 -----------------
@@ -376,6 +399,10 @@ Logout and do the same as the ``AppProvider``.
 Canton Coin Scan
 ~~~~~~~~~~~~~~~~
 
+.. review(sm): this URL seems off for DevNet. This seems like the LocalNet URL, not DevNet.
+   For DevNet you'll want to point people to https://sync.global/sv-network/, which publishes
+   the URLs.
+
 While connected to ``DevNet``, navigate to the CC Scan Web UI at http://scan.localhost:4000/.
 
 The default activity view shows the total CC balance and the Validator rewards.
@@ -393,6 +420,8 @@ The Validators menu shows that the local validator has been registered with the 
 
 .. image:: images/37-registered-validator.png
    :alt: Registered validator
+
+.. review(sm): this feels out of place. that's an infra dashboard sandwiched between different splice components
 
 Observability Dashboard
 -----------------------
@@ -413,6 +442,9 @@ Select any log entry to view its details.
 
 .. image:: images/40-log-entry-details.png
    :alt: log entry details
+
+.. review(sm): this is only available for a LocalNet deployment. Let's demo that there, and explain that this is
+   the UI that usually SVs use to govern the network. As an app developer this is not relevant to you.
 
 SV UIs
 ------
@@ -439,5 +471,7 @@ Next steps
 ==========
 
 You’ve completed a business operation in the CN QS and have been introduced to the basics of the Canton Console and Daml Shell.
+
+.. review(sm): link to sections
 
 Learn more about Daml Shell and the project structure in the Project Structure guide.
