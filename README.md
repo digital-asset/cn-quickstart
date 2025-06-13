@@ -168,11 +168,11 @@ After starting the application with `make start` you can access the following UI
 
 The `*.localhost` domains will resolve to your local host IP `127.0.0.1`.
 
-### Auth
+### Authorization
 
 Quickstart support to different authorization modes:
-- oauth2 (default)
-- shared-secret
+- **oauth2** (default)
+- **shared-secret**
 See Splice LocalNet documentation for the shared-secret mode which is default Splice LocalNet auth mode.
 
 #### OAuth2 mode - keycloak setup
@@ -195,12 +195,11 @@ You can find port mappings scheme in the Splice LocalNet [documentation](https:/
 See the [Project structure](sdk/docs/guide/ProjectStructureGuide-20250317.pdf) for more details.
 
 ## Docker Compose-Based Development for LocalNet
-
-The Quickstart leverages Docker Compose for modular development. Instead of relying on a single extensive docker-compose.yaml file, this approach orchestrates multiple compose files and corresponding environment files for each Quickstart module. Splice LocalNet is housed within the `docker/modules/localnet` directory. In the `Makefile`, Docker Compose commands are dynamically assembled from Splice LocalNet, additional modules, and Quickstart-specific compose and environment files, arranged in an order that respects the interdependencies of the various components. 
+The Quickstart leverages Docker Compose for modular development. Instead of relying on a single extensive docker-compose.yaml file, this approach orchestrates multiple compose files and corresponding environment files for each Quickstart module. Splice LocalNet is housed within the `docker/modules/localnet` directory. In the `Makefile`, Docker Compose commands are dynamically assembled from Splice LocalNet, Quickstart modules, and Quickstart-specific compose and environment files, arranged in an order that respects the interdependencies of the various components. 
 
 Some modules (e.g., Keycloak and Observability) are optional and can be toggled on or off based on the selections made during `make setup`. When the Docker Compose command is executed, all specified Compose YAML files are merged in the order they appear on the command line. Likewise, the environment is built by applying each environment file in sequence; if the same variable is defined in multiple files, the value from the later file will overwrite the previous ones.
  
-The splice-onboarding module supports two distinct operational modes. Initially, it performs a one-time setup procedure for Canton, Splice, all modules. This initialization includes creating a ledger user and assigning necessary permissions. Developers can customize this process by specifying DAR files for ledger upload, custom shell scripts, or environment variables through their project’s `compose.yaml` file. For example:
+The `splice-onboarding` module supports two distinct operational modes. Initially, it performs a one-time setup procedure for Canton, Splice and modules. This initialization includes creating a ledger user and assigning necessary permissions. Developers can customize this process by specifying DAR files (and mounting it to file in `/canton/dars` in `splice-onboarding`) for ledger upload, custom shell scripts, or environment variables through their project’s `compose.yaml` file. For example:
 
 ```yaml
 splice-onboarding:
@@ -211,17 +210,53 @@ splice-onboarding:
     - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
 ```
 
-Furthermore, developers may want to leverage the `splice-onboarding` module to execute custom onboarding scripts once all dependent components are operational (for instance, the `register-app-user-tenant` script) or to initialize specific workflows (such as scripts defined in `/docker/create-app-install-request/compose.yaml`).
+Furthermore, developers may want to leverage the `splice-onboarding` module to execute custom onboarding scripts once all dependent services are operational (for instance, the `register-app-user-tenant` script) or to initialize specific workflows (such as scripts defined in `/docker/create-app-install-request/compose.yaml`).
 
-By integrating this approach, developers can leverage prepopulated environment variables —such as APP_PROVIDER_PARTY and other authentication-related settings— while also accessing a suite of tools bundled with the `splice-onboarding` container. These tools, including utilities like curl, jq, and jwt-cli, together with an library of shell functions found in `docker/modules/splice-onboarding/docker/utils.sh` that demonstrate on how to utilize JSON Ledger API HTTP endpoints effectively. This comprehensive setup facilitates the achievement of necessary functionality with minimal additional configuration.
+By integrating this approach, developers can leverage prepopulated environment variables, such as `APP_PROVIDER_PARTY` and other authentication-related settings, while also accessing a suite of tools bundled with the `splice-onboarding` container. These tools, including utilities like curl, jq, and jwt-cli, together with an library of shell functions found in `docker/modules/splice-onboarding/docker/utils.sh` that demonstrate on how to utilize JSON Ledger API HTTP endpoints effectively. This comprehensive setup facilitates the achievement of necessary functionality with minimal additional configuration.
 
 Utilizing Docker Compose’s [merge mechanism](https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/), developers have complete control over the configuration. They can add any settings by providing a custom `compose.yaml` (which is usually the first file processed in the Docker Compose command) or by appending a `compose.override.yaml` file at the end to override default configurations defined by Splice LocalNet or Quickstart modules.
 
 Please note that while Quickstart is meticulously designed to streamline local development, deploying to production requires additional considerations. In a production-grade environment, you would typically utilize an orchestration framework such as Kubernetes and replace certain automated configurations with controlled, manual configuration steps. This approach ensures enhanced security and clear separation of services in line with enterprise standards.
 
+### Modules
+
+The Quickstart repository includes several modular components that can be reused in developer projects outside of Quickstart. These modules are located in the `docker/modules` directory by default; however, they can be sourced from any directory by setting the `MODULES_DIR` environment variable accordingly. 
+
+Splice LocalNet is a special module borrowed from the [Splice repository](https://github.com/hyperledger-labs/splice/tree/main/cluster/compose/localnet) and is placed by default in `docker/modules`. It can also be relocated by properly configuring the LOCALNET_DIR environment variable. 
+
+Each module provides specific functionality and may depend on other modules. The currently supported modules are:
+
+- **keycloak** (optional): Adds support for OAuth2 authorization to Splice LocalNet.
+- **splice-onboarding**: Provides onboarding capabilities, including a collection of tools, resolved environment settings, and shell scripts for calling JSON Ledger API HTTP endpoints.
+- **pqs**: Offers preconfigured PQS instances for Splice LocalNet participants.
+- **observability**: Introduces observability infrastructure components.
+- **daml-shell**: A standalone module that enables launching Daml Shell. By default, it connects to the pqs-app-provider’s Postgres database.
+
+### Docker Profiles
+Docker profiles are used in both Splice LocalNet and Quickstart to enable or disable specific functionalities. Each module can support multiple profiles. For example, Splice LocalNet defines the following five modules:
+- **app-provider**
+- **app-user**
+- **sv**
+- **swagger-ui**
+- **console**
+
+The `console` module runs as a standalone container, while the other modules start by default unless explicitly disabled (e.g., by omitting the profile flag such as --profile app-provider). In some implementations, modules rely on environment variables to determine the active profiles. In these cases, you should set the corresponding environment variable—such as APP_PROVIDER_PROFILE—to either "on" or "off". This approach is necessary because Docker does not inherently expose profile configuration details within the Docker Compose file or inside the container environments.
+
+### Environment
+
+There are two distinct types of environment files:
+
+- Files used primarily for Docker Compose configuration.
+- Files intended for Docker container environment settings.
+
+The first category includes files such as `.env`, `.env.local`, `${LOCALNET_DIR}/env/<dev|local>.env`, `${LOCALNET_DIR}/env/common.env`, and any `compose.env` files from the modules. The second category encompasses the remaining files found under `${LOCALNET_DIR}/env` as well as the `env` directories within the modules.
+
+In the Docker container environment files, you can reference variables defined in the Docker Compose environment. Simply declare a variable as `VAR=${VAR}` to ensure that the value from the Docker Compose environment is available within the container.
+
+
 ### Dynamic Configuration
 
-In certain situations, it is necessary to share runtime information between services. For instance, in the case of the backend service, the configuration variable `APP_PROVIDER_PARTY` is mandatory. In a production-like environment, this information would typically be provided manually by a system administrator. The party ID becomes available only after the complete initialization of canton/splice. To automate this process, one might consider retrieving the party ID by querying the JSON Ledger API HTTP endpoint; however, adding extra environment variables to support JWT token retrieval for this purpose could clutter the backend service configuration.
+In certain situations, it is necessary to share runtime information between services. For instance, in the case of the `backend-service`, the environment variable `APP_PROVIDER_PARTY` is mandatory. In a production-like environment, this information would typically be provided manually by a system administrator. The party ID becomes available only after the complete initialization of canton/splice. To automate this process, one might consider retrieving the party ID by querying the JSON Ledger API HTTP endpoint; however, adding extra environment variables to support JWT token retrieval for this purpose could clutter the backend service configuration.
 
 A preferable solution is to leverage the existing `splice-onboarding` service, which already possesses the appropriate environment and tools to perform this task. By mounting a custom script into the splice-onboarding container (for example, mapping `./docker/backend-service/onboarding/onboarding.sh` to `/app/scripts/on/backend-service.sh`), the splice-onboarding service will execute the script (or any script located in the `/app/scripts/on/` directory) at the conclusion of its initialization routine.
 
@@ -231,7 +266,7 @@ Within the script, the acquired information can be shared with the backend servi
   export APP_PROVIDER_PARTY=${APP_PROVIDER_PARTY}
 EOF
 ```
-In this context, `share_file` is a utility function that writes the provided content (the second argument) to the specified file (the first argument) on the shared volume /onboarding. This volume is also mounted in the `backend-service`, and the startup script (docker/backend-service/start.sh) sources the newly shared script prior to executing the main command of the backend service, thereby ensuring that the `APP_PROVIDER_PARTY` environment variable is available to the service.
+In this context, `share_file` is a utility function that writes the provided content (the second argument) to the specified file (the first argument) on the shared volume `onboarding`. This volume is also mounted in the `backend-service`, and the startup script (docker/backend-service/start.sh) sources the newly shared script prior to executing the main command of the backend service, thereby ensuring that the `APP_PROVIDER_PARTY` environment variable is available to the service.
 
 
 ## License
