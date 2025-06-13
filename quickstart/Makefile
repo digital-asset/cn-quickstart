@@ -28,12 +28,12 @@ endif
 ifndef MODULES_DIR
   export MODULES_DIR=$(shell pwd)/docker/modules
 endif
-$(info MODULES_DIR=$(MODULES_DIR))
+$(warning MODULES_DIR=$(MODULES_DIR))
 
 ifndef LOCALNET_DIR
   export LOCALNET_DIR=$(MODULES_DIR)/localnet
 endif
-$(info LOCALNET_DIR=$(LOCALNET_DIR))
+$(warning LOCALNET_DIR=$(LOCALNET_DIR))
 
 # Default to adding resource constraints for Quickstart compose stack.
 RESOURCE_CONSTRAINTS_ENABLED ?= true

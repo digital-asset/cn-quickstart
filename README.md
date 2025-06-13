@@ -168,6 +168,78 @@ After starting the application with `make start` you can access the following UI
 
 The `*.localhost` domains will resolve to your local host IP `127.0.0.1`.
 
+## Exploring Quickstart Docker Compose
+
+Before exploring advanced topics, we recommend familiarizing yourself with the core components of the Licensing Model Workflow within Quickstart. In particular, begin by reviewing the implementation of the `backend-service`, which serves as an excellent entry point.
+
+If you have already explored the Quickstart web UI and would now like to understand how the Quickstart Docker Compose configuration is orchestrated, start by running a simple setup using `make setup` with Observability and OAuth2 disabled. Then, execute the following command to inspect the resolved configuration for the backend service:
+
+```bash
+make compose-config | tail -n +2 | yq eval '.services.backend-service'
+```
+
+This command outputs a configuration similar to the example below:
+
+```yaml
+command:
+  - /app/start.sh
+container_name: backend-service
+depends_on:
+  pqs-app-provider:
+    condition: service_started
+    required: true
+  splice-onboarding:
+    condition: service_healthy
+    required: true
+environment:
+  _JAVA_OPTIONS: -XX:-UseCompressedOops -Xms512m -Xmx700m
+  AUTH_APP_PROVIDER_BACKEND_USER_NAME: app-provider-backend
+  BACKEND_PORT: "8080"
+  LEDGER_HOST: canton
+  LEDGER_PORT: "3901"
+  POSTGRES_DATABASE: pqs-app-provider
+  POSTGRES_HOST: postgres
+  POSTGRES_PASSWORD: supersafe
+  POSTGRES_PORT: "5432"
+  POSTGRES_USERNAME: cnadmin
+  SPRING_PROFILES_ACTIVE: shared-secret
+  VALIDATOR_URI: http://splice:3903/api/validator
+image: eclipse-temurin:17.0.12_7-jdk
+labels:
+  description: 'Backend service supporting the Quickstart Licensing workflow. Note: The APP_PROVIDER_PARTY environment variable is dynamically resolved at runtime before the main process is initiated.'
+mem_limit: "1073741824"
+networks:
+  default: null
+ports:
+  - mode: ingress
+    target: 8080
+    published: "8080"
+    protocol: tcp
+volumes:
+  - type: bind
+    source: /repositories/cn-quickstart/quickstart/backend/build/distributions/backend.tar
+    target: /backend.tar
+    bind:
+      create_host_path: true
+  - type: bind
+    source: /repositories/cn-quickstart/quickstart/docker/backend-service/start.sh
+    target: /app/start.sh
+    bind:
+      create_host_path: true
+  - type: volume
+    source: onboarding
+    target: /onboarding
+    volume: {}
+working_dir: /app
+```
+
+This configuration demonstrates how the `backend-service` relies on the Quickstart-provided infrastructure. Quickstart automates much of the local environment setup for LocalNet, enabling you to prioritize application development. As you progress toward deployment and explore cloud orchestration. a deeper grasp of service configuration will be invaluable. For now, consider these services as a ready-to-use infrastructure foundation.
+
+Then explore `register-app-user-tenant` this is service that register AppUser tenant to backend-service. That allows end users from AppUser organization to login and Quickstart web-ui. THat ties AppUser Identity Provider to AppUser primary party ID. That means that if end user is logged in through this Identity Provider, user can then act as AppUser primary party. The `register-app-user-tenant` utilize lot of functionality provided by `splice-onboarding` module to make the task as simple as possible. This step is also possible to make manually through web-ui if you login to Quickstart as `app-provider` and navigate to tenants tab. You can see also list of registered tenants there and verify that `AppUser` tenant was automatically pre-registered for you by `register-app-user-tenant`.
+
+Once you run `make create-app-install-request`, the `docker/create-app-install-request` service executes a script that initiates the Licensing workflow on behalf of the `app-user`. This script leverages the capabilities of the `splice-onboarding` module to streamline the process. In a production environment, the initial Licensing workflow step would be executed by submitting a command to the AppUser Participant Node, potentially supported by a dedicated web UI within the AppUser infrastructure.
+
+
 ### Authorization
 
 Quickstart support to different authorization modes:

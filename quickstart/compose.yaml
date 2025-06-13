@@ -5,6 +5,9 @@ services:
   backend-service:
     image: "eclipse-temurin:${JAVA_VERSION}"
     container_name: backend-service
+    labels:
+      - "description=Backend service supporting the Quickstart Licensing workflow.
+      Note: The APP_PROVIDER_PARTY environment variable is dynamically resolved at runtime before the main process is initiated."
     working_dir: /app
     env_file:
       - ./docker/backend-service/env/app.env
