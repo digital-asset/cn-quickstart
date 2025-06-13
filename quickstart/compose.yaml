@@ -7,8 +7,6 @@ services:
     container_name: backend-service
     working_dir: /app
     env_file:
-      - ${LOCALNET_ENV_DIR}/common.env
-      - ${APP_PROVIDER_AUTH_ENV}
       - ./docker/backend-service/env/app.env
       - ./docker/backend-service/onboarding/env/${AUTH_MODE}.env
     volumes:

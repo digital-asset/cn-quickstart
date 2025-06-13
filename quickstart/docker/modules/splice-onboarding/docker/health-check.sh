@@ -22,7 +22,7 @@ if [ ! -f /tmp/all-done ]; then
   if [ "$APP_PROVIDER_PROFILE" == "on" ]; then
     source /app/app-provider-auth.sh
     if [ "$DO_INIT" == "true" ] && [ ! -f /tmp/app-provider-init-dars-uploaded ]; then
-      upload_dars "$APP_PROVIDER_PARTICIPANT_ADMIN_TOKEN" "canton:3${PARTICIPANT_JSON_API_PORT}"
+      upload_dars "$APP_PROVIDER_PARTICIPANT_ADMIN_TOKEN" "canton:3${PARTICIPANT_JSON_API_PORT_SUFFIX}"
       touch /tmp/app-provider-init-dars-uploaded
     fi
   fi
@@ -30,7 +30,7 @@ if [ ! -f /tmp/all-done ]; then
   if [ "$APP_USER_PROFILE" == "on" ]; then
     source /app/app-user-auth.sh
     if [ "$DO_INIT" == "true" ] && [ ! -f /tmp/app-user-init-dars-uploaded ]; then
-      upload_dars "$APP_USER_PARTICIPANT_ADMIN_TOKEN" "canton:2${PARTICIPANT_JSON_API_PORT}"
+      upload_dars "$APP_USER_PARTICIPANT_ADMIN_TOKEN" "canton:2${PARTICIPANT_JSON_API_PORT_SUFFIX}"
       touch /tmp/app-user-init-dars-uploaded
     fi
   fi
