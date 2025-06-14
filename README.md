@@ -252,8 +252,8 @@ See Splice LocalNet documentation for the shared-secret mode which is default Sp
 #### OAuth2 mode - keycloak setup
 To perform operations such as creating AppInstallRequest and renewing License, users must be authenticated and authorized. The endpoints that perform these operations are protected by OAuth2 Authorization Code Grant Flow. GRPC communication between the backend service and participant is secured by OAuth2 Client Credentials Flow.
 
-In OAuth2 mode Quickstart starts local multi-tenant instance of [keycloak](https://www.keycloak.org/). 
- Two registered tenants are `AppProvider` and `AppUser`. Tenants have pre-configured users `app-provider` and `app-user` as well as clients needed for validator, wallet, pqs, frontend and backend-service. Pre-configured users, clients and realms are imported on keycloak startup from `docker/compose/modules/keycloak/conf/data` folder. The configuration in that folder was exported from keycloak instance after manual configuration via [Keycloak Administration Console](http://keycloak.localhost:8082/admin/master/console/) by running commands
+In OAuth2 mode, Quickstart starts a local multi-tenant instance of [keycloak](https://www.keycloak.org/). 
+ Two registered tenants are `AppProvider` and `AppUser`. Tenants have pre-configured users `app-provider` and `app-user`, as well as clients needed for validator, wallet, pqs, frontend, and backend service. Pre-configured users, clients, and realms are imported from the `docker/compose/modules/keycloak/conf/data` folder on Keycloak startup. The configuration in that folder is exported from the Keycloak instance after manual configuration via [Keycloak Administration Console](http://keycloak.localhost:8082/admin/master/console/) by running commands
 ```
 /opt/keycloak/bin/kc.sh export --dir=/opt/keycloak/data/import --realm AppUser --optimized
 /opt/keycloak/bin/kc.sh export --dir=/opt/keycloak/data/import --realm AppProvider --optimized
