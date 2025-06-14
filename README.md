@@ -233,7 +233,7 @@ volumes:
 working_dir: /app
 ```
 
-This configuration demonstrates how the `backend-service` relies on the Quickstart-provided infrastructure. Quickstart automates much of the local environment setup for LocalNet, enabling you to prioritize application development. As you progress toward deployment and explore cloud orchestration. a deeper grasp of service configuration will be invaluable. For now, consider these services as a ready-to-use infrastructure foundation.
+This configuration demonstrates how the `backend-service` relies on the Quickstart-provided infrastructure. Quickstart automates much of the local environment setup for LocalNet, allowing you to prioritize application development. As you progress toward deployment and explore cloud orchestration, a deeper grasp of service configuration is invaluable. For now, consider these services a ready-to-use infrastructure foundation.
 
 Then explore `register-app-user-tenant` this is service that register AppUser tenant to backend-service. That allows end users from AppUser organization to login and Quickstart web-ui. THat ties AppUser Identity Provider to AppUser primary party ID. That means that if end user is logged in through this Identity Provider, user can then act as AppUser primary party. The `register-app-user-tenant` utilize lot of functionality provided by `splice-onboarding` module to make the task as simple as possible. This step is also possible to make manually through web-ui if you login to Quickstart as `app-provider` and navigate to tenants tab. You can see also list of registered tenants there and verify that `AppUser` tenant was automatically pre-registered for you by `register-app-user-tenant`.
 
