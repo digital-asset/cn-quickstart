@@ -224,6 +224,7 @@ tail: ## Tail logs of Docker containers
 capture-logs: ## Monitor docker events and capture logs
 	@network_name="quickstart"; \
 	canton_services=("canton" "splice"); \
+	mkdir -p ./logs; rm -rf ./logs/*; \
 	docker events -f type=container \
 	    -f event=start \
 	    -f event=stop \

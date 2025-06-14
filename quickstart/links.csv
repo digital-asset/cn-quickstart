@@ -1,2 +1,2 @@
 #REPO,COMMIT_SHA,SOURCE_PATH,DEST_PATH
-git@github.com:DACH-NY/canton-network-node.git,285516b9ea974a54891c9a1ace35f6517cf37a1b,cluster/compose/localnet,docker/modules
+git@github.com:hyperledger-labs/splice.git,a91c38d296d8742561a4f4c4c25756bebae8608b,cluster/compose/localnet,docker/modules
