@@ -265,7 +265,7 @@ Only the end users from an organization registered using endpoint `http://backen
 
 ### Port mappings
 
-You can find port mappings scheme in the Splice LocalNet [documentation](https://docs.sync.global/app_dev/testing/localnet.html).
+You can find the port mappings scheme in the Splice LocalNet [documentation](https://docs.sync.global/app_dev/testing/localnet.html).
 See the [Project structure](sdk/docs/guide/ProjectStructureGuide-20250317.pdf) for more details.
 
 ## Docker Compose-Based Development for LocalNet
