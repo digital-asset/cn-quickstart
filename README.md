@@ -290,7 +290,7 @@ By integrating this approach, developers can leverage prepopulated environment v
 
 Utilizing Docker Compose’s [merge mechanism](https://docs.docker.com/compose/how-tos/multiple-compose-files/merge/), developers have complete control over the configuration. They can add any settings by providing a custom `compose.yaml` (which is usually the first file processed in the Docker Compose command) or by appending a `compose.override.yaml` file at the end to override default configurations defined by Splice LocalNet or Quickstart modules.
 
-Please note that while Quickstart is meticulously designed to streamline local development, deploying to production requires additional considerations. In a production-grade environment, you would typically utilize an orchestration framework such as Kubernetes and replace certain automated configurations with controlled, manual configuration steps. This approach ensures enhanced security and clear separation of services in line with enterprise standards.
+Please note that while Quickstart is designed to streamline local development, deploying to production requires additional considerations. In a production-grade environment, you would typically utilize an orchestration framework such as Kubernetes and replace certain automated configurations with controlled, manual configuration steps. This approach ensures enhanced security and clear separation of services in line with enterprise standards.
 
 ### Modules
 
