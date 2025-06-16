@@ -2,10 +2,12 @@
 Canton Network quickstart observability & troubleshooting overview
 ==================================================================
 
+.. wip::
+
 .. Note:: The screenshots in this guide are currently taken from
    multiple sessions over multiple days and therefore are inconsistent
-   with each other (and in some places the text). 
-   This will be rectified once some of the updates to Quickstart 
+   with each other (and in some places the text).
+   This will be rectified once some of the updates to Quickstart
    currently in flight are committed.
 
 **Contents**
@@ -59,8 +61,8 @@ The LocalNet configuration
 The Quickstart runtime configuration is defined in `.env.local`, which
 allows each developer to switch between running a `LocalNet` or `DevNet`
 application deployment; and, whether or not to bring up a local
-deployment of the Observability Stack. This file can be created using `$ make setup`, 
-which wraps the command `$ ./gradlew configureProfiles --no-daemon --console=plain --quiet`, 
+deployment of the Observability Stack. This file can be created using `$ make setup`,
+which wraps the command `$ ./gradlew configureProfiles --no-daemon --console=plain --quiet`,
 or can be edited manually to set environment variables `LOCALNET_ENABLED` and `OBSERVABILITY_ENABLED` to `true`
 or `false` as desired.
 
@@ -77,7 +79,7 @@ Immediately useful commands you probably already know:
    follow the logs with the `-f` option.
 
    -  If the system is not working well to the extent you do not trust
-      the observability stack (discussed later), `docker logs backend-service` 
+      the observability stack (discussed later), `docker logs backend-service`
       is a good place to start looking for errors that
       might provide an insight into what has gone wrong.
 
@@ -127,7 +129,7 @@ application provider’s PQS instance. This is easiest to access via the
 toplevel project scripts accessed via `make` from `quickstart/`. To see this
 in action, build and start the quickstart app then:
 
-Run `$ make create-app-install-request` to use `curl` to submit the 
+Run `$ make create-app-install-request` to use `curl` to submit the
 `create AppInstallRequest ...` command to the ledger [1]_ to initiate user
 onboarding [2]_. Then you can use the following Daml Shell commands:
 
@@ -197,7 +199,7 @@ backend-service you will see the lines:
        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 
     ports:
-   
+
       - "${BACKEND_PORT}:8080"
       - "5055:5005"
 
@@ -475,7 +477,7 @@ identifiers.
      - `Description`
      - `ID`
    * - `Command Id`
-     -  
+     -
      - `79062314-1354-439b-b5c8-b889bec1024f`
    * - `Contract Id`
      - `AppInstall`
@@ -485,9 +487,9 @@ identifiers.
      - `79062314-1354-439b-b5c8-b889bec1024f`
 
 As we have already seen, contract ids can be used in Daml Shell to
-inspect the contracts directly. 
-In addition, due to the way the OpenAPI interface for the Backend has been designed, 
-the Command Id is visible as a query parameter to the POST. 
+inspect the contracts directly.
+In addition, due to the way the OpenAPI interface for the Backend has been designed,
+the Command Id is visible as a query parameter to the POST.
 We can use this to query the consolidated logs in Grafana:
 
 .. image:: images/06-grafana-consolidated-logs.png

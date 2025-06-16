@@ -62,9 +62,11 @@ This guide walks through the installation and `LocalNet` deployment of the CN QS
 Prerequisites
 =============
 
-Access to the `CN-Quickstart Github repository <https://github.com/digital-asset/cn-quickstart>`__ 
+Access to the open source `CN-Quickstart Github repository <https://github.com/digital-asset/cn-quickstart>`__ 
 and `CN Docker repository <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__
 is needed to successfully pull the Digital Asset artifacts from JFrog Artifactory.
+
+If you need access to the JFrog Artifactory, email support@digitalasset.com.
 
 Access to the *Daml-VPN* connection or `a SV Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
 that is whitelisted on the CN is required to connect to DevNet. 
@@ -165,7 +167,6 @@ Replace `<username>` with the JFrog Artifactory user profile email.
 
 .. image:: images/02-jfrog-user-profile.png
    :alt: JFrog user profile
-   :width: 50%
 
 Create an Identity Token
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,20 +175,17 @@ Toward the bottom of the same profile page, click "Generate an Identity Token."
 
 .. image:: images/03-generate-jfrog-token.png
    :alt: JFrog generate identity token
-   :width: 30%
 
 Add an identity token description.
 
 .. image:: images/03b-gen-id-token.png
    :alt: JFrog API Key
-   :width: 30%
 
 Copy the Identity Token as shown under "Reference Token." 
 The Identity Token is also referred to as the "Reference Token" and the "API key" in JFrog and is the password in `~/.netrc`.
 
 .. image:: images/03c-copy-ref-token.png
    :alt: New Reference Token
-   :width: 30%
 
 Complete ~/.netrc
 ~~~~~~~~~~~~~~~~~
@@ -256,6 +254,9 @@ The Daml SDK is large and can take several minutes to complete.
 
 .. image:: images/06-unpack-sdk.png
    :alt: Daml SDK unpacking
+
+.. note:: The CN QS uses Java SDK version `Eclipse Temurin JDK version 17.0.12+7`.
+   The Java SDK runs within the Docker container.
 
 Deploy a validator on LocalNet
 ------------------------------

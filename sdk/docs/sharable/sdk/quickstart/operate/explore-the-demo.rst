@@ -1,5 +1,5 @@
 ==========================================
-Explore the Canton Network quickstart demo 
+Explore the Canton Network quickstart demo
 ==========================================
 
 **Contents**
@@ -28,11 +28,14 @@ Explore the Canton Network quickstart demo
 
 `Next Steps <#next-steps>`__
 
+.. _exploring-the-demo:
+
 Exploring the demo
 ==================
 
-The CN QS and its guides are a work-in-progress (WIP). 
-As a result, the CN QS guides may not be a little out of step with the application. 
+.. wip::
+
+As a result, the CN QS guides may be a little out of step with the application.
 If you find errors or other inconsistencies, please contact your representative at Digital Asset.
 
 This section works through a complete business operation within the CN QS.
@@ -40,21 +43,23 @@ This section works through a complete business operation within the CN QS.
 Prerequisites
 =============
 
-You should have successfully `installed the CN QS <https://github.com/digital-asset/cn-quickstart/blob/main/docs/guide/CN-QS-Installation-20250314.pdf>`__
+You should have successfully `installed the CN QS <../download/cnqs-installation.html>`__
 before beginning this demonstration.
 
-Access to the `CN-Quickstart Github repository <https://github.com/digital-asset/cn-quickstart>`__ and `CN Docker repository <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__
+Access to the `CN Docker repository <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__
 is needed to successfully pull the Digital Asset artifacts from JFrog Artifactory.
 
+If you need support accessing the JFrog Artifactory, please email support@digitalasset.com.
+
 Access to the *Daml-VPN* connection or `a SV Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
-that is whitelisted on the CN is required to connect to `DevNet`. 
-The GSF publishes a `list of SV nodes <https://sync.global/sv-network/>`__ who have the ability to sponsor a Validator node. 
+that is whitelisted on the CN is required to connect to `DevNet`.
+The GSF publishes a `list of SV nodes <https://sync.global/sv-network/>`__ who have the ability to sponsor a Validator node.
 To access `DevNet`, contact your sponsoring SV agent for VPN connection information.
 
 If you need support accessing the SV or VPN email support@digitalasset.com.
 
-The CN QS is a Dockerized application and requires `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__. 
-It is recommended to allocate 8 GB of memory and 3 GB of Swap memory to properly run the required Docker containers. 
+The CN QS is a Dockerized application and requires `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__.
+It is recommended to allocate 8 GB of memory and 3 GB of Swap memory to properly run the required Docker containers.
 If you witness unhealthy containers, please consider allocating additional resources, if possible.
 
 `DevNet` is less intensive because the SVs and other `LocalNet` containers are hosted outside of your local machine.
@@ -92,7 +97,6 @@ Select “AppInstalls” in the menu.
 
 .. image:: images/02a-app-installs-view.png
    :alt: App Installs view
-   :width: 60%
 
 Open a terminal.
 
@@ -118,13 +122,11 @@ Click “Accept”.
 
 .. image:: images/06-install-request.png
    :alt: install request
-   :width: 60%
 
 The `AppInstallRequest` is Accepted. The actions update to create or cancel the license.
 
 .. image:: images/07-req-accept.png
    :alt: accept request
-   :width: 60%
 
 Click “Create License”.
 
@@ -132,16 +134,14 @@ The license is created and the “# Licenses” field is updated.
 
 .. image:: images/08-create-lic.png
    :alt: create license
-   :width: 60%
 
 In the `AppProvider`, “Pat the provider’s,” account, navigate to the **Licenses** menu and select “Actions.”
 
 .. image:: images/09-licenses-view.png
    :alt: Licenses view
-   :width: 60%
 
-An “Actions for License” modal opens with an option to renew or expire the license. 
-Per the Daml contract, licenses are created in an expired state. 
+An “Actions for License” modal opens with an option to renew or expire the license.
+Per the Daml contract, licenses are created in an expired state.
 To activate the license, it must be renewed.
 
 .. image:: images/10-license-modal.png
@@ -156,18 +156,16 @@ The license renewal process is initiated and ultimately successful.
 
 .. image:: images/12-init-renewal.png
    :alt: license renewal
-   :width: 60%
 
 The license is now available for a 30-day extension for a flat fee of $100 CC.
 
 .. image:: images/13-license-available.png
    :alt: license available
-   :width: 60%
 
 Pat the provider has done as much as they are able until Alice pays the renewal fee.
 
-   💡For the next step we recommend opening a separate browser in incognito mode. 
-   Each user should be logged into separate browsers for most consistent results. 
+   💡For the next step we recommend opening a separate browser in incognito mode.
+   Each user should be logged into separate browsers for most consistent results.
    For example, if you logged into `AppProvider` using Chrome, you would use Firefox when logging into `AppUser`.
 
 Navigate to http://localhost:3000/login using a separate browser in incognito or private mode.
@@ -186,7 +184,6 @@ Go to the **Licenses** View and click the “Pay renewal” button.
 
 .. image:: images/15-license-view.png
    :alt: License view
-   :width: 60%
 
 Click on the Pay Renewal button. This navigates to the Canton Coin Wallet log in. Click “LOG IN WITH OAUTH2”.
 
@@ -194,7 +191,6 @@ Click on the Pay Renewal button. This navigates to the Canton Coin Wallet log in
 
 .. image:: images/16-cc-wallet-login.png
    :alt: CC Wallet login
-   :width: 30%
 
 This navigates to a keycloak login.
 
@@ -202,7 +198,7 @@ Enter the same username and password as before.
 
 .. image:: images/17-keycloak-login.png
    :alt: alice login
-   :width: 30%
+   :width: 60%
 
 Signing in directs to a preloaded Canton Coin Wallet.
 Click **Send Payment**.
@@ -215,31 +211,28 @@ The `AppProvider` may now Complete the Renewal.
 
 .. image:: images/22-complete-renewal.png
    :alt: complete renewal
-   :width: 50%
 
 Clicking “Complete Renewal” results in a Success.
 
 .. image:: images/23-renew-success.png
    :alt: renewal success
-   :width: 50%
 
 Alice’s License view shows the activated license.
 
 .. image:: images/24-activated-license.png
    :alt: Activated license
-   :width: 50%
 
 Congratulations. You’ve successfully created and activated a license with a payment transfer!
 
 Canton Console
 --------------
 
-The Canton Console connects to the running application ledger. 
-The console allows a developer to bypass the UI to interact with the CN in a more direct manner. 
+The Canton Console connects to the running application ledger.
+The console allows a developer to bypass the UI to interact with the CN in a more direct manner.
 For example, in Canton Console you can connect to the Participant to see the location of the Participant and their synchronizer domain.
 
-The app provider and the app user each have their own console. 
-To activate the app provider’s Canton Console in a terminal from the `quickstart/` directory. 
+The app provider and the app user each have their own console.
+To activate the app provider’s Canton Console in a terminal from the `quickstart/` directory.
 Run:
 
 `make console-app-provider`
@@ -266,8 +259,8 @@ Shows the Participant’s synchronizer.
 
 `participant.health.ping(participant)`
 
-Runs a health ping. 
-The ping makes a round trip through the CN blockchain. 
+Runs a health ping.
+The ping makes a round trip through the CN blockchain.
 Pinging yourself validates communication throughout the entire network.
 
 .. image:: images/27-console-ping.png
@@ -276,7 +269,7 @@ Pinging yourself validates communication throughout the entire network.
 Daml Shell
 ----------
 
-The Daml Shell connects to the running PQS database of the application provider’s Participant. 
+The Daml Shell connects to the running PQS database of the application provider’s Participant.
 In the Shell, the assets and their details are available in real time.
 
 Run the shell from quickstart/ in the terminal with:
@@ -291,7 +284,6 @@ Shows unique identifiers and the asset count
 
 .. image:: images/28-shell-ids.png
    :alt: Active identifiers
-   :width: 50%
 
 `active quickstart-licensing:Licensing.License:License`
 
@@ -299,7 +291,6 @@ List the license details.
 
 .. image:: images/29-license-details.png
    :alt: License details
-   :width: 60%
 
 `active quickstart-licensing:Licensing.License:LicenseRenewalRequest`
 
@@ -311,7 +302,6 @@ Shows any archived license(s).
 
 .. image:: images/30-archive-licenses.png
    :alt: Archived licenses
-   :width: 60%
 
 Connect to DevNet
 -----------------
@@ -350,7 +340,6 @@ For example, if the SV Node Information shows the `migration_id` value as “0�
 
 .. image:: images/32-gsf-sv.png
    :alt: GSF SV information
-   :width: 50%
 
 In `.env`:
 
@@ -369,19 +358,19 @@ Configuring non-default DevNet sponsors
 
 In `DevNet` mode, you can configure a non-default `SPONSOR_SV_ADDRESS`, `SCAN_ADDRESS` and `ONBOARDING_SECRET_URL` or `ONBOARDING_SECRET` in the `quickstart/.env` file.
 
-   💡 Connecting to `DevNet` requires a connection to an `approved SV <https://sync.global/docs/>`__. 
+   💡 Connecting to `DevNet` requires a connection to an `approved SV <https://sync.global/docs/>`__.
    If your organization provides access to the DAML-VPN, then connect to it to access the Digital Asset-sponsored SV.
 
-   Your organization may sponsor another `CN-approved SV <https://sync.global/sv-network/>`__. 
+   Your organization may sponsor another `CN-approved SV <https://sync.global/sv-network/>`__.
    If this is the case, speak with your administrator for privileged access.
 
    Review the `DevNet` Global Synchronizer documentation to learn more about the `SV onboarding process <https://docs.dev.sync.global/validator_operator/validator_onboarding.html#onboarding-process-overview>`__.
 
-   ⏱️ If you run into errors when making `DevNet` operations, double check that the `DevNet` VPN is active. 
+   ⏱️ If you run into errors when making `DevNet` operations, double check that the `DevNet` VPN is active.
    `DevNet` VPNs may timeout, especially if left unattended for extended periods of time.
 
-In an incognito browser navigate to `localhost:3000/login`. 
-Login as the Org1 user and create and archive assets, as before. 
+In an incognito browser navigate to `localhost:3000/login`.
+Login as the Org1 user and create and archive assets, as before.
 Logout and do the same as the `AppProvider`.
 
 Canton Coin Scan
@@ -399,13 +388,11 @@ Select the Network Info menu to view SV identification.
 
 .. image:: images/34-active-svs.png
    :alt: Active SVs
-   :width: 50%
 
 The Validators menu shows that the local validator has been registered with the SV.
 
 .. image:: images/37-registered-validator.png
    :alt: Registered validator
-   :width: 50%
 
 Observability Dashboard
 -----------------------
@@ -415,44 +402,38 @@ the observability dashboards. Select “Quickstart - consolidated logs”.
 
 .. image:: images/38-obs-dash.png
    :alt: observability dashboard
-   :width: 55%
 
 The default view shows a running stream of all services.
 
 .. image:: images/39-service-stream.png
    :alt: service stream
-   :width: 55%
 
-Change the services filter from “All” to “participant” to view participant logs. 
+Change the services filter from “All” to “participant” to view participant logs.
 Select any log entry to view its details.
 
 .. image:: images/40-log-entry-details.png
    :alt: log entry details
-   :width: 60%
 
 SV UIs
 ------
 
-Navigate to http://sv.localhost:4000/ for the SV Web UI. 
+Navigate to http://sv.localhost:4000/ for the SV Web UI.
 The SV view displays data directly from the validator in a GUI that is straightforward to navigate.
 
 Login as ‘administrator’.
 
 .. image:: images/33-sv-ui-login.png
    :alt: SV UI login
-   :width: 30%
 
 The UI shows information about the SV and lists the active SVs.
 
 .. image:: images/34-active-svs.png
    :alt: Active SVs
-   :width: 45%
 
 The Validator Onboarding menu allows for the creation of validator onboarding secrets.
 
 .. image:: images/35-validator-onboarding.png
    :alt: Validator onboarding
-   :width: 45%
 
 Next steps
 ==========

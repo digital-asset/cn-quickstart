@@ -3,6 +3,7 @@
 This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
  
 To run the Quickstart you need some binaries from Artifactory.  Request Artifactory access by clicking [here](https://www2.digitalasset.com/contact-us-access-to-jfrog) and we will get right back to you.  
+
 The terms and conditions for the binaries can be found [here](https://github.com/digital-asset/cn-quickstart/blob/main/terms.md). 
 
 The is licensed under the BSD Zero Clause License.
@@ -13,23 +14,21 @@ Once you are familiar with the QS, please review the technology choices and the 
 
 ## Docs and guides
 
-If you are impatient, then you can start by following the Engineer Setup below. Alternatively, you can peruse the documentation:
-- [Quickstart Installation](docs/guide/CN-QS-Installation-20250516.pdf)
-- [Exploring The Demo](docs/guide/ExploringTheDemo-20250516.pdf)
-- [Project Structure](docs/guide/ProjectStructureGuide-20250317.pdf)
-- [FAQ](docs/guide/CN-QS-FAQ-20250516.pdf)
-- [Observability and Troubleshooting Overview](docs/guide/ObservabilityTroubleshootingOverview-20250220.pdf)
+You can find Quickstart documentation in the Canton Network documentation portal.
+- [Quickstart Installation](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation)
+- [Exploring The Demo](https://docs.digitalasset.com/build/3.3/quickstart/operate/explore-the-demo)
+- [Project Structure](https://docs.digitalasset.com/build/3.3/quickstart/configure/project-structure-overview)
+- [FAQ](https://docs.digitalasset.com/build/3.3/quickstart/troubleshoot/cnqs-faq.html)
+- [Observability and Troubleshooting Overview](https://docs.digitalasset.com/build/3.3/quickstart/observe/observability-troubleshooting-overview.html)
 
 ### Technical documentation
 
 - [Observability](sdk/docs/user/001-observability.md)
 - [Topology](sdk/docs/user/002-topology.md)
 
-Additional documentation and updates are planned weekly.
+This project is rapidly enhanced, so please check back often for updates.
 
-This project will be rapidly enhanced, so please check back often for updates.
-
-## Engineer setup
+## Setup
 
 This repository uses `direnv`, `nix`, and `docker-compose` to provide development dependencies:
 
@@ -88,11 +87,23 @@ $ make console-app-provider
 $ make shell
 ```
 
-If containers fail to start, ensure docker compose is configured to allocate enough memory (recommended minimum total of 32gb).
+If a container fails to start, there are a few things to try:
+
+- Ensure Docker Compose is configured to allocate enough memory. The recommended minimum total memory is 8 GB.
+- Start fresh with `make clean-all` and then delete all Docker images and volumes.  
+- If you aren't able to run on DevNet:
+  - Make sure you have VPN access enabled by getting an OK from this curl request: `curl https://scan.sv-2.dev.global.canton.network.digitalasset.com/api/scan/version`
+  - Make sure the in the `quickstart/.env` file that the `IMAGE_TAG` is set to the latest Splice version by looking at the [current version information](https://docs.dev.sync.global/).
+- You may need to upgrade to a more recent version of the Daml SDK. Run `make install-daml-sdk` to assess your version and upgrade if you're not on the latest version.
+- Check to make sure `MIGRATION_ID` in `quickstart/env/devnet.env` is set to the value specified by the [SuperValidator network](https://sync.global/sv-network/).
 
 When running `make start` for the first time, an assistant will help you setting up the local deployment. You can choose to run the application in `DevNet` or `LocalNet` mode (recommended) for local development and testing, the latter meaning that a transient Super Validator is set up locally. You can change this later by running `make setup`.
 
 **Note**: Access to the Super Validator endpoints on DevNet may require a VPN setup.
+
+**Note**: The CN QS uses Java SDK version `Eclipse Temurin JDK version 17.0.12+7`.
+The Java SDK runs within the Docker container.
+This information is specified in `quickstart/compose.yaml` and `.env`.
 
 ## Available make targets
 
