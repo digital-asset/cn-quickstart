@@ -82,7 +82,3 @@ services:
     environment:
       - CREATE_DATABASE_pqs_app_provider=pqs-app-provider
       - CREATE_DATABASE_pqs_app_user=pqs-app-user
-
-include:
-  - ${MODULES_DIR}/splice-onboarding/testik-empty.yaml
-  - ${MODULES_DIR}/splice-onboarding/overrides.yaml
