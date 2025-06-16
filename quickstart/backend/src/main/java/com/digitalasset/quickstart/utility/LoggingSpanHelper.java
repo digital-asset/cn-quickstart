@@ -200,7 +200,7 @@ public final class LoggingSpanHelper {
             logBuilder.setCause(t);
         }
         logBuilder.log(message);
-        logger.error(message + " WHY THIS WAS NOT LOGGED: " + t.getMessage(), t);
+        logger.error(message + t.getMessage(), t);
     }
 
     /**
@@ -222,7 +222,7 @@ public final class LoggingSpanHelper {
             logBuilder.setCause(t);
             t.printStackTrace(pw);
         }
-        logBuilder.log(message + " WHY THIS WAS NOT LOGGED: " +t.getMessage() + "\n" + sw);
+        logBuilder.log(message + t.getMessage() + "\n" + sw);
     }
 
     /**

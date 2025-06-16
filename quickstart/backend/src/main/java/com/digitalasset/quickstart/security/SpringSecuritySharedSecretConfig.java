@@ -118,7 +118,6 @@ public class SpringSecuritySharedSecretConfig {
 
     @Bean
     public TokenProvider tokenProvider() {
-        // KV remove dependency on auth0 as we don't need it anymore
         return () -> securityConfig.getToken();
     }
 

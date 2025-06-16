@@ -258,7 +258,6 @@ public class AdminApiImpl implements AdminApi {
                     } else {
                         result = tenantPropertiesRepository.getAllTenants().values().stream()
                                 .map(prop -> {
-                                    // KV check whether clientId and issuerUrl are mandatory
                                     TenantRegistration out = new TenantRegistration();
                                     out.setTenantId(prop.getTenantId());
                                     if (prop.getWalletUrl() != null) out.setWalletUrl(URI.create(prop.getWalletUrl()));
