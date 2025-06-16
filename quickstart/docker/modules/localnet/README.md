@@ -114,9 +114,9 @@ The `*.localhost` domains will resolve to your local host IP `127.0.0.1`.
 ## Swagger UI
 
 When the `swagger-ui` profile is enabled, the Swagger UI for the `JSON Ledger API HTTP Endpoints` across all running participants is available at [http://localhost:9090](http://localhost:9090).
-Note: Some endpoints require a JWT token when using the **Try it out** feature. One method to obtain this token is via the Canton Console. Start the Canton Console and execute the following command:
+Note: Some endpoints require a JWT token when using the **Try it out** feature. One method to obtain this token is via the Canton Console. Start the Canton Console `make canton-console` and execute the following command:
 ```
-app-provider.adminToken
+`app-provider`.adminToken
 ```
 
 For proper functionality, Swagger UI relies on a localhost nginx proxy for `canton.localhost` configured for each participant. For example, the `JSON Ledger API HTTP Endpoints` for the app-provider
