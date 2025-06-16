@@ -28,7 +28,6 @@ services:
     working_dir: /daml3.3
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
-#      - ${APP_PROVIDER_AUTH_ENV}
       - ${MODULES_DIR}/pqs/env/pqs.env
       - *app-provider-pqs-onboarding-env
       - *app-provider-pqs-env
@@ -53,7 +52,6 @@ services:
     working_dir: /daml3.3
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
-#      - ${APP_USER_AUTH_ENV}
       - ${MODULES_DIR}/pqs/env/pqs.env
       - *app-user-pqs-onboarding-env
       - *app-user-pqs-env
@@ -84,3 +82,7 @@ services:
     environment:
       - CREATE_DATABASE_pqs_app_provider=pqs-app-provider
       - CREATE_DATABASE_pqs_app_user=pqs-app-user
+
+include:
+  - ${MODULES_DIR}/splice-onboarding/testik-empty.yaml
+  - ${MODULES_DIR}/splice-onboarding/overrides.yaml

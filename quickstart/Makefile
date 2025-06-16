@@ -28,12 +28,16 @@ endif
 ifndef MODULES_DIR
   export MODULES_DIR=$(shell pwd)/docker/modules
 endif
-$(warning MODULES_DIR=$(MODULES_DIR))
 
 ifndef LOCALNET_DIR
   export LOCALNET_DIR=$(MODULES_DIR)/localnet
 endif
-$(warning LOCALNET_DIR=$(LOCALNET_DIR))
+
+# Print out info about paths:
+ifdef PATH_DEBUG_INFO
+  $(warning MODULES_DIR=$(MODULES_DIR))
+  $(warning LOCALNET_DIR=$(LOCALNET_DIR))
+endif
 
 # Default to adding resource constraints for Quickstart compose stack.
 RESOURCE_CONSTRAINTS_ENABLED ?= true

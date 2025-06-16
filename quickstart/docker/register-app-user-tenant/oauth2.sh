@@ -11,7 +11,7 @@ register_tenant() {
   local partyId=$2
   local clientId=$3
   local issuerUrl=$4
-  echo "register_tenant $partyId $clientId $issuerUrl |${APP_USER_UI_PORT}|" >&2
+  echo "register_tenant $partyId $clientId $issuerUrl" >&2
   curl_check "http://backend-service:${BACKEND_PORT}/admin/tenant-registrations" "$token" "application/json" \
    --data-raw '{
      "tenantId": "AppUser",
