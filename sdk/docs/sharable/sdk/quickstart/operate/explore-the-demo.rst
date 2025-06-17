@@ -1,6 +1,6 @@
-==========================================
-Explore the Canton Network quickstart demo
-==========================================
+======================================================
+Explore the Canton Network Application Quickstart demo
+======================================================
 
 **Contents**
 
@@ -33,22 +33,22 @@ Explore the Canton Network quickstart demo
 Exploring the demo
 ==================
 
-Explore the demo is intended to help you become familiar with a CN business operation within the CN QS.
-The QS application is intended to be incrementally extended by your team to meet your business needs.
-When you are familiar with the QS, review the technology choices and application design to determine what changes are needed.
+Explore the demo is intended to help you become familiar with a CN business operation within the CN App Quickstart.
+The App Quickstart application is intended to be incrementally extended by your team to meet your business needs.
+When you are familiar with the App Quickstart, review the technology choices and application design to determine what changes are needed.
 Technology and design decisions are ultimately up to you.
 
 .. wip::
 
-As a result, the CN QS guides may be a little out of step with the application.
+As a result, the CN App Quickstart guides may be a little out of step with the application.
 If you find errors or other inconsistencies, please contact your representative at Digital Asset.
 
-This section works through a complete business operation within the CN QS.
+This section works through a complete business operation within the CN App Quickstart.
 
 Prerequisites
 =============
 
-You should have successfully `installed the CN QS <../download/cnqs-installation.html>`__
+You should have successfully `installed the CN App Quickstart <../download/cnqs-installation.html>`__
 before beginning this demonstration.
 
 Access to the `CN Docker repository <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__
@@ -63,7 +63,7 @@ To access ``DevNet``, contact your sponsoring SV agent for VPN connection inform
 
 If you need support accessing the SV or VPN email support@digitalasset.com.
 
-The CN QS is a Dockerized application and requires `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__.
+The CN App Quickstart is a Dockerized application and requires `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__.
 It is recommended to allocate 8 GB of memory and 3 GB of Swap memory to properly run the required Docker containers.
 If you witness unhealthy containers, please consider allocating additional resources, if possible.
 
@@ -72,7 +72,7 @@ If you witness unhealthy containers, please consider allocating additional resou
 Walkthrough
 ===========
 
-After the QS is installed and running, confirm that you are in the quickstart subdirectory of the CN QS.
+After the App Quickstart is installed and running, confirm that you are in the quickstart subdirectory of the CN App Quickstart.
 
 Open an incognito browser.
 
@@ -87,7 +87,7 @@ Alternatively, in the terminal, from quickstart/ run:
 ``make open-app-ui``
 
 .. image:: images/01-login-cnqs.png
-   :alt: CNQS Login screen
+   :alt: CN App Quickstart Login screen
 
 Make note that the ``AppProvider``’s username is “pat” and the password is “abc123” (all lowercase).
 
@@ -325,7 +325,7 @@ When prompted to enable ``LocalNet``, enter “n”. This enables ``DevNet``
 
 Optionally, enter “Y” to enable observability. This starts additional containers which may require more memory for Docker.
 
-.. note:: Observability may no longer work while QS is under revisions. If you experience unexpected errors, set observability to "n". 
+.. note:: Observability may no longer work while App Quickstart is under revisions. If you experience unexpected errors, set observability to "n". 
 
 You may leave the party hint as the default value by tapping ‘return’ on the keyboard.
 
@@ -408,7 +408,7 @@ The Validators menu shows that the local validator has been registered with the 
 Observability Dashboard
 -----------------------
 
-.. note:: Observability may no longer work while QS is under revisions.
+.. note:: Observability may no longer work while App Quickstart is under revisions.
 
 In a web browser, navigate to http://localhost:3030/dashboards to view
 the observability dashboards. Select “Quickstart - consolidated logs”.
@@ -451,6 +451,6 @@ The Validator Onboarding menu allows for the creation of validator onboarding se
 Next steps
 ==========
 
-You’ve completed a business operation in the CN QS and have been introduced to the basics of the Canton Console and Daml Shell.
+You’ve completed a business operation in the CN App Quickstart and have been introduced to the basics of the Canton Console and Daml Shell.
 
 Learn more about Daml Shell and the project structure in the Project Structure guide.
