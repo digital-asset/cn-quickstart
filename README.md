@@ -91,7 +91,11 @@ If a container fails to start, there are a few things to try:
 
 - Ensure Docker Compose is configured to allocate enough memory. The recommended minimum total memory is 8 GB.
 - Start fresh with `make clean-all` and then delete all Docker images and volumes.  
+- If you aren't able to run on DevNet:
+  - Make sure you have VPN access enabled by getting an OK from this curl request: `curl https://scan.sv-2.dev.global.canton.network.digitalasset.com/api/scan/version`
+  - Make sure the in the `quickstart/.env` file that the `IMAGE_TAG` is set to the latest Splice version by looking at the [current version information](https://docs.dev.sync.global/).
 - You may need to upgrade to a more recent version of the Daml SDK. Run `make install-daml-sdk` to assess your version and upgrade if you're not on the latest version.
+- Check to make sure `MIGRATION_ID` in `quickstart/env/devnet.env` is set to the value specified by the [SuperValidator network](https://sync.global/sv-network/).
 
 When running `make start` for the first time, an assistant will help you setting up the local deployment. You can choose to run the application in `DevNet` or `LocalNet` mode (recommended) for local development and testing, the latter meaning that a transient Super Validator is set up locally. You can change this later by running `make setup`.
 

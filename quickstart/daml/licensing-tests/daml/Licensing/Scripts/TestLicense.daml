@@ -163,7 +163,7 @@ setupLicensingInstall app user = do
 -- | Simulate the setup of the validator party on a self-hosted validator node.
 setupValidatorParty : AmuletApp -> Text -> Script AmuletUser
 setupValidatorParty app name = do
-  party  <- allocatePartyWithHint name $ PartyIdHint name
+  party  <- allocatePartyByHint (PartyIdHint name)
   userId <- validateUserId name
   -- We need 'CanReadAs app.dso' only in tests, as they are not yet setup to simulate explicit disclosure.
   -- In the actual implementation, the provider backend would provide the DSO published contracts via explicit disclosure.

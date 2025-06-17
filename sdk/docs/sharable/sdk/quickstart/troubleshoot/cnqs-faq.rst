@@ -42,7 +42,7 @@ Please be aware that the Canton Network Quickstart (CN QS) is a rapidly evolving
 
 **What are the minimum system requirements to run CN QS LocalNet?**
 
-The CN QS requires Docker Desktop with at least 8 GB of memory allocated to run `LocalNet` properly.
+The CN QS requires Docker Desktop with at least 8 GB of memory allocated to run ``LocalNet`` properly.
 If your machine has less memory, consider declining Observability when prompted during setup.
 
 **Which browsers are supported for running CN QS?**
@@ -52,13 +52,13 @@ Safari has known issues with local URLs and should be avoided.
 You may also use the same browser with one user in incognito mode and the other in standard mode.
 
 **How should I test** Participant **and** User **interactions on**
-`LocalNet` **and** `DevNet`\ **?**
+``LocalNet`` **and** ``DevNet``\ **?**
 
 For testing multiple users, use separate browsers or one browser in standard mode and another in incognito to avoid session/cookie interference.
 
 **How do I handle authentication for JFrog Artifactory?**
 
-You need to create a `~/.netrc` file with the following format:
+You need to create a ``~/.netrc`` file with the following format:
 
 ::
 
@@ -66,14 +66,14 @@ You need to create a `~/.netrc` file with the following format:
    login <your-email>
    password <your-api-key>
 
-Set permissions with `chmod 600 ~/.netrc`
+Set permissions with ``chmod 600 ~/.netrc``
 
 For more information see the Installation Guide.
 
 **Why is Nix-shell unable to download my SSL certificate?**
 
 The Nix prerequisite may introduce hurdles to installation if your enterprise runs behind a corporate proxy.
-If nix-shell is not found, then verify that `/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt`
+If nix-shell is not found, then verify that ``/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt``
 contains your corporate CA.
 
 CN, PQS, Daml Shell and other CN QS related services run on a user-supplied JVM.
@@ -98,7 +98,7 @@ If the log returns an error message such as:
    SSL peer certificate or SSH remote key was not OK (60)
 
 Then the required corporate CA does not exist.
-Request your corporate CA from your organization’s tech administrator and merge the certificate into the Nix `certs ca-bundle.crt`.
+Request your corporate CA from your organization’s tech administrator and merge the certificate into the Nix ``certs ca-bundle.crt``.
 
 If you need additional support, the `Nix reference manual <https://nix.dev/manual/nix/2.24/command-ref/conf-file.html#conf-ssl-cert-file>`__
 offers guidance regarding the order at which cert files are detected and used on the host, as well as environment variables to override default file locations.
@@ -118,20 +118,20 @@ Always prefer to use the make commands.
 
 **What version of the Java SDK does the CN Quickstart use?**
 
-The CN QS uses Java SDK version `Eclipse Temurin JDK version 17.0.12+7`.
+The CN QS uses Java SDK version ``Eclipse Temurin JDK version 17.0.12+7``.
 The Java SDK runs within the Docker container.
 
-This information is specified in `quickstart/compose.yaml` and `.env`, respectively.
+This information is specified in ``quickstart/compose.yaml`` and ``.env``, respectively.
 
-`quickstart/compose.yaml`
+``quickstart/compose.yaml``
 
 ::
 
    services:
    backend-service:
       image: "eclipse-temurin:${JAVA_VERSION}"
-   
-`.env`
+
+``.env``
 
 ::
 
@@ -139,17 +139,17 @@ This information is specified in `quickstart/compose.yaml` and `.env`, respectiv
 
 **How do I resolve a “build failed with an exception failure”?**
 
-If `make install-daml-sdk` results in:
+If ``make install-daml-sdk`` results in:
 
 ::
 
    Task :daml:unpackDamlSdk FAILED
    FAILURE: Build failed with an exception
 
-Then you may have a corrupted `daml-sdk snapshot`.
+Then you may have a corrupted ``daml-sdk snapshot``.
 In most cases, deleting the identified tarball snapshot will resolve the issue in subsequent installation attempts.
 
-This error may occur if `make install-daml-sdk` is interrupted.
+This error may occur if ``make install-daml-sdk`` is interrupted.
 
 A failure of this kind will end in:
 
@@ -167,13 +167,13 @@ A failure of this kind will end in:
 
    > java.io.EOFException
 
-To resolve this error, copy the faulty `.tar.gz` file with directory path as shown in *your* terminal and `rm` it:
+To resolve this error, copy the faulty ``.tar.gz`` file with directory path as shown in *your* terminal and ``rm`` it:
 
 ::
 
    rm /Users/USER/Code/cn-quickstart/quickstart/daml/.sdk/daml-sdk-3.2.0-snapshot.20241031.13398.0.vf95d2607-macos-x86_64-ee.tar.gz
 
-.. note:: `USER` in `/Users/USER/` will display your username. Copy and paste from your terminal. NOT this FAQ.
+.. note:: ``USER`` in ``/Users/USER/`` will display your username. Copy and paste from your terminal. NOT this FAQ.
 
 Reattempt make install-daml-sdk.
 
@@ -205,7 +205,7 @@ If you’d like to learn more about this issue, visit `JDK Bug System <https://b
 
 **How can I check if my CN QS deployment is running correctly?**
 
-Use `make status` to see all running containers and their health status.
+Use ``make status`` to see all running containers and their health status.
 
 **What should I do if containers show as "unhealthy" after startup?**
 
@@ -213,15 +213,15 @@ The most common cause is insufficient memory allocation to Docker. Try:
 
 1. Increase Docker memory allocation to at least 8 GB
 
-2. Run `make stop` followed by `make clean-all`
+2. Run ``make stop`` followed by ``make clean-all``
 
-3. Run `make setup` and turn off `observability`
+3. Run ``make setup`` and turn off ``observability``
 
-4. Restart with `make start`
+4. Restart with ``make start``
 
 **How can I monitor system metrics?**
 
-You can use Grafana at http://localhost:3030/ to monitor system metrics if `observability` is enabled.
+You can use Grafana at http://localhost:3030/ to monitor system metrics if ``observability`` is enabled.
 
 For more information see the Observability and Troubleshooting Overview.
 
@@ -229,13 +229,13 @@ For more information see the Observability and Troubleshooting Overview.
 
 Execute the following commands in order:
 
-1. `make stop`
+1. ``make stop``
 
-2. `make clean-all`
+2. ``make clean-all``
 
-3. `make setup` (to reconfigure environment options)
+3. ``make setup`` (to reconfigure environment options)
 
-4. `make start`
+4. ``make start``
 
 **How do I resolve "Couldn't find env file" in make build?**
 
@@ -246,27 +246,27 @@ If you receive an error message such as:
    Couldn't find env file: /Users/USER/development/canton/cn-quickstart/quickstart/.env.local
    make: \**\* [build-docker-images] Error 15
 
-Run `make setup` to create the `.env.local` file.
+Run ``make setup`` to create the ``.env.local`` file.
 
 **Development & testing**
 -------------------------
 
 **How do I access the Daml Shell for debugging?**
 
-Run `make shell` from the quickstart directory.
+Run ``make shell`` from the quickstart directory.
 This provides access to useful commands like:
 
--  `active` - shows summary of contracts
+-  ``active`` - shows summary of contracts
 
--  `active quickstart:Main:Asset` - shows Asset contract details
+-  ``active quickstart:Main:Asset`` - shows Asset contract details
 
--  `contract [contract-id]` - shows full contract details
+-  ``contract [contract-id]`` - shows full contract details
 
 **How can I monitor application logs and traces?**
 
 The CN QS provides several observability options:
 
-1. Direct container logs: `docker logs <container-name>`
+1. Direct container logs: ``docker logs <container-name>``
 
 2. Grafana dashboards: http://localhost:3030/
 
@@ -277,27 +277,27 @@ The CN QS provides several observability options:
 
 **What's the difference between LocalNet and DevNet deployment?**
 
-`LocalNet` runs everything locally including a Super Validator and Canton Coin wallet, making it more resource intensive but self-contained.
+``LocalNet`` runs everything locally including a Super Validator and Canton Coin wallet, making it more resource intensive but self-contained.
 
-`DevNet` connects to actual decentralized Global Synchronizer infrastructure operated by Super Validators.
-`DevNet` requires less local resources but needs whitelisted VPN access and connectivity.
+``DevNet`` connects to actual decentralized Global Synchronizer infrastructure operated by Super Validators.
+``DevNet`` requires less local resources but needs whitelisted VPN access and connectivity.
 
 For more information see the Project Structure Guide.
 
 **What is ScratchNet?**
 
-`ScratchNet` is a persistent Canton Network environment that supports team collaboration while maintaining centralized control.
+``ScratchNet`` is a persistent Canton Network environment that supports team collaboration while maintaining centralized control.
 It fills the gap between a single-developer LocalNet (constrained by one laptop's resources) and a fully decentralized DevNet (maintained by Super Validators).
-Development teams typically deploy `ScratchNet` on a shared server to enable longer-running instances with persistent data storage across development sessions.
-Learn more about `ScratchNet` in the Exploring the Demo Guide.
+Development teams typically deploy ``ScratchNet`` on a shared server to enable longer-running instances with persistent data storage across development sessions.
+Learn more about ``ScratchNet`` in the Exploring the Demo Guide.
 
 **How can I find out the migration_id of DevNet?**
 
-Go to https://sync.global/sv-network/ and look for the `migration_id` value.
+Go to https://sync.global/sv-network/ and look for the ``migration_id`` value.
 
 **Do I need VPN access to use CN QS?**
 
-VPN access is only required for `DevNet` connections.
+VPN access is only required for ``DevNet`` connections.
 You need either:
 
 -  Access to the DAML-VPN
@@ -318,7 +318,7 @@ Keycloak should show healthy.
    keycloak   quay.io/keycloak/keycloak:26.1.0 "/opt/keycloak/bin/k…"
    keycloak   17 minutes ago Up 17 minutes (healthy) 8080/tcp, 8443/tcp, 9000/tcp
 
-Keycloak credentials are set in `.env` with the following credentials:
+Keycloak credentials are set in ``.env`` with the following credentials:
 
 ::
 
@@ -341,7 +341,7 @@ Best practices include:
 
 3. Be aware that even incognito mode in the same browser may have session interference
 
-4. Consider using the make commands for testing specific operations (e.g., `make create-app-install-request`)
+4. Consider using the make commands for testing specific operations (e.g., ``make create-app-install-request``)
 
 **Database & query access**
 ---------------------------
@@ -475,5 +475,5 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 | http://localhost:5003         | Validator API service                |
 +-------------------------------+--------------------------------------+
 
-In `DevNet` mode, Super Validator and wallet services are hosted externally rather than locally.
+In ``DevNet`` mode, Super Validator and wallet services are hosted externally rather than locally.
 The exact URLs for those services are provided by your sponsoring Super Validator.

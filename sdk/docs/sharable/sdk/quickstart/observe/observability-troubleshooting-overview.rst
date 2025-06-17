@@ -58,32 +58,32 @@ transaction provenance across multiple organizations and environments.
 The LocalNet configuration
 --------------------------
 
-The Quickstart runtime configuration is defined in `.env.local`, which
-allows each developer to switch between running a `LocalNet` or `DevNet`
+The Quickstart runtime configuration is defined in ``.env.local``, which
+allows each developer to switch between running a ``LocalNet`` or ``DevNet``
 application deployment; and, whether or not to bring up a local
-deployment of the Observability Stack. This file can be created using `$ make setup`,
-which wraps the command `$ ./gradlew configureProfiles --no-daemon --console=plain --quiet`,
-or can be edited manually to set environment variables `LOCALNET_ENABLED` and `OBSERVABILITY_ENABLED` to `true`
-or `false` as desired.
+deployment of the Observability Stack. This file can be created using ``$ make setup``,
+which wraps the command ``$ ./gradlew configureProfiles --no-daemon --console=plain --quiet``,
+or can be edited manually to set environment variables ``LOCALNET_ENABLED`` and ``OBSERVABILITY_ENABLED`` to ``true``
+or ``false`` as desired.
 
-The `LocalNet` runtime configuration is handled by `docker-compose`
-configured in `compose.yaml` using environment variables from `.env` in the
-`quickstart/` project root directory. As a result the usual Docker
+The ``LocalNet`` runtime configuration is handled by ``docker-compose``
+configured in ``compose.yaml`` using environment variables from ``.env`` in the
+``quickstart/`` project root directory. As a result the usual Docker
 commands and tooling applies.
 
 Immediately useful commands you probably already know:
 
--  `$ docker ps` lists the running containers.
+-  ``$ docker ps`` lists the running containers.
 
--  `$ docker logs [-f] <container>` fetches the logs of a container, and
-   follow the logs with the `-f` option.
+-  ``$ docker logs [-f] <container>`` fetches the logs of a container, and
+   follow the logs with the ``-f`` option.
 
    -  If the system is not working well to the extent you do not trust
-      the observability stack (discussed later), `docker logs backend-service`
+      the observability stack (discussed later), ``docker logs backend-service``
       is a good place to start looking for errors that
       might provide an insight into what has gone wrong.
 
--  `$ docker restart <container>` for those instances where a container
+-  ``$ docker restart <container>`` for those instances where a container
    seems to have become stuck.
 
 Observability overview
@@ -92,7 +92,7 @@ Observability overview
 The Quickstart application has been built to provide the foundation for
 a production Daml application. As such it includes a full observability
 configuration which is helpful to troubleshoot or debug an application
-when running on the `LocalNet`. In order to provide a working demo
+when running on the ``LocalNet``. In order to provide a working demo
 Quickstart has naturally had to be opinionated regarding the choice of
 technologies, selecting from modern commonly used technologies. The
 platform itself is agnostic, and individual components can and should be
@@ -126,29 +126,29 @@ Daml Shell is a terminal application that provides interactive local
 ledger inspection on top of PQS. Quickstart is configured to launch Daml
 Shell in a docker container and is configured to connect to the included
 application provider’s PQS instance. This is easiest to access via the
-toplevel project scripts accessed via `make` from `quickstart/`. To see this
+toplevel project scripts accessed via ``make`` from ``quickstart/``. To see this
 in action, build and start the quickstart app then:
 
-Run `$ make create-app-install-request` to use `curl` to submit the
-`create AppInstallRequest ...` command to the ledger [1]_ to initiate user
+Run ``$ make create-app-install-request`` to use ``curl`` to submit the
+``create AppInstallRequest ...`` command to the ledger [1]_ to initiate user
 onboarding [2]_. Then you can use the following Daml Shell commands:
 
-> `active` to see a summary of the contracts you created; and,
+> ``active`` to see a summary of the contracts you created; and,
 
-> `active quickstart-licensing:Licensing.AppInstall:AppInstallRequest` to
+> ``active quickstart-licensing:Licensing.AppInstall:AppInstallRequest`` to
 see the contract details for any Asset contracts on the ledger; finally,
 
-> `contract [contract-id from the previous command]` [3]_ to see the full
-detail of the `AppInstallRequest` contract on the ledger.
+> ``contract [contract-id from the previous command]`` [3]_ to see the full
+detail of the ``AppInstallRequest`` contract on the ledger.
 
-> `help [command]` provides context help for daml shell commands. [4]_
+> ``help [command]`` provides context help for daml shell commands. [4]_
 
 Grafana
 ~~~~~~~
 
 The Grafana interface is accessible via its web interface which is
 port-mapped to http://localhost:3030/, and can be opened in the current
-browser from the command line using `make open-observe`.
+browser from the command line using ``make open-observe``.
 
 It is recommended that the focus of your debugging should be on using
 the trace and log facilities provided by Grafana and ledger inspection
@@ -158,10 +158,10 @@ assurance that they will be sufficient to support diagnostics in
 production.
 
 There is additional access configured into the quickstart that can
-assist with debugging on `LocalNet`. To reiterate, best practice is to use
+assist with debugging on ``LocalNet``. To reiterate, best practice is to use
 the same diagnostic tools for development as you will for production. If
 you add a log line that then allows you to identify and fix a bug in
-development, then keeping it around at `trace` or `debug` log levels
+development, then keeping it around at ``trace`` or ``debug`` log levels
 increases your operational readiness. Conversely, in one sense, using a
 tool that won’t be available in production to debug in development
 reduces your operational readiness.
@@ -170,16 +170,16 @@ Direct Postgres access
 ~~~~~~~~~~~~~~~~~~~~~~
 
 All persistent state in the example application is stored in one or more
-postgres databases. You can use the postgres configuration in `.env` to
+postgres databases. You can use the postgres configuration in ``.env`` to
 connect directly to these instances.
 
 .. code-block::
 
    $ docker exec -it <postgres container> psql -v --username <.env username> --dbname <.env dbname> --password
 
-For example: if you connect to the `postgres-splice-app-provider`
-container (default username `cnadmin`, dbname `scribe`, and password
-`supersafe`; then you can use the SQL interface to PQS to examine the
+For example: if you connect to the ``postgres-splice-app-provider``
+container (default username ``cnadmin``, dbname ``scribe``, and password
+``supersafe``; then you can use the SQL interface to PQS to examine the
 app-provider’s participant’s local ledger. The SQL API to PQS is
 documented in the daml documentation
 (`https://docs.daml.com/query/pqs-user-guide.html# <https://docs.daml.com/query/pqs-user-guide.html>`__).
@@ -187,7 +187,7 @@ documented in the daml documentation
 Interactive debugger
 ~~~~~~~~~~~~~~~~~~~~
 
-If you review the `compose.yaml` file and examine the configuration for
+If you review the ``compose.yaml`` file and examine the configuration for
 backend-service you will see the lines:
 
 .. code-block::
@@ -240,42 +240,42 @@ A few of the key identifiers to be aware of are:
    :widths: 15 20 60
    :header-rows: 1
 
-   * -   `Identifier`
-     -   `Specified by`
-     -   `Scope`
-   * -   `ApplicationId`
-     -   `The Ledger Client`
-     -   `Identifies the ledger client during command submission and processing.`
-   * -   `WorkflowId`
-     -   `The Ledger Client`
-     -   `Identifies the business process. Persisted to the ledger.`
-   * -   `CommandId`
-     -   `The Ledger Client`
-     -   `Identifies the business “act” associated with a ledger command. Persisted to the ledger. Visible only to the submitting party. Common across retries.`
-   * -   `SubmissionId`
-     -   `The Ledger Client`
-     -   `Identifies an individual ledger submission to a participant node.`
-   * -   `TransactionId`
-     -   `Daml Ledger`
-     -   `Global identifier for a committed transaction to the ledger. Only visible to participant nodes that witness or are informed of the transaction.` [5]_
-   * -   `LedgerEventId`
-     -   `Daml Ledger`
-     -   `Global identifier for a node within a committed transaction tree corresponding to a ledger event.`
-   * -   `Trace/SpanId` [6]_
-     -   `Ledger Client (or upstream)`
-     -   `Accepted by GRPC/HTTP ledger interfaces and honoured throughout the Canton Network code. Where one is not provided may sometimes be generated internally to provide tracing support within the network.`
-   * -   `LedgerOffset`
-     -   `Participant Node`
-     -   `The height of a transaction within the local linearization of the ledger by a participant node.` [7]_
-   * -   `ContractId`
-     -   `Daml Ledger`
-     -   `Global identifier for a contract that was created successfully on the ledger at some point. If the contract has been subsequently archived the id remains a stable and valid way to refer to it even though the associated contract can no longer be used.`
-   * -   `TemplateId`
-     -   `Daml Application`
-     -   `Combined with a PackageId this provides a global identifier for a Daml smart contract.`
-   * -   `PartyId`
-     -   `Participant Node`
-     -   `Global, potentially non-unique, identifier for a legal entity on the Canton ledger.` [8]_
+   * -   ``Identifier``
+     -   ``Specified by``
+     -   ``Scope``
+   * -   ``ApplicationId``
+     -   ``The Ledger Client``
+     -   ``Identifies the ledger client during command submission and processing.``
+   * -   ``WorkflowId``
+     -   ``The Ledger Client``
+     -   ``Identifies the business process. Persisted to the ledger.``
+   * -   ``CommandId``
+     -   ``The Ledger Client``
+     -   ``Identifies the business “act” associated with a ledger command. Persisted to the ledger. Visible only to the submitting party. Common across retries.``
+   * -   ``SubmissionId``
+     -   ``The Ledger Client``
+     -   ``Identifies an individual ledger submission to a participant node.``
+   * -   ``TransactionId``
+     -   ``Daml Ledger``
+     -   ``Global identifier for a committed transaction to the ledger. Only visible to participant nodes that witness or are informed of the transaction.`` [5]_
+   * -   ``LedgerEventId``
+     -   ``Daml Ledger``
+     -   ``Global identifier for a node within a committed transaction tree corresponding to a ledger event.``
+   * -   ``Trace/SpanId`` [6]_
+     -   ``Ledger Client (or upstream)``
+     -   ``Accepted by GRPC/HTTP ledger interfaces and honoured throughout the Canton Network code. Where one is not provided may sometimes be generated internally to provide tracing support within the network.``
+   * -   ``LedgerOffset``
+     -   ``Participant Node``
+     -   ``The height of a transaction within the local linearization of the ledger by a participant node.`` [7]_
+   * -   ``ContractId``
+     -   ``Daml Ledger``
+     -   ``Global identifier for a contract that was created successfully on the ledger at some point. If the contract has been subsequently archived the id remains a stable and valid way to refer to it even though the associated contract can no longer be used.``
+   * -   ``TemplateId``
+     -   ``Daml Application``
+     -   ``Combined with a PackageId this provides a global identifier for a Daml smart contract.``
+   * -   ``PartyId``
+     -   ``Participant Node``
+     -   ``Global, potentially non-unique, identifier for a legal entity on the Canton ledger.`` [8]_
 
 
 The goal of the observability configuration is to make it easier to
@@ -294,7 +294,7 @@ by OpenTelemetery.
 Direct Ledger inspection using correlation identifiers
 ------------------------------------------------------
 
-Starting from `$ make stop clean-all && make build start`, we proceed with
+Starting from ``$ make stop clean-all && make build start``, we proceed with
 initiating the example application app-user onboarding:
 
 .. code-block::
@@ -473,18 +473,18 @@ identifiers.
    :widths: 20 20 60
    :header-rows: 1
 
-   * - `Id Type`
-     - `Description`
-     - `ID`
-   * - `Command Id`
+   * - ``Id Type``
+     - ``Description``
+     - ``ID``
+   * - ``Command Id``
      -
-     - `79062314-1354-439b-b5c8-b889bec1024f`
-   * - `Contract Id`
-     - `AppInstall`
-     - `002ac6577aa4aee9906cee4aec9c82c45312...`
-   * - `Contract Id`
-     - `License`
-     - `79062314-1354-439b-b5c8-b889bec1024f`
+     - ``79062314-1354-439b-b5c8-b889bec1024f``
+   * - ``Contract Id``
+     - ``AppInstall``
+     - ``002ac6577aa4aee9906cee4aec9c82c45312...``
+   * - ``Contract Id``
+     - ``License``
+     - ``79062314-1354-439b-b5c8-b889bec1024f``
 
 As we have already seen, contract ids can be used in Daml Shell to
 inspect the contracts directly.
@@ -637,7 +637,7 @@ A starting point for finding documentation on these see:
    https://grafana.com/docs/grafana/latest/datasources/prometheus/query-editor/
 
 .. [1]
-   Specifically this sends a `CreateCommand` to the `submit-and-wait`
+   Specifically this sends a ``CreateCommand`` to the ``submit-and-wait``
    service on the Application User’s participant node.
 
 .. [2]
@@ -646,7 +646,7 @@ A starting point for finding documentation on these see:
 
 .. [3]
    Daml shell has tab completion on most command arguments, including
-   the Template Id argument to `active` and the Contract Id argument to
+   the Template Id argument to ``active`` and the Contract Id argument to
    contract.
 
 .. [4]

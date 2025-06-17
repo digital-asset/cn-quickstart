@@ -16,6 +16,7 @@ import DA.List.Total
 import DA.Optional (fromOptional)
 import DA.Time
 import DA.Assert
+import qualified DA.TextMap as TextMap
 
 import Splice.Api.Token.MetadataV1
 
@@ -93,7 +94,7 @@ setupValidator app name = do
 
 setupValidator' : AmuletApp -> Text -> Script AmuletUser
 setupValidator' app name = do
-  validatorParty <- allocatePartyWithHint name (PartyIdHint name)
+  validatorParty <- allocatePartyByHint (PartyIdHint name)
   sponsorParty <- allocateParty (name <> "_dummy_SV_sponsor")
   now <- getTime
   submitMulti [validatorParty, app.dso] [] $ createCmd ValidatorLicense with
@@ -125,7 +126,7 @@ data AmuletUser = AmuletUser
 
 setupUserWithoutValidatorRight: AmuletApp -> Text -> Script AmuletUser
 setupUserWithoutValidatorRight app name = do
-  user <- allocatePartyWithHint name (PartyIdHint name)
+  user <- allocatePartyByHint (PartyIdHint name)
   userId <- validateUserId name
   -- TODO(#2957): remove read-as DSO party.
   createUser (User userId (Some user)) [CanActAs user, CanReadAs app.dso]
@@ -661,12 +662,12 @@ genericCheckTxMetadata extractMeta extractSummary app expectedKind sender body =
   let totalHoldingsAfter = sum (Map.values holdingsAfter)
   debug ("check meta", totalHoldingsBefore, totalHoldingsAfter, show meta)
   let expect k v
-        | Map.lookup k meta == Some v = pure ()
-        | otherwise = abort ("Expected " <> show k <> " to be " <> show v <> " but got " <> show (Map.lookup k meta))
+        | TextMap.lookup k meta == Some v = pure ()
+        | otherwise = abort ("Expected " <> show k <> " to be " <> show v <> " but got " <> show (TextMap.lookup k meta))
   let expectUnlessZero k v
         | v == 0.0 = pure ()
         | otherwise = expect k (show v)
-  let expectNotSet k = when (Map.member k meta) (abort ("Expected " <> show k <> " to not be set"))
+  let expectNotSet k = when (TextMap.member k meta) (abort ("Expected " <> show k <> " to not be set"))
   -- check kind
   expect txKindMetaKey (txKindToText expectedKind)
   -- check which holding amounts changed
