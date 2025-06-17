@@ -33,7 +33,7 @@ const App: React.FC = () => {
                 <Routes>
                     <Route path="/" element={<HomeView />} />
                     <Route path="/tenants" element={<TenantRegistrationView />} />
-                    <Route path="/login-page" element={<LoginView />} />
+                    <Route path="/login" element={<LoginView />} />
                     <Route path="/app-installs" element={<AppInstallsView />} />
                     <Route path="/licenses" element={<LicensesView />} />
                 </Routes>

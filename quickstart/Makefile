@@ -179,7 +179,7 @@ restart-backend: build-backend ## Build and start the application
 
 .PHONY: restart-frontend
 restart-frontend: build-frontend ## Build and start the application
-	$(call docker-compose, restart nginx-app-provider)
+	$(call docker-compose, restart nginx)
 
 # Run targets
 .PHONY: start

@@ -57,7 +57,7 @@ const LoginView: React.FC = () => {
         ) : (
             <div className="login-container">
                 <h1 className="login-title">Login</h1>
-                <form name="f" action="login" method="POST" className="login-form">
+                <form name="f" action="login/shared-secret" method="POST" className="login-form">
                     <div className="form-group">
                         <label htmlFor="username" className="form-label">User:</label>
                         <input type="text" id="username" name="username" className="form-input"/>

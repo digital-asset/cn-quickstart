@@ -48,7 +48,7 @@ const AuthenticatedLinks: React.FC = () => {
         return (
             <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li className="nav-item">
-                    <Link className="nav-link" to="/login-page">
+                    <Link className="nav-link" to="/login">
                         Login
                     </Link>
                 </li>

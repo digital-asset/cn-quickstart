@@ -3,6 +3,14 @@
 
 server:
   forward-headers-strategy: NATIVE
+  # Review Error settings here and set acceptable values for production use.
+  # This configuration is for development purposes.
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
+    include-path: always
+    include-exception: true
   port: ${BACKEND_PORT}
 
 logging:
