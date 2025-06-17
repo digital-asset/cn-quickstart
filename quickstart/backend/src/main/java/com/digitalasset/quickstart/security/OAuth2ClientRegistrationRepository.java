@@ -6,6 +6,7 @@ package com.digitalasset.quickstart.security;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientPropertiesMapper;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.ClientRegistrations;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Lazy(false)
+@Profile("oauth2")
 public class OAuth2ClientRegistrationRepository
         implements AuthClientRegistrationRepository, ClientRegistrationRepository, Iterable<ClientRegistration> {
 
