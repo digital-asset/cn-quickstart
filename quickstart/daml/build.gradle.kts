@@ -161,8 +161,8 @@ tasks.register("verifyDamlSdkVersion") {
                 ❌ Could not determine DAML SDK version. 
                    Is it installed and on your PATH?
 
-                   💡 Please try running: make install-daml-sdk
-                   """.trimIndent())
+                💡 Please try running: make install-daml-sdk
+                """.trimIndent())
         }
 
         if (installedVersion != requiredVersion) {
