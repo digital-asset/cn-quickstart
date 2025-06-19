@@ -176,7 +176,7 @@ export async function createAppInstallRequest(
         packageIdSelectionPreference: []
     };
 
-    const response = await request.post(`http://localhost:2`+ getEnv('PARTICIPANT_JSON_API_PORT') +`/v2/commands/submit-and-wait`, {
+    const response = await request.post(`http://localhost:2`+ getEnv('PARTICIPANT_JSON_API_PORT_SUFFIX') +`/v2/commands/submit-and-wait`, {
         headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -205,7 +205,7 @@ export async function createAppInstallRequests(request: APIRequestContext): Prom
         request,
         appUserParticipantAdminToken,
         getEnv('AUTH_APP_USER_VALIDATOR_USER_ID') || '',
-        Number('2' + getEnv('PARTICIPANT_JSON_API_PORT'))
+        Number('2' + getEnv('PARTICIPANT_JSON_API_PORT_SUFFIX'))
     );
 
     // Retrieve admin tokens for the participant that hosts the app provider
@@ -219,7 +219,7 @@ export async function createAppInstallRequests(request: APIRequestContext): Prom
         request,
         appProviderParticipantAdminToken,
         getEnv('AUTH_APP_PROVIDER_VALIDATOR_USER_ID') || '',
-        Number('3' + getEnv('PARTICIPANT_JSON_API_PORT'))
+        Number('3' + getEnv('PARTICIPANT_JSON_API_PORT_SUFFIX'))
     );
 
     // Retrieve a token for the wallet admin user and fetch the DSO party

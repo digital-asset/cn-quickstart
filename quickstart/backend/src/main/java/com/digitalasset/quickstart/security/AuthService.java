@@ -1,5 +1,6 @@
 package com.digitalasset.quickstart.security;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
+@Profile("oauth2")
 final class AuthService implements AuthenticatedPartyProvider, AuthenticatedUserProvider, TokenProvider {
 
   private final OAuth2AuthorizedClientManager authorizedClientManager;

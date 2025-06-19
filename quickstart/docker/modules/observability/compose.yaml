@@ -1,0 +1,141 @@
+# Copyright (c) 2024, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+services:
+  otel-collector:
+    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_VERSION}
+    container_name: otel-collector
+    hostname: otel-collector
+    mem_limit: 1gb
+    ports:
+      - "${OTEL_COLLECTOR_FLUENTD_PORT}:${OTEL_COLLECTOR_FLUENTD_PORT}"
+    command:
+      - --config=/etc/otel-collector/config.yaml
+      - --feature-gates=receiver.prometheusreceiver.EnableNativeHistograms
+    environment:
+      OTLP_LISTEN_PORT: ${OTEL_COLLECTOR_OTLP_PORT}
+      FLUENTD_LISTEN_PORT: ${OTEL_COLLECTOR_FLUENTD_PORT}
+      CANTON_METRICS_PORT: ${CANTON_METRICS_PORT}
+      CADVISOR_METRICS_PORT: ${CADVISOR_METRICS_PORT}
+      POSTGRES_EXPORTER_METRICS_PORT: ${POSTGRES_EXPORTER_METRICS_PORT}
+      NGINX_EXPORTER_METRICS_PORT: ${NGINX_EXPORTER_METRICS_PORT}
+      PROMETHEUS_PORT: ${PROMETHEUS_HTTP_PORT}
+      LOKI_PORT: ${LOKI_HTTP_PORT}
+      TEMPO_PORT: ${TEMPO_OTLP_PORT}
+    volumes:
+      - ${MODULES_DIR}/observability/conf/otel-collector/collector.yaml:/etc/otel-collector/config.yaml
+    profiles:
+      - observability
+
+  prometheus:
+    image: ${PROMETHEUS_IMAGE}:${PROMETHEUS_VERSION}
+    container_name: prometheus
+    hostname: prometheus
+    mem_limit: 256mb
+    command:
+      - --config.file=/etc/prometheus/config.yaml
+      - --web.enable-admin-api
+      - --web.enable-remote-write-receiver
+      - --web.listen-address=:${PROMETHEUS_HTTP_PORT}
+      - --enable-feature=native-histograms
+      - --enable-feature=exemplar-storage
+      - --enable-feature=otlp-write-receiver
+      - --storage.tsdb.path=/prometheus/data
+    volumes:
+      - ${MODULES_DIR}/observability/conf/prometheus/prometheus.yaml:/etc/prometheus/config.yaml
+    profiles:
+      - observability
+
+  loki:
+    image: ${LOKI_IMAGE}:${LOKI_VERSION}
+    container_name: loki
+    hostname: loki
+    mem_limit: 512mb
+    command:
+      - --config.file=/etc/loki/config.yaml
+      - --config.expand-env=true
+    environment:
+      HTTP_LISTEN_PORT: ${LOKI_HTTP_PORT}
+    volumes:
+      - ${MODULES_DIR}/observability/conf/loki/loki.yaml:/etc/loki/config.yaml
+    profiles:
+      - observability
+
+  tempo:
+    image: ${TEMPO_IMAGE}:${TEMPO_VERSION}
+    container_name: tempo
+    hostname: tempo
+    mem_limit: 1g
+    command:
+      - --config.file=/etc/tempo/config.yaml
+      - --config.expand-env=true
+    environment:
+      HTTP_LISTEN_PORT: ${TEMPO_HTTP_PORT}
+      OTLP_LISTEN_PORT: ${TEMPO_OTLP_PORT}
+      PROMETHEUS_PORT: ${PROMETHEUS_HTTP_PORT}
+    volumes:
+      - ${MODULES_DIR}/observability/conf/tempo/tempo.yaml:/etc/tempo/config.yaml
+    profiles:
+      - observability
+
+  grafana:
+    image: ${GRAFANA_IMAGE}:${GRAFANA_VERSION}
+    container_name: grafana
+    hostname: grafana
+    mem_limit: 256mb
+    environment:
+      LOKI_PORT: ${LOKI_HTTP_PORT}
+      PROMETHEUS_PORT: ${PROMETHEUS_HTTP_PORT}
+      TEMPO_PORT: ${TEMPO_HTTP_PORT}
+    ports:
+      - "3030:3000"
+    volumes:
+      - ${MODULES_DIR}/observability/conf/grafana/dashboards:/var/lib/grafana/dashboards
+      - ${MODULES_DIR}/observability/conf/grafana/provisioning:/etc/grafana/provisioning
+      - ${MODULES_DIR}/observability/conf/grafana/grafana.ini:/etc/grafana/grafana.ini
+    depends_on:
+      prometheus:
+        condition: service_started
+    profiles:
+      - observability
+
+  cadvisor:
+    image: ${CADVISOR_IMAGE}:${CADVISOR_VERSION}
+    container_name: cadvisor
+    hostname: cadvisor
+    mem_limit: 256mb
+    command:
+      - --store_container_labels=false
+      - -docker_only
+      - -port=${CADVISOR_METRICS_PORT}
+    profiles:
+      - observability
+
+  nginx-metrics:
+    image: ${NGINX_EXPORTER_IMAGE}:${NGINX_EXPORTER_VERSION}
+    container_name: nginx-metrics
+    hostname: nginx-metrics
+    mem_limit: 32mb
+    command:
+      - --nginx.scrape-uri=http://nginx/status
+      - --web.listen-address=:${NGINX_EXPORTER_METRICS_PORT}
+    profiles:
+      - observability
+
+  postgres-metrics:
+    image: ${POSTGRES_EXPORTER_IMAGE}:${POSTGRES_EXPORTER_VERSION}
+    container_name: postgres-metrics
+    hostname: postgres-metrics
+    mem_limit: 32mb
+    command:
+      - --web.listen-address=:${POSTGRES_EXPORTER_METRICS_PORT}
+    env_file:
+      - ${LOCALNET_ENV_DIR}/common.env
+    environment:
+      DATA_SOURCE_URI: "${DB_SERVER}:${DB_PORT}/postgres?sslmode=disable"
+      DATA_SOURCE_USER: "${DB_USER}"
+      DATA_SOURCE_PASS: "${DB_PASSWORD}"
+    profiles:
+      - observability
+
