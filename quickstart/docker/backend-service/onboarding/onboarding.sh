@@ -2,6 +2,12 @@
 # Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 # SPDX-License-Identifier: 0BSD
 
+# This script is executed by the `splice-onboarding` container. It leverages provided functions from `/app/utils`
+# and the resolved environment to onboard a backend service user to a participant (handling user creation and rights assignment),
+# and propagating the necessary environment variables to the backend service via the `backend-service.sh` script stored in the shared `onboarding` volume.
+# The backend service container sources this shared script during its initialization phase, prior to launching the main process.
+# Note: This onboarding script is intended for local development environment only and is not meant for production use.
+
 set -eo pipefail
 
 source /app/utils.sh

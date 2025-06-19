@@ -4,7 +4,7 @@
 
 set -eou pipefail
 
-# source all scripts from /onboarding/backend-service/on so that env variables exported by them are available in the current shell
+# source all scripts from /onboarding/backend-service/on so that env variables exported by them are available in the main process
 for script in /onboarding/backend-service/on/*.sh; do
 # shellcheck disable=SC1090
   [ -f "$script" ] && source "$script"
