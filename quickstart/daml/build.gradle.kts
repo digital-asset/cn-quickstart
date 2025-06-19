@@ -18,6 +18,7 @@ plugins {
 }
 
 tasks.register<Exec>("compileDaml") {
+    dependsOn("verifyDamlSdkVersion")
     commandLine("daml", "damlc", "build", "--all")
 }
 
@@ -131,5 +132,52 @@ tasks.register<Exec>("installDamlSdk") {
         println("Installed Daml SDK runtime $damlSdkRuntimeVersion as $damlSdkVersion")
         println("Cleaning up downloaded files")
         sdkDir.deleteRecursively()
+    }
+}
+
+// Task to ensure the right Daml SDK version is installed
+tasks.register("verifyDamlSdkVersion") {
+    val sdkVars = computeSdkVariables()
+    val requiredVersion = sdkVars["damlSdkVersion"] as String
+
+    doLast {
+        val output = java.io.ByteArrayOutputStream()
+        exec {
+            commandLine = listOf("daml", "version")
+            standardOutput = output
+            isIgnoreExitValue = true
+        }
+
+        val versionLine = output.toString()
+            .lineSequence()
+            .firstOrNull { it.contains("default SDK version") }
+            ?.trim()
+
+        val installedVersion = versionLine?.replace(Regex("\\s*\\(default SDK version.*\\)\\s*"), "")?.trim()
+
+        if (installedVersion == null) {
+            throw GradleException(
+                """
+                ❌ Could not determine DAML SDK version. 
+                   Is it installed and on your PATH?
+
+                💡 Please try running: make install-daml-sdk
+                """.trimIndent())
+        }
+
+        if (installedVersion != requiredVersion) {
+            throw GradleException(
+                """
+                ❌ DAML SDK version mismatch:
+                   Required:  $requiredVersion
+                   Installed: $installedVersion
+                
+                💡 Please try running: make install-daml-sdk
+                """.trimIndent()
+            )
+        } else {
+            println("✅ DAML SDK version $installedVersion is installed.")
+        }
+
     }
 }
