@@ -3,6 +3,9 @@
 
 import com.google.protobuf.gradle.*
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+import java.net.URI
+import java.util.Scanner
+import java.nio.file.Files
 
 plugins {
     application
@@ -72,7 +75,80 @@ tasks.register<Copy>("copyOtelAgentJar") {
 }
 
 tasks.named("build") {
+    dependsOn("validateSpliceCompat")
     dependsOn("copyOtelAgentJar")
+}
+
+tasks.register("validateSpliceCompat") {
+    doLast {
+        val localVersion = localSpliceVersion()
+        val devnetUrl = "https://docs.dev.global.canton.network.sync.global/versions"
+        val synchoronisersInfo = fetchDevNetRows(devnetUrl)
+        if (synchoronisersInfo.isEmpty())
+            logger.warn("CSV at $devnetUrl was empty or malformed")
+
+        val versionGroups = synchoronisersInfo.groupBy { it.version }
+        if (versionGroups.size > 1) {
+            logger.warn("\n⚠️  DevNet is in a MIXED STATE – multiple versions detected:")
+            versionGroups.forEach { (ver, group) ->
+                logger.warn("  • ⚠️ $ver  ← (${group.size} SVs), eg. ${group.first().name}")
+            }
+        }
+        // Pick the foundation row as the source of truth
+        val remoteSpliceVersion = synchoronisersInfo
+            .firstOrNull { it.name == "Global-Synchronizer-Foundation" }
+            ?.version
+            ?: error("Global-Synchronizer-Foundation row not found in devnet")
+
+        logger.lifecycle("""
+            |• DevNet: Splice version: $remoteSpliceVersion
+            |• Local : Splice version: $localVersion
+            """.trimMargin()
+        )
+
+        if (remoteSpliceVersion == localVersion) {
+            logger.lifecycle("✅ Versions match – continuing")
+        } else {
+            logger.warn("⚠️ DevNet and Quickstart do not match!")
+            print("Do you want to proceed anyway? [y/n]: ")
+            System.out.flush()
+            val answer = Scanner(System.`in`).nextLine().trim().lowercase()
+            if (answer != "y" && answer != "yes") {
+                throw GradleException("❌ Aborted due to Splice version mismatch from DevNet: $remoteSpliceVersion and Quickstart $localVersion")
+            }
+        }
+    }
+}
+
+data class CNSyncInfo(val name: String, val scanUrl: String, val version: String)
+
+fun fetchDevNetRows(url: String): List<CNSyncInfo> =
+    URI.create(url).toURL().readText().lineSequence()
+        .drop(1)
+        .filter { it.isNotEmpty() }
+        .map { it.split(',').map(String::trim) }
+        .filter { it.size >= 3 }
+        .map { CNSyncInfo(it[0], it[1], it[2]) }
+        .toList()
+
+fun localSpliceVersion(): String {
+    val envFile = project.rootProject.file(".env")
+    val envVars: Map<String, String> =
+        if (envFile.exists()) {
+            Files.readAllLines(envFile.toPath())
+                .asSequence()
+                .filter { it.isNotEmpty() && !it.startsWith("#") && it.contains('=') }
+                .map {
+                    val (k, v) = it.split('=', limit = 2)
+                    k.trim() to v.trim()
+                }
+                .toMap()
+        } else emptyMap()
+    // ---What is this QS built against?
+    return (findProperty("IMAGE_TAG") as? String)
+        ?: envVars["IMAGE_TAG"]
+        ?: System.getenv("IMAGE_TAG")           // final fallback
+        ?: error("Missing property `IMAGE_TAG` not found (Gradle property, .env, or env var)")
 }
 
 openApiGenerate {
