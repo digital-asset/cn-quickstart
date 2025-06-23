@@ -339,6 +339,10 @@ clean-all: clean clean-docker ## Stop and remove all build artifacts, Docker con
 install-daml-sdk: ## Install the Daml SDK
 	./gradlew :daml:installDamlSdk
 
+.PHONY: check-daml-sdk
+check-daml-sdk: ## Install the Daml SDK
+	./gradlew :daml:verifyDamlSdkVersion
+
 .PHONY: fetch-grafana-dashboards
 fetch-grafana-dashboards: ## Download Grafana dashboards
 	./gradlew fetchGrafanaDashboards
