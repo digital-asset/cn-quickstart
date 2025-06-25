@@ -334,7 +334,7 @@ There are two distinct types of environment files:
 - Files used primarily for Docker Compose configuration.
 - Files intended for Docker container environment settings.
 
-The first category includes files such as `.env`, `.env.local`, `${LOCALNET_DIR}/env/<dev|local>.env`, `${LOCALNET_DIR}/env/common.env`, and any `compose.env` files from the modules. The second category encompasses the remaining files found under `${LOCALNET_DIR}/env` as well as the `env` directories within the modules.
+The first category includes files such as `.env`, `.env.local`, `${LOCALNET_DIR}/env/common.env`, and any `compose.env` files from the modules. The second category encompasses the remaining files found under `${LOCALNET_DIR}/env` as well as the `env` directories within the modules.
 
 In the Docker container environment files, you can reference variables defined in the Docker Compose environment. Simply declare a variable as `VAR=${VAR}` to ensure that the value from the Docker Compose environment is available within the container.
 

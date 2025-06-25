@@ -49,14 +49,8 @@ DOCKER_COMPOSE_FILES := -f compose.yaml
 ####  Setup Splice LocalNet
 ############################################################################
 DOCKER_COMPOSE_FILES += -f ${LOCALNET_DIR}/compose.yaml
-DOCKER_COMPOSE_PROFILES := --profile app-provider --profile app-user --profile swagger-ui
+DOCKER_COMPOSE_PROFILES := --profile app-provider --profile app-user --profile sv --profile swagger-ui
 DOCKER_COMPOSE_ENVFILE := --env-file .env --env-file .env.local --env-file ${LOCALNET_DIR}/compose.env --env-file ${LOCALNET_DIR}/env/common.env
-ifeq ($(ENV),local)
-    DOCKER_COMPOSE_PROFILES += --profile sv
-    DOCKER_COMPOSE_ENVFILE += --env-file ${LOCALNET_DIR}/env/local.env
-else
-    DOCKER_COMPOSE_PROFILES += --env-file ${LOCALNET_DIR}/env/dev.env
-endif
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
   RESOURCE_CONSTRAINT_CONFIG := -f ${LOCALNET_DIR}/resource-constraints.yaml
 endif
