@@ -224,7 +224,7 @@ export async function createAppInstallRequests(request: APIRequestContext): Prom
 
     // Retrieve a token for the wallet admin user and fetch the DSO party
     const walletAdminToken = await getUserToken(request);
-    const dsoParty = await getDSOPartyId(request, walletAdminToken, 25003);
+    const dsoParty = await getDSOPartyId(request, walletAdminToken, Number('2' + getEnv('VALIDATOR_ADMIN_API_PORT_SUFFIX')));
 
     // This is used as the applicationId in commands
     const participantUserId = getEnv('AUTH_APP_USER_WALLET_ADMIN_USER_ID') || 'auth-app-user-wallet-admin';

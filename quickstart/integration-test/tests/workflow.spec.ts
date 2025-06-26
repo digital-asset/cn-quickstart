@@ -63,7 +63,7 @@ test.describe('AppInstall and Licensing workflow', () => {
         await (
             await getVisibleLocator(userPage, 'button[id="kc-login"]', 'Login button is visible')
         ).click();
-        await expect(userPage.locator('#user-name')).toHaveText('app-user the user');
+        await expect(userPage.locator('#user-name')).toHaveText('app user');
     });
 
     test('AppProvider can log in', async () => {
@@ -80,7 +80,7 @@ test.describe('AppInstall and Licensing workflow', () => {
         await (
             await getVisibleLocator(providerPage, 'button[id="kc-login"]', 'Login button is visible')
         ).click();
-        await expect(providerPage.locator('#user-name')).toHaveText('app-provider the provider');
+        await expect(providerPage.locator('#user-name')).toHaveText('app provider');
     });
 
     test('AppUser can sign in to wallet UI', async () => {

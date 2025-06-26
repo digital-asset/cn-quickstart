@@ -272,25 +272,16 @@ first-run-setup:
 	@exit 2
 
 .PHONY: integration-test
-integration-test: integration-test/node_modules build ## Run integration tests
-	node ./integration-test/setup-and-run-tests.js
+integration-test: DOCKER_COMPOSE_FILES = -f compose.tests.yaml
+integration-test: DOCKER_COMPOSE_PROFILES =
+integration-test: ## Run integration tests
+	@if [ "$(AUTH_MODE)" = "shared-secret" ]; then \
+		echo "Integration tests supported only for AUTH_MODE=oauth2."; \
+		exit 1; \
+	fi
+	@cd integration-test && npm install
+	$(call docker-compose, run --rm integration-tests)
 
-.PHONY: integration-test-ci
-integration-test-ci: integration-test/node_modules start ## Run integration tests using host's application deployment
-	@# The integration test expects four AppInstallRequests
-	docker run --network host --rm -it --user "$(shell id -u):$(shell id -g)" \
-		-v "$(PWD)/integration-test":/work:ro \
-		$(foreach f,.env $(wildcard env/*.env),--env-file $(f)) \
-		-e NPM_CONFIG_CACHE=/tmp/.npm \
-		-w /work \
-		mcr.microsoft.com/playwright:v1.51.0-jammy \
-		npx playwright test --reporter list --output /tmp/playwright-report
-
-.PHONY: integration-test/node_modules
-integration-test/node_modules:
-	@echo "Sorry integration tests are disabled. They will be enabled in a future release. https://github.com/digital-asset/cn-quickstart/issues/149"
-	exit 1
-	cd integration-test && npm install
 
 # Console
 .PHONY: canton-console
