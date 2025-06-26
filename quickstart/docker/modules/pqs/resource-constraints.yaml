@@ -1,0 +1,10 @@
+services:
+  pqs-app-provider:
+    mem_limit: 1g
+    environment:
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"
+
+  pqs-app-user:
+    mem_limit: 1g
+    environment:
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx768m"

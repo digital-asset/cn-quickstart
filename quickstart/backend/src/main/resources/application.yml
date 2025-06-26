@@ -1,52 +1,25 @@
 # Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 # SPDX-License-Identifier: 0BSD
 
-ledger:
-  application-id: ${AUTH_APP_PROVIDER_BACKEND_USER_ID}
-  validator-uri: "http://splice:3${VALIDATOR_ADMIN_API_PORT}/api/validator"
-
-security:
-  issuer-url: ${AUTH_APP_PROVIDER_ISSUER_URL}
-
-application:
-  tenants:
-    AppProvider:
-      tenantId: AppProvider
-      partyId: ${AUTH_APP_PROVIDER_PARTY}
-      internal: true
-
-
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${security.issuer-url}
-      client:
-        registration:
-          AppProviderBackend:
-            client-id: ${AUTH_APP_PROVIDER_BACKEND_CLIENT_ID}
-            client-secret: ${AUTH_APP_PROVIDER_BACKEND_SECRET}
-            authorization-grant-type: client_credentials
-            provider: AppProvider
-          AppProvider:
-            client-id: ${AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID}
-            client-name: ${application.tenants.AppProvider.tenantId}
-            authorization-grant-type: authorization_code
-            scope: "openid"
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            provider: AppProvider
-        provider:
-          AppProvider:
-            issuer-uri: ${security.issuer-url}
-
 server:
   forward-headers-strategy: NATIVE
+  # Review Error settings here and set acceptable values for production use.
+  # This configuration is for development purposes.
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
+    include-path: always
+    include-exception: true
+  port: ${BACKEND_PORT}
 
 logging:
   level:
     org.apache.coyote.http11.Http11InputBuffer: DEBUG
     com.digitalasset.quickstart.oauth.Interceptor: DEBUG
+    org.springframework: ERROR
+    org.springframework.security: DEBUG
+#    org.springframework.security.web.FilterChainProxy: TRACE
 
 management:
   endpoints:
@@ -54,3 +27,16 @@ management:
       exposure:
         include: '*'
 
+ledger:
+  application-id: ${AUTH_APP_PROVIDER_BACKEND_USER_ID:AppId}
+  validator-uri: ${VALIDATOR_URI}
+
+# Access to the application is restricted to authorized end users from organization (e.g. AppProvider, AppUser) registered as tenant.
+# Backend service starts with a single AppProvider internal tenant. Additional tenant registration is available through
+# the /admin/tenant-registrations endpoint.
+application:
+  tenants:
+    AppProvider:
+      tenantId: AppProvider
+      partyId: ${APP_PROVIDER_PARTY}
+      internal: true

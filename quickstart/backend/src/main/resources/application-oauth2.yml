@@ -1,0 +1,40 @@
+# Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: 0BSD
+
+spring:
+  security:
+    oauth2:
+      # Provides administrative access to backend-service HTTP endpoints when a JWT token is issued by the specified authority.
+      # For instance, the `register-app-user-tenant` service invokes /admin/tenant-registrations using a shell script,
+      # where the shell script acts as the client and the backend service functions as the resource server in the OAuth2 standard.
+      resourceserver:
+        jwt:
+          issuer-uri: ${security.issuer-url}
+      client:
+        registration:
+          # Facilitates all backend-service back-channel communications on behalf of ${application.tenants.AppProvider.partyId},
+          # including gRPC calls to the ledger and HTTP requests to the scan proxy.
+          # Here, the backend service is the client while the ledger or scan proxy functions as the resource server in the OAuth2 standard.
+          AppProviderBackend:
+            client-id: ${AUTH_APP_PROVIDER_BACKEND_CLIENT_ID}
+            client-secret: ${AUTH_APP_PROVIDER_BACKEND_SECRET}
+            authorization-grant-type: client_credentials
+            provider: AppProvider
+          # Enables authentication for end users from the AppProvider organization to access the application.
+          # In this configuration, the end user is the resource owner, the web UI acts as the client, and the backend service functions
+          # as the resource server in accordance with the OAuth2 standard.
+          # Note: To enable access for end users from organizations beyond AppProvider, register a new tenant via /admin/tenant-registrations.
+          AppProvider:
+            client-id: ${AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID}
+            client-name: ${application.tenants.AppProvider.tenantId}
+            authorization-grant-type: authorization_code
+            scope: "openid"
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            provider: AppProvider
+        provider:
+          AppProvider:
+            issuer-uri: ${security.issuer-url}
+
+# Grants administrative access to any end user presenting a JWT issued by the specified authority.
+security:
+  issuer-url: ${AUTH_APP_PROVIDER_ISSUER_URL}
