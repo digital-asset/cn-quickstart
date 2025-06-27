@@ -33,12 +33,10 @@ Explore the Canton Network Application Quickstart demo
 Exploring the demo
 ==================
 
-Explore the demo is intended to help you become familiar with a CN business operation within the CN App Quickstart.
+Explore the demo is intended to help you become familiar with a Canton Network (CN) business operation within the CN App Quickstart.
 The App Quickstart application is intended to be incrementally extended by your team to meet your business needs.
 When you are familiar with the App Quickstart, review the technology choices and application design to determine what changes are needed.
 Technology and design decisions are ultimately up to you.
-
-.. wip::
 
 As a result, the CN App Quickstart guides may be a little out of step with the application.
 If you find errors or other inconsistencies, please contact your representative at Digital Asset.
@@ -64,7 +62,7 @@ To access ``DevNet``, contact your sponsoring SV agent for VPN connection inform
 If you need support accessing the SV or VPN email support@digitalasset.com.
 
 The CN App Quickstart is a Dockerized application and requires `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__.
-It is recommended to allocate 8 GB of memory and 3 GB of Swap memory to properly run the required Docker containers.
+It is recommended to allocate 8 GB of memory to properly run the required Docker containers.
 If you witness unhealthy containers, please consider allocating additional resources, if possible.
 
 ``DevNet`` is less intensive because the SVs and other ``LocalNet`` containers are hosted outside of your local machine.
@@ -72,38 +70,71 @@ If you witness unhealthy containers, please consider allocating additional resou
 Walkthrough
 ===========
 
-After the App Quickstart is installed and running, confirm that you are in the quickstart subdirectory of the CN App Quickstart.
+The CN App Quickstart can run with or without authorization, based on your business needs.
+Toggle authorization with the ``make setup`` command in the ``quickstart`` subdirectory.
+``make setup`` asks to enable ``LocalNet``, Observability, OAUTH2, and specify a party hint.
+In this demo, we use ``LocalNet``, the default party hint, and we show OAUTH2 as enabled and disabled.
+When OAUTH2 makes a difference, we display both paths one after the other. 
+You can follow your path and ignore the other.
+You may enable Observability, but it is not required for this demo.
+
+Choose your adventure:
+
+``make setup`` without OAUTH2:
+
+.. image:: images/make-setup-no-auth.png
+   :alt: Make setup no auth
+   :width: 70%
+
+``make setup`` with OAUTH2:
+
+.. image:: images/make-setup-with-auth.png
+   :alt: Make setup with auth
+
+Build and start App Quickstart:
+
+.. code-block:: bash
+   
+   make build; make start
 
 Open an incognito browser.
 
 Navigate to:
 
-localhost:3000/login
+..
 
-   💡 Currently, localhost URLs do not work in Safari. We are working on a solution and apologize for the inconvenience.
+   localhost:3000
 
 Alternatively, in the terminal, from quickstart/ run:
 
 ``make open-app-ui``
 
-.. image:: images/01-login-cnqs.png
-   :alt: CN App Quickstart Login screen
+When OAUTH2 is disabled, the homepage presents a simple login field.
+Begin by logging in as the ``AppProvider`` by entering "app-provider" in the User field.
 
-Make note that the ``AppProvider``’s username is “pat” and the password is “abc123” (all lowercase).
+.. image:: images/01-login-app-qs-noauth.png
+   :alt: CN App Quickstart Login screen without Auth
 
-Login as the ``AppProvider``.
+When OAUTH2 is enabled, the homepage prompts to login with Keycloak's OAuth 2.0 portal:
 
-Fill in the login credentials: username: pat, password: abc123
+.. image:: images/01-login-app-qs-auth.png
+   :alt: CN App Quickstart Login screen with Auth
 
-.. image:: images/02-appprovider-signin.png
+Make a mental note that ``AppProvider``’s username is “app-provider” and the password is "abc123" (all lowercase).
+
+Login with ``app-provider`` with keycloak.
+
+Fill in the login credentials: username: app-provider, password: abc123
+
+.. image:: images/login-app-provider-view.png
    :alt: AppProvider login screen
 
-Select “AppInstalls” in the menu.
+Once you are logged in select “AppInstalls” in the menu.
 
-.. image:: images/02a-app-installs-view.png
+.. image:: images/appinstalls-default-view.png
    :alt: App Installs view
 
-Open a terminal.
+Open a terminal to create an app install request.
 
 From ``/quickstart/`` run:
 
@@ -125,106 +156,106 @@ The install request appears in the list.
 
 Click “Accept”.
 
-.. image:: images/06-install-request.png
+.. image:: images/app-installs-new-install-request.png
    :alt: install request
 
 The ``AppInstallRequest`` is Accepted. The actions update to create or cancel the license.
-
-.. image:: images/07-req-accept.png
-   :alt: accept request
-
 Click “Create License”.
+
+.. image:: images/accept-app-install-request.png
+   :alt: accept request
 
 The license is created and the “# Licenses” field is updated.
 
-.. image:: images/08-create-lic.png
+.. image:: images/create-license-success.png
    :alt: create license
 
-In the ``AppProvider``, “Pat the provider’s,” account, navigate to the **Licenses** menu and select “Actions.”
+Next, navigate to the "Licenses" menu and select “Actions.”
 
-.. image:: images/09-licenses-view.png
+.. image:: images/licenses-view.png
    :alt: Licenses view
 
 An “Actions for License” modal opens with an option to renew or expire the license.
 Per the Daml contract, licenses are created in an expired state.
-To activate the license, it must be renewed.
+To activate the license, a renewal payment request must be issued.
+Enter a description for the license renewal request, then click the green “Issue Renewal Payment Request” button.
 
-.. image:: images/10-license-modal.png
-   :alt: License modal
-
-To renew the license, enter a description then click the green “Issue Renewal Payment Request” button.
-
-.. image:: images/11-issue-renewal.png
+.. image:: images/activate-license-modal.png
    :alt: issue renewal
 
-The license renewal process is initiated and ultimately successful.
+The license renewal process is initiated and a 30-day extension becomes available for a fee of $100 CC.
 
-.. image:: images/12-init-renewal.png
-   :alt: license renewal
-
-The license is now available for a 30-day extension for a flat fee of $100 CC.
-
-.. image:: images/13-license-available.png
+.. image:: images/license-renewal-request-success.png
    :alt: license available
 
-Pat the provider has done as much as they are able until Alice pays the renewal fee.
+The app-provider has done as much as they are able until the app-user pays the renewal fee.
 
    💡For the next step we recommend opening a separate browser in incognito mode.
    Each user should be logged into separate browsers for most consistent results.
    For example, if you logged into ``AppProvider`` using Chrome, you would use Firefox when logging into ``AppUser``.
 
-Navigate to http://localhost:3000/login using a separate browser in incognito or private mode.
+Navigate to http://localhost:3000/ using a separate browser in incognito or private mode.
 
-.. image:: images/01-login-cnqs.png
+Your login screen will look as it had when you logged in as ``AppProvider``.
+If OAUTH2 is disabled, simply log in as ``app-user``.
+
+.. image:: images/login-app-user-noauth.png
+   :alt: AppUser login screen without Auth
+
+When OAUTH2 is enabled, you log in using the app-user username and password.
+
+.. image:: images/01-login-app-qs-auth.png
    :alt: login screen
 
-Login as ``AppUser`` alice.
+Login as ``AppUser`` with “app-user" as the username and the password is “abc123”.
 
-Note that ``AppUser``’s username is “alice” and the password is “abc123”.
-
-.. image:: images/14-app-user-signin.png
+.. image:: images/appuser-auth-login-view.png
    :alt: AppUser login screen
 
-Go to the **Licenses** View and click the “Pay renewal” button.
+As the app-user, go to the **Licenses** view and click the “Pay renewal” button.
 
-.. image:: images/15-license-view.png
+.. image:: images/appuser-licenses-view.png
    :alt: License view
 
-Click on the Pay Renewal button. This navigates to the Canton Coin Wallet log in. Click “LOG IN WITH OAUTH2”.
+When OAUTH2 is disabled, you are directed to log in to the Canton Wallet, directly.
+Use "app-user" as the username.
 
-💡 If you have any issues with log in, navigate directly to http://wallet.localhost:2000/.
+.. image:: images/appuser-canton-coin-wallet-login-noauth.png
+   :alt: AppUser Canton Coin no auth
+
+When OAUTH2 is enabled, you log in to the Canton Coin Wallet by clicking “LOG IN WITH OAUTH2”.
 
 .. image:: images/16-cc-wallet-login.png
    :alt: CC Wallet login
 
 This navigates to a keycloak login.
 
-Enter the same username and password as before.
+Enter the app-user username and password.
 
-.. image:: images/17-keycloak-login.png
-   :alt: alice login
+.. image:: images/app-user-reauth.png
+   :alt: appuser reauth login
    :width: 60%
 
-Signing in directs to a preloaded Canton Coin Wallet.
+Signing in navigates to a preloaded Canton Coin Wallet.
 Click **Send Payment**.
 
-.. image:: images/18-canton-preloaded-wallet.png
+.. image:: images/cc-wallet-send-payment.png
    :alt: CC Wallet view
 
 Return to the ``AppProvider``’s License Renewal Requests View.
 The ``AppProvider`` may now Complete the Renewal.
 
-.. image:: images/22-complete-renewal.png
+.. image:: images/app-provider-complete-renewal.png
    :alt: complete renewal
 
 Clicking “Complete Renewal” results in a Success.
 
-.. image:: images/23-renew-success.png
+.. image:: images/renew-license-success.png
    :alt: renewal success
 
-Alice’s License view shows the activated license.
+The App User's License view shows the activated license.
 
-.. image:: images/24-activated-license.png
+.. image:: images/app-user-activated-license.png
    :alt: Activated license
 
 Congratulations. You’ve successfully created and activated a license with a payment transfer!
@@ -232,49 +263,42 @@ Congratulations. You’ve successfully created and activated a license with a pa
 Canton Console
 --------------
 
-The Canton Console connects to the running application ledger.
+The :externalref:`Canton Console<canton_console>` connects to the running application ledger.
 The console allows a developer to bypass the UI to interact with the CN in a more direct manner.
 For example, in Canton Console you can connect to the Participant to see the location of the Participant and their synchronizer domain.
 
-The app provider and the app user each have their own console.
-To activate the app provider’s Canton Console in a terminal from the ``quickstart/`` directory.
+Activate the :externalref:`Canton Console<canton_remote_console>` in a terminal from the ``quickstart/`` directory.
 Run:
 
-``make console-app-provider``
+``make canton-console``
 
-Open the participant’s Canton Console with
+After the console initiates, run the ``participants`` and ``participants.all`` commands, respectively.
 
-``make console-app-user``
+``participants``
 
-After the console initiates, run the ``participant`` and ``participant.domains`` commands, respectively.
+Returns a detailed categorization of participants.
 
-``participant``
-
-Returns their location in the ledger.
-
-.. image:: images/25-console-participant.png
+.. image:: images/canton-console-participants.png
    :alt: Participant location in the ledger
 
-``participant.domains``
+``participants.all``
 
-Shows the Participant’s synchronizer.
+Shows a list of all participant references.
 
-.. image:: images/26-console-sync.png
+.. image:: images/canton-console-participants.all.png
    :alt: Participant synchronizer
 
-``participant.health.ping(participant)``
+``health.status``
 
-Runs a health ping.
-The ping makes a round trip through the CN blockchain.
-Pinging yourself validates communication throughout the entire network.
+Is a diagnostic tool that displays the health of Canton Network participants.
 
-.. image:: images/27-console-ping.png
+.. image:: images/health.status.png
    :alt: Ping yourself
 
 Daml Shell
 ----------
 
-The Daml Shell connects to the running PQS database of the application provider’s Participant.
+The :externalref:`Daml Shell <build_daml_shell_component_howto>` connects to the running PQS database of the application provider’s Participant.
 In the Shell, the assets and their details are available in real time.
 
 Run the shell from quickstart/ in the terminal with:
@@ -300,6 +324,9 @@ List the license details.
 ``active quickstart-licensing:Licensing.License:LicenseRenewalRequest``
 
 Displays license renewal request details.
+
+.. image:: images/active-quickstart-appinstallrequest.png
+   :alt: License renewal request details
 
 ``archives quickstart-licensing:Licensing.AppInstall:AppInstallRequest``
 
@@ -343,11 +370,11 @@ When connecting to ``DevNet``, verify that the ``MIGRATION_ID`` value in ``.env`
 
 Check the current migration ID at https://sync.global/sv-network/ under the GSF ``DevNet`` information section.
 
-For example, if the SV Node Information shows the ``migration_id`` value as “0” then update ``MIGRATION_ID`` to “0” in your ``.env``.
+For example, if the SV Node Information shows the ``migration_id`` value as “2” then update ``MIGRATION_ID`` to “2” in your ``.env``.
 
-.. note:: Some `env` vars will be in different files. For example, `/env/dev.env`
+.. note:: Some ``env`` vars will be in different files. For example, ``/env/dev.env``
 
-.. image:: images/32-gsf-sv.png
+.. image:: images/gsf-devnet-sv-info.png
    :alt: GSF SV information
 
 In ``.env``:
@@ -356,7 +383,7 @@ In ``.env``:
 
    ONBOARDING_SECRET_URL=https://sv.sv-1.dev.global.canton.network.digitalasset.com/api/sv/v0/devnet/onboard/validator/prepare
 
-   MIGRATION_ID=0
+   MIGRATION_ID=2
 
    APP_PROVIDER_VALIDATOR_PARTICIPANT_ADDRESS=participant-app-provider
 
@@ -453,4 +480,4 @@ Next steps
 
 You’ve completed a business operation in the CN App Quickstart and have been introduced to the basics of the Canton Console and Daml Shell.
 
-Learn more about Daml Shell and the project structure in the Project Structure guide.
+Learn more about Daml Shell and the project structure in the :ref:`Project Structure guide<project-structure-overview>`.
