@@ -75,7 +75,7 @@ Navigate to:
 
 ::
 
-   localhost:3000
+   app-provider.localhost:3000
 
 Alternatively, in the terminal, from quickstart/ run:
 
