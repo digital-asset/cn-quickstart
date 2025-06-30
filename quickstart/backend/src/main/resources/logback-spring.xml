@@ -11,17 +11,8 @@ SPDX-License-Identifier: 0BSD
     <springProperty scope="context" name="LOG_PATH" source="logging.path"/>
 
     <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-            <providers>
-                <timestamp/>
-                <logLevel/>
-                <threadName/>
-                <loggerName/>
-                <message/>
-                <keyValuePairs/>
-                <context/>
-                <version/>
-            </providers>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>{"@timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z'}","thread_name":"%thread","level":"%-5level","logger_name":"%logger{36}","trace-id":"%X{trace_id}","message":"%msg"}%n</pattern>
         </encoder>
     </appender>
 

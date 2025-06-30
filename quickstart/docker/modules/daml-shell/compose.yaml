@@ -1,0 +1,24 @@
+# Copyright (c) 2024, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+networks:
+  quickstart:
+    external: true
+    name: ${DOCKER_NETWORK}
+
+services:
+  daml-shell:
+    image: ${SHELL_IMAGE}:${SHELL_VERSION}
+    mem_limit: 512mb
+    environment:
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms256m -Xmx384m"
+      DAML_SHELL_POSTGRES_HOST: "${DB_SERVER}"
+      DAML_SHELL_POSTGRES_USERNAME: "${DB_USER}"
+      DAML_SHELL_POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      DAML_SHELL_POSTGRES_DATABASE: "${SHELL_DB:-pqs-app-provider}"
+    networks:
+      - ${DOCKER_NETWORK}
+    command: --connect
+    stdin_open: true
+    tty: true

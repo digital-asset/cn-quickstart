@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -46,13 +47,16 @@ public class LedgerApi {
     private final Logger logger = LoggerFactory.getLogger(LedgerApi.class);
 
     @Autowired
-    public LedgerApi(LedgerConfig ledgerConfig, TokenProvider tokenProvider) {
+    public LedgerApi(LedgerConfig ledgerConfig, Optional<TokenProvider> tokenProvider) {
         APP_ID = ledgerConfig.getApplicationId();
-        ManagedChannel channel = ManagedChannelBuilder
+        ManagedChannelBuilder<?> builder = ManagedChannelBuilder
                 .forAddress(ledgerConfig.getHost(), ledgerConfig.getPort())
-                .usePlaintext()
-                .intercept(new Interceptor(tokenProvider))
-                .build();
+                .usePlaintext();
+        if (tokenProvider.isEmpty()) {
+            throw new IllegalStateException("TokenProvider is required for authentication");
+        }
+        builder.intercept(new Interceptor(tokenProvider.get()));
+        ManagedChannel channel = builder.build();
 
         // Single log statement, not duplicating attributes for spans, so leaving as-is:
         logger.atInfo()
