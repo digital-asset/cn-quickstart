@@ -141,7 +141,8 @@ Click “Accept”.
 .. image:: images/app-installs-new-install-request.png
    :alt: install request
 
-The ``AppInstallRequest`` is Accepted. The actions update to create or cancel the license.
+The ``AppInstallRequest`` is Accepted. 
+The actions update to create or cancel the license.
 
 Click “Create License”.
 
@@ -353,6 +354,7 @@ Canton Coin Scan
 ~~~~~~~~~~~~~~~~
 
 Explore the CC Scan Web UI at http://scan.localhost:4000/.
+
 
 The default activity view shows the total CC balance and the Validator rewards.
 
