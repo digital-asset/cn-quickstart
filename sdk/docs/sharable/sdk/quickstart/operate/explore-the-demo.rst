@@ -84,7 +84,6 @@ Choose your adventure:
 
 .. image:: images/make-setup-no-auth.png
    :alt: Make setup no auth
-   :width: 70%
 
 ``make setup`` with OAUTH2:
 
@@ -263,11 +262,11 @@ Congratulations. You’ve successfully created and activated a license with a pa
 Canton Console
 --------------
 
-The :externalref:`Canton Console<canton_console>` connects to the running application ledger.
+The :externalref:`Canton Console <canton_console>` connects to the running application ledger.
 The console allows a developer to bypass the UI to interact with the CN in a more direct manner.
 For example, in Canton Console you can connect to the Participant to see the location of the Participant and their synchronizer domain.
 
-Activate the :externalref:`Canton Console<canton_remote_console>` in a terminal from the ``quickstart/`` directory.
+Activate the :externalref:`Canton Console <canton_remote_console>` in a terminal from the ``quickstart/`` directory.
 Run:
 
 ``make canton-console``
@@ -480,4 +479,4 @@ Next steps
 
 You’ve completed a business operation in the CN App Quickstart and have been introduced to the basics of the Canton Console and Daml Shell.
 
-Learn more about Daml Shell and the project structure in the :ref:`Project Structure guide<project-structure-overview>`.
+Learn more about Daml Shell and the project structure in the :externalref:`Project Structure guide <../configure/project-structure-overview>`.
