@@ -272,7 +272,7 @@ first-run-setup:
 	@exit 2
 
 .PHONY: integration-test
-integration-test: DOCKER_COMPOSE_FILES = -f compose.tests.yaml
+integration-test: DOCKER_COMPOSE_FILES = -f ./integration-test/compose.yaml
 integration-test: DOCKER_COMPOSE_PROFILES =
 integration-test: ## Run integration tests
 	@if [ "$(AUTH_MODE)" = "shared-secret" ]; then \

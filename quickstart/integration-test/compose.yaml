@@ -15,12 +15,11 @@ services:
   integration-tests:
     image: mcr.microsoft.com/playwright:v1.51.0-jammy
     env_file:
-      - .env
       - ${LOCALNET_ENV_DIR}/common.env
       - *app-provider-auth-env
       - *app-user-auth-env
     volumes:
-      - "./integration-test:/work"
+      - ".:/work"
     working_dir: /work
     network_mode: host
     command: npx playwright test --output /tmp/ --reporter line
