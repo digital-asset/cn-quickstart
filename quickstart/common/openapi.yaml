@@ -5,6 +5,19 @@ info:
   version: 1.0.0
 
 paths:
+  /feature-flags:
+    get:
+      summary: Get feature flags
+      operationId: getFeatureFlags
+      responses:
+        '200':
+          description: A list of feature flags
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeatureFlags'
+        '400':
+          description: Invalid request
   /login-links:
     get:
       summary: Get list of links that initiate login
@@ -383,8 +396,6 @@ components:
         - tenantId
         - partyId
         - walletUrl
-        - clientId
-        - issuerUrl
       properties:
         tenantId:
           type: string
@@ -398,6 +409,10 @@ components:
           type: string
         internal:
           type: boolean
+        users:
+          type: array
+          items:
+            type: string
 
     TenantRegistration:
       type: object
@@ -405,8 +420,6 @@ components:
         - tenantId
         - partyId
         - walletUrl
-        - clientId
-        - issuerUrl
         - internal
       properties:
         tenantId:
@@ -429,7 +442,10 @@ components:
         internal:
           type: boolean
           description: Internal registration
-
+        users:
+          type: array
+          items:
+            type: string
     AuthenticatedUser:
       type: object
       required:
@@ -707,3 +723,12 @@ components:
           type: number
         unit:
           type: string
+
+    FeatureFlags:
+      type: object
+      properties:
+        authMode:
+          type: string
+          enum:
+            - oauth2
+            - shared-secret

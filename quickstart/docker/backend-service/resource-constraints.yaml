@@ -1,0 +1,5 @@
+services:
+  backend-service:
+    mem_limit: 1g
+    environment:
+      _JAVA_OPTIONS: "-XX:-UseCompressedOops -Xms512m -Xmx700m"

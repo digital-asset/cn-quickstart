@@ -1,0 +1,3 @@
+services:
+  splice-onboarding:
+    mem_limit: 32mb

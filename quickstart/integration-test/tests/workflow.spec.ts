@@ -56,14 +56,14 @@ test.describe('AppInstall and Licensing workflow', () => {
         ).click();
         await (
             await getVisibleLocator(userPage, 'input[id="username"]', 'Username field is visible')
-        ).fill('alice');
+        ).fill('app-user');
         await (
             await getVisibleLocator(userPage, 'input[id="password"]', 'Password field is visible')
         ).fill(DEFAULT_PASSWORD);
         await (
             await getVisibleLocator(userPage, 'button[id="kc-login"]', 'Login button is visible')
         ).click();
-        await expect(userPage.locator('#user-name')).toHaveText('Alice the user');
+        await expect(userPage.locator('#user-name')).toHaveText('app user');
     });
 
     test('AppProvider can log in', async () => {
@@ -73,14 +73,14 @@ test.describe('AppInstall and Licensing workflow', () => {
         ).click();
         await (
             await getVisibleLocator(providerPage, 'input[id="username"]', 'Username field is visible')
-        ).fill('pat');
+        ).fill('app-provider');
         await (
             await getVisibleLocator(providerPage, 'input[id="password"]', 'Password field is visible')
         ).fill(DEFAULT_PASSWORD);
         await (
             await getVisibleLocator(providerPage, 'button[id="kc-login"]', 'Login button is visible')
         ).click();
-        await expect(providerPage.locator('#user-name')).toHaveText('Pat the provider');
+        await expect(providerPage.locator('#user-name')).toHaveText('app provider');
     });
 
     test('AppUser can sign in to wallet UI', async () => {
