@@ -78,14 +78,14 @@ When OAUTH2 makes a difference, we display both paths one after the other.
 You can follow your path and ignore the other.
 You may enable Observability, but it is not required for this demo.
 
-Choose your adventure:
+**Choose your adventure:**
 
-``make setup`` without OAUTH2:
+``make setup`` **without** OAUTH2:
 
 .. image:: images/make-setup-no-auth.png
    :alt: Make setup no auth
 
-``make setup`` with OAUTH2:
+``make setup`` **with** OAUTH2:
 
 .. image:: images/make-setup-with-auth.png
    :alt: Make setup with auth
@@ -108,13 +108,17 @@ Alternatively, in the terminal, from quickstart/ run:
 
 ``make open-app-ui``
 
-When OAUTH2 is disabled, the homepage presents a simple login field.
+**OAUTH2 disabled**
+
+When OAUTH2 is **disabled**, the homepage presents a simple login field.
 Begin by logging in as the ``AppProvider`` by entering "app-provider" in the User field.
 
 .. image:: images/01-login-app-qs-noauth.png
    :alt: CN App Quickstart Login screen without Auth
 
-When OAUTH2 is enabled, the homepage prompts to login with Keycloak's OAuth 2.0 portal:
+**OAUTH2 enabled**
+
+When OAUTH2 is **enabled**, the homepage prompts to login with Keycloak's OAuth 2.0 portal:
 
 .. image:: images/01-login-app-qs-auth.png
    :alt: CN App Quickstart Login screen with Auth
@@ -127,6 +131,8 @@ Fill in the login credentials: username: app-provider, password: abc123
 
 .. image:: images/login-app-provider-view.png
    :alt: AppProvider login screen
+
+**The App Installs Menu**
 
 Once you are logged in select “AppInstalls” in the menu.
 
@@ -196,10 +202,15 @@ The app-provider has done as much as they are able until the app-user pays the r
 Navigate to http://localhost:3000/ using a separate browser in incognito or private mode.
 
 Your login screen will look as it had when you logged in as ``AppProvider``.
+
+**OAUTH2 disabled**
+
 If OAUTH2 is disabled, simply log in as ``app-user``.
 
 .. image:: images/login-app-user-noauth.png
    :alt: AppUser login screen without Auth
+
+**OAUTH2 enabled**
 
 When OAUTH2 is enabled, you log in using the app-user username and password.
 
@@ -211,16 +222,22 @@ Login as ``AppUser`` with “app-user" as the username and the password is “ab
 .. image:: images/appuser-auth-login-view.png
    :alt: AppUser login screen
 
+**The App User Licenses Menu**
+
 As the app-user, go to the **Licenses** view and click the “Pay renewal” button.
 
 .. image:: images/appuser-licenses-view.png
    :alt: License view
+
+**OAUTH2 disabled**
 
 When OAUTH2 is disabled, you are directed to log in to the Canton Wallet, directly.
 Use "app-user" as the username.
 
 .. image:: images/appuser-canton-coin-wallet-login-noauth.png
    :alt: AppUser Canton Coin no auth
+
+**OAUTH2 enabled**
 
 When OAUTH2 is enabled, you log in to the Canton Coin Wallet by clicking “LOG IN WITH OAUTH2”.
 
@@ -234,6 +251,8 @@ Enter the app-user username and password.
 .. image:: images/app-user-reauth.png
    :alt: appuser reauth login
    :width: 60%
+
+**Canton Coin Wallet**
 
 Signing in navigates to a preloaded Canton Coin Wallet.
 Click **Send Payment**.
