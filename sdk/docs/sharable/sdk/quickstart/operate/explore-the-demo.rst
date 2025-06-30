@@ -151,6 +151,7 @@ Click “Accept”.
    :alt: install request
 
 The ``AppInstallRequest`` is Accepted. The actions update to create or cancel the license.
+
 Click “Create License”.
 
 .. image:: images/accept-app-install-request.png
