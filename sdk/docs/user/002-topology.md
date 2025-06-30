@@ -1,6 +1,6 @@
 # Canton Network Quickstart Infrastructure Overview
 
-This document provides an overview of the Canton Network infrastructure and the environment in which the Quickstart App operates. The diagrams below illustrate the relationships between Users, Providers, and the Super Validator, as well as the internal components that make up the system. The focus of `Canton Network Quickstart` is to provide a development environment for App Providers - the provision of Super Validator infrastructure is auxiliary.
+This document provides an overview of the Canton Network infrastructure and the environment in which the Quickstart App operates. The diagrams below illustrate the relationships between Users, Providers, and the Super Validator, as well as the internal components that make up the system. The focus of ``Canton Network Quickstart`` is to provide a development environment for App Providers - the provision of Super Validator infrastructure is auxiliary.
 
 ## High Level Structure
 
@@ -152,7 +152,7 @@ flowchart TD
 This diagram shows the **App Provider's** infrastructure within the Canton Network Quickstart environment.
 
 - **App Provider Components:**
-  - **Auth:** Authentication service used by the **Backend** and **PQS** to connect to the **Participant** as the Ledger API user (`"quickstart"`) to act on the App Users' behalf.
+  - **Auth:** Authentication service used by the **Backend** and **PQS** to connect to the **Participant** as the Ledger API user (``"quickstart"``) to act on the App Users' behalf.
   - **UI and Backend (Hosted Option #1):** The Provider hosts the application **UI** and **Backend** services, which handle user interactions and business logic. These are custom components specific to the application, which read ledger content from the PQS database and submit transactions to the **Participant**.
   - **PQS (Participant Query Store):** Writes ledger content related to the Provider's and all Users' parties to the **Database**, to be used and processed by the backend.
   - **Private Synchronizer:** A domain operated by the Provider to facilitate transactions with Users that do not require the Global Domain.
@@ -248,7 +248,7 @@ This diagram presents a view of the **App User's** infrastructurem including the
 flowchart TD
   subgraph Super_Validator [Super Validator]
     sv-browser(("Browser"))
-    
+
     sv-validator["Validator (validator-sv)"]
     sv-wallet_ui["Wallet UI (wallet-web-ui)"]
     sv-app["SV (sv-app)"]
@@ -285,7 +285,7 @@ flowchart TD
 
 ### Description
 
-This diagram illustrates the components of the **Super Validator** node, that operates the **Global Synchronizer** and oversees network governance and consensus. While operating a **Super Validator** node is not the focus of `Canton Network Quickstart`, a setup is provided to allow development against a local Super Validator.
+This diagram illustrates the components of the **Super Validator** node, that operates the **Global Synchronizer** and oversees network governance and consensus. While operating a **Super Validator** node is not the focus of ``Canton Network Quickstart``, a setup is provided to allow development against a local Super Validator.
 
 - **Super Validator Components:**
   - **Browser:** Used by Super Validator operators to access administrative interfaces and management tools.

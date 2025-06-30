@@ -150,6 +150,27 @@ build-backend: ## Build the backend service
 build-daml: ## Build the Daml model
 	./gradlew :daml:build distTar
 
+.PHONY: check-docker
+check-docker: ## Check Docker and Docker Compose versions
+	@{ \
+    	  min_docker="27.0.0"; \
+    	  have_docker=$$(docker version --format '{{.Client.Version}}' | sed 's/-.*//'); \
+    	  if ! printf '%s\n%s\n' "$$min_docker" "$$have_docker" | sort -V -C 2>/dev/null; then \
+    	    echo "✗ Docker $$have_docker too old – need >= $$min_docker"; exit 1; \
+    	  else \
+    	    echo "✓ Docker $$have_docker OK"; \
+    	  fi; \
+    }
+	@{ \
+    	  min_compose="2.27.0"; \
+    	  have_compose=$$(docker compose version --short | sed 's/-.*//'); \
+    	  if ! printf '%s\n%s\n' "$$min_compose" "$$have_compose" | sort -V -C 2>/dev/null; then \
+    	    echo "✗ Compose $$have_compose too old – need >= $$min_compose"; exit 1; \
+    	  else \
+    	    echo "✓ Compose $$have_compose OK"; \
+    	  fi; \
+   	}
+
 .PHONY: test
 test: test-daml ## Run unit tests
 
@@ -323,6 +344,10 @@ clean-all: clean clean-docker ## Stop and remove all build artifacts, Docker con
 .PHONY: install-daml-sdk
 install-daml-sdk: ## Install the Daml SDK
 	./gradlew :daml:installDamlSdk
+
+.PHONY: check-daml-sdk
+check-daml-sdk: ## Install the Daml SDK
+	./gradlew :daml:verifyDamlSdkVersion
 
 .PHONY: fetch-grafana-dashboards
 fetch-grafana-dashboards: ## Download Grafana dashboards
