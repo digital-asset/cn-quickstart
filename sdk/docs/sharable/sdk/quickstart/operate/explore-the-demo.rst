@@ -2,31 +2,13 @@
 Explore the Canton Network Application Quickstart demo
 ======================================================
 
-**Contents**
+Contents
+========
 
-`Exploring the demo <#exploring-the-demo>`__
-
-`Prerequisites <#prerequisites>`__
-
-`Walkthrough <#walkthrough>`__
-
-   `Canton Console <#canton-console>`__
-
-   `Daml Shell <#daml-shell>`__
-
-   `Connect to DevNet <#connect-to-devnet>`__
-
-   `Important: migration ID for DevNet connections <#important-migration-id-for-devnet-connections>`__
-
-   `Configuring non-default DevNet sponsors <#configuring-non-default-devnet-sponsors>`__
-
-   `SV UIs <#sv-uis>`__
-
-   `Canton Coin Scan <#canton-coin-scan>`__
-
-   `Observability dashboard <#observability-dashboard>`__
-
-`Next Steps <#next-steps>`__
+  * `Exploring the demo <#exploring-the-demo>`__
+  * `Prerequisites <#prerequisites>`__
+  * `Walkthrough <#walkthrough>`__
+  * `Next Steps <#next-steps>`__
 
 .. _exploring-the-demo:
 
@@ -100,13 +82,15 @@ Open an incognito browser.
 
 Navigate to:
 
-..
+::
 
    localhost:3000
 
 Alternatively, in the terminal, from quickstart/ run:
 
-``make open-app-ui``
+::
+
+  ``make open-app-ui``
 
 **OAUTH2 disabled**
 
@@ -143,7 +127,9 @@ Open a terminal to create an app install request.
 
 From ``/quickstart/`` run:
 
-``make create-app-install-request``
+::
+
+  ``make create-app-install-request``
 
 This command creates an App Installation Request on behalf of the Participant.
 
@@ -288,25 +274,33 @@ For example, in Canton Console you can connect to the Participant to see the loc
 Activate the :externalref:`Canton Console <canton_remote_console>` in a terminal from the ``quickstart/`` directory.
 Run:
 
-``make canton-console``
+::
+
+  make canton-console
 
 After the console initiates, run the ``participants`` and ``participants.all`` commands, respectively.
 
-``participants``
+::
+
+  participants
 
 Returns a detailed categorization of participants.
 
 .. image:: images/canton-console-participants.png
    :alt: Participant location in the ledger
 
-``participants.all``
+::
+
+  participants.all
 
 Shows a list of all participant references.
 
 .. image:: images/canton-console-participants.all.png
    :alt: Participant synchronizer
 
-``health.status``
+::
+
+  health.status
 
 Is a diagnostic tool that displays the health of Canton Network participants.
 
@@ -321,32 +315,42 @@ In the Shell, the assets and their details are available in real time.
 
 Run the shell from quickstart/ in the terminal with:
 
-``make shell``
+::
+
+  make shell
 
 Run the following commands to see the data:
 
-``active``
+::
+
+  active
 
 Shows unique identifiers and the asset count
 
 .. image:: images/28-shell-ids.png
    :alt: Active identifiers
 
-``active quickstart-licensing:Licensing.License:License``
+::
+
+  active quickstart-licensing:Licensing.License:License
 
 List the license details.
 
 .. image:: images/29-license-details.png
    :alt: License details
 
-``active quickstart-licensing:Licensing.License:LicenseRenewalRequest``
+::
+
+  active quickstart-licensing:Licensing.License:LicenseRenewalRequest
 
 Displays license renewal request details.
 
 .. image:: images/active-quickstart-appinstallrequest.png
    :alt: License renewal request details
 
-``archives quickstart-licensing:Licensing.AppInstall:AppInstallRequest``
+::
+
+  archives quickstart-licensing:Licensing.AppInstall:AppInstallRequest
 
 Shows any archived license(s).
 
@@ -360,11 +364,15 @@ Stop the ``LocalNet`` containers to change the connection from ``LocalNet`` to `
 
 In the terminal, run:
 
-``make stop && make clean-all``
+::
+
+  make stop && make clean-all
 
 To edit the connection and observability parameters run:
 
-``make setup``
+::
+
+  make setup
 
 When prompted to enable ``LocalNet``, enter “n”. This enables ``DevNet``
 
@@ -397,7 +405,7 @@ For example, if the SV Node Information shows the ``migration_id`` value as “2
 
 In ``.env``:
 
-..
+::
 
    ONBOARDING_SECRET_URL=https://sv.sv-1.dev.global.canton.network.digitalasset.com/api/sv/v0/devnet/onboard/validator/prepare
 
@@ -438,7 +446,6 @@ The default activity view shows the total CC balance and the Validator rewards.
 
 .. image:: images/36-cc-balance.png
    :alt: CC balance
-   :width: 45%
 
 Select the Network Info menu to view SV identification.
 
