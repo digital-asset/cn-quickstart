@@ -36,26 +36,17 @@ is needed to successfully pull the Digital Asset artifacts from JFrog Artifactor
 
 If you need support accessing the JFrog Artifactory, please email support@digitalasset.com.
 
-Access to the *Daml-VPN* connection or `a SV Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
-that is whitelisted on the CN is required to connect to ``DevNet``.
-The GSF publishes a `list of SV nodes <https://sync.global/sv-network/>`__ who have the ability to sponsor a Validator node.
-To access ``DevNet``, contact your sponsoring SV agent for VPN connection information.
-
-If you need support accessing the SV or VPN email support@digitalasset.com.
-
 The CN App Quickstart is a Dockerized application and requires `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__.
 It is recommended to allocate 8 GB of memory to properly run the required Docker containers.
 If you witness unhealthy containers, please consider allocating additional resources, if possible.
-
-``DevNet`` is less intensive because the SVs and other ``LocalNet`` containers are hosted outside of your local machine.
 
 Walkthrough
 ===========
 
 The CN App Quickstart can run with or without authorization, based on your business needs.
 Toggle authorization with the ``make setup`` command in the ``quickstart`` subdirectory.
-``make setup`` asks to enable ``LocalNet``, Observability, OAUTH2, and specify a party hint.
-In this demo, we use ``LocalNet``, the default party hint, and we show OAUTH2 as enabled and disabled.
+``make setup`` asks to enable Observability, OAUTH2, and specify a party hint.
+In this demo, we use the default party hint, and we show OAUTH2 as enabled and disabled.
 When OAUTH2 makes a difference, we display both paths one after the other. 
 You can follow your path and ignore the other.
 You may enable Observability, but it is not required for this demo.
@@ -64,12 +55,12 @@ You may enable Observability, but it is not required for this demo.
 
 ``make setup`` **without** OAUTH2:
 
-.. image:: images/make-setup-no-auth.png
+.. image:: images/make-setup-noauth.png
    :alt: Make setup no auth
 
 ``make setup`` **with** OAUTH2:
 
-.. image:: images/make-setup-with-auth.png
+.. image:: images/make-setup-with-oauth.png
    :alt: Make setup with auth
 
 Build and start App Quickstart:
@@ -358,90 +349,10 @@ Shows any archived license(s).
 .. image:: images/30-archive-licenses.png
    :alt: Archived licenses
 
-Connect to DevNet
------------------
-
-Stop the ``LocalNet`` containers to change the connection from ``LocalNet`` to ``DevNet``.
-
-In the terminal, run:
-
-::
-
-  make stop && make clean-all
-
-To edit the connection and observability parameters run:
-
-::
-
-  make setup
-
-When prompted to enable ``LocalNet``, enter “n”. This enables ``DevNet``
-
-Optionally, enter “Y” to enable observability. This starts additional containers which may require more memory for Docker.
-
-.. note:: Observability may no longer work while App Quickstart is under revisions. If you experience unexpected errors, set observability to "n". 
-
-You may leave the party hint as the default value by tapping ‘return’ on the keyboard.
-
-.. image:: images/31-party-hint.png
-   :alt: Party hint
-
-💡Running make setup regenerates ``.env.local`` but preserves the contents of the ``.env`` file settings.
-
-The application is now connected to ``DevNet``.
-
-Important: Migration ID for DevNet connections
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-When connecting to ``DevNet``, verify that the ``MIGRATION_ID`` value in ``.env`` matches the current network migration ID for your ``DevNet`` Super Validator (SV).
-
-Check the current migration ID at https://sync.global/sv-network/ under the GSF ``DevNet`` information section.
-
-For example, if the SV Node Information shows the ``migration_id`` value as “2” then update ``MIGRATION_ID`` to “2” in your ``.env``.
-
-.. note:: Some ``env`` vars will be in different files. For example, ``/env/dev.env``
-
-.. image:: images/gsf-devnet-sv-info.png
-   :alt: GSF SV information
-
-In ``.env``:
-
-::
-
-   ONBOARDING_SECRET_URL=https://sv.sv-1.dev.global.canton.network.digitalasset.com/api/sv/v0/devnet/onboard/validator/prepare
-
-   MIGRATION_ID=2
-
-   APP_PROVIDER_VALIDATOR_PARTICIPANT_ADDRESS=participant-app-provider
-
-   APP_USER_VALIDATOR_PARTICIPANT_ADDRESS=participant-app-user
-
-Configuring non-default DevNet sponsors
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. note:: Configuration files are currently under revision and may not be in the stated locations.
-
-In ``DevNet`` mode, you can configure a non-default ``SPONSOR_SV_ADDRESS``, ``SCAN_ADDRESS`` and ``ONBOARDING_SECRET_URL`` or ``ONBOARDING_SECRET`` in the ``quickstart/.env`` file.
-
-   💡 Connecting to ``DevNet`` requires a connection to an `approved SV <https://sync.global/docs/>`__.
-   If your organization provides access to the DAML-VPN, then connect to it to access the Digital Asset-sponsored SV.
-
-   Your organization may sponsor another `CN-approved SV <https://sync.global/sv-network/>`__.
-   If this is the case, speak with your administrator for privileged access.
-
-   Review the ``DevNet`` Global Synchronizer documentation to learn more about the `SV onboarding process <https://docs.dev.sync.global/validator_operator/validator_onboarding.html#onboarding-process-overview>`__.
-
-   ⏱️ If you run into errors when making ``DevNet`` operations, double check that the ``DevNet`` VPN is active.
-   ``DevNet`` VPNs may timeout, especially if left unattended for extended periods of time.
-
-In an incognito browser navigate to ``localhost:3000/login``.
-Login as the Org1 user and create and archive assets, as before.
-Logout and do the same as the ``AppProvider``.
-
 Canton Coin Scan
 ~~~~~~~~~~~~~~~~
 
-While connected to ``DevNet``, navigate to the CC Scan Web UI at http://scan.localhost:4000/.
+Explore the CC Scan Web UI at http://scan.localhost:4000/.
 
 The default activity view shows the total CC balance and the Validator rewards.
 
@@ -486,7 +397,7 @@ SV UIs
 Navigate to http://sv.localhost:4000/ for the SV Web UI.
 The SV view displays data directly from the validator in a GUI that is straightforward to navigate.
 
-Login as ‘administrator’.
+Login as ‘sv’.
 
 .. image:: images/33-sv-ui-login.png
    :alt: SV UI login
