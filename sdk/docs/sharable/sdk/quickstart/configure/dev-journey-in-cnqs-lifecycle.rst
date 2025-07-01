@@ -43,12 +43,12 @@ application evolves.
 **Build system**
 
 The build system integrates Daml smart contract with the Java and
-TypeScript applications. Running `./gradlew` build generates code from the
+TypeScript applications. Running ``./gradlew`` build generates code from the
 Daml model, packages contracts into DAR files, and prepares deployment.
 
 To understand the project structure, dependencies, and root project
-configuration, examine `quickstart/build.gradle.kts`. For Daml-specific
-build configurations, review `quickstart/daml/build.gradle.kts`.
+configuration, examine ``quickstart/build.gradle.kts``. For Daml-specific
+build configurations, review ``quickstart/daml/build.gradle.kts``.
 
 To extend the build system for your application, create parallel project
 structures in quickstart/settings.gradle.kts. These settings allow you
@@ -56,7 +56,7 @@ to maintain your code alongside the original CN QS components while
 leveraging the same build infrastructure.
 
 Customize code generation by modifying the Gradle tasks in
-`quickstart/buildSrc/src/main/kotlin/` to target specific languages or
+``quickstart/buildSrc/src/main/kotlin/`` to target specific languages or
 adjust output formats.
 
 As your application evolves, you can fine-tune dependency management
@@ -66,7 +66,7 @@ serves as the foundation that connects your Daml models to client
 applications.
 
 When troubleshooting build issues, check the generated code in
-`build/generated-daml-bindings/` to verify that your Daml models are
+``build/generated-daml-bindings/`` to verify that your Daml models are
 correctly translated to your target languages.
 
 Understanding the build system can save extensive time in development
@@ -129,11 +129,11 @@ Grafana JSON for dashboards), making them easy to edit with standard
 tools.
 
 Override configuration values by setting environment variables in your
-`.env` files rather than editing the configuration files directly. This
+``.env`` files rather than editing the configuration files directly. This
 approach makes it easier to incorporate upstream updates by keeping your
 customizations separate from the base configurations. For example, set
-`CANTON_ADMIN_PORT=5022` in your `.env` file to change the Canton admin API
-port without modifying the `app.conf` file.
+``CANTON_ADMIN_PORT=5022`` in your ``.env`` file to change the Canton admin API
+port without modifying the ``app.conf`` file.
 
 When troubleshooting, examine these configuration files to understand
 how services are connected and what parameters control their behavior.
@@ -144,19 +144,19 @@ QS configurations.
 **Utility tools**
 
 Leverage the CN QS utility tools during development and testing
-workflows. Use the build utilities in `quickstart/buildSrc/` to automate
-common development tasks. The `UnpackTarGzTask` helps extract archive
+workflows. Use the build utilities in ``quickstart/buildSrc/`` to automate
+common development tasks. The ``UnpackTarGzTask`` helps extract archive
 files while preserving permissions and symbolic links. The Java
 convention scripts standardize your application's build configuration
 across modules.
 
 Configure your deployment environment by selecting the appropriate
-Docker Compose files in `quickstart/docker/`. Use `compose-validator.yaml`
+Docker Compose files in ``quickstart/docker/``. Use ``compose-validator.yaml``
 for validator nodes and adjust resource allocations with the
-`resource-constraints-*.yaml` files. Start the observability stack with
-`docker-compose -f quickstart/docker/o11y/compose.yaml` up to monitor your
+``resource-constraints-*.yaml`` files. Start the observability stack with
+``docker-compose -f quickstart/docker/o11y/compose.yaml`` up to monitor your
 application's performance. The o11y directory integrates with Grafana
-dashboards defined in `quickstart/config/o11y/` to provide real-time
+dashboards defined in ``quickstart/config/o11y/`` to provide real-time
 metrics visualization.
 
 Examine these utilities early in your development process to understand
@@ -220,11 +220,11 @@ provides direct ledger access for debugging.
 
 Access service logs in terminal using
 
-`make logs`
+``make logs``
 
 Access git logs in terminal with
 
-`git log`
+``git log``
 
 Most teams maintain LocalNet throughout development, even after
 replacing the sample application. LocalNet provides a consistent testing
@@ -266,15 +266,15 @@ following pattern:
 
    # Clone CN QS repository to server
 
-   `git clone https://github.com/digital-asset/cn-quickstart.git`
+   ``git clone https://github.com/digital-asset/cn-quickstart.git``
 
-   `cd cn-quickstart`
+   ``cd cn-quickstart``
 
    # Create persistent storage directories
 
-   `mkdir -p /mnt/scratchnet/postgres-data`
+   ``mkdir -p /mnt/scratchnet/postgres-data``
 
-   `mkdir -p /mnt/scratchnet/canton-data`
+   ``mkdir -p /mnt/scratchnet/canton-data``
 
 Configure external volume mounts in a custom compose override file:
 

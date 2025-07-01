@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan;
 import org.openapitools.model.LoginLink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +27,7 @@ import static com.digitalasset.quickstart.utility.ContextAwareCompletableFutures
 
 @Controller
 @RequestMapping("${openapi.asset.base-path:}")
+@Profile("oauth2")
 public class LoginLinksApiImpl implements LoginLinksApi {
 
     private static final Logger logger = LoggerFactory.getLogger(LoginLinksApiImpl.class);

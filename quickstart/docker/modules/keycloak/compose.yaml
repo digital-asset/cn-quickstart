@@ -1,0 +1,102 @@
+# Copyright (c) 2023, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+---
+# Since app-provider and app-user profiles are optional, we relax the environment file requirements to avoid Docker errors when a profile is disabled.
+x-vars:
+  app-provider-wallet-auth-env: &app-provider-wallet-auth-env
+    path: ${MODULES_DIR}/keycloak/env/app-provider/${APP_PROVIDER_PROFILE}/wallet.oauth2.env
+    required: false
+
+  app-user-wallet-auth-env: &app-user-wallet-auth-env
+    path: ${MODULES_DIR}/keycloak/env/app-user/${APP_USER_PROFILE}/wallet.oauth2.env
+    required: false
+
+  app-provider-ans-auth-env: &app-provider-ans-auth-env
+    path: ${MODULES_DIR}/keycloak/env/app-provider/${APP_PROVIDER_PROFILE}/ans.oauth2.env
+    required: false
+
+  app-user-ans-auth-env: &app-user-ans-auth-env
+    path: ${MODULES_DIR}/keycloak/env/app-user/${APP_USER_PROFILE}/ans.oauth2.env
+    required: false
+
+services:
+  nginx-keycloak:
+    image: "nginx:${NGINX_VERSION}"
+    container_name: nginx-keycloak
+    volumes:
+      - ${MODULES_DIR}/keycloak/conf/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8082:8082"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    # Workaround limitation of using localhost subdomains in QS. It is used only in backend-service
+    # to configure frontend facing client otherwise the configuration would be quite difficult.
+    networks:
+      default:
+        aliases:
+          - keycloak.localhost
+    profiles:
+      - keycloak
+
+  keycloak:
+    image: "${KEYCLOAK_IMAGE}:${KEYCLOAK_VERSION}"
+    container_name: keycloak
+    volumes:
+      - ${MODULES_DIR}/keycloak/conf/data:/opt/keycloak/data/import
+    env_file:
+      - ${LOCALNET_ENV_DIR}/common.env
+      - ${MODULES_DIR}/keycloak/env/keycloak.env
+    command: ["start-dev", "--import-realm", "--http-port=8082", "--health-enabled=true", "--hostname-strict=false", "--proxy-headers=forwarded"]
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 30s
+      timeout: 10s
+      retries: 50
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - keycloak
+
+  postgres:
+    environment:
+      - CREATE_DATABASE_keycloakdb=keycloakdb
+
+  canton:
+    depends_on:
+       keycloak:
+         condition: service_healthy
+    volumes:
+      - ${MODULES_DIR}/keycloak/conf/canton/app-provider.conf:/app/app-provider/${APP_PROVIDER_PROFILE}/app-auth.conf
+      - ${MODULES_DIR}/keycloak/conf/canton/app-user.conf:/app/app-user/${APP_USER_PROFILE}/app-auth.conf
+
+  splice:
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    volumes:
+      - ${MODULES_DIR}/keycloak/conf/splice/app-provider.conf:/app/app-provider/${APP_PROVIDER_PROFILE}/app-auth.conf
+      - ${MODULES_DIR}/keycloak/conf/splice/app-user.conf:/app/app-user/${APP_USER_PROFILE}/app-auth.conf
+
+  ans-web-ui-app-provider:
+    env_file:
+      - *app-provider-ans-auth-env
+
+  ans-web-ui-app-user:
+    env_file:
+      - *app-user-ans-auth-env
+
+  wallet-web-ui-app-provider:
+    env_file:
+      - *app-provider-wallet-auth-env
+
+  wallet-web-ui-app-user:
+    env_file:
+      - *app-user-wallet-auth-env
+
+  console:
+    volumes:
+      - ${MODULES_DIR}/keycloak/docker/console/app-provider.sh:/app/pre-startup/${APP_PROVIDER_PROFILE}/app-provider.sh
+      - ${MODULES_DIR}/keycloak/docker/console/app-user.sh:/app/pre-startup/${APP_USER_PROFILE}/app-user.sh

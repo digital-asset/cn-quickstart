@@ -75,22 +75,22 @@ Nix download support
 
    Check for Nix on your machine.
 
-   `nix --version`
+   ``nix --version``
 
    If the command returns something like:
 
-   `Nix (Nix) 2.25.2`
+   ``Nix (Nix) 2.25.2``
 
    Congratulations, you’re done.
 
    Recommended installation for MacOS.
 
-   `sh <(curl -L https://nixos.org/nix/install)`
+   ``sh <(curl -L https://nixos.org/nix/install)``
 
    | Recommended installation for Linux.
    | (Windows users should run this and all following commands in WSL 2).
 
-   `sh <(curl -L https://nixos.org/nix/install) --daemon`
+   ``sh <(curl -L https://nixos.org/nix/install) --daemon``
 
 Step-by-step instructions
 =========================
@@ -98,7 +98,7 @@ Step-by-step instructions
 Clone from Github
 -----------------
 
-Clone and `cd` into the `cn-quickstart` repository into your local machine.
+Clone and ``cd`` into the ``cn-quickstart`` repository into your local machine.
 
 ::
 
@@ -115,24 +115,24 @@ Artifactory
 Check the ~/.netrc file
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Necessary artifacts are located in 
+Necessary artifacts are located in
 `Digital Asset's JFrog Artifactory <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__.
 These files are accessed through the repository’s build system using a
 `~/.netrc` configuration file.
 
-Check if a `~/.netrc` file already exists.
+Check if a ``~/.netrc`` file already exists.
 
 ::
 
   `cat ~/.netrc`
 
-Create or edit the `~/.netrc` file at root.
+Create or edit the ``~/.netrc`` file at root.
 
 ::
 
   `vim ~/.netrc`
 
-Paste the boiler plate content into `~/.netrc`.
+Paste the boiler plate content into ``~/.netrc``.
 
 ::
 
@@ -147,8 +147,8 @@ Log into JFrog.
 
 Click the profile icon in the top right corner and then click **Edit Profile**.
 
-Your email address is the login username in `~/.netrc`.
-Replace `<username>` with the JFrog Artifactory user profile email.
+Your email address is the login username in ``~/.netrc``.
+Replace ``<username>`` with the JFrog Artifactory user profile email.
 
 .. image:: images/02-jfrog-user-profile.png
    :alt: JFrog user profile
@@ -194,7 +194,7 @@ When complete, the `~/.netrc` file will look similar to:
    login email@domain.com
    password cmVmdGtuOjAxOjE3Nzg5NTQzNjc6UmhYaFNaZWpUNGtFMzJyYXRyWEQya...
 
-Manually set `.netrc`’s permissions.
+Manually set ``.netrc``’s permissions.
 
 ::
 
@@ -205,7 +205,7 @@ the username and password.
 
 ::
 
-   curl -v --netrc 
+   curl -v --netrc
    "https://digitalasset.jfrog.io/artifactory/api/system/ping"`
 
 .. image:: images/04-jfrog-ping.png
@@ -282,7 +282,7 @@ enabling `Observability`, and specifying a party hint.
 
 In the future, this helper can be accessed by running `make setup`.
 
-Begin the first application in `LocalNet` with `Observability` enabled.
+Begin the first application in ``LocalNet`` with ``Observability`` enabled.
 Leave the party hint blank to use the default.
 
   The party hint is used as a party node’s alias of their identification hash.
@@ -301,7 +301,7 @@ Leave the party hint blank to use the default.
     network) [quickstart-USERNAME-1]:
   | PARTY_HINT set to ‘quickstart-USERNAME-1’.
 
-`.env.local` updated successfully.
+``.env.local`` updated successfully.
 
    Consider declining Observability if your machine has less than 8 GB of memory
    to allocate to Docker Desktop.
@@ -309,7 +309,7 @@ Leave the party hint blank to use the default.
 .. image:: images/09-make-setup.png
    :alt: Make setup
 
-If prompted to re-run `make start`, do so.
+If prompted to re-run ``make start``, do so.
 
 ::
 
@@ -353,13 +353,13 @@ Closing the application
 Close Canton console
 ~~~~~~~~~~~~~~~~~~~~
 
-When complete, open the Canton console terminal. 
-Run `exit` to stop and remove the console container.
+When complete, open the Canton console terminal.
+Run ``exit`` to stop and remove the console container.
 
 Close Daml shell
 ~~~~~~~~~~~~~~~~
 
-In the Daml shell terminal, execute `quit` to stop the shell container.
+In the Daml shell terminal, execute ``quit`` to stop the shell container.
 
 Close the CN QS
 ~~~~~~~~~~~~~~~

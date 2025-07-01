@@ -6,6 +6,7 @@ import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 
 object Repositories {
     val sonatype: Action<MavenArtifactRepository> = Action {
-        url = java.net.URI("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+        url = java.net.URI("https://digitalasset.jfrog.io/artifactory/libs-release-local/")
+        credentials(Credentials.fromNetRc("digitalasset.jfrog.io"))
     }
 }
