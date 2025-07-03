@@ -1,8 +1,8 @@
 Application structure
----------------------
+=====================
 
 Example application architecture
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------
 
 It is tempting to see three layers and immediately assume these align
 with the traditional 3-tier architecture (User Interface, Business
@@ -55,7 +55,7 @@ distinction between local vs. consensus logic and state see the Daml
 Philosophy Course 2 “Daml Workflows” [19]_.
 
 Alternative Application Architecture
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------
 
 This example application could have used a CQRS-style alternative
 architecture. This architecture is often used where front end user
@@ -224,10 +224,10 @@ Exercising the `AppInstallRequest_Accept` choice completes the onboarding.
 The Frontend UI provides a way to do this.
 
 Key Daml Templates
-~~~~~~~~~~~~~~~~~~
+------------------
 
 AppInstallRequest Contract
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `AppInstallRequest` contract initiates the app user onboarding process
 by capturing a user’s request to install the application. The contract
@@ -248,7 +248,7 @@ The `AppInstallRequest_Cancel` choice allows the user to withdraw their
 request any time before the provider accepts the contract.
 
 AppInstall Contract
-^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~
 
 The `AppInstall` contract maintains the formal relationship between the
 provider and user. It tracks installation status and manages license
@@ -267,7 +267,7 @@ transaction.
 `AppInstall_Cancel` lets the provider or user cancel the installation.
 
 License Contract
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~
 
 The `License` contract is the on ledger record supporting the core
 business case for the application. One critical field is the `expiresAt`

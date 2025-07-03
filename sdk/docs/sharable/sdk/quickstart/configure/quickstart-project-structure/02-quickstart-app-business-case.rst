@@ -1,8 +1,8 @@
 The Canton Quickstart example application
------------------------------------------
+=========================================
 
 Business case
-~~~~~~~~~~~~~
+-------------
 
 The Canton Quickstart contains an example application providing both a
 demonstration of a Canton application targeted at production; and, a way
@@ -38,10 +38,10 @@ this application this is an entity with a need to purchase a license,
 and periodically renew it. Canton Coin is exchanged for the license.
 
 Core Workflows Happy Path Business Requirement
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------
 
 Issuing a License
-^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~
 
 *Given* an application user (app-user) has been onboarded to the
 licensing application
@@ -53,7 +53,7 @@ to create a new license for the app-user
 visible to the app-user
 
 Requesting a License Renewal
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *Given* an app-user has a license (l1)
 
@@ -69,7 +69,7 @@ renewal
 the ledger
 
 Paying for a License Renewal
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *Given* there is a license renewal request on the ledger
 
@@ -81,7 +81,7 @@ Paying for a License Renewal
 wallet, and can approve the request
 
 Renewing the license
-^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~
 
 *Given* an app-user has approved an amulet payment request associated
 with a license renewal request

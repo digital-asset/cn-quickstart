@@ -141,7 +141,7 @@ So for example the `JSON API Port` for the Application User is `27575`;
 while the `Ledger API Port` for the Super Validator is `25001`.
 
 Important security note regarding port mappings
------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Be aware that the port mappings for `LocalNet` include exposing both the
 `AdminAPI` port and the `Postgres` port, both of which would normally be a
