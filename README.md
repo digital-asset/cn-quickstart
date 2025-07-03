@@ -1,6 +1,6 @@
 # Canton Network application quickstart
 
-**Note**: On July 2nd, the quickstart had an architectural change and no longer connects to DevNet.  This update may require a `make clean-all` to remove old data and then a `make build`.
+**Note**: On July 2, 2025, the quickstart underwent an architectural change and no longer connects to DevNet. This update may require a `make clean-all` to remove old data and then a `make build`.
 
 This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
 
