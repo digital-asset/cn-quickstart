@@ -101,7 +101,7 @@ If a container fails to start, there are a few things to try:
 
 **Note**: The CN QS uses Java SDK version `Eclipse Temurin JDK version 17.0.12+7` which runs within the Docker container.  This information is specified in `quickstart/compose.yaml` and `.env`.
 
-If you need assistance then the log information will be needed to debug the situation.  Please follow these directions to gather the logs:
+If you need assistance, please follow these directions to gather the log information needed for debugging:
 1. `make install-daml-sdk`  # make sure you have the latest sdk
 2. `make setup`             # optional
 3. `make clean-all`         # remove data from prior runs
