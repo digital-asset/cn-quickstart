@@ -1,16 +1,18 @@
 # Canton Network application quickstart
 
-This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
- 
-To run the Quickstart you need some binaries from Artifactory.  Request Artifactory access by clicking [here](https://www2.digitalasset.com/contact-us-access-to-jfrog) and we will get right back to you.  
+**Note**: On July 2nd, the quickstart had an architectural change and no longer connects to DevNet.  This update may require a `make clean-all` to remove old data and then a `make build`.
 
-The terms and conditions for the binaries can be found [here](https://github.com/digital-asset/cn-quickstart/blob/main/terms.md). 
+This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
+
+To run the Quickstart you need some binaries from Artifactory.  Request Artifactory access by clicking [here](https://www2.digitalasset.com/contact-us-access-to-jfrog) and we will get right back to you.
+
+The terms and conditions for the binaries can be found [here](https://github.com/digital-asset/cn-quickstart/blob/main/terms.md).
 
 The is licensed under the BSD Zero Clause License.
 
 ## Disclaimer
 
-Once you are familiar with the QS, please review the technology choices and the application design to determine what changes are needed. Technology and design decisions are ultimately up to you. Please be aware that the CN QS is a rapidly evolving work in progress. 
+Once you are familiar with the QS, please review the technology choices and the application design to determine what changes are needed. Technology and design decisions are ultimately up to you. Please be aware that the CN QS is a rapidly evolving work in progress.
 
 ## Docs and guides
 
@@ -34,7 +36,7 @@ This repository uses `direnv`, `nix`, and `docker-compose` to provide developmen
 
 * how to [install direnv](https://direnv.net/docs/installation.html)
 * how to [install nix](https://nix.dev/install-nix.html)
-* how to [install docker-compose](https://docs.docker.com/compose/install/) 
+* how to [install docker-compose](https://docs.docker.com/compose/install/)
 
 **Important (MacOS only):** Run the following command to download and install the Daml SDK with the correct version:
 ```sh
@@ -87,23 +89,26 @@ $ make console-app-provider
 $ make shell
 ```
 
+When running `make start` for the first time, an assistant will help you setting up the local deployment. You can choose to run the application in `DevNet` or `LocalNet` mode (recommended) for local development and testing, the latter meaning that a transient Super Validator is set up locally. You can change this later by running `make setup`.
+
+## Debugging TL;DR
+
 If a container fails to start, there are a few things to try:
 
 - Ensure Docker Compose is configured to allocate enough memory. The recommended minimum total memory is 8 GB.
-- Start fresh with `make clean-all` and then delete all Docker images and volumes.  
-- If you aren't able to run on DevNet:
-  - Make sure you have VPN access enabled by getting an OK from this curl request: `curl https://scan.sv-2.dev.global.canton.network.digitalasset.com/api/scan/version`
-  - Make sure the in the `quickstart/.env` file that the `IMAGE_TAG` is set to the latest Splice version by looking at the [current version information](https://docs.dev.sync.global/).
+- Start fresh with `make clean-all` and then manually delete all Docker images and volumes.
 - You may need to upgrade to a more recent version of the Daml SDK. Run `make install-daml-sdk` to assess your version and upgrade if you're not on the latest version.
-- Check to make sure `MIGRATION_ID` in `quickstart/env/devnet.env` is set to the value specified by the [SuperValidator network](https://sync.global/sv-network/).
 
-When running `make start` for the first time, an assistant will help you setting up the local deployment. You can choose to run the application in `DevNet` or `LocalNet` mode (recommended) for local development and testing, the latter meaning that a transient Super Validator is set up locally. You can change this later by running `make setup`.
+**Note**: The CN QS uses Java SDK version `Eclipse Temurin JDK version 17.0.12+7` which runs within the Docker container.  This information is specified in `quickstart/compose.yaml` and `.env`.
 
-**Note**: Access to the Super Validator endpoints on DevNet may require a VPN setup.
+If you need assistance then the log information will be needed to debug the situation.  Please follow these directions to gather the logs:
+1. `make install-daml-sdk`  # make sure you have the latest sdk
+2. `make setup`             # optional
+3. `make clean-all`         # remove data from prior runs
+4. `make capture-logs`      # this needs to be done in a separate terminal because it will block and keep running.  Use `<ctrl-c>` to stop
+5. `make start`             # start the system with logging enabled
+6. `tar -czvf <your file name with .tar.gz>` logs  # gather the content of the `logs` directory into a file
 
-**Note**: The CN QS uses Java SDK version `Eclipse Temurin JDK version 17.0.12+7`.
-The Java SDK runs within the Docker container.
-This information is specified in `quickstart/compose.yaml` and `.env`.
 
 ## Available make targets
 
@@ -119,7 +124,7 @@ Run `make help` to see a list of all available targets, including (but not limit
 - **canton-console**: Starts the Canton console using Docker, connected to the running app provider, app-user, sv ledgers.
 - **shell**: Starts Daml Shell using Docker, connected to the running application PQS database.
 - **status**: Shows the status of Docker containers.
-- **capture-logs**: Consumes Docker events and starts capturing logs to `/logs` directory for each service when `start` Docker event is observed. Ideal for diagnostic purposes. 
+- **capture-logs**: Consumes Docker events and starts capturing logs to `/logs` directory for each service when `start` Docker event is observed. Ideal for diagnostic purposes.
 - **logs**: Shows logs of Docker containers.
 - **tail**: Tails logs of Docker containers in real-time.
 - **clean**: Cleans the build artifacts.
@@ -246,7 +251,7 @@ working_dir: /app
 
 This configuration demonstrates how the `backend-service` relies on the Quickstart-provided infrastructure. Quickstart automates much of the local environment setup for LocalNet, allowing you to prioritize application development. As you progress toward deployment and explore cloud orchestration, a deeper grasp of service configuration is invaluable. For now, consider these services a ready-to-use infrastructure foundation.
 
-Then explore `register-app-user-tenant`, the service that registers AppUser tenants to the `backend-service`. That allows end users from the AppUser organization to log in and Quickstart the web UI. That, in turn, ties the AppUser Identity Provider to the AppUser primary party ID. That means that if the end user is logged in through this Identity Provider, the user can then act as the AppUser primary party. The `register-app-user-tenant` service utilizes functionality provided by the `splice-onboarding` module to make the task as simple as possible. 
+Then explore `register-app-user-tenant`, the service that registers AppUser tenants to the `backend-service`. That allows end users from the AppUser organization to log in and Quickstart the web UI. That, in turn, ties the AppUser Identity Provider to the AppUser primary party ID. That means that if the end user is logged in through this Identity Provider, the user can then act as the AppUser primary party. The `register-app-user-tenant` service utilizes functionality provided by the `splice-onboarding` module to make the task as simple as possible.
 
 This step can also be performed manually through the web UI if you log in to Quickstart as `app-provider` and navigate to the tenants tab. At that tab, you can also see a list of registered tenants and verify that the `AppUser` tenant was automatically pre-registered for you by `register-app-user-tenant`.
 
@@ -263,7 +268,7 @@ See Splice LocalNet documentation for the shared-secret mode which is default Sp
 #### OAuth2 mode - keycloak setup
 To perform operations such as creating AppInstallRequest and renewing License, users must be authenticated and authorized. The endpoints that perform these operations are protected by OAuth2 Authorization Code Grant Flow. GRPC communication between the backend service and participant is secured by OAuth2 Client Credentials Flow.
 
-In OAuth2 mode, Quickstart starts a local multi-tenant instance of [keycloak](https://www.keycloak.org/). 
+In OAuth2 mode, Quickstart starts a local multi-tenant instance of [keycloak](https://www.keycloak.org/).
  Two registered tenants are `AppProvider` and `AppUser`. Tenants have pre-configured users `app-provider` and `app-user`, as well as clients needed for validator, wallet, pqs, frontend, and backend service. Pre-configured users, clients, and realms are imported from the `docker/compose/modules/keycloak/conf/data` folder on Keycloak startup. The configuration in that folder is exported from the Keycloak instance after manual configuration via [Keycloak Administration Console](http://keycloak.localhost:8082/admin/master/console/) by running commands
 ```
 /opt/keycloak/bin/kc.sh export --dir=/opt/keycloak/data/import --realm AppUser --optimized
@@ -280,10 +285,10 @@ You can find the port mappings scheme in the Splice LocalNet [documentation](htt
 See the [Project structure](sdk/docs/guide/ProjectStructureGuide-20250317.pdf) for more details.
 
 ## Docker Compose-Based Development for LocalNet
-The Quickstart leverages Docker Compose for modular development. Instead of relying on a single extensive docker-compose.yaml file, this approach orchestrates multiple compose files and corresponding environment files for each Quickstart module. Splice LocalNet is housed within the `docker/modules/localnet` directory. In the `Makefile`, Docker Compose commands are dynamically assembled from Splice LocalNet, Quickstart modules, and Quickstart-specific compose and environment files, arranged in an order that respects the interdependencies of the various components. 
+The Quickstart leverages Docker Compose for modular development. Instead of relying on a single extensive docker-compose.yaml file, this approach orchestrates multiple compose files and corresponding environment files for each Quickstart module. Splice LocalNet is housed within the `docker/modules/localnet` directory. In the `Makefile`, Docker Compose commands are dynamically assembled from Splice LocalNet, Quickstart modules, and Quickstart-specific compose and environment files, arranged in an order that respects the interdependencies of the various components.
 
 Some modules (e.g., Keycloak and Observability) are optional and can be toggled on or off based on the selections made during `make setup`. When the Docker Compose command is executed, all specified Compose YAML files are merged in the order they appear on the command line. Likewise, the environment is built by applying each environment file in sequence; if the same variable is defined in multiple files, the value from the later file will overwrite the previous ones.
- 
+
 The `splice-onboarding` module supports two distinct operational modes. Initially, it performs a one-time setup procedure for Canton, Splice and modules. This initialization includes creating a ledger user and assigning necessary permissions. Developers can customize this process by specifying DAR files (and mounting it to file in `/canton/dars` in `splice-onboarding`) for ledger upload, custom shell scripts, or environment variables through their project’s `compose.yaml` file. For example:
 
 ```yaml
@@ -305,9 +310,9 @@ Please note that while Quickstart is designed to streamline local development, d
 
 ### Modules
 
-The Quickstart repository includes several modular components that can be reused in developer projects outside of Quickstart. These modules are located in the `docker/modules` directory by default; however, they can be sourced from any directory by setting the `MODULES_DIR` environment variable accordingly. 
+The Quickstart repository includes several modular components that can be reused in developer projects outside of Quickstart. These modules are located in the `docker/modules` directory by default; however, they can be sourced from any directory by setting the `MODULES_DIR` environment variable accordingly.
 
-Splice LocalNet is a special module borrowed from the [Splice repository](https://github.com/hyperledger-labs/splice/tree/main/cluster/compose/localnet) and is placed by default in `docker/modules`. It can also be relocated by properly configuring the LOCALNET_DIR environment variable. 
+Splice LocalNet is a special module borrowed from the [Splice repository](https://github.com/hyperledger-labs/splice/tree/main/cluster/compose/localnet) and is placed by default in `docker/modules`. It can also be relocated by properly configuring the LOCALNET_DIR environment variable.
 
 Each module provides specific functionality and may depend on other modules. The currently supported modules are:
 
@@ -362,7 +367,7 @@ Copyright &copy; 2025 Digital Asset (Switzerland) GmbH and/or its affiliates
 
 > Permission to use, copy, modify, and/or distribute this software for
 > any purpose with or without fee is hereby granted.
-> 
+>
 > THE SOFTWARE IS PROVIDED “AS IS” AND THE AUTHOR DISCLAIMS ALL
 > WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES
 > OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE
