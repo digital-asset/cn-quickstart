@@ -36,6 +36,16 @@ Asset.
 This guide walks through the installation and `LocalNet` deployment of the CN
 QS.
 
+Other documentation
+-------------------
+
+ * For more details on the example application see "Exploring the demo".
+ * An overview of how the Quickstart project is structured, the architecture
+   and tooling behind the development infrastructure provided by CN-Quickstart
+   is available in the "Quickstart overview and structure" guide.
+ * A survey of the observability and debugging features is available in the
+   Quickstart observability guide.
+
 Prerequisites
 =============
 
@@ -43,13 +53,6 @@ Access to the `CN-Quickstart Github repository <https://github.com/digital-asset
 and `CN Docker repository <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__
 is needed to successfully pull the Digital Asset artifacts from JFrog
 Artifactory.
-
-Access to the *Daml-VPN* connection or
-`a SV Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
-that is whitelisted on the CN is required to connect to DevNet. The GSF
-publishes a `list of SV nodes <https://sync.global/sv-network/>`__ who have the
-ability to sponsor a Validator node. To access `DevNet`, contact your
-sponsoring SV agent for VPN connection information.
 
 If you need access or additional support, email support@digitalasset.com.
 
@@ -261,7 +264,7 @@ The Daml SDK is large and can take several minutes to complete.
 Deploy a validator on LocalNet
 ------------------------------
 
-From the quickstart subdirectory, build the application.
+From the `quickstart/` subdirectory, build the application.
 
 ::
 
@@ -277,12 +280,12 @@ Once complete, start the application, Canton services and Observability.
   `make start`
 
 The first time running `make start`, a helper assistant prompts to set up a
-local deployment. It offers the choice of running `DevNet` or `LocalNet`,
-enabling `Observability`, and specifying a party hint. 
+local deployment. It offers the choice of enabling `Observability`, OAuth or
+dummy (shared-secret) based security, and specifying a party hint. 
 
 In the future, this helper can be accessed by running `make setup`.
 
-Begin the first application in ``LocalNet`` with ``Observability`` enabled.
+Begin the first application with ``OAuth2`` and ``Observability`` enabled.
 Leave the party hint blank to use the default.
 
   The party hint is used as a party node’s alias of their identification hash.
@@ -291,11 +294,14 @@ Leave the party hint blank to use the default.
 
 ::
 
-  | Enable LocalNet? (Y/n): Y
-  | LOCALNET_ENABLED set to ‘true’.
+  | % make setup
+  |  Starting local environment setup tool...
+  |  ./gradlew configureProfiles --no-daemon --console=plain --quiet
+  |  Enable Observability? (Y/n):
+  |  OBSERVABILITY_ENABLED set to 'true'.
 
-  | Enable Observability? (Y/n): Y
-  | OBSERVABILITY_ENABLED set to ‘true’.
+  | Enable OAUTH2? (Y/n):
+  | AUTH_MODE set to 'oauth2'.
 
   | Specify a party hint (this will identify the participant in the
     network) [quickstart-USERNAME-1]:
@@ -303,30 +309,18 @@ Leave the party hint blank to use the default.
 
 ``.env.local`` updated successfully.
 
-   Consider declining Observability if your machine has less than 8 GB of memory
-   to allocate to Docker Desktop.
+   OAuth2 and Observability may be unstable if your machine has less than
+   8 GB of memory to allocate to Docker Desktop.
 
-.. image:: images/09-make-setup.png
-   :alt: Make setup
+If you want to change any of these settings, re-run ``make start`` do so.
 
-If prompted to re-run ``make start``, do so.
+At any point you can run ``make install-daml-sdk`` download and install the
+version of the daml sdk required by the quickstart example application.
 
-::
+Connecting to the Local Canton Nodes
+------------------------------------
 
-  `make start`
-
-.. image:: images/10-make-start.png
-   :alt: Make start
-
-In the future, you may run the following series of commands from
-`cn-quickstart/` to clone and initiate Quickstart:
-
-::
-
-   git pull; cd quickstart; make install-daml-sdk; make setup; make build;
-   make start
-
-In a separate shell, from the quickstart subdirectory, run the Canton Consoles.
+In a separate shell, from the `quickstart/` subdirectory, run the Canton Consoles.
 
 ::
 
@@ -379,7 +373,25 @@ Next steps
 You have successfully installed the CN QS. 
 
 The next section, “Exploring The Demo,” provides a demonstration of the
-application in `LocalNet` and `DevNet` environments.
+example application.
+
+Connecting your application to The Canton Network
+-------------------------------------------------
+
+The `LocalNet` deployment connects to a local validator which is in turn
+connected to a local super-validator (synchronizer). Staging and final
+production deployments require connecting to a validator that is in turn
+connected to the public Canton Network.
+
+The Canton Network provides three synchronizer pools. The production network
+is `MainNet`; the production staging network is `TestNet`. As a developer you
+will mostly be connecting to the development staging network `DevNet`.
+
+Access to `a SV Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
+that is whitelisted on the CN is required to connect to DevNet. The GSF
+publishes a `list of SV nodes <https://sync.global/sv-network/>`__ who have the
+ability to sponsor a Validator node. To access `DevNet`, contact your
+sponsoring SV agent for VPN connection information.
 
 Resources
 =========
