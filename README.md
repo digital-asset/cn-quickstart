@@ -89,7 +89,7 @@ $ make console-app-provider
 $ make shell
 ```
 
-When running `make start` for the first time, an assistant will help you setting up the local deployment. You can choose to run the application in `DevNet` or `LocalNet` mode (recommended) for local development and testing, the latter meaning that a transient Super Validator is set up locally. You can change this later by running `make setup`.
+When running `make start` for the first time, an assistant helps you set up the local deployment. You can choose to run the application in `DevNet` or `LocalNet` mode (recommended) for local development and testing; the latter meaning that a transient Super Validator is set up locally. You can change this later by running `make setup`.
 
 ## Debugging TL;DR
 
