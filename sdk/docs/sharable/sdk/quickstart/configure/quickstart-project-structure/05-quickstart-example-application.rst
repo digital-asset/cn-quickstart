@@ -6,13 +6,13 @@ Example application architecture
 
 It is tempting to see three layers and immediately assume these align
 with the traditional 3-tier architecture (User Interface, Business
-Logic, Database), but doing this will result in underperforming
-applications generating unnecessary traffic on the Global Synchronizer.
-It is easy to fall into the trap to treat the blockchain as a database
+Logic, Database), but doing this results in underperforming
+applications that generate unnecessary traffic on the Global Synchronizer.
+It is easy to fall into the trap of treating the blockchain as a database
 because it has very similar features to a database. However, applying
 standard database design techniques to a blockchain does not produce an
 optimal design. A better way to view these layers is in terms of
-consensus vs. local state. Specifically: User Interface, Local Business
+consensus vs. local state: User Interface, Local Business
 Logic and State, and Consensus Business Logic and State.
 
 -  Local Business Logic and State: Actions and data that a single
@@ -37,8 +37,8 @@ Logic and State, and Consensus Business Logic and State.
 |                   | Logic and State**       |                        |
 +-------------------+-------------------------+------------------------+
 
-A symptom that you have fallen into the trap of treating the blockchain
-like a database is a prevalence of CRUD operations in the web-services
+A sign that you have fallen into the trap of treating the blockchain
+like a database is the prevalence of CRUD operations in the web services
 provided by the backend. The blockchain is intended to synchronize data
 between multiple organizations with little trust between them. This
 means that the operations between organizations should be at a larger
@@ -46,27 +46,27 @@ granularity, invariably representing business operations rather than
 updates to an object store\ *.*
 
 The privacy guarantees provided by Canton do not exist on a publicly
-visible ledger. So all business logic and business state that need to be
-either authorized or verified by more than one party is implemented
-within the Daml smart contract. The necessary consensus on
+visible ledger. Therefore, all business logic and business state requiring
+either authorization or verification by more than one party should be
+implemented within a Daml smart contract. The necessary consensus on
 authorization, verification, and/or visibility will then be coordinated
 via the (Global) Synchronizer. For a more detailed discussion on the
 distinction between local vs. consensus logic and state see the Daml
 Philosophy Course 2 “Daml Workflows” [19]_.
 
-Alternative Application Architecture
+Alternative application architecture
 ------------------------------------
 
 This example application could have used a CQRS-style alternative
-architecture. This architecture is often used where front end user
+architecture. This architecture is often used where frontend user
 action stories are expressed directly in terms of unmediated consensus
 business operations. This means:
 
 -  User interface updates (writes) are performed directly against the
    Daml models rather than mediated through backend services.
 
--  User interface queries (reads) remain provided by backend services;
-   which also continue to provide external integrations and automation.
+-  User interface queries (reads) continue to be provided by backend services;
+   which also provide external integrations and automation.
 
 +----------------+----------------------+-----------+-----------------+
 | Frontend       | **User Interface**   |           |                 |
@@ -89,7 +89,7 @@ For a detailed discussion on options for application architectures see
 the free courses in the Technical Solution Architect
 Certification [20]_.
 
-Daml Model Structure
+Daml model structure
 --------------------
 
 .. code-block:: text
@@ -105,7 +105,7 @@ Daml Model Structure
    3 directories, 4 files
 
 The example application is a simple license management application that
-allows the application provider to issue licenses to application users;
+allows the application provider to issue licenses to application users
 with license fees paid using Canton Coin. It uses a Daml model
 consisting of two modules. The `AppInstall` module has two
 responsibilities:
@@ -221,12 +221,12 @@ ledger.
     postgres-splice-app-provider:5432/scribe 3f → 42>
 
 Exercising the `AppInstallRequest_Accept` choice completes the onboarding.
-The Frontend UI provides a way to do this.
+The frontend UI provides a way to do this.
 
-Key Daml Templates
+Key Daml templates
 ------------------
 
-AppInstallRequest Contract
+AppInstallRequest contract
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `AppInstallRequest` contract initiates the app user onboarding process
@@ -241,13 +241,13 @@ request. When the choice is executed, it creates a new AppInstall
 contract and makes the provider and user signatories.
 
 The `AppInstallRequest_Reject` choice allows the provider to decline the
-request. It archives the request contract and also records in the ledger
-exercise event, metadata about why the request was rejected.
+request. It archives the request contract and also records metadata about
+why the request was rejected in the ledger exercise event.
 
 The `AppInstallRequest_Cancel` choice allows the user to withdraw their
 request any time before the provider accepts the contract.
 
-AppInstall Contract
+AppInstall contract
 ~~~~~~~~~~~~~~~~~~~
 
 The `AppInstall` contract maintains the formal relationship between the
@@ -269,41 +269,41 @@ transaction.
 License Contract
 ~~~~~~~~~~~~~~~~
 
-The `License` contract is the on ledger record supporting the core
+The `License` contract is the on-ledger record supporting the core
 business case for the application. One critical field is the `expiresAt`
 field, which both determines the duration of the license’s validity, and
-is used to ensure that neither actor can revoke (ie. archive) the
+is used to ensure that neither actor can revoke (archive) the
 license contract before expiry. The contract also has two choices:
 
 `License_Renew` can be exercised by the license provider. It creates a
 Splice [25]_ `AppPaymentRequest` and a `LicenseRenewalRequest` contract. The
 former is a part of the Splice Wallet Application, and is used to
-request an amulet transfer. The choice of which amulet is made via the
+request an amulet transfer. The choice of amulet is made via the
 dso party used in the `AppInstall` contract. The current deployment
-configuration will result in this being Canton Coin; however, there is
+configuration results in this being Canton Coin; however, there is
 nothing in the Daml model, or the backend code that prevents a different
-amulet being used.
+amulet from being used.
 
 The `License_Expire` choice allows either party to archive an expired
 `License` contract. This has the benefit of allowing an expired license to
 be renewed without having to reissue it. It is also necessary because
 Daml smart contracts do not have any facility to self-execute or
 self-archive. Every change to the ledger originates from a command
-submitted to the ledger API on a validator. As a result this sort of
-cleanup operation must be exercised explicitly via a choice such as
-this. It is not uncommon to have background or end-of-day batch
+submitted to the ledger API on a validator. As a result, this sort of
+cleanup operation must be exercised explicitly via a choice.
+It is not uncommon to have background or end-of-day batch
 processes automate this sort of task.
 
-Common OpenAPI Definition
+Common OpenAPI definition
 -------------------------
 
-The Daml models define the consensus between the App Provider, App User,
-and the DSO (amulet issuer). Once the models are in use, the front end
+Daml models define the consensus between the App Provider, App User,
+and the DSO (amulet issuer). Once the models are in use, the frontend
 user interface needs to be able to query and interact with the resulting
 ledger. The usual pattern is to store and index the relevant slice of
 the ledger in the `Participant Query
 Store <https://docs.daml.com/query/pqs-user-guide.html#pqs>`__\  [26]_,
-and provide a set of query web services that provide business oriented
+and provide a set of query web services that provide business-oriented
 queries resolved against the PQS postgres database.
 
 The architecture used by the example application also exposes a variety
@@ -314,31 +314,31 @@ backend to centralise authentication and access control code.
 This does necessitate defining an API between the back and front ends.
 For this example application, we have chosen to use OpenAPI [27]_. The
 API definition is in `common/openapi.yaml`. It uses GET to access the
-query services in the backend; and, POST to execute choices on contracts
+query services in the backend, and POST to execute choices on contracts
 identified by contract-id in the URL.
 
-**Note:** This is using HTTP. The HTTP method semantics align
+**Note:** The HTTP method semantics align
 appropriately with the requirements of the Daml operations and we call
 this a “JSON API”. However, it is not a pure ReST [28]_ API and does use
 HATEOAS. As mentioned above, the blockchain should not be viewed as a
 database since the underlying state is not rows in a database, or
-objects in a datastore—either of which would be compatible with the
+objects in a datastore, either of which would be compatible with the
 CRUD-style semantics that emerge with most modern ReST tooling. Instead
 the architecture style used here is more akin to a sophisticated RPC
 mechanism [29]_.
 
-Backend Services Structure
+Backend services structure
 --------------------------
 
-The example backend is a SpringBoot [30]_ application the core of which
-are the API implementation classes in
+The example backend is a SpringBoot [30]_ application, at the core of
+which are the API implementation classes in
 com.digitalasset.quickstart.service.
 
 Most of this code is standard Java SQL-backed JSON-encoded HTTP web
 service fare. The code itself is divided into seven modules under
 com.digitalasset.quickstart.*:
 
-`config`: Mostly standard SpringBoot @ConfigurationProperties based
+`config`: Mostly standard SpringBoot `@ConfigurationProperties` based
 components; however, SecurityConfig may be worth looking at for how the
 example application handles CSRF tokens and OAuth2 authentication of
 login and logout requests.
@@ -347,8 +347,8 @@ login and logout requests.
 authenticate the backend services to the Ledger API.
 
 `service`: Implements the openAPI endpoints. Mostly a roughly equal split
-between read-only calls to PQS via the DamlRepository spring component;
-and, GRPC calls to the relevant validator via the LedgerApi spring
+between read-only calls to PQS via the DamlRepository spring component
+and GRPC calls to the relevant validator via the LedgerApi spring
 component.
 
 `ledger`: The main class here is `LedgerApi` which handles the details of
@@ -360,34 +360,34 @@ providing business-logic level query and retrieval facilities against
 the ledger via PQS (the Participant Query Store).
 
 `pqs`: The main class is `Pqs`, which provides data-model level query and
-retrieval. This encapsulates the necessary SQL generation, and the JDBC
+retrieval. This encapsulates the necessary SQL generation and the JDBC
 queries against the PQS Postgres database.
 
 `utility`: For the moment this is restricted to the `ObjectMapper` required
 for JSON transcoding in the web services.
 
-Ultimately the main recommendation embedded in this code is to orient
-the web-service api around a combination of queries and choice
+Ultimately, the main recommendation embedded in this code is to orient
+the web-service API around a combination of queries and choice
 invocations. This is hopefully adequately demonstrated in the open API
-definition. Other than that the usual web service engineering
-considerations apply. Separation of concerns, DRY [31]_, and the
-importance of centralising SQL generation and Authentication mechanisms
-to ensure having to address these security sensitive components only
+definition. Other than that, the usual web service engineering
+considerations apply: separation of concerns, DRY [31]_, and the
+importance of centralizing SQL generation and authentication mechanisms
+to ensure we address these security sensitive components only
 once.
 
-Frontend Interface Structure
+Frontend interface structure
 ----------------------------
 
 One property of the fully mediated architecture used in the example
 application is that by delegating all operations to the backend, the
 open API schemas act as DTO (Data Transfer Object) definitions for the
 front and back ends [32]_. In simple cases, such as the example
-application, these can double as front end models when using a React,
-MVVM, FRP, or similar front end architecture style.
+application, these can double as frontend models when using React,
+MVVM, FRP, or a similar frontend architecture style.
 
 The example application is a naive React web frontend [33]_ written in
-Typescript [34]_. It accesses the Backend web services using the
-generator-less Axios client to handle the lowest level transport,
+Typescript [34]_. It accesses the backend web services using the
+generator-less Axios client to handle the lowest-level transport,
 configured in `src/api.ts`:
 
 .. code-block::
@@ -405,13 +405,13 @@ configured in `src/api.ts`:
    export default api;
 
 Authentication is handled using OAuth2 against a mock OAuth server [35]_
-to perform the login; and, bearer tokens to identify the Frontend to the
-Backend. The Frontend does not have any knowledge of Canton, or Daml
-Users or Parties, this is delegated entirely to the Backend.
+to perform the login; and, bearer tokens to identify the frontend to the
+backend. The frontend does not have any knowledge of Canton or Daml
+users or parties, this is delegated entirely to the backend.
 
 The records defined by the OpenAPI definition are used directly as the
-models maintained within the react stores, and from there to the views
-via the usual react handlers.
+models maintained within the React stores, and from there to the views
+via the usual React handlers.
 
 .. [19]
    https://daml.talentlms.com/catalog/info/id:152 currently part of the Daml Philosophy Certification

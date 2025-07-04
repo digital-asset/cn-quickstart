@@ -4,8 +4,8 @@ The Canton Quickstart example application
 Business case
 -------------
 
-The Canton Quickstart contains an example application providing both a
-demonstration of a Canton application targeted at production; and, a way
+The Canton Quickstart contains an example application that provides both a
+demonstration of a Canton application targeted at production, and a way
 of exercising the supporting developer scaffolding provided by the
 bootstrap.
 
@@ -20,39 +20,39 @@ The relevant business entities are:
 
 **Amulet**: An infrastructure token usable on the Canton synchronizer
 being used by this application. In the case of an application using
-Canton Network, this will be Canton Coin [4]_.
+Canton Network, this is Canton Coin [4]_.
 
 **DSO Party:** The Decentralized Synchronizer Operations Canton Party.
 This is the party that operates the Amulet token in which the provider
 accepts license payments. In the case of a Canton Network Application,
-this will be the Global Synchronizer Foundation.
+this is the Global Synchronizer Foundation.
 
-**Application Provider**: This is a Canton Party representing the legal
+**Application Provider**: A Canton Party representing the legal
 entity deploying, running, and offering the application to their users
 (customers). In a licensing application, this is the entity offering to
 sell the licenses.
 
-**Application User**: This is a Canton Party representing the legal
+**Application User**: A Canton Party representing the legal
 entity that is (presumably) a customer of the application provider. In
 this application this is an entity with a need to purchase a license,
 and periodically renew it. Canton Coin is exchanged for the license.
 
-Core Workflows Happy Path Business Requirement
+Core workflows happy path business requirement
 ----------------------------------------------
 
-Issuing a License
+Issuing a license
 ~~~~~~~~~~~~~~~~~
 
-*Given* an application user (app-user) has been onboarded to the
+*Given* that an application user (app-user) has been onboarded to the
 licensing application
 
 *When* the application provider (app-provider) instructs the application
 to create a new license for the app-user
 
-*Then* a new expired license will be created on the ledger and made
+*Then* a new expired license is created on the ledger and made
 visible to the app-user
 
-Requesting a License Renewal
+Requesting a license renewal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *Given* an app-user has a license (l1)
@@ -63,12 +63,12 @@ license (l1)
 *When* the app-provider instructs the application to request a license
 renewal
 
-*Then* a license renewal will be created and made visible to the user
+*Then* a license renewal is created and made visible to the user
 
-*And* a matching amulet (canton coin) payment request will be created on
+*And* a matching amulet (Canton Coin) payment request is created on
 the ledger
 
-Paying for a License Renewal
+Paying for a license renewal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *Given* there is a license renewal request on the ledger
@@ -77,7 +77,7 @@ Paying for a License Renewal
 
 *When* the user indicates they wish to pay the renewal
 
-*Then* the user will be redirected to the payment request in their
+*Then* the user is redirected to the payment request in their
 wallet, and can approve the request
 
 Renewing the license
@@ -92,10 +92,10 @@ ledger corresponding to that approval
 *When* the app-provider instructs the application to complete the
 renewal transaction
 
-*Then* the license will be updated with a new expiration date = renewal
+*Then* the license is updated with a new expiration date = renewal
 duration + max (old expiration date, now)
 
-*And* the app-provider will exercise the AcceptedAppPayment_Collect
+*And* the app-provider exercises the AcceptedAppPayment_Collect
 choice on accepted-payment
 
 .. [4]

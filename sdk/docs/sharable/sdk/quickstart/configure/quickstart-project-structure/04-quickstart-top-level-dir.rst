@@ -1,10 +1,10 @@
-Quickstart toplevel directory structure
+Quickstart top-level directory structure
 =======================================
 
 Quickstart project directory
 ----------------------------
 
-As is typical in a project directory the files and directories here fall
+As is typical in a project directory, the files and directories here fall
 into one of three categories:
 
 -  Build configuration
@@ -35,7 +35,7 @@ Build configuration
 -------------------
 
 The primary build tool used by the example project is Gradle. As is
-recommended, this is managed via the Gradle wrappers `gradlew` and
+best-practice, this is managed via the Gradle wrappers `gradlew` and
 `gradlew.bat`. This is used for the Java-based web services in `backend/`.
 It is also used to build Daml smart contracts via a simple wrapper that
 calls the Daml Assistant [12]_.
@@ -100,10 +100,10 @@ LocalNet port mappings
 ----------------------
 
 For convenience, the `LocalNet` configuration exposes a number of ports to
-localhost. For ease of use, the ports are configured using a
-prefix|suffix arrangement. A single-digit prefix is used to identify the
-“entity” associated with the relevant node; and, the suffix is the usual
-four-digit port number associated with the relevant service.
+localhost; these ports are configured using a prefix|suffix arrangement.
+A single-digit prefix is used to identify the “entity” associated with the
+relevant node, and the suffix is the usual four-digit port number
+associated with the relevant service.
 
 .. list-table:: LocalNet Port Prefixes
    :widths: 30 70
@@ -137,16 +137,16 @@ four-digit port number associated with the relevant service.
    * - `5432`
      - Postgres Port
 
-So for example the `JSON API Port` for the Application User is `27575`;
+So for example, the `JSON API Port` for the Application User is `27575`;
 while the `Ledger API Port` for the Super Validator is `25001`.
 
 Important security note regarding port mappings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Be aware that the port mappings for `LocalNet` include exposing both the
+Be aware that the port mappings for `LocalNet` expose both the
 `AdminAPI` port and the `Postgres` port, both of which would normally be a
 security risk. Having direct access to these ports when running on a
-local developers machine can be useful. **These ports should not be
+local developer's machine can be useful. **These ports should not be
 exposed when preparing deployment configurations for non-local
 deployments.**
 
@@ -155,10 +155,10 @@ deployment, the port suffixes are defined as environment variables in
 the `.env`. For any port mappings you wish to disable, you can find and
 remove the relevant Docker `port`: entry in the `compose.yaml` file.
 
-Application Source
+Application source
 ------------------
 
-As with most Daml applications the source code falls into four
+As with most Daml applications, the source code falls into four
 categories:
 
 .. list-table:: Application directories
@@ -186,7 +186,7 @@ Both the frontend and backend examples can be written using any relevant
 technology stack. In particular, there is no reason why the backend
 could not be written using Node.js, C#, or any other language. As of the
 time this was written, the Daml codegen tooling provided by Digital
-Asset supports Java, Javascript, and Typescript which has driven the
+Asset supports Java, JavaScript, and TypeScript which has driven the
 choice of stack for the example application.
 
 .. [12]

@@ -6,21 +6,21 @@ The Canton Quickstart project bootstrap provides two “deployment” modes:
 intended for testing against the Canton `DevNet`, and provides only those
 nodes that would be necessary to run the application in production. The
 `LocalNet` configuration is a superset of `DevNet` and also runs local
-versions of a super validator, and the canton coin wallet application.
-This allows running/testing/demonstrating the application entirely on a
-single machine. Please note that this version of `LocalNet` will need
+versions of a super validator and the Canton Coin wallet application.
+This allows you to run, test, and demonstrate the application entirely on a
+single machine. Please note that this version of `LocalNet` needs
 considerable memory resources [5]_.
 
-In addition to the `DevNet` vs `LocalNet` distinction, there is also an
-optional Observability configuration that will work with either mode.
-This will bring up a fully configured OpenTelemetry deployment with
+In addition to the `DevNet` vs `LocalNet` distinction, there is an
+optional Observability configuration that works with either mode.
+This brings up a fully configured OpenTelemetry deployment with
 metrics, monitoring, log aggregation, and trace analysis.
 
-Running `make setup` in the `quickstart/` directory will allow you to select
-between these various configurations.
+Running `make setup` in the `quickstart/` directory allows you to select
+a configuration.
 
 Once your configuration is built and running, `make status` in `quickstart/`
-will display the associated running docker containers.
+displays the associated running Docker containers.
 
 See the Topology documentation in the `docs/` directory for more detailed
 information on the various nodes in each configuration and their
@@ -29,12 +29,12 @@ relationship to each other/.
 Top level
 ---------
 
-Most of the top level project directory is associated with supporting a
+Most of the top-level project directory is associated with supporting a
 portable, consistent cross-platform development environment. It does
 this using the package manager
 `Nix <https://nixos.org/download/>`__\  [6]_,
 `Direnv <https://direnv.net/>`__\  [7]_, and `Docker
-Compose <https://docs.docker.com/compose/>`__\  [8]_. The toplevel setup
+Compose <https://docs.docker.com/compose/>`__\  [8]_. The top-level setup
 ensures a consistent and repeatable dev, build, and test regardless of
 choice of environment.
 
