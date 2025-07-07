@@ -12,15 +12,14 @@ bootstrap.
 This example application is a simple license management application that
 allows the application provider to issue licenses to application users.
 Canton Coin is used in this transaction. These users are assumed to be
-potentially retail customers of the provider, with access to Canton and
-a Canton Wallet, but not necessarily running their own infrastructure
-beyond a (possibly outsourced) validator node.
+retail customers of the provider, with access to Canton and
+a Canton Wallet. We do not assume they are running their any of their own
+infrastructure beyond a (possibly outsourced) validator node.
 
 The relevant business entities are:
 
-**Amulet**: An infrastructure token usable on the Canton synchronizer
-being used by this application. In the case of an application using
-Canton Network, this is Canton Coin [4]_.
+**Amulet**: An infrastructure token usable on the Canton synchronizer.
+In the case of an application using Canton Network, this is Canton Coin [4]_.
 
 **DSO Party:** The Decentralized Synchronizer Operations Canton Party.
 This is the party that operates the Amulet token in which the provider
@@ -33,7 +32,7 @@ entity deploying, running, and offering the application to their users
 sell the licenses.
 
 **Application User**: A Canton Party representing the legal
-entity that is (presumably) a customer of the application provider. In
+entity that is a customer of the application provider. In
 this application this is an entity with a need to purchase a license,
 and periodically renew it. Canton Coin is exchanged for the license.
 

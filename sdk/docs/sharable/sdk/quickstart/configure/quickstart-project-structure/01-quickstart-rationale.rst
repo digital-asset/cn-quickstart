@@ -4,11 +4,11 @@ Project structure overview
 When approaching the Canton Network Quickstart it is important to keep in
 mind that Quickstart is not a "framework" or "platform". Rather, it is a 
 snapshot of an early-stage Canton Network project that has spent several
-sprints developing developer, test, and deployment infrastructure and is
+sprints creating developer, test, and deployment infrastructure and is
 just beginning to transition to feature delivery.
 
 Developer infrastructure and project logistics are more transferable between
-projects than specific feature delivery.  The goal of Canton Network
+projects than specific feature delivery. The goal of Canton Network
 Quickstart is to act as a "bootstrap scaffold", to provide the benefits of
 early investment in such project infrastructure to every Canton Network
 Application development team on the network.

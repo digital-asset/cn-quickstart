@@ -1,20 +1,23 @@
 Topology
 ~~~~~~~~
 
-The Canton Quickstart project bootstrap provides two “deployment” modes:
-`DevNet` and `LocalNet`. The local topology of the `DevNet` configuration is
-intended for testing against the Canton `DevNet`, and provides only those
-nodes that would be necessary to run the application in production. The
-`LocalNet` configuration is a superset of `DevNet` and also runs local
-versions of a super validator and the Canton Coin wallet application.
-This allows you to run, test, and demonstrate the application entirely on a
-single machine. Please note that this version of `LocalNet` needs
-considerable memory resources [5]_.
+The Canton Quickstart project builds upon the `LocalNet` docker compose 
+local test configuration provided within the
+`Splice repository <https://docs.sync.global/app_dev/testing/localnet.html#>`.
+Specifically Quickstart uses a module convention to extend the default
+Validator and Super-Validator provided by Splice with authentication,
+observability, PQS, and application configurations.
 
-In addition to the `DevNet` vs `LocalNet` distinction, there is an
-optional Observability configuration that works with either mode.
-This brings up a fully configured OpenTelemetry deployment with
-metrics, monitoring, log aggregation, and trace analysis.
+For simplicity Quickstart restricts itself to what is possible with
+`docker-compose`. This is sufficient for local development, debugging, and
+testing; however, for production you should consider if the dynamic resource
+management, high-availability support provided by Kubernetes is required.
+
+The `LocalNet` configuration runs local versions of a super validator, the
+Canton Coin wallet application, the example application nodes, and any
+supporting services.  This allows you to run, test, and demonstrate the
+application entirely on a single machine. Please note that depending on your
+configuration, this can require considerable memory resources [5]_.
 
 Running `make setup` in the `quickstart/` directory allows you to select
 a configuration.
@@ -24,7 +27,7 @@ displays the associated running Docker containers.
 
 See the Topology documentation in the `docs/` directory for more detailed
 information on the various nodes in each configuration and their
-relationship to each other/.
+relationship to each other.
 
 Top level
 ---------
