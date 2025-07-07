@@ -16,7 +16,7 @@ The basic format of a Make build target is:
    <target>: <dependency list (space separated)>
          shell commands, make macros, and gnu-make function invocations
 
-For instance to build the frontend you can run `npm install && npm run build`
+For instance, to build the frontend, you can run `npm install && npm run build`
 from the `frontend/` directory, or make build-frontend from the
 quickstart/ directory via the following target in quickstart/Makefile:
 
@@ -26,7 +26,7 @@ quickstart/ directory via the following target in quickstart/Makefile:
    build-frontend: ## Build the frontend application
    @cd frontend && npm install && npm run build
 
-`.PHONY` is a special built-in target that is used to indicate that
+`.PHONY` is a special built-in target used to indicate that
 build-frontend is strictly a target name and does not correspond to a
 file [38]_.
 
@@ -42,7 +42,7 @@ generate the usage displayed by make help.
 
 `<tab>@cd frontend && npm install && npm run build` is a shell command to
 be executed when the target is invoked. Unless this is a phony-target,
-Make's expectation is that this command will regenerate the target file. By
+Make expects this command to regenerate the target file. By
 default, Make prints each shell command to stdout immediately before it
 executes it; this is suppressed if the command is prepended with a `@`.
 
@@ -57,12 +57,11 @@ You can see dependency list in action with the top-level build target:
    .PHONY: build
    build: build-frontend build-backend build-daml build-docker-images
 
-When the target is invoked the dependency targets are run to bring them
+When the target is invoked, the dependency targets are run and brought
 up to date (or invoked in the case of phony targets) before any shell
 command is executed.
 
-Other Make features that are currently used in the existing file
-include:
+Other Make features used in the existing file include:
 
 `define` [39]_ which is used to define multiline variables. In this case,
 we use it to define a simple macro (`open-url-target`) to define

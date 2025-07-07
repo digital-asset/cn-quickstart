@@ -45,23 +45,24 @@ The current toplevel directory contents for a fresh checkout include:
 
 .. code-block:: text
 
-   √ % ls -lAgo
-   total 32
-   -rw-r--r-- 1 427 Feb 11 17:20 .envrc
-   drwxr-xr-x 12 384 Feb 11 17:23 .git
-   -rw-r--r-- 1 214 Feb 11 17:20 .gitattributes
-   drwxr-xr-x 3 96 Feb 11 17:20 .github
-   -rw-r--r-- 1 587 Feb 11 17:20 .gitignore
-   -rw-r--r-- 1 680 Feb 11 17:20 LICENSE
-   -rw-r--r-- 1 6592 Feb 11 17:20 README.md
-   -rw-r--r-- 1 702 Feb 11 17:20 SECURITY.md
-   drwxr-xr-x 4 128 Feb 11 17:20 docs
-   drwxr-xr-x 4 128 Feb 11 17:20 nix
-   drwxr-xr-x 18 576 Feb 11 17:20 quickstart
-   -rw-r--r-- 1 881 Feb 11 17:20 shell.nix
+   √ % ls -Algo
+   total 60
+   -rw-r--r--  1   427 Jul  2 16:38 .envrc
+   drwxr-xr-x 15   480 Jul  7 19:15 .git
+   -rw-r--r--  1   214 Jul  2 16:38 .gitattributes
+   drwxr-xr-x  3    96 Jul  2 16:38 .github
+   -rw-r--r--  1   633 Jul  2 16:38 .gitignore
+   -rw-r--r--  1   680 Jul  2 16:38 LICENSE
+   -rw-r--r--  1 26180 Jul  7 19:13 README.md
+   -rw-r--r--  1   702 Jul  2 16:38 SECURITY.md
+   drwxr-xr-x  3    96 Jul  2 16:38 docs
+   drwxr-xr-x  4   128 Jul  2 16:38 nix
+   drwxr-xr-x 26   832 Jul  7 19:13 quickstart
+   drwxr-xr-x  3    96 Jul  2 16:38 sdk
+   -rw-r--r--  1   881 Jul  2 16:38 shell.nix
+   -rw-r--r--  1  7042 Jul  2 16:38 terms.md
 
-
-`.git\*` The usual git files and directories. In particular, `.gitignore` is
+`.git*` The usual git files and directories. In particular, `.gitignore` is
 configured to exclude build artifacts for the current build systems in
 use; Daml SDK support files; and, IDE project artifacts for Visual Code
 or other IDEs.
@@ -71,7 +72,7 @@ activates the Nix environment for the project via a call to `use nix`
 which uses the `shell.nix` file to set up the development environment
 using nix-shell [9]_.
 
-`LICENSE`, `Security.md`, and `README.md`. The License is 0BSD.
+`LICENSE`, `terms.md`, `Security.md`, and `README.md`. The License is 0BSD.
 
 `docs/` contains some engineering documentation for the example app.
 
@@ -86,6 +87,8 @@ shell.nix is essential, as it manages new dependencies. Note
 builds. You will want to ensure this gets updated at an appropriate
 cadence that balances staying up to date with development environment
 stability.
+
+`sdk/` contains the source to this documentation, using reStructuredText.
 
 **Current Dependencies declared in `shell.nix`**
    - npins

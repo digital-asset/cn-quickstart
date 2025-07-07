@@ -58,7 +58,7 @@ Alternative application architecture
 ------------------------------------
 
 This example application could have used a CQRS-style alternative
-architecture. This architecture is often used where frontend user
+architecture, which is often used where frontend user
 action stories are expressed directly in terms of unmediated consensus
 business operations. This means:
 
@@ -258,7 +258,7 @@ creation. The contract has two choices, `AppInstall_CreateLicense` and
 `AppInstall_CreateLicense` allows the provider to create a new license for
 the user. When the `CreateLicense` choice is exercised it creates a new
 License contract. It also increments `numLicensesCreated` to track how
-many licenses exist which is used to assign each licence a licence
+many licenses exist which is used to assign each license a license
 number. **Note:** Daml smart contracts are immutable, so “incrementing”
 the counter results in archiving the current `AppInstall` contract and
 creating a new one with the updated counter, within the same atomic
@@ -279,9 +279,9 @@ license contract before expiry. The contract also has two choices:
 Splice [25]_ `AppPaymentRequest` and a `LicenseRenewalRequest` contract. The
 former is a part of the Splice Wallet Application, and is used to
 request an amulet transfer. The choice of amulet is made via the
-dso party used in the `AppInstall` contract. The current deployment
+DSO party used in the `AppInstall` contract. The current deployment
 configuration results in this being Canton Coin; however, there is
-nothing in the Daml model, or the backend code that prevents a different
+nothing in the Daml model, or the backend code, that prevents a different
 amulet from being used.
 
 The `License_Expire` choice allows either party to archive an expired

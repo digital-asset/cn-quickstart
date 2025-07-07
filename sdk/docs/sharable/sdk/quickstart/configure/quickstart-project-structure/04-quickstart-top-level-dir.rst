@@ -34,11 +34,10 @@ into one of three categories:
 Build configuration
 -------------------
 
-The primary build tool used by the example project is Gradle. As is
-best-practice, this is managed via the Gradle wrappers `gradlew` and
-`gradlew.bat`. This is used for the Java-based web services in `backend/`.
-It is also used to build Daml smart contracts via a simple wrapper that
-calls the Daml Assistant [12]_.
+The primary build tool used by the example project is Gradle.  This is
+managed via the Gradle wrappers `gradlew` and `gradlew.bat`. Gradle is used
+for the Java-based web services in `backend/` and to build Daml smart
+contracts via a simple wrapper that calls the Daml Assistant [12]_.
 
 The backend takes advantage of classes generated from the Daml model to
 simplify interactions with the Ledger API. These are generated directly
@@ -75,7 +74,7 @@ advantage of documenting and sharing these tasks under revision
 control. [14]_ Use `make help` to view the currently supported tasks. The
 `Makefile` itself is intended to be implicit documentation of how each of
 these steps is performed. By default, `make` also prints any commands it
-executes to `stdout` and this can also help familiarize new developers to
+executes to `stdout` and this can also help familiarize new developers with
 how the dev-loop is structured. If your team is unfamiliar with Make, at
 the end of this guide [15]_, we have documented the Make features used
 in the current Makefile with links to additional documentation.
@@ -101,7 +100,7 @@ LocalNet port mappings
 
 For convenience, the `LocalNet` configuration exposes a number of ports to
 localhost; these ports are configured using a prefix|suffix arrangement.
-A single-digit prefix is used to identify the “entity” associated with the
+A single-digit prefix identifies the “entity” associated with the
 relevant node, and the suffix is the usual four-digit port number
 associated with the relevant service.
 
@@ -137,7 +136,7 @@ associated with the relevant service.
    * - `5432`
      - Postgres Port
 
-So for example, the `JSON API Port` for the Application User is `27575`;
+For example, the `JSON API Port` for the Application User is `27575`,
 while the `Ledger API Port` for the Super Validator is `25001`.
 
 Important security note regarding port mappings
@@ -150,7 +149,7 @@ local developer's machine can be useful. **These ports should not be
 exposed when preparing deployment configurations for non-local
 deployments.**
 
-Should you wish to disable these mappings even for the `LocalNet`
+To disable these mappings even for the `LocalNet`
 deployment, the port suffixes are defined as environment variables in
 the `.env`. For any port mappings you wish to disable, you can find and
 remove the relevant Docker `port`: entry in the `compose.yaml` file.
