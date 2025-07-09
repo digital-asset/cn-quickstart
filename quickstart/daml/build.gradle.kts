@@ -4,7 +4,6 @@
 buildscript {
     repositories {
         mavenCentral()
-        maven(Repositories.sonatype)
     }
     dependencies {
         classpath(Deps.transcode.plugin)
