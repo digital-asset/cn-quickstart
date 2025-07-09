@@ -1,5 +1,5 @@
-Project structure overview
-==========================
+Project overview
+================
 
 When approaching the Canton Network Quickstart it is important to keep in
 mind that Quickstart is not a "framework" or "platform". Rather, it is a 

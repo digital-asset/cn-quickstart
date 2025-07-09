@@ -1,5 +1,5 @@
-Topology
-~~~~~~~~
+Canton Quickstart high level structure
+=======================================
 
 The Canton Quickstart project builds upon the `LocalNet` docker compose 
 local test configuration provided within the
