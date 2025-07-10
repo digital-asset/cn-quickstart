@@ -3,4 +3,5 @@
 
 # Documentation
 /docs/ @hrischuk-da @digital-asset/etx @digital-asset/daml-docs
+/sdk/docs/ @hrischuk-da @digital-asset/etx @digital-asset/daml-docs
 /README.md @hrischuk-da @digital-asset/etx @digital-asset/daml-docs
