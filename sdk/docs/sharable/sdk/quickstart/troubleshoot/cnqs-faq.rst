@@ -313,11 +313,11 @@ Keycloak should show healthy.
    keycloak   quay.io/keycloak/keycloak:26.1.0 "/opt/keycloak/bin/k…"
    keycloak   17 minutes ago Up 17 minutes (healthy) 8080/tcp, 8443/tcp, 9000/tcp
 
-Keycloak credentials are set in ``.env`` with the following credentials:
+Keycloak credentials are set in ``oauth2.env`` with the following credentials:
 
 ::
 
-   Username: AUTH_APP_USER_WALLET_ADMIN_USER_NAME (e.g. alice)
+   Username: AUTH_APP_USER_WALLET_ADMIN_USER_NAME (e.g. app-user)
    Password: AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD (e.g. abc123)
 
 The Keycloak user must have the same ID as the ledger user’s ID.
