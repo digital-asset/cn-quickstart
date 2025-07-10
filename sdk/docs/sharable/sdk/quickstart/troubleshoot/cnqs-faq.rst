@@ -1,12 +1,10 @@
-=============================
-Canton Network quickstart FAQ
-=============================
-
-.. wip::
+=================================
+Canton Network App Quickstart FAQ
+=================================
 
 **Contents**
 
-`CN QS Frequently Asked Questions <#cn-qs-frequently-asked-questions>`__
+`CN App Quickstart Frequently Asked Questions <#cn-qs-frequently-asked-questions>`__
 
    `System requirements & setup <#system-requirements-setup>`__
 
@@ -21,38 +19,37 @@ Canton Network quickstart FAQ
 
    `Database & query access <#database-query-access>`__
 
-`CN QS Make target reference <#cn-qs-make-target-reference>`__
+`CN App Quickstart Make target reference <#cn-qs-make-target-reference>`__
 
    `UI opening commands <#ui-opening-commands>`__
 
 `LocalNet URLs <#localnet-urls>`__
 
-**CN QS Frequently Asked Questions**
-====================================
+**CN App Quickstart Frequently Asked Questions**
+================================================
 
 **System requirements & setup**
 -------------------------------
 
-**Have the best technologies been selected for the CN QS?**
+**Have the best technologies been selected for the CN App Quickstart?**
 
-The Quickstart (QS) is designed to help teams become familiar with Canton Network (CN) application development by providing scaffolding to kickstart development.
-The QS application is intended to be incrementally extended by you to meet your specific business needs.
-Once you are familiar with the QS, please review the technology choices and the application design to determine what changes are needed - technology and design decisions are ultimately up to you.
-Please be aware that the Canton Network Quickstart (CN QS) is a rapidly evolving work in progress.
+The Quickstart is designed to help teams become familiar with Canton Network (CN) application development by providing scaffolding to kickstart development.
+Quickstart is intended to be incrementally extended by you to meet your specific business needs.
+Once you are familiar with the Quickstart, please review the technology choices and the application design to determine what changes are needed - technology and design decisions are ultimately up to you.
+Please be aware that the Canton Network Application Quickstart (CN App Quickstart) is a rapidly evolving work in progress.
 
-**What are the minimum system requirements to run CN QS LocalNet?**
+**What are the minimum system requirements to run CN App Quickstart LocalNet?**
 
-The CN QS requires Docker Desktop with at least 8 GB of memory allocated to run ``LocalNet`` properly.
+The CN App Quickstart requires Docker Desktop with at least 8 GB of memory allocated to run ``LocalNet`` properly.
 If your machine has less memory, consider declining Observability when prompted during setup.
 
-**Which browsers are supported for running CN QS?**
+**Which browsers are supported for running CN App Quickstart?**
 
 Chromium browsers such as Chrome, Edge, and Firefox are recommended.
 Safari has known issues with local URLs and should be avoided.
 You may also use the same browser with one user in incognito mode and the other in standard mode.
 
-**How should I test** Participant **and** User **interactions on**
-``LocalNet`` **and** ``DevNet``\ **?**
+**How should I test Participant and User interactions on LocalNet?**
 
 For testing multiple users, use separate browsers or one browser in standard mode and another in incognito to avoid session/cookie interference.
 
@@ -76,8 +73,8 @@ The Nix prerequisite may introduce hurdles to installation if your enterprise ru
 If nix-shell is not found, then verify that ``/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt``
 contains your corporate CA.
 
-CN, PQS, Daml Shell and other CN QS related services run on a user-supplied JVM.
-CN QS assumes that you have access to JVM v17+ with access to the internet.
+CN, PQS, Daml Shell and other CN App Quickstart related services run on a user-supplied JVM.
+CN App Quickstart assumes that you have access to JVM v17+ with access to the internet.
 If your organization operates behind a web proxy then JVM may not have automatic knowledge of the corporate certificate.
 In these instances, JVM must be instructed to trust the certificate.
 
@@ -118,7 +115,7 @@ Always prefer to use the make commands.
 
 **What version of the Java SDK does the CN Quickstart use?**
 
-The CN QS uses Java SDK version ``Eclipse Temurin JDK version 17.0.12+7``.
+The CN App Quickstart uses Java SDK version ``Eclipse Temurin JDK version 17.0.12+7``.
 The Java SDK runs within the Docker container.
 
 This information is specified in ``quickstart/compose.yaml`` and ``.env``, respectively.
@@ -175,11 +172,11 @@ To resolve this error, copy the faulty ``.tar.gz`` file with directory path as s
 
 .. note:: ``USER`` in ``/Users/USER/`` will display your username. Copy and paste from your terminal. NOT this FAQ.
 
-Reattempt make install-daml-sdk.
+Reattempt make ``install-daml-sdk``.
 
 **How do I resolve Docker containers that fail unexpectedly?**
 
-Starting the CN QS while running Docker Desktop version 4.38.0 may result in java.lang.NullPointerException errors:
+Starting the CN App Quickstart while running Docker Desktop version 4.38.0 may result in java.lang.NullPointerException errors:
 
 ::
 
@@ -203,7 +200,7 @@ If you’d like to learn more about this issue, visit `JDK Bug System <https://b
 **Common issues & troubleshooting**
 -----------------------------------
 
-**How can I check if my CN QS deployment is running correctly?**
+**How can I check if my CN App Quickstart deployment is running correctly?**
 
 Use ``make status`` to see all running containers and their health status.
 
@@ -213,7 +210,7 @@ The most common cause is insufficient memory allocation to Docker. Try:
 
 1. Increase Docker memory allocation to at least 8 GB
 
-2. Run ``make stop`` followed by ``make clean-all``
+2. Run ``make stop; make clean-all; make clean-docker``
 
 3. Run ``make setup`` and turn off ``observability``
 
@@ -264,7 +261,7 @@ This provides access to useful commands like:
 
 **How can I monitor application logs and traces?**
 
-The CN QS provides several observability options:
+The CN App Quickstart provides several observability options:
 
 1. Direct container logs: ``docker logs <container-name>``
 
@@ -279,36 +276,34 @@ The CN QS provides several observability options:
 
 ``LocalNet`` runs everything locally including a Super Validator and Canton Coin wallet, making it more resource intensive but self-contained.
 
-``DevNet`` connects to actual decentralized Global Synchronizer infrastructure operated by Super Validators.
-``DevNet`` requires less local resources but needs whitelisted VPN access and connectivity.
+``DevNet`` is NOT included in the CN App Quickstart.
+However, CN ``DevNet`` connects to actual decentralized Global Synchronizer infrastructure operated by Super Validators and requires whitelisted VPN access and connectivity.
 
-For more information see the Project Structure Guide.
+For more information see the Project Structure Overview.
 
 **What is ScratchNet?**
 
 ``ScratchNet`` is a persistent Canton Network environment that supports team collaboration while maintaining centralized control.
 It fills the gap between a single-developer LocalNet (constrained by one laptop's resources) and a fully decentralized DevNet (maintained by Super Validators).
 Development teams typically deploy ``ScratchNet`` on a shared server to enable longer-running instances with persistent data storage across development sessions.
-Learn more about ``ScratchNet`` in the Exploring the Demo Guide.
 
 **How can I find out the migration_id of DevNet?**
 
 Go to https://sync.global/sv-network/ and look for the ``migration_id`` value.
 
-**Do I need VPN access to use CN QS?**
+**Do I need VPN access to use CN App Quickstart?**
 
-VPN access is only required for ``DevNet`` connections.
-You need either:
+No. VPN access is only required for ``DevNet`` connections.
+The CN App Quickstart only provides a ``LocalNet`` deployment option, which does not require VPN access.
 
--  Access to the DAML-VPN
+**What will I need when I am ready to connect to DevNet?**
 
--  Access to a SV Node that is whitelisted on the CN. Contact your sponsoring Super Validator agent for connection information.
-
-For more information see the Exploring the Demo Guide.
+To connect to CN ``DevNet`` you need access to a SV Node that is whitelisted on the CN. 
+Contact your sponsoring Super Validator agent for connection information.
 
 **How do I log in with Keycloak?**
 
-The CN QS uses Keycloak for authentication.
+The CN App Quickstart uses Keycloak for authentication when ``OAUTH2`` is enabled.
 If you have issues with logging in with Keycloak credentials, you may begin troubleshooting by running make status to verify the Keycloak service is running.
 
 Keycloak should show healthy.
@@ -350,8 +345,8 @@ Best practices include:
 
 The Participant Query Store (PQS) is recommended for querying ledger data.
 
-**CN QS Make target reference**
-===============================
+**CN App Quickstart Make target reference**
+===========================================
 
 +---------------------+------------------------------------------------+
 | **Target**          | **Description**                                |
@@ -390,15 +385,11 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 | tail                | Tail logs of Docker containers                 |
 +---------------------+------------------------------------------------+
 | setup               | Configure local development environment        |
-|                     | (enable DevNet/LocalNet, Observability)        |
 +---------------------+------------------------------------------------+
-| c                   | Start the Canton console. Connects to running  |
-| onsole-app-provider | app provider ledger                            |
+| canton-console      | Start the Canton console.                      |
 +---------------------+------------------------------------------------+
-| console-app-user    | Start the Canton console. Connects to running  |
-|                     | app user ledger                                |
-+---------------------+------------------------------------------------+
-| clean-console       | Stop and remove the Canton console container   |
+| clean-canton-       | Stop and remove the Canton console container   |
+| console             |                                                |
 +---------------------+------------------------------------------------+
 | shell               | Start Daml Shell                               |
 +---------------------+------------------------------------------------+
@@ -432,9 +423,6 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 | open-app-ui      | Open the Application UI in the active browser     |
 +------------------+---------------------------------------------------+
 | open-observe     | Open the Grafana UI in the active browser         |
-+------------------+---------------------------------------------------+
-| open-sv-gateway  | Open the Super Validator gateway UI in the active |
-|                  | browser                                           |
 +------------------+---------------------------------------------------+
 | open-sv-wallet   | Open the Super Validator wallet UI in the active  |
 |                  | browser                                           |
@@ -475,5 +463,4 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 | http://localhost:5003         | Validator API service                |
 +-------------------------------+--------------------------------------+
 
-In ``DevNet`` mode, Super Validator and wallet services are hosted externally rather than locally.
-The exact URLs for those services are provided by your sponsoring Super Validator.
+Sponsoring Super Validators may offer different URLs for their ``DevNet`` services.
