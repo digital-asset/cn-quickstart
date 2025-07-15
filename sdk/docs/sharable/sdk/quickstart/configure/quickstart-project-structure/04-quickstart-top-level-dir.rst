@@ -1,5 +1,5 @@
 Quickstart top-level directory structure
-=======================================
+========================================
 
 Quickstart project directory
 ----------------------------
