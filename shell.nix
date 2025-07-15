@@ -17,6 +17,7 @@ pkgs.mkShell {
       jdk17
       nodejs_18
       typescript
+      yq
     ]
     ++ (lib.optionals stdenv.isDarwin [
       pkgs.libiconv
