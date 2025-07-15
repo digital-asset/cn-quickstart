@@ -53,7 +53,20 @@ You may also use the same browser with one user in incognito mode and the other 
 
 For testing multiple users, use separate browsers or one browser in standard mode and another in incognito to avoid session/cookie interference.
 
-**How do I handle authentication for JFrog Artifactory?**
+**Where can I install CN App Quickstart dependencies?**
+
+This repository uses `direnv`, `nix`, and `docker-compose` to provide development dependencies:
+
+* how to [install direnv](https://direnv.net/docs/installation.html)
+* how to [install nix](https://nix.dev/install-nix.html)
+* how to [install docker-compose](https://docs.docker.com/compose/install/)
+
+**How do I authenticate on JFrog Artifactory?**
+
+To run the Quickstart App you need some binaries from Artifactory. 
+If you don't have authorization, [contact us](https://www2.digitalasset.com/contact-us-access-to-jfrog) to request Artifactory access.
+
+**How do I set up my JFrog credentials?**
 
 You need to create a ``~/.netrc`` file with the following format:
 
@@ -66,6 +79,11 @@ You need to create a ``~/.netrc`` file with the following format:
 Set permissions with ``chmod 600 ~/.netrc``
 
 For more information see the Installation Guide.
+
+**Do I need to install Nix?**
+
+You can use the project files in the `quickstart` directory as a standalone project without nix, but you will need to provide binary dependencies manually.
+We do not offer guidance on how to do this, but you can find the required binaries in the `quickstart/compose.yaml` file.
 
 **Why is Nix-shell unable to download my SSL certificate?**
 
@@ -367,7 +385,7 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 +---------------------+------------------------------------------------+
 | restart-frontend    | Build and restart the frontend application     |
 +---------------------+------------------------------------------------+
-| start               | Start the application and observability        |
+| start               |  Start the application and observability        |
 |                     | services if enabled                            |
 +---------------------+------------------------------------------------+
 | stop                | Stop the application and observability         |
