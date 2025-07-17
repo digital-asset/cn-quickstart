@@ -385,7 +385,7 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 +---------------------+------------------------------------------------+
 | restart-frontend    | Build and restart the frontend application     |
 +---------------------+------------------------------------------------+
-| start               |  Start the application and observability        |
+| start               | Start the application and observability        |
 |                     | services if enabled                            |
 +---------------------+------------------------------------------------+
 | stop                | Stop the application and observability         |

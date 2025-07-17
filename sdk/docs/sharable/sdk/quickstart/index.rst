@@ -3,3 +3,7 @@
 
 Canton Network Quickstart
 =========================
+
+.. toctree::
+    :maxdepth: 3
+    :caption: Quickstart
