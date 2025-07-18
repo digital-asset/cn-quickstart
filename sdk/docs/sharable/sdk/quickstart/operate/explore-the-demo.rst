@@ -419,4 +419,4 @@ Next steps
 
 You’ve completed a business operation in the CN App Quickstart and have been introduced to the basics of the Canton Console and Daml Shell.
 
-Learn more about Daml Shell and the project structure in the :externalref:`Project Structure guide <../configure/project-structure-overview>`.
+Learn more about Daml Shell and the project structure in the Project Structure guide.
