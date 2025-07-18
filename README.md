@@ -8,7 +8,7 @@ We intend that you clone the repository and incrementally update the solution to
 We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. 
 However, an OSS developer can benefit from this project by understanding how a CN Global Synchronizer application is structured.
 
-To run the Quickstart App you need some binaries from Artifactory. [Contact us](https://www2.digitalasset.com/contact-us-access-to-jfrog) to request Artifactory access.
+To run the Quickstart you need some binaries from Artifactory. [Contact us](https://www2.digitalasset.com/contact-us-access-to-jfrog) to request Artifactory access.
 
 [Binaries terms and conditions](https://github.com/digital-asset/cn-quickstart/blob/main/terms.md).
 
@@ -22,11 +22,11 @@ Technology and design decisions are ultimately up to you. Please be aware that t
 ## Docs and guides
 
 You can find Quickstart documentation in the Canton Network documentation portal.
-- [Quickstart Installation](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation.html)
-- [Exploring The Demo](https://docs.digitalasset.com/build/3.3/quickstart/operate/explore-the-demo.html)
+- [Quickstart Installation](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation)
+- [Exploring The Demo](https://docs.digitalasset.com/build/3.3/quickstart/operate/explore-the-demo)
 - [Project Structure](https://docs.digitalasset.com/build/3.3/quickstart/configure/project-structure-overview)
-- [FAQ](https://docs.digitalasset.com/build/3.3/quickstart/troubleshoot/cnqs-faq.html)
-- [Observability and Troubleshooting Overview](https://docs.digitalasset.com/build/3.3/quickstart/observe/observability-troubleshooting-overview.html)
+- [FAQ](https://docs.digitalasset.com/build/3.3/quickstart/troubleshoot/cnqs-faq)
+- [Observability and Troubleshooting Overview](https://docs.digitalasset.com/build/3.3/quickstart/observe/observability-troubleshooting-overview)
 
 ### Technical documentation
 
