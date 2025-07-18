@@ -1,18 +1,23 @@
 # Canton Network application quickstart
 
-**Note**: On July 2, 2025, the quickstart underwent an architectural change and no longer connects to DevNet. This update may require a `make clean-all` to remove old data and then a `make build`.
+**Note**: On July 2, 2025, the quickstart underwent an architectural change and no longer connects to DevNet. 
+This update may require a `make clean-all` to remove old data and then a `make build`.
 
-This project provides scaffolding to develop a Canton Network application for the Global Synchronizer (CN GS). We intend that you clone the repository and incrementally update the solution to match your business operations. We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. However, an OSS developer can benefit from this project by understanding how a CN GS application is structured.
+This project provides scaffolding to develop a Canton Network (CN) application for the Global Synchronizer. 
+We intend that you clone the repository and incrementally update the solution to match your business operations. 
+We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. 
+However, an OSS developer can benefit from this project by understanding how a CN Global Synchronizer application is structured.
 
-To run the Quickstart you need some binaries from Artifactory. Request Artifactory access by clicking [here](https://www2.digitalasset.com/contact-us-access-to-jfrog).
+To run the Quickstart you need some binaries from Artifactory. [Contact us](https://www2.digitalasset.com/contact-us-access-to-jfrog) to request Artifactory access.
 
-The terms and conditions for the binaries can be found [here](https://github.com/digital-asset/cn-quickstart/blob/main/terms.md).
+[Binaries terms and conditions](https://github.com/digital-asset/cn-quickstart/blob/main/terms.md).
 
-The is licensed under the BSD Zero Clause License.
+Licensed under the BSD Zero Clause License.
 
 ## Disclaimer
 
-Once you are familiar with the QS, please review the technology choices and the application design to determine what changes are needed. Technology and design decisions are ultimately up to you. Please be aware that the CN QS is a rapidly evolving work in progress.
+Once you are familiar with the Quickstart Application, please review the technology choices and the application design to determine what changes are needed. 
+Technology and design decisions are ultimately up to you. Please be aware that the CN Quickstart is a rapidly evolving work in progress.
 
 ## Docs and guides
 
@@ -20,8 +25,8 @@ You can find Quickstart documentation in the Canton Network documentation portal
 - [Quickstart Installation](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation)
 - [Exploring The Demo](https://docs.digitalasset.com/build/3.3/quickstart/operate/explore-the-demo)
 - [Project Structure](https://docs.digitalasset.com/build/3.3/quickstart/configure/project-structure-overview)
-- [FAQ](https://docs.digitalasset.com/build/3.3/quickstart/troubleshoot/cnqs-faq.html)
-- [Observability and Troubleshooting Overview](https://docs.digitalasset.com/build/3.3/quickstart/observe/observability-troubleshooting-overview.html)
+- [FAQ](https://docs.digitalasset.com/build/3.3/quickstart/troubleshoot/cnqs-faq)
+- [Observability and Troubleshooting Overview](https://docs.digitalasset.com/build/3.3/quickstart/observe/observability-troubleshooting-overview)
 
 ### Technical documentation
 
@@ -30,39 +35,9 @@ You can find Quickstart documentation in the Canton Network documentation portal
 
 This project is rapidly enhanced, so please check back often for updates.
 
-## Setup
+## Setup and Artifactory access
 
-This repository uses `direnv`, `nix`, and `docker-compose` to provide development dependencies:
-
-* how to [install direnv](https://direnv.net/docs/installation.html)
-* how to [install nix](https://nix.dev/install-nix.html)
-* how to [install docker-compose](https://docs.docker.com/compose/install/)
-
-**Important (MacOS only):** Run the following command to download and install the Daml SDK with the correct version:
-```sh
-cd quickstart
-make install-daml-sdk
-```
-
-Project files are located in the `quickstart` directory. You can use the `quickstart` directory as a standalone project without nix, but you will need to provide binary dependencies manually.
-
-### Artifactory access
-
-As mentioned, Some Docker images are from Digital Asset's [artifactory](https://digitalasset.jfrog.io). To access these artifacts the build system in this repository uses a `~/.netrc` file. You can get (or create) the necessary credentials on your [user profile](https://digitalasset.jfrog.io/ui/user_profile) page. The `.netrc` file should contain the following:
-
-```sh
-machine digitalasset.jfrog.io
-login <username>
-password <identity_token>
-```
-
-**Additionally,** to pull licensed docker images you must also log into the following Docker registries:
-
-```bash
-docker login -u <username> -p <password> digitalasset-docker.jfrog.io
-```
-
-Use the same username and password from your Artifactory credentials.
+See the [Quickstart Installation Guide](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation.html) for installation, setup, and Artifactory directions.
 
 ## Quickstart
 
@@ -99,7 +74,7 @@ If a container fails to start, there are a few things to try:
 - Start fresh with `make clean-all` and then manually delete all Docker images and volumes.
 - You may need to upgrade to a more recent version of the Daml SDK. Run `make install-daml-sdk` to assess your version and upgrade if you're not on the latest version.
 
-**Note**: The CN QS uses Java SDK version `Eclipse Temurin JDK version 17.0.12+7` which runs within the Docker container.  This information is specified in `quickstart/compose.yaml` and `.env`.
+**Note**: The CN Quickstart uses Java SDK version `Eclipse Temurin JDK version 17.0.12+7` which runs within the Docker container.  This information is specified in `quickstart/compose.yaml` and `.env`.
 
 If you need assistance, please follow these directions to gather the log information needed for debugging:
 1. `make install-daml-sdk`  # make sure you have the latest sdk
@@ -136,7 +111,7 @@ Run `make help` to see a list of all available targets, including (but not limit
 
 Quickstart is built on top of https://github.com/hyperledger-labs/splice/tree/main/cluster/compose/localnet. Check [documentation](https://docs.sync.global/app_dev/testing/localnet.html) for more information about Splice LocalNet.
 
-This diagram summarizes the relationship of services that are started as part of `make start`. The `canton` and `splice` services are configured to serve multiple logically separate components (each component represented with a box in the diagram) from a single container to reduce resource consumption. Similarly the `postgres` service contains multiple databases required by QS services. One `nginx` service is used as proxy for all QS services that needs one except for `keycloak` that has its own `nginx-keycloak` as it needs to be ready before other services start. The focus of `Canton Network Quickstart` is to provide a development environment for App Providers.
+This diagram summarizes the relationship of services that are started as part of `make start`. The `canton` and `splice` services are configured to serve multiple logically separate components (each component represented with a box in the diagram) from a single container to reduce resource consumption. Similarly the `postgres` service contains multiple databases required by Quickstart services. One `nginx` service is used as proxy for all Quickstart services that needs one except for `keycloak` that has its own `nginx-keycloak` as it needs to be ready before other services start. The focus of `Canton Network Quickstart` is to provide a development environment for App Providers.
 
 ![QS Topology](sdk/docs/images/qs-topology.drawio.png)
 
