@@ -1,14 +1,14 @@
 # Canton Network application quickstart
 
-**Note**: On July 2, 2025, the quickstart underwent an architectural change and no longer connects to DevNet. 
+**Note**: On July 2, 2025, the quickstart underwent an architectural change and no longer connects to DevNet.
 This update may require a `make clean-all` to remove old data and then a `make build`.
 
-This project provides scaffolding to develop a Canton Network (CN) application for the Global Synchronizer. 
-We intend that you clone the repository and incrementally update the solution to match your business operations. 
-We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime. 
+This project provides scaffolding to develop a Canton Network (CN) application for the Global Synchronizer.
+We intend that you clone the repository and incrementally update the solution to match your business operations.
+We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime.
 However, an OSS developer can benefit from this project by understanding how a CN Global Synchronizer application is structured.
 
-To run the Quickstart you need some binaries from Artifactory. [Contact us](https://www2.digitalasset.com/contact-us-access-to-jfrog) to request Artifactory access.
+To run the Quickstart you need some binaries from Artifactory. [Contact us](https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog) to request Artifactory access.
 
 [Binaries terms and conditions](https://github.com/digital-asset/cn-quickstart/blob/main/terms.md).
 
@@ -16,7 +16,7 @@ Licensed under the BSD Zero Clause License.
 
 ## Disclaimer
 
-Once you are familiar with the Quickstart Application, please review the technology choices and the application design to determine what changes are needed. 
+Once you are familiar with the Quickstart Application, please review the technology choices and the application design to determine what changes are needed.
 Technology and design decisions are ultimately up to you. Please be aware that the CN Quickstart is a rapidly evolving work in progress.
 
 ## Docs and guides
