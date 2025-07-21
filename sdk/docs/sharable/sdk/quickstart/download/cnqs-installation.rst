@@ -54,7 +54,7 @@ and `CN Docker repository <https://digitalasset.jfrog.io/ui/native/canton-networ
 is needed to successfully pull the Digital Asset artifacts from JFrog
 Artifactory.
 
-If you need access or additional support, email support@digitalasset.com.
+If you need access or additional support, [contact us](https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog).
 
 The CN QS is a Dockerized application and requires
 `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__. Running
