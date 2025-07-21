@@ -10,12 +10,6 @@
   ./sharable/sdk/quickstart/configure/index
   ./sharable/sdk/quickstart/configure/dev-journey-in-cnqs-lifecycle
   ./sharable/sdk/quickstart/configure/development-lifecycle
-  ./sharable/sdk/quickstart/configure/quickstart-project-structure/05-quickstart-example-application
-  ./sharable/sdk/quickstart/configure/quickstart-project-structure/03-quickstart-high-level-structure
-  ./sharable/sdk/quickstart/configure/quickstart-project-structure/04-quickstart-top-level-dir
-  ./sharable/sdk/quickstart/configure/quickstart-project-structure/06-quickstart-makefile-primer
-  ./sharable/sdk/quickstart/configure/quickstart-project-structure/01-quickstart-rationale
-  ./sharable/sdk/quickstart/configure/quickstart-project-structure/02-quickstart-app-business-case
   ./sharable/sdk/quickstart/configure/project-structure-overview
   ./sharable/sdk/quickstart/observe/observability-troubleshooting-overview
   ./sharable/sdk/quickstart/operate/index
