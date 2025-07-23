@@ -92,7 +92,7 @@ stability.
 
 **Current Dependencies declared in `shell.nix`**
    - npins
-   - jdk17
+   - jdk21
    - nodejs_18
    - typescript
 

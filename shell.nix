@@ -14,7 +14,7 @@ pkgs.mkShell {
     with pkgs;
     [
       npins
-      jdk17
+      jdk21
       nodejs_18
       typescript
     ]

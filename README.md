@@ -74,7 +74,7 @@ If a container fails to start, there are a few things to try:
 - Start fresh with `make clean-all` and then manually delete all Docker images and volumes.
 - You may need to upgrade to a more recent version of the Daml SDK. Run `make install-daml-sdk` to assess your version and upgrade if you're not on the latest version.
 
-**Note**: The CN Quickstart uses Java SDK version `Eclipse Temurin JDK version 17.0.12+7` which runs within the Docker container.  This information is specified in `quickstart/compose.yaml` and `.env`.
+**Note**: The CN Quickstart uses Java SDK version `Eclipse Temurin JDK version 21` which runs within the Docker container.  This information is specified in `quickstart/compose.yaml` and `.env`.
 
 If you need assistance, please follow these directions to gather the log information needed for debugging:
 1. `make install-daml-sdk`  # make sure you have the latest sdk
