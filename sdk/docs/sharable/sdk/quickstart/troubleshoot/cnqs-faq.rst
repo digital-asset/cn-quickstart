@@ -382,13 +382,37 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 | **Target**          | **Description**                                |
 +=====================+================================================+
 | build               | Build frontend, backend, Daml model and docker |
-|                     | images                                         |
+|                     | images.                                        |
 +---------------------+------------------------------------------------+
-| build-frontend      | Build the frontend application                 |
+| build-backend       | Build the backend service.                     |
 +---------------------+------------------------------------------------+
-| build-backend       | Build the backend service                      |
+| build-daml          | Build the Daml model.                          |
 +---------------------+------------------------------------------------+
-| build-daml          | Build the Daml model                           |
+| build-frontend      | Build the frontend application.                |
++---------------------+------------------------------------------------+
+| canton-console      | Start the Canton console. Connects to the      |
+|                     | running app provider, app-user, sv ledgers.    |
++---------------------+------------------------------------------------+
+| capture-logs        | Consumes Docker events and starts capturing    |
+|                     | logs to ``/logs`` directory for each service   |
+|                     | when a ``start`` Docker event is observed.     |
+|                     | Ideal for diagnostic purposes.                 |
++---------------------+------------------------------------------------+
+| clean               | Clean the build artifacts.                     |
++---------------------+------------------------------------------------+
+| clean-all           | Stop and remove all build artifacts, Docker    |
+|                     | containers and volumes.                        |
++---------------------+------------------------------------------------+
+| clean-application   | Like ``clean-docker``, but leaves              |
+|                     | observability services running.                |
++---------------------+------------------------------------------------+
+| clean-canton-       | Stop and remove the Canton console container.  |
+| console             |                                                |
++---------------------+------------------------------------------------+
+| clean-docker        | Stop and remove application Docker containers  |
+|                     | and volumes.                                   |
++---------------------+------------------------------------------------+
+| clean-shell         | Stop and remove the Daml Shell container.      |
 +---------------------+------------------------------------------------+
 | compose-config      | Displays finalized configuration for each      |
 |                     | service initiated by ``make start``.           |
@@ -397,62 +421,40 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 |                     | run time and not included in this output.      |
 +---------------------+------------------------------------------------+
 | create-             | Submit an App Install Request from the App     |
-| app-install-request | User participant node                          |
+| app-install-request | User participant node.                         |
 +---------------------+------------------------------------------------+
-| restart-backend     | Build and restart the backend service          |
+| generate-NOTICES    | Generate the NOTICES.txt file.                 |
 +---------------------+------------------------------------------------+
-| restart-frontend    | Build and restart the frontend application     |
+| install-daml-sdk    | Install the Daml SDK.                          |
++---------------------+------------------------------------------------+
+| logs                | Show logs of Docker containers.                |
++---------------------+------------------------------------------------+
+| restart             | Restart the application services.              |
++---------------------+------------------------------------------------+
+| restart-backend     | Build and restart the backend service.         |
++---------------------+------------------------------------------------+
+| restart-frontend    | Build and restart the frontend application.    |
++---------------------+------------------------------------------------+
+| setup               | Configure local development environment.       |
++---------------------+------------------------------------------------+
+| shell               | Start Daml Shell. Connects to the running      |
+|                     | application PQS database.                      |
 +---------------------+------------------------------------------------+
 | start               | Start the application and observability        |
-|                     | services if enabled                            |
+|                     | services if enabled.                           |
++---------------------+------------------------------------------------+
+| status              | Show status of Docker containers.              |
 +---------------------+------------------------------------------------+
 | stop                | Stop the application and observability         |
-|                     | services                                       |
+|                     | services.                                      |
 +---------------------+------------------------------------------------+
 | stop-application    | Stop only the application, leaving             |
-|                     | observability services running                 |
+|                     | observability services running.                |
 +---------------------+------------------------------------------------+
-| restart             | Restart the entire application                 |
-+---------------------+------------------------------------------------+
-| status              | Show status of Docker containers               |
-+---------------------+------------------------------------------------+
-| logs                | Show logs of Docker containers                 |
-+---------------------+------------------------------------------------+
-| tail                | Tail logs of Docker containers                 |
-+---------------------+------------------------------------------------+
-| setup               | Configure local development environment        |
-+---------------------+------------------------------------------------+
-| canton-console      | Start the Canton console.                      |
-+---------------------+------------------------------------------------+
-| capture-logs        | Consumes Docker events and starts capturing    |
-|                     | logs to ``/logs`` directory for each service   |
-|                     | when a ``start`` Docker event is observed.     |
-|                     | Ideal ofr diagnostic purposes.                 |
-+---------------------+------------------------------------------------+
-| clean-canton-       | Stop and remove the Canton console container   |
-| console             |                                                |
-+---------------------+------------------------------------------------+
-| shell               | Start Daml Shell                               |
-+---------------------+------------------------------------------------+
-| clean-shell         | Stop and remove the Daml Shell container       |
-+---------------------+------------------------------------------------+
-| clean               | Clean the build artifacts                      |
-+---------------------+------------------------------------------------+
-| clean-docker        | Stop and remove application Docker containers  |
-|                     | and volumes                                    |
-+---------------------+------------------------------------------------+
-| clean-application   | Like clean-docker, but leave observability     |
-|                     | services running                               |
-+---------------------+------------------------------------------------+
-| clean-all           | Stop and remove all build artifacts, Docker    |
-|                     | containers and volumes                         |
-+---------------------+------------------------------------------------+
-| install-daml-sdk    | Install the Daml SDK                           |
-+---------------------+------------------------------------------------+
-| generate-NOTICES    | Generate the NOTICES.txt file                  |
+| tail                | Tail logs of Docker containers.                |
 +---------------------+------------------------------------------------+
 | update-env-         | Helper to update DAML_RUNTIME_VERSION in .env  |
-| sdk-runtime-version | based on daml/daml.yaml sdk-version            |
+| sdk-runtime-version | based on daml/daml.yaml sdk-version.           |
 +---------------------+------------------------------------------------+
 
 **UI Opening Commands**
