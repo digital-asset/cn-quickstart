@@ -133,7 +133,7 @@ Always prefer to use the make commands.
 
 **What version of the Java SDK does the CN Quickstart use?**
 
-The CN App Quickstart uses Java SDK version ``Eclipse Temurin JDK version 17.0.12+7``.
+The CN App Quickstart uses Java SDK version ``Eclipse Temurin JDK version 21``.
 The Java SDK runs within the Docker container.
 
 This information is specified in ``quickstart/compose.yaml`` and ``.env``, respectively.
@@ -150,7 +150,7 @@ This information is specified in ``quickstart/compose.yaml`` and ``.env``, respe
 
 ::
 
-   JAVA_VERSION=17.0.12_7-jdk
+   JAVA_VERSION=21-jdk
 
 **How do I resolve a “build failed with an exception failure”?**
 
@@ -319,6 +319,18 @@ The CN App Quickstart only provides a ``LocalNet`` deployment option, which does
 To connect to CN ``DevNet`` you need access to a SV Node that is whitelisted on the CN. 
 Contact your sponsoring Super Validator agent for connection information.
 
+**How can I operate a ``DevNet`` node?**
+
+Use the Docker compose ``DevNet`` [deployment from Splice](https://docs.dev.sync.global/validator_operator/validator_compose.html).
+We recommend using the Docker compose configuration for integration and long-term testing.
+
+**How does my team gain access to an enterprise license?**
+
+Get an Enterprise evaluation license by filling out our [contact form](https://www.digitalasset.com/contact-us?comments=I'm%20requesting%20access%20to%20jFrog).
+The evaluation license is good for six months and is renewable.
+Please allow 24 hours for the request to be processed.
+The evaluation license includes VPN access to ``DevNet``.
+
 **How do I log in with Keycloak?**
 
 The CN App Quickstart uses Keycloak for authentication when ``OAUTH2`` is enabled.
@@ -378,6 +390,12 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 +---------------------+------------------------------------------------+
 | build-daml          | Build the Daml model                           |
 +---------------------+------------------------------------------------+
+| compose-config      | Displays finalized configuration for each      |
+|                     | service initiated by ``make start``.           |
+|                     | Dynamic environment variables                  |
+|                     | e.g. ``APP_PROVIDER_PARTY`` are resolved at    |
+|                     | run time and not included in this output.      |
++---------------------+------------------------------------------------+
 | create-             | Submit an App Install Request from the App     |
 | app-install-request | User participant node                          |
 +---------------------+------------------------------------------------+
@@ -405,6 +423,11 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 | setup               | Configure local development environment        |
 +---------------------+------------------------------------------------+
 | canton-console      | Start the Canton console.                      |
++---------------------+------------------------------------------------+
+| capture-logs        | Consumes Docker events and starts capturing    |
+|                     | logs to ``/logs`` directory for each service   |
+|                     | when a ``start`` Docker event is observed.     |
+|                     | Ideal ofr diagnostic purposes.                 |
 +---------------------+------------------------------------------------+
 | clean-canton-       | Stop and remove the Canton console container   |
 | console             |                                                |

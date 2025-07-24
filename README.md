@@ -87,25 +87,8 @@ If you need assistance, please follow these directions to gather the log informa
 
 ## Available make targets
 
-Run `make help` to see a list of all available targets, including (but not limited to):
-
-- **start**: Builds and starts the application, including frontend and backend services, using Docker Compose. Also starts `observability` and/or `LocalNet` stack depending on configuration.
-- **setup**: Configure the local development environment (enable DevNet/LocalNet, Observability)
-- **stop**: Stops the application services, as well as the observability stack.
-- **stop-application**: Like `stop`, but leaves the observability services running.
-- **restart**: Re-runs the application services by stopping and then starting it again.
-- **build**: Builds frontend, Daml model, and backend.
-- **compose-config**: Displays the finalized configuration for each service initiated by the `make start` command. Please note that dynamic environment variables, such as `APP_PROVIDER_PARTY`, which are resolved at runtime, are not included in this output.
-- **canton-console**: Starts the Canton console using Docker, connected to the running app provider, app-user, sv ledgers.
-- **shell**: Starts Daml Shell using Docker, connected to the running application PQS database.
-- **status**: Shows the status of Docker containers.
-- **capture-logs**: Consumes Docker events and starts capturing logs to `/logs` directory for each service when `start` Docker event is observed. Ideal for diagnostic purposes.
-- **logs**: Shows logs of Docker containers.
-- **tail**: Tails logs of Docker containers in real-time.
-- **clean**: Cleans the build artifacts.
-- **clean-docker**: Stops and removes Docker containers and volumes.
-- **clean-application**: Like `clean-docker`, but leaves the observability services.
-- **clean-all**: Stops and removes all Docker containers and volumes, including observability services.
+Run `make help` to see a list of all available targets.
+Read the [FAQ Make target reference](9https://docs.digitalasset.com/build/3.3/quickstart/troubleshoot/cnqs-faq.html#cn-app-quickstart-make-target-reference) for a detailed list of make targets and their descriptions.
 
 ## Topology
 
