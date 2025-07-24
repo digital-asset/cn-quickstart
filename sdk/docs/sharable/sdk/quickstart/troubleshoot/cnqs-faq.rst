@@ -133,7 +133,7 @@ Always prefer to use the make commands.
 
 **What version of the Java SDK does the CN Quickstart use?**
 
-The CN App Quickstart uses Java SDK version ``Eclipse Temurin JDK version 17.0.12+7``.
+The CN App Quickstart uses Java SDK version ``Eclipse Temurin JDK version 21``.
 The Java SDK runs within the Docker container.
 
 This information is specified in ``quickstart/compose.yaml`` and ``.env``, respectively.
@@ -150,7 +150,7 @@ This information is specified in ``quickstart/compose.yaml`` and ``.env``, respe
 
 ::
 
-   JAVA_VERSION=17.0.12_7-jdk
+   JAVA_VERSION=21-jdk
 
 **How do I resolve a “build failed with an exception failure”?**
 
@@ -319,6 +319,18 @@ The CN App Quickstart only provides a ``LocalNet`` deployment option, which does
 To connect to CN ``DevNet`` you need access to a SV Node that is whitelisted on the CN. 
 Contact your sponsoring Super Validator agent for connection information.
 
+**How can I operate a ``DevNet`` node?**
+
+Use the Docker compose ``DevNet`` [deployment from Splice](https://docs.dev.sync.global/validator_operator/validator_compose.html).
+We recommend using the Docker compose configuration for integration and long-term testing.
+
+**How does my team gain access to an enterprise license?**
+
+Get an Enterprise evaluation license by filling out our [contact form](https://www.digitalasset.com/contact-us?comments=I'm%20requesting%20access%20to%20jFrog).
+The evaluation license is good for six months and is renewable.
+Please allow 24 hours for the request to be processed.
+The evaluation license includes VPN access to ``DevNet``.
+
 **How do I log in with Keycloak?**
 
 The CN App Quickstart uses Keycloak for authentication when ``OAUTH2`` is enabled.
@@ -370,66 +382,79 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 | **Target**          | **Description**                                |
 +=====================+================================================+
 | build               | Build frontend, backend, Daml model and docker |
-|                     | images                                         |
+|                     | images.                                        |
 +---------------------+------------------------------------------------+
-| build-frontend      | Build the frontend application                 |
+| build-backend       | Build the backend service.                     |
 +---------------------+------------------------------------------------+
-| build-backend       | Build the backend service                      |
+| build-daml          | Build the Daml model.                          |
 +---------------------+------------------------------------------------+
-| build-daml          | Build the Daml model                           |
+| build-frontend      | Build the frontend application.                |
 +---------------------+------------------------------------------------+
-| create-             | Submit an App Install Request from the App     |
-| app-install-request | User participant node                          |
+| canton-console      | Start the Canton console. Connects to the      |
+|                     | running app provider, app-user, sv ledgers.    |
 +---------------------+------------------------------------------------+
-| restart-backend     | Build and restart the backend service          |
+| capture-logs        | Consumes Docker events and starts capturing    |
+|                     | logs to ``/logs`` directory for each service   |
+|                     | when a ``start`` Docker event is observed.     |
+|                     | Ideal for diagnostic purposes.                 |
 +---------------------+------------------------------------------------+
-| restart-frontend    | Build and restart the frontend application     |
-+---------------------+------------------------------------------------+
-| start               | Start the application and observability        |
-|                     | services if enabled                            |
-+---------------------+------------------------------------------------+
-| stop                | Stop the application and observability         |
-|                     | services                                       |
-+---------------------+------------------------------------------------+
-| stop-application    | Stop only the application, leaving             |
-|                     | observability services running                 |
-+---------------------+------------------------------------------------+
-| restart             | Restart the entire application                 |
-+---------------------+------------------------------------------------+
-| status              | Show status of Docker containers               |
-+---------------------+------------------------------------------------+
-| logs                | Show logs of Docker containers                 |
-+---------------------+------------------------------------------------+
-| tail                | Tail logs of Docker containers                 |
-+---------------------+------------------------------------------------+
-| setup               | Configure local development environment        |
-+---------------------+------------------------------------------------+
-| canton-console      | Start the Canton console.                      |
-+---------------------+------------------------------------------------+
-| clean-canton-       | Stop and remove the Canton console container   |
-| console             |                                                |
-+---------------------+------------------------------------------------+
-| shell               | Start Daml Shell                               |
-+---------------------+------------------------------------------------+
-| clean-shell         | Stop and remove the Daml Shell container       |
-+---------------------+------------------------------------------------+
-| clean               | Clean the build artifacts                      |
-+---------------------+------------------------------------------------+
-| clean-docker        | Stop and remove application Docker containers  |
-|                     | and volumes                                    |
-+---------------------+------------------------------------------------+
-| clean-application   | Like clean-docker, but leave observability     |
-|                     | services running                               |
+| clean               | Clean the build artifacts.                     |
 +---------------------+------------------------------------------------+
 | clean-all           | Stop and remove all build artifacts, Docker    |
-|                     | containers and volumes                         |
+|                     | containers and volumes.                        |
 +---------------------+------------------------------------------------+
-| install-daml-sdk    | Install the Daml SDK                           |
+| clean-application   | Like ``clean-docker``, but leaves              |
+|                     | observability services running.                |
 +---------------------+------------------------------------------------+
-| generate-NOTICES    | Generate the NOTICES.txt file                  |
+| clean-canton-       | Stop and remove the Canton console container.  |
+| console             |                                                |
++---------------------+------------------------------------------------+
+| clean-docker        | Stop and remove application Docker containers  |
+|                     | and volumes.                                   |
++---------------------+------------------------------------------------+
+| clean-shell         | Stop and remove the Daml Shell container.      |
++---------------------+------------------------------------------------+
+| compose-config      | Displays finalized configuration for each      |
+|                     | service initiated by ``make start``.           |
+|                     | Dynamic environment variables                  |
+|                     | e.g. ``APP_PROVIDER_PARTY`` are resolved at    |
+|                     | run time and not included in this output.      |
++---------------------+------------------------------------------------+
+| create-             | Submit an App Install Request from the App     |
+| app-install-request | User participant node.                         |
++---------------------+------------------------------------------------+
+| generate-NOTICES    | Generate the NOTICES.txt file.                 |
++---------------------+------------------------------------------------+
+| install-daml-sdk    | Install the Daml SDK.                          |
++---------------------+------------------------------------------------+
+| logs                | Show logs of Docker containers.                |
++---------------------+------------------------------------------------+
+| restart             | Restart the application services.              |
++---------------------+------------------------------------------------+
+| restart-backend     | Build and restart the backend service.         |
++---------------------+------------------------------------------------+
+| restart-frontend    | Build and restart the frontend application.    |
++---------------------+------------------------------------------------+
+| setup               | Configure local development environment.       |
++---------------------+------------------------------------------------+
+| shell               | Start Daml Shell. Connects to the running      |
+|                     | application PQS database.                      |
++---------------------+------------------------------------------------+
+| start               | Start the application and observability        |
+|                     | services if enabled.                           |
++---------------------+------------------------------------------------+
+| status              | Show status of Docker containers.              |
++---------------------+------------------------------------------------+
+| stop                | Stop the application and observability         |
+|                     | services.                                      |
++---------------------+------------------------------------------------+
+| stop-application    | Stop only the application, leaving             |
+|                     | observability services running.                |
++---------------------+------------------------------------------------+
+| tail                | Tail logs of Docker containers.                |
 +---------------------+------------------------------------------------+
 | update-env-         | Helper to update DAML_RUNTIME_VERSION in .env  |
-| sdk-runtime-version | based on daml/daml.yaml sdk-version            |
+| sdk-runtime-version | based on daml/daml.yaml sdk-version.           |
 +---------------------+------------------------------------------------+
 
 **UI Opening Commands**
