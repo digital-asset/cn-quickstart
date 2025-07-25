@@ -16,6 +16,13 @@ services:
       service: splice-onboarding
     volumes:
       - ./run.sh:/app/scripts/on/create-app-install-request.sh
+    environment:
+      - CANTON_HOST=canton
+      - TEST_UNIQUE_REQUEST_TAG=${TEST_UNIQUE_REQUEST_TAG:-}
+      - TEST_MODE=${TEST_MODE:-off}
+      - TEST_AUTH_APP_USER_WALLET_ADMIN_USER_NAME=${TEST_AUTH_APP_USER_WALLET_ADMIN_USER_NAME:-}
+      - TEST_AUTH_APP_USER_WALLET_ADMIN_USER_ID=${TEST_AUTH_APP_USER_WALLET_ADMIN_USER_ID:-}
+      - TEST_APP_USER_PARTY=${TEST_APP_USER_PARTY:-}
     entrypoint: [ "/entrypoint.sh", "--exit-on-finish" ]
     networks:
       - ${DOCKER_NETWORK}

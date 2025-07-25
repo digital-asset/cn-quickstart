@@ -1,12 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
+import path from 'path';
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, '.generated.env') });
+if (process.env.DOCKER_RUN === 'true')
+  dotenv.config({ path: path.resolve(__dirname, '.generated.docker.override.env'), override: true });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -18,6 +16,7 @@ export default defineConfig({
   expect: {
     timeout: 20_000,
   },
+
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -27,11 +26,18 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'list',
+  reporter: [
+    ['list'],
+    ['html', { open: 'never' }]
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
     // baseURL: 'http://127.0.0.1:3000',
+
+    actionTimeout: 20_000,
+    // default timeout for navigation/waitForNavigation
+    navigationTimeout: 30_000,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -39,10 +45,23 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
+    // {
+    //   name: 'chromium',
+    //   use: { ...devices['Desktop Chrome'] },
+    // },
+
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'login',
+      testMatch: '**/login.spec.ts',
+      // use: { ...devices['Desktop Chrome'] },
     },
+
+    {
+      name: 'workflow',
+      testMatch: '**/workflow.spec.ts',
+      use: { ...devices['Desktop Chrome'] },
+      dependencies: ['login'],
+    }
 
     // {
     //   name: 'firefox',
