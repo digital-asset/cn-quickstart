@@ -12,8 +12,6 @@ services:
     env_file:
       - ./docker/backend-service/env/app.env
       - ./docker/backend-service/onboarding/env/${AUTH_MODE}.env
-    environment:
-      JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
     volumes:
       - ./backend/build/distributions/backend.tar:/backend.tar
       - ./docker/backend-service/start.sh:/app/start.sh
@@ -21,7 +19,6 @@ services:
     command: /app/start.sh
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
-      - "5005:5005"  # Debug port
     depends_on:
       pqs-app-provider:
         condition: service_started
