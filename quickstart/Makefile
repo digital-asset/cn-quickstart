@@ -190,7 +190,9 @@ create-app-install-request: ## Submit an App Install Request from the App User p
 
 .PHONY: restart-backend
 restart-backend: build-backend ## Build and start the application
-	$(call docker-compose, restart backend-service)
+	$(call docker-compose, rm -s -f backend-service)
+	$(call docker-compose, rm -s -f register-app-user-tenant)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
 
 .PHONY: restart-frontend
 restart-frontend: build-frontend ## Build and start the application
@@ -292,17 +294,32 @@ first-run-setup:
 	@echo "Environment file generated, Please re-run your previous command to continue."
 	@exit 2
 
+.PHONY: integration-test-env-init
+integration-test-env-init: DOCKER_COMPOSE_FILES = -f ./integration-test/compose.yaml
+integration-test-env-init: DOCKER_COMPOSE_PROFILES =
+integration-test-env-init: ## Generate environment variables for integration tests
+	rm -f ./integration-test/.generated.env && \
+	rm -f ./integration-test/.generated.docker.override.env && \
+	$(call docker-compose, run --rm environment-init)
+
 .PHONY: integration-test
 integration-test: DOCKER_COMPOSE_FILES = -f ./integration-test/compose.yaml
 integration-test: DOCKER_COMPOSE_PROFILES =
 integration-test: ## Run integration tests
+integration-test: integration-test-env-init
 	@if [ "$(AUTH_MODE)" = "shared-secret" ]; then \
 		echo "Integration tests supported only for AUTH_MODE=oauth2."; \
 		exit 1; \
 	fi
-	@cd integration-test && npm install
+	@cd integration-test && \
+	npm install && \
+	npx playwright install
 	$(call docker-compose, run --rm integration-tests)
 
+.PHONY: show-integration-test-report
+show-integration-test-report: ## Show the integration test report
+	@cd integration-test && \
+	npx playwright show-report --port=9323 --host=0.0.0.0
 
 # Console
 .PHONY: canton-console

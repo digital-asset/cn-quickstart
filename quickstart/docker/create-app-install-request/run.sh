@@ -10,6 +10,12 @@ set -eo pipefail
 
 source /app/utils.sh
 
+if [ "$TEST_MODE" == "on" ] && [ -n "$TEST_UNIQUE_REQUEST_TAG" ]; then
+  AUTH_APP_USER_WALLET_ADMIN_USER_NAME=$TEST_AUTH_APP_USER_WALLET_ADMIN_USER_NAME
+  AUTH_APP_USER_WALLET_ADMIN_USER_ID=$TEST_AUTH_APP_USER_WALLET_ADMIN_USER_ID
+  APP_USER_PARTY=$TEST_APP_USER_PARTY
+fi
+
 create_app_install_request() {
   local token=$1
   local dsoParty=$2
@@ -17,59 +23,65 @@ create_app_install_request() {
   local appProviderParty=$4
   local participantUserId=$5
   local participant=$6
+  local uniqueTestTag=$7
 
-  # Add a timestamp for a unique command ID to allow resubmission
-  local time="$(date +%s%N)"
+  local uniqueRequestIdentifier="$(date +%s%N)"
+  local metadata=[]
 
-  echo "create_app_install_request $dsoParty $appUserParty $appProviderParty $participant" >&2
+  if [ -n "${uniqueTestTag}" ]; then
+    uniqueRequestIdentifier=${uniqueTestTag}
+    metadata='[["test", "'${uniqueTestTag}'"]]'
+  fi
 
-  curl_check "http://$participant/v2/commands/submit-and-wait" "$token" "application/json" \
-    --data-raw '{
+  echo "create_app_install_request $dsoParty $appUserParty $appProviderParty $participant $uniqueTestTag" >&2
+  local body=$(cat << EOF
+      {
         "commands": [
           {
             "CreateCommand": {
               "templateId": "#quickstart-licensing:Licensing.AppInstall:AppInstallRequest",
               "createArguments": {
-                "dso": "'$dsoParty'",
-                "provider": "'$appProviderParty'",
-                "user": "'$appUserParty'",
+                "dso": "$dsoParty",
+                "provider": "$appProviderParty",
+                "user": "$appUserParty",
                 "meta": {
-                  "values": []
+                  "values": $metadata
                 }
               }
             }
           }
         ],
         "workflowId": "create-app-install-request",
-        "applicationId": "'$participantUserId'",
-        "commandId": "create-app-install-request-'$time'",
+        "applicationId": "$participantUserId",
+        "commandId": "create-app-install-request-$uniqueRequestIdentifier",
         "deduplicationPeriod": {
           "Empty": {}
         },
         "actAs": [
-          "'$appUserParty'"
+          "$appUserParty"
         ],
         "readAs": [
-          "'$appUserParty'"
+          "$appUserParty"
         ],
         "submissionId": "create-app-install-request",
         "disclosedContracts": [],
         "domainId": "",
         "packageIdSelectionPreference": []
-    }'
+      }
+EOF
+)
+
+  curl_check "http://$participant/v2/commands/submit-and-wait" "$token" "application/json" \
+    --data-raw "$body"
 }
 
 if [ "$AUTH_MODE" == "oauth2" ]; then
-
+  # generate APP_USER_PARTICIPANT_ADMIN_TOKEN on every run
   APP_USER_WALLET_ADMIN_TOKEN=$(get_user_token $AUTH_APP_USER_WALLET_ADMIN_USER_NAME $AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD $AUTH_APP_USER_AUTO_CONFIG_CLIENT_ID $AUTH_APP_USER_TOKEN_URL)
-  DSO_PARTY=$(get_dso_party_id "$APP_USER_WALLET_ADMIN_TOKEN" "splice:2${VALIDATOR_ADMIN_API_PORT_SUFFIX}")
-
-  create_app_install_request "$APP_USER_WALLET_ADMIN_TOKEN" $DSO_PARTY $APP_USER_PARTY $APP_PROVIDER_PARTY $AUTH_APP_USER_WALLET_ADMIN_USER_ID "canton:2${PARTICIPANT_JSON_API_PORT_SUFFIX}"
+  create_app_install_request "$APP_USER_WALLET_ADMIN_TOKEN" $DSO_PARTY $APP_USER_PARTY $APP_PROVIDER_PARTY $AUTH_APP_USER_WALLET_ADMIN_USER_ID "$CANTON_HOST:2${PARTICIPANT_JSON_API_PORT_SUFFIX}" ${TEST_UNIQUE_REQUEST_TAG}
 
 else
-  APP_USER_WALLET_ADMIN_TOKEN=$(generate_jwt "$AUTH_APP_USER_WALLET_ADMIN_USER_NAME" "$AUTH_APP_USER_AUDIENCE")
-  DSO_PARTY=$(get_dso_party_id "$APP_USER_WALLET_ADMIN_TOKEN" "splice:2${VALIDATOR_ADMIN_API_PORT_SUFFIX}")
-
-  create_app_install_request "$APP_USER_WALLET_ADMIN_TOKEN" $DSO_PARTY $APP_USER_PARTY $APP_PROVIDER_PARTY $AUTH_APP_USER_WALLET_ADMIN_USER_NAME "canton:2${PARTICIPANT_JSON_API_PORT_SUFFIX}"
+  # static APP_USER_WALLET_ADMIN_TOKEN
+  create_app_install_request "$APP_USER_WALLET_ADMIN_TOKEN" $DSO_PARTY $APP_USER_PARTY $APP_PROVIDER_PARTY $AUTH_APP_USER_WALLET_ADMIN_USER_NAME "$CANTON_HOST:2${PARTICIPANT_JSON_API_PORT_SUFFIX}" "${TEST_UNIQUE_REQUEST_TAG}"
 fi
 

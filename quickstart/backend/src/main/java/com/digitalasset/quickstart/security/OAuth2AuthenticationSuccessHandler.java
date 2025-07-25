@@ -9,6 +9,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -37,11 +39,13 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     private final OAuth2AuthorizedClientService authorizedClientService;
     private final TenantPropertiesRepository tenantPropertiesRepository;
     private final SecurityConfig securityConfig;
+    private final Environment env;
 
-    public OAuth2AuthenticationSuccessHandler(OAuth2AuthorizedClientService authorizedClientService, TenantPropertiesRepository tenantPropertiesRepository, SecurityConfig securityConfig) {
+    public OAuth2AuthenticationSuccessHandler(OAuth2AuthorizedClientService authorizedClientService, TenantPropertiesRepository tenantPropertiesRepository, SecurityConfig securityConfig, Environment env) {
         this.authorizedClientService = authorizedClientService;
         this.tenantPropertiesRepository = tenantPropertiesRepository;
         this.securityConfig = securityConfig;
+        this.env = env;
     }
 
     @Override
@@ -61,7 +65,16 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
         Map<String, Object> claimsWithParty = new HashMap<>(oidcUser.getClaims());
         claimsWithParty.put(AuthService.VIRTUAL_TENANT_ID_CLAIM, clientReg.getClientName());
-        claimsWithParty.put(AuthService.VIRTUAL_PARTY_ID_CLAIM, tenantPropertiesRepository.getTenant(clientReg.getClientName()).getPartyId());
+
+        var testPartyId = claimsWithParty.get("party_id");
+        if (env.acceptsProfiles(Profiles.of("test")) && testPartyId != null) {
+            // CAUTION: Not intended for use in production environments.
+            // In the test profile party ID resolution is derived from the JWT token's party_id claim, overriding the tenant registration's party ID.
+            // This feature is designed for testing purposes to generate a unique AppUser party for each test run and ensure isolation.
+            claimsWithParty.put(AuthService.VIRTUAL_PARTY_ID_CLAIM, testPartyId);
+        } else {
+            claimsWithParty.put(AuthService.VIRTUAL_PARTY_ID_CLAIM, tenantPropertiesRepository.getTenant(clientReg.getClientName()).getPartyId());
+        }
 
         OidcIdToken idTokenWithParty = new OidcIdToken(oidcUser.getIdToken().getTokenValue(), oidcUser.getIssuedAt(), oidcUser.getExpiresAt(), claimsWithParty);
 
