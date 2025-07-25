@@ -41,7 +41,7 @@ const AppInstallsView: React.FC = () => {
               <th style={{ width: '150px' }}>DSO</th>
               <th style={{ width: '150px' }}>Provider</th>
               <th style={{ width: '150px' }}>User</th>
-              <th style={{ width: '200px' }}>Meta</th>
+              <th style={{ width: '300px' }}>Meta</th>
               <th style={{ width: '100px' }}># Licenses</th>
               <th style={{ width: '310px' }}>Actions</th>
             </tr>
@@ -65,9 +65,9 @@ const AppInstallsView: React.FC = () => {
                     {item.user}
                   </td>
                   <td className="ellipsis-cell app-install-meta">
-                    {item.meta ? JSON.stringify(item.meta) : '{}'}
+                    {item.meta ? JSON.stringify(item.meta.data) : '{}'}
                   </td>
-                  <td className="app-install-num-licenses">
+                  <td className="app-install-num-licenses" data-testid="num-licenses">
                     {item.numLicensesCreated}
                   </td>
                   <td className="app-install-actions">
@@ -76,7 +76,7 @@ const AppInstallsView: React.FC = () => {
                             <div className="btn-group" role="group">
                               <button
                                   className="btn btn-success btn-accept-install"
-                                  onClick={() => accept(item.contractId, {}, {})}
+                                  onClick={() => accept(item.contractId, item.meta, {})}
                               >
                                 Accept
                               </button>

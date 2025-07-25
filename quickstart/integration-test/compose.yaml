@@ -1,25 +1,38 @@
 # Copyright (c) 2023, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
----
-x-vars:
-  app-provider-auth-env: &app-provider-auth-env
-    path: ${APP_PROVIDER_AUTH_ENV}
-    required: false
+networks:
+  quickstart:
+    external: true
+    name: ${DOCKER_NETWORK}
 
-  app-user-auth-env: &app-user-auth-env
-    path: ${APP_USER_AUTH_ENV}
-    required: false
-
+volumes:
+  onboarding:
 
 services:
-  integration-tests:
-    image: mcr.microsoft.com/playwright:v1.51.0-jammy
-    env_file:
-      - ${LOCALNET_ENV_DIR}/common.env
-      - *app-provider-auth-env
-      - *app-user-auth-env
+  environment-init:
+    extends:
+      file: ${MODULES_DIR}/splice-onboarding/compose.yaml
+      service: splice-onboarding
+    container_name: environment-init
     volumes:
-      - ".:/work"
+      - ./environment-init.sh:/app/scripts/on/integration-tests-environment-init.sh
+      - .:/work
+    entrypoint: [ "/entrypoint.sh", "--exit-on-finish" ]
+    networks:
+      - ${DOCKER_NETWORK}
+    depends_on: !reset []
+
+  integration-tests:
+    build: docker
+    environment:
+      - DOCKER_RUN=true
+    volumes:
+      - .:/work
+      - ./start.sh:/app/start.sh
+      - ${MODULES_DIR}/splice-onboarding/docker/utils.sh:/app/utils.sh
+      - ../docker/create-app-install-request/run.sh:/app/create-app-install-request.sh
     working_dir: /work
     network_mode: host
-    command: npx playwright test --output /tmp/ --reporter line
+    command: /app/start.sh
+    depends_on:
+      - environment-init

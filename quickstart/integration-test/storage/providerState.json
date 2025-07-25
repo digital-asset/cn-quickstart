@@ -1,0 +1,65 @@
+{
+  "cookies": [
+    {
+      "name": "AUTH_SESSION_ID",
+      "value": "MmY3ZjQ1NzUtNjA1NS00ZTk3LWIyNjAtYTc0YjQ2NzYwNGFkLnZST3c3Z3RQdUo2S3dtWDhQMExaT3NoTXl1blhONkN6dUJxYk1XQV82VWJhcXZxdktrVmRwSUNveGRnV0N5OF9ZdnZ3OFRVQWRWQ1BUemJjS2xqd3h3",
+      "domain": "keycloak.localhost",
+      "path": "/realms/AppProvider/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "KC_AUTH_SESSION_HASH",
+      "value": "\"tpGo5vClZ4PDEh8YcSnD/M3XQ7reFGkH6oAmMxttrH4\"",
+      "domain": "keycloak.localhost",
+      "path": "/realms/AppProvider/",
+      "expires": 1753423573.607286,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "KEYCLOAK_IDENTITY",
+      "value": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJmYjk5ZTBhNy1hNDJjLTQ1YzUtYmU3Ny1kNDg2ZmJlYWRhMDMifQ.eyJleHAiOjE3NTM0NTk1MTMsImlhdCI6MTc1MzQyMzUxMywianRpIjoiMDU0N2M0ODctMWIzNC00YTlmLTk2NWQtN2MwNzAzZjNkNTliIiwiaXNzIjoiaHR0cDovL2tleWNsb2FrLmxvY2FsaG9zdDo4MDgyL3JlYWxtcy9BcHBQcm92aWRlciIsInN1YiI6IjU1M2M2NzU0LTg4NzktNDFjOS1hZTgwLWIzMDJmNWFmOTJjOSIsInR5cCI6IlNlcmlhbGl6ZWQtSUQiLCJzaWQiOiIyZjdmNDU3NS02MDU1LTRlOTctYjI2MC1hNzRiNDY3NjA0YWQiLCJzdGF0ZV9jaGVja2VyIjoiZGJXekplbW1LQlVnZ3MxOEpHLU1XbjNJMjhWc1J5VzlBdXY3akU3S09RSSJ9.ZGMz2rjFOI8aaeOyh8o6wIOhFdfRiugHueGyrWXhdGhcNJsjLV3gKWw0FD8oh5idNdAl5yBp8Qoj6L_ED9Iu9Q",
+      "domain": "keycloak.localhost",
+      "path": "/realms/AppProvider/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "KEYCLOAK_SESSION",
+      "value": "tpGo5vClZ4PDEh8YcSnD_M3XQ7reFGkH6oAmMxttrH4",
+      "domain": "keycloak.localhost",
+      "path": "/realms/AppProvider/",
+      "expires": 1753459513.764801,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "JSESSIONID",
+      "value": "DBE3BB6C0B8807632650BB4D16F570BC",
+      "domain": "app-provider.localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "XSRF-TOKEN",
+      "value": "959dc807-5a6f-415d-bdf5-f14015f8e2cb",
+      "domain": "app-provider.localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}
