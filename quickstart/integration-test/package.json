@@ -10,8 +10,7 @@
     "dotenv": "^16.0.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.53.2",
-    "@types/node": "^22.13.10",
-    "execa": "^6.1.0"
+    "@playwright/test": "^1.54.1",
+    "@types/node": "^22.13.10"
   }
 }

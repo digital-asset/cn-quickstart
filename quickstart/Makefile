@@ -312,8 +312,7 @@ integration-test: integration-test-env-init
 		exit 1; \
 	fi
 	@cd integration-test && \
-	npm install && \
-	npx playwright install
+	npm install
 	$(call docker-compose, run --rm integration-tests)
 
 .PHONY: show-integration-test-report

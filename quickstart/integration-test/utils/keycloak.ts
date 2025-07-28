@@ -83,7 +83,7 @@ export async function getAdminToken(
   tokenUrl: string
 ): Promise<string> {
   console.log(`Get Admin Token ${clientId}`)
-  const response = await request.post(`${KEYCLOAK_HOST}/realms/AppUser/protocol/openid-connect/token`, { // KV fix the URL
+  const response = await request.post(`${KEYCLOAK_HOST}/realms/AppUser/protocol/openid-connect/token`, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     form: {
       client_id: clientId,

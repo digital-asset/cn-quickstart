@@ -23,7 +23,10 @@ services:
     depends_on: !reset []
 
   integration-tests:
-    build: docker
+    build:
+      context: docker
+      args:
+        PLAYWRIGHT_VERSION: v1.54.1-jammy
     environment:
       - DOCKER_RUN=true
     volumes:

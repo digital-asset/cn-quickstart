@@ -74,8 +74,10 @@ test.describe('AppInstall and Licensing workflow', () => {
             await provider.installs.clickButton(InstallButton.Accept);
             await provider.installs.assertStatus(Status.Install);
             await provider.installs.clickButton(InstallButton.CreateLicense);
+            await provider.installs.captureLicenseId();
             await provider.installs.assertLicenseCountIs(1);
             await provider.installs.clickButton(InstallButton.CreateLicense);
+            await provider.installs.captureLicenseId();            
             await provider.installs.assertLicenseCountIs(2);
         });
     });      
