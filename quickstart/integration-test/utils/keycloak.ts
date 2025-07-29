@@ -6,8 +6,9 @@ export class Keycloak {
 
   public async init(): Promise<void> {
     this.kcRequest = await request.newContext({
-      baseURL: process.env.KEYCLOAK_BASE_URL!,
-      extraHTTPHeaders: {Host: 'keycloak.localhost'},
+      // TODO cleanup
+      baseURL: "http://keycloak.localhost:8082", // process.env.KEYCLOAK_BASE_URL!,
+      // extraHTTPHeaders: {Host: 'keycloak.localhost'},
     })
   }
 

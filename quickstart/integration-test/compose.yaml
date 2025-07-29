@@ -36,6 +36,8 @@ services:
       - ../docker/create-app-install-request/run.sh:/app/create-app-install-request.sh
     working_dir: /work
     network_mode: host
+    extra_hosts:
+      - "keycloak.localhost:host-gateway"
     command: /app/start.sh
     depends_on:
       - environment-init
