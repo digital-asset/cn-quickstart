@@ -1,9 +1,9 @@
 import type {APIRequestContext} from 'playwright-core';
 import TagProvider from '../fixtures/workflow';
-import { execFileSync } from 'child_process';
-import { resolve } from 'path';
-import { createUser as createKeycloakUser, getAdminToken} from '../utils/keycloak.ts';
-import { createParty, createUser as createLedgerUser, grantRights } from '../utils/ledger.ts';
+import {execFileSync} from 'child_process';
+import {resolve} from 'path';
+import {createUser as createKeycloakUser, getAdminToken} from '../utils/keycloak.ts';
+import {createParty, createUser as createLedgerUser, grantRights} from '../utils/ledger.ts';
 
 
 export default class AppUser {
@@ -26,7 +26,7 @@ export default class AppUser {
     const secret = process.env.AUTH_APP_USER_VALIDATOR_CLIENT_SECRET!
     const clientId = process.env.AUTH_APP_USER_VALIDATOR_CLIENT_ID!
     const tokenUrl = process.env.AUTH_APP_USER_TOKEN_URL!
-    const partyIdHint = `${tag}-${process.env.APP_USER_PARTY_HINT || 'app-user'}`; 
+    const partyIdHint = `${tag}-${process.env.APP_USER_PARTY_HINT || 'app-user'}`;
     const participant = 'localhost:2' + process.env.PARTICIPANT_JSON_API_PORT_SUFFIX;
 
     // 0. Get admin token for the app user participant
@@ -61,7 +61,7 @@ export default class AppUser {
     console.log(`Run create-app-install-request shell script.`);
 
     if (process.env.DOCKER_RUN === 'true') {
-      execFileSync('bash', ['/app/create-app-install-request.sh'], { env, stdio: 'inherit' });
+      execFileSync('bash', ['/app/create-app-install-request.sh'], {env, stdio: 'inherit'});
     } else {
       execFileSync('make', ['create-app-install-request'], {
         cwd: resolve(__dirname, '../..'),

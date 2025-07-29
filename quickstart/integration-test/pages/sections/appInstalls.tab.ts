@@ -1,7 +1,8 @@
-import { expect, type Page, type Locator } from '@playwright/test';
-import  RowOps from '../../utils/rowOps.ts';
+import {expect, type Page, type Locator} from '@playwright/test';
+import RowOps from '../../utils/rowOps.ts';
 
 const APP_PROVIDER_APP_INSTALLS_URL = 'http://app-provider.localhost:3000/app-installs';
+
 export enum Status {
   Request = 'REQUEST',
   Install = 'INSTALL',
@@ -20,11 +21,11 @@ export default class AppInstalls extends RowOps {
   }
 
   button = (name: string, row: Locator = this.matchingRow): Locator => {
-    return row.getByRole('button', { name: name });
+    return row.getByRole('button', {name: name});
   }
 
   status = (name: Status, row: Locator = this.matchingRow): Locator => {
-    return row.getByRole('cell', { name: name });
+    return row.getByRole('cell', {name: name});
   }
 
   licenseCount = (row: Locator = this.matchingRow): Locator => {
@@ -35,12 +36,12 @@ export default class AppInstalls extends RowOps {
     await this.page.goto(APP_PROVIDER_APP_INSTALLS_URL);
   }
 
-  public async assertStatus(status: Status, row : Locator = this.matchingRow): Promise<void> {
-     await expect(this.status(status, row)).toBeVisible();
+  public async assertStatus(status: Status, row: Locator = this.matchingRow): Promise<void> {
+    await expect(this.status(status, row)).toBeVisible();
   }
 
-  public async clickButton(button: Button, row : Locator = this.matchingRow): Promise<void> {
-     await this.button(button, row).click();
+  public async clickButton(button: Button, row: Locator = this.matchingRow): Promise<void> {
+    await this.button(button, row).click();
   }
 
   public async assertLicenseCountIs(licenseCount: number, row: Locator = this.matchingRow): Promise<void> {
@@ -56,16 +57,16 @@ export default class AppInstalls extends RowOps {
     await expect(success).toBeVisible();
 
     // read its textContent
-    const fullText = await success.textContent();  
+    const fullText = await success.textContent();
     // e.g. "Success: Created License: 00a6f3cf…"
 
     // extract just the ID
     const match = fullText!.match(/Success: Created License: ([0-9a-f]+)/);
     expect(match, 'license ID should parse').not.toBeNull();
-    const licenseId = match![1];   
-    console.log('Captured new LicenseId:', licenseId);     
+    const licenseId = match![1];
+    console.log('Captured new LicenseId:', licenseId);
 
-    await this.page.getByRole('button', { name: 'Close' }).click();
+    await this.page.getByRole('button', {name: 'Close'}).click();
 
     return licenseId;
   }

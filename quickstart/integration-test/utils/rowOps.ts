@@ -1,4 +1,4 @@
-import { expect, type Page, type Locator } from '@playwright/test';
+import {expect, type Page, type Locator} from '@playwright/test';
 
 export default class RowOps {
   page: Page;
@@ -10,8 +10,8 @@ export default class RowOps {
 
   findRowBy = (pattern: string | RegExp): Locator => {
     const nameMatcher = pattern instanceof RegExp ? pattern : new RegExp(pattern);
-    const cell = this.page.getByRole('cell', { name: nameMatcher });
-    return this.page.locator('role=row', { has: cell });
+    const cell = this.page.getByRole('cell', {name: nameMatcher});
+    return this.page.locator('role=row', {has: cell});
   }
 
   public async withRowMatching(
@@ -25,15 +25,15 @@ export default class RowOps {
 
   public async assertNoMatchingRowExists(row: Locator = this.matchingRow): Promise<void> {
     await expect(
-        row,
-        'There shouldn\'t be any matching row.'
+      row,
+      'There shouldn\'t be any matching row.'
     ).toHaveCount(0);
   }
 
   public async assertMatchingRowCountIs(count: number, row: Locator = this.matchingRow): Promise<void> {
     await expect(
-        row,
-        `There should be exactly ${count} matching row(s).`
+      row,
+      `There should be exactly ${count} matching row(s).`
     ).toHaveCount(count);
   }
 }

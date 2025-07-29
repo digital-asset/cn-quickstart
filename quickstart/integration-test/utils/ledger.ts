@@ -1,4 +1,4 @@
-import type { APIRequestContext } from 'playwright-core';
+import type {APIRequestContext} from 'playwright-core';
 
 export async function createParty(request: APIRequestContext, token: string, partyIdHint: string, participant: string): Promise<string> {
   const namespace = await getParticipantNamespace(request, token, participant);
@@ -65,7 +65,7 @@ export async function createUser(
   userId: string,
   userName: string,
   party: string,
-  participant: string,   
+  participant: string,
 ) {
   const baseUrl = `http://${participant}`
 
@@ -92,7 +92,7 @@ export async function createUser(
           identityProviderId: '',
           metadata: {
             resourceVersion: '',
-            annotations: { username: userName },
+            annotations: {username: userName},
           },
         },
         rights: [],
@@ -127,11 +127,11 @@ export async function grantRights(
   const rights = rightsCsv.split(' ').map(r => {
     switch (r) {
       case 'ParticipantAdmin':
-        return { kind: { ParticipantAdmin: { value: {} } } }
+        return {kind: {ParticipantAdmin: {value: {}}}}
       case 'ActAs':
-        return { kind: { CanActAs:    { value: { party: partyId } } } }
+        return {kind: {CanActAs: {value: {party: partyId}}}}
       case 'ReadAs':
-        return { kind: { CanReadAs:   { value: { party: partyId } } } }
+        return {kind: {CanReadAs: {value: {party: partyId}}}}
       default:
         throw new Error(`Unknown right: ${r}`)
     }
@@ -140,7 +140,7 @@ export async function grantRights(
   const response = await request.post(`http://${participant}/v2/users/${userId}/rights`, {
     headers: {
       'Authorization': `Bearer ${token}`,
-      'Content-Type':  'application/json',
+      'Content-Type': 'application/json',
     },
     data: {
       userId,

@@ -1,12 +1,13 @@
-import { expect, test, type Page, type Locator } from '@playwright/test';
+import {expect, test, type Page, type Locator} from '@playwright/test';
 import type {APIRequestContext} from 'playwright-core';
-import { WALLET_URL, DEFAULT_PASSWORD} from '../tests/global.ts';
-import { getUserToken} from '../utils/keycloak.ts';
-import { onboardWalletUser} from '../utils/wallet.ts';
+import {WALLET_URL, DEFAULT_PASSWORD} from '../tests/global.ts';
+import {getUserToken} from '../utils/keycloak.ts';
+import {onboardWalletUser} from '../utils/wallet.ts';
 
 export default class Wallet {
   page: Page;
   request: APIRequestContext;
+
   constructor(page: Page, request: APIRequestContext) {
     this.page = page;
     this.request = request;
@@ -15,7 +16,7 @@ export default class Wallet {
   public async pay(amount: number, description: string): Promise<void> {
     await expect(this.page.locator('.payment-description', {hasText: description})).toBeVisible();
     await expect(this.page.locator('#confirm-payment')).toContainText(`Send ${amount} CC to`);
-    await this.page.getByRole('button', { name: 'Send Payment' }).click();
+    await this.page.getByRole('button', {name: 'Send Payment'}).click();
   }
 
   public async onboardWalletUser(userId: string, partyId: string): Promise<void> {
@@ -26,21 +27,21 @@ export default class Wallet {
 
   public async login(): Promise<void> {
     await this.page.goto(WALLET_URL);
-    await this.page.getByRole('button', { name: 'Log In with OAuth2' }).click();
+    await this.page.getByRole('button', {name: 'Log In with OAuth2'}).click();
     await expect(this.page.getByText('Please re-authenticate to continue')).toBeVisible();
-    await this.page.getByRole('textbox', { name: 'Password' }).fill(DEFAULT_PASSWORD);
-    await this.page.getByRole('button', { name: 'Sign In' }).click();
+    await this.page.getByRole('textbox', {name: 'Password'}).fill(DEFAULT_PASSWORD);
+    await this.page.getByRole('button', {name: 'Sign In'}).click();
     await expect(this.page.locator('#logged-in-user').getByRole('textbox')).toHaveValue(/.*app-user::.*/);
   }
 
   public async tap(amount: number): Promise<void> {
     await this.page.goto(WALLET_URL);
-    await this.page.getByRole('textbox', { name: 'Amount' }).fill(amount.toString());
-    await this.page.getByRole('button', { name: 'Tap' }).click();
+    await this.page.getByRole('textbox', {name: 'Amount'}).fill(amount.toString());
+    await this.page.getByRole('button', {name: 'Tap'}).click();
     test.slow(); // CC processing can take a while
     await expect(
-        this.page.locator('[data-testid="AccountBalanceWalletIcon"]').first(),
-        'Balance update should show in transaction history.'
+      this.page.locator('[data-testid="AccountBalanceWalletIcon"]').first(),
+      'Balance update should show in transaction history.'
     ).toBeVisible();
-  }  
+  }
 }

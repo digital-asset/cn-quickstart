@@ -1,6 +1,6 @@
 import type {APIRequestContext} from 'playwright-core';
 
-const KEYCLOAK_HOST =  process.env.KEYCLOAK_HOST!;
+const KEYCLOAK_HOST = process.env.KEYCLOAK_HOST!;
 
 export async function createUser(request: APIRequestContext, partyId: string, tag: string): Promise<string> {
   const accessToken = await getKeycloakAdminToken(request);
@@ -50,26 +50,26 @@ export async function createUser(request: APIRequestContext, partyId: string, ta
 export async function getKeycloakAdminToken(request: APIRequestContext): Promise<string> {
 
   const tokenResponse = await request.post(
-      `${KEYCLOAK_HOST}/realms/master/protocol/openid-connect/token`,
-      {
+    `${KEYCLOAK_HOST}/realms/master/protocol/openid-connect/token`,
+    {
       headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
       form: {
-          client_id: 'admin-cli',
-          grant_type: 'password',
-          username: 'admin',
-          password: 'admin',
+        client_id: 'admin-cli',
+        grant_type: 'password',
+        username: 'admin',
+        password: 'admin',
       },
-      }
+    }
   );
   if (!tokenResponse.ok()) {
-      throw new Error(
+    throw new Error(
       `Failed to fetch keycloak admin token: ${tokenResponse.status()} ${await tokenResponse.text()}`
-      );
+    );
   }
 
-  const { access_token: accessToken } = await tokenResponse.json();
+  const {access_token: accessToken} = await tokenResponse.json();
   return accessToken;
 }
 
@@ -84,7 +84,7 @@ export async function getAdminToken(
 ): Promise<string> {
   console.log(`Get Admin Token ${clientId}`)
   const response = await request.post(`${KEYCLOAK_HOST}/realms/AppUser/protocol/openid-connect/token`, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
     form: {
       client_id: clientId,
       client_secret: clientSecret,
@@ -99,36 +99,36 @@ export async function getAdminToken(
     )
   }
 
-  const { access_token: accessToken } = await response.json()
+  const {access_token: accessToken} = await response.json()
   return accessToken
 }
 
 
 export async function getUserToken(
-    request: APIRequestContext,
-    username: string,
-    password: string,
-    clientId: string
+  request: APIRequestContext,
+  username: string,
+  password: string,
+  clientId: string
 ): Promise<string> {
-    const response = await request.post(`${KEYCLOAK_HOST}/realms/AppUser/protocol/openid-connect/token`, {
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        form: {
-            client_id: clientId,
-            username,
-            password,
-            grant_type: 'password',
-            scope: 'openid',
-        },
-    })
+  const response = await request.post(`${KEYCLOAK_HOST}/realms/AppUser/protocol/openid-connect/token`, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    form: {
+      client_id: clientId,
+      username,
+      password,
+      grant_type: 'password',
+      scope: 'openid',
+    },
+  })
 
-    if (!response.ok()) {
-        throw new Error(
-            `Failed to fetch user token: ${response.status()} ${await response.text()}`
-        )
-    }
+  if (!response.ok()) {
+    throw new Error(
+      `Failed to fetch user token: ${response.status()} ${await response.text()}`
+    )
+  }
 
-    const { access_token: accessToken } = await response.json()
-    return accessToken
+  const {access_token: accessToken} = await response.json()
+  return accessToken
 }

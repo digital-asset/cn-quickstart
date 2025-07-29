@@ -1,7 +1,7 @@
-import { test as base, type Page, type Locator } from '@playwright/test';
+import {test as base, type Page, type Locator} from '@playwright/test';
 import AppUser from '../utils/appUser.ts';
 import QS from '../pages/qs.page.ts';
-import { PROVIDER_STORAGE } from '../tests/global.ts';
+import {PROVIDER_STORAGE} from '../tests/global.ts';
 
 type Fixtures = {
   tagProvider: TagProvider;
@@ -13,37 +13,37 @@ type Fixtures = {
 
 export * from '@playwright/test';
 export const test = base.extend<Fixtures>({
-  tagProvider: async ({ }, use) => {
+  tagProvider: async ({}, use) => {
     const tag = new TagProvider();
     console.log(`Using test tag: ${tag.base}`);
     await use(tag);
   },
-  appUser: async ({ request, tagProvider }, use) => {
+  appUser: async ({request, tagProvider}, use) => {
     // Create an AppUser test instance with a unique test tag
     // - creates keycloak user, ledger party, and ledger user
     // - grants rights to the user to act as and read as the party
     const appUser = await base.step('Create a unique test AppUser', async () => {
-        return await AppUser.create(request, tagProvider);
+      return await AppUser.create(request, tagProvider);
     });
     await use(appUser);
   },
-  requestTag: async ({ tagProvider, appUser }, use) => {
+  requestTag: async ({tagProvider, appUser}, use) => {
     const tag = tagProvider.next();
     await base.step('Run create-app-install-request script', async () => {
-       appUser.createAppInstallRequest(tag);
+      appUser.createAppInstallRequest(tag);
     });
 
     await use(tag);
   },
-  provider: async ({ browser, request }, use) => {
-    const context = await browser.newContext({ storageState: PROVIDER_STORAGE });
+  provider: async ({browser, request}, use) => {
+    const context = await browser.newContext({storageState: PROVIDER_STORAGE});
     const providerPage = await context.newPage();
     const provider = new QS(providerPage, request);
     await use(provider);
     await context.close();
   },
-  user: async ({ browser, request, appUser, tagProvider }, use) => {
-    const context = await browser.newContext(); 
+  user: async ({browser, request, appUser, tagProvider}, use) => {
+    const context = await browser.newContext();
     const userPage = await context.newPage();
     const user = new QS(userPage, request);
     // Login as the test user
@@ -56,10 +56,12 @@ export const test = base.extend<Fixtures>({
 export default class TagProvider {
   counter: number = 0;
   base: string = 'test-' + Date.now() + "-" + process.env.TEST_WORKER_INDEX;
+
   next(): string {
     this.counter++;
     return this.base + '-' + this.counter;
   }
+
   last(): string {
     return this.base + '-' + this.counter;
   }
