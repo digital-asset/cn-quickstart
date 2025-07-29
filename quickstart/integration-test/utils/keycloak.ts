@@ -8,6 +8,7 @@ export async function createUser(request: APIRequestContext, partyId: string, ta
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
+      'Host' : '172.0.0.1',
     },
     data: {
       username: `app-user-${tag}`,
@@ -53,7 +54,8 @@ export async function getKeycloakAdminToken(request: APIRequestContext): Promise
     `${KEYCLOAK_HOST}/realms/master/protocol/openid-connect/token`,
     {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Host' : '172.0.0.1',
       },
       form: {
         client_id: 'admin-cli',
@@ -84,7 +86,10 @@ export async function getAdminToken(
 ): Promise<string> {
   console.log(`Get Admin Token ${clientId}`)
   const response = await request.post(`${KEYCLOAK_HOST}/realms/AppUser/protocol/openid-connect/token`, {
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Host' : '172.0.0.1',
+    },
     form: {
       client_id: clientId,
       client_secret: clientSecret,
@@ -113,6 +118,7 @@ export async function getUserToken(
   const response = await request.post(`${KEYCLOAK_HOST}/realms/AppUser/protocol/openid-connect/token`, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
+      'Host' : '172.0.0.1',
     },
     form: {
       client_id: clientId,
