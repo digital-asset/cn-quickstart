@@ -298,6 +298,14 @@ first-run-setup:
 integration-test-env-init: DOCKER_COMPOSE_FILES = -f ./integration-test/compose.yaml
 integration-test-env-init: DOCKER_COMPOSE_PROFILES =
 integration-test-env-init: ## Generate environment variables for integration tests
+	@if [ "$(TEST_MODE)" = "off" ]; then \
+		echo "To run the integration tests Quickstart must be started in test mode. Please run \"make setup\" and enable TEST_MODE when prompted"; \
+		exit 1; \
+	fi
+	@if [ "$(AUTH_MODE)" = "shared-secret" ]; then \
+		echo "Integration tests supported only for AUTH_MODE=oauth2."; \
+		exit 1; \
+	fi
 	rm -f ./integration-test/.generated.env && \
 	rm -f ./integration-test/.generated.docker.override.env && \
 	$(call docker-compose, run --rm environment-init)
@@ -307,10 +315,6 @@ integration-test: DOCKER_COMPOSE_FILES = -f ./integration-test/compose.yaml
 integration-test: DOCKER_COMPOSE_PROFILES =
 integration-test: ## Run integration tests
 integration-test: integration-test-env-init
-	@if [ "$(AUTH_MODE)" = "shared-secret" ]; then \
-		echo "Integration tests supported only for AUTH_MODE=oauth2."; \
-		exit 1; \
-	fi
 	@cd integration-test
 	$(call docker-compose, run --rm integration-tests)
 
