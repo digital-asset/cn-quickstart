@@ -15,7 +15,7 @@ services:
       service: splice-onboarding
     container_name: environment-init
     volumes:
-      - ./environment-init.sh:/app/scripts/on/integration-tests-environment-init.sh
+      - ./docker/environment-init.sh:/app/scripts/on/integration-tests-environment-init.sh
       - .:/work
     entrypoint: [ "/entrypoint.sh", "--exit-on-finish" ]
     networks:
@@ -31,7 +31,7 @@ services:
       - DOCKER_RUN=true
     volumes:
       - .:/work
-      - ./start.sh:/app/start.sh
+      - ./docker/start.sh:/app/start.sh
       - ${MODULES_DIR}/splice-onboarding/docker/utils.sh:/app/utils.sh
       - ../docker/create-app-install-request/run.sh:/app/create-app-install-request.sh
     working_dir: /work

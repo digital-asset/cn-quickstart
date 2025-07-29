@@ -311,13 +311,12 @@ integration-test: integration-test-env-init
 		echo "Integration tests supported only for AUTH_MODE=oauth2."; \
 		exit 1; \
 	fi
-	@cd integration-test && \
-	npm install
+	@cd integration-test
 	$(call docker-compose, run --rm integration-tests)
 
 .PHONY: show-integration-test-report
 show-integration-test-report: ## Show the integration test report
-	@cd integration-test && \
+	@cd integration-test
 	npx playwright show-report --port=9323 --host=0.0.0.0
 
 # Console

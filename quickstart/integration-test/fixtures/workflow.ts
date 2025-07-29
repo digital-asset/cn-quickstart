@@ -20,7 +20,11 @@ export const test = base.extend<Fixtures>({
   },
   appUser: async ({ request, tagProvider }, use) => {
     // Create an AppUser test instance with a unique test tag
-    const appUser = await AppUser.create(request, tagProvider);
+    // - creates keycloak user, ledger party, and ledger user
+    // - grants rights to the user to act as and read as the party
+    const appUser = await base.step('Create a unique test AppUser', async () => {
+        return await AppUser.create(request, tagProvider);
+    });
     await use(appUser);
   },
   requestTag: async ({ tagProvider, appUser }, use) => {

@@ -9,4 +9,5 @@ while [ ! -f /work/.generated.env ]; do
   sleep 1
 done
 
+npm install
 npx playwright test --output /work/test-results --trace=retain-on-first-failure
