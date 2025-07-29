@@ -59,21 +59,22 @@ open class ConfigureProfilesTask : DefaultTask() {
                 }
 
                 OptionType.TEST_MODE -> {
-                    val boolValue = promptForBoolean(option.promptText, default = true)
+                    val boolValue = promptForBoolean(option.promptText, default = false)
                     option.value = if (boolValue) {
                         "on"
                     } else {
                         "off"
                     }
                     println("  ${option.envVarName} set to '${option.value}'.\n")
-                    println (
-                        """
-                        CAUTION: Not intended for use in production environments.
-                        Activates the test profile in the backend service.
-                        When enabled, party ID resolution is derived from the JWT token's party_id claim, overriding the tenant registration's party ID.
-                        This feature is designed for testing purposes to generate a unique AppUser party for each test run and ensure isolation.                            
-                        """.trimIndent()
-                    )
+                    if (boolValue)
+                        println (
+                            """
+                            CAUTION: Not intended for use in production environments.
+                            Activates the test profile in the backend service.
+                            When enabled, party ID resolution is derived from the JWT token's party_id claim, overriding the tenant registration's party ID.
+                            This feature is designed for testing purposes to generate a unique AppUser party for each test run and ensure isolation.                            
+                            """.trimIndent()
+                        )
                 }
             }
             System.out.flush()
