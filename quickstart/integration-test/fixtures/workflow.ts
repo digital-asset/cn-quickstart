@@ -2,8 +2,10 @@ import {test as base, type Page, type Locator} from '@playwright/test';
 import AppUser from '../utils/appUser.ts';
 import QS from '../pages/qs.page.ts';
 import {PROVIDER_STORAGE} from '../tests/global.ts';
+import {Keycloak} from '../utils/keycloak';
 
 type Fixtures = {
+  keycloak: Keycloak
   tagProvider: TagProvider;
   appUser: AppUser;
   provider: QS;
@@ -13,17 +15,22 @@ type Fixtures = {
 
 export * from '@playwright/test';
 export const test = base.extend<Fixtures>({
+  keycloak: async ({}, use) => {
+    const kc = await new Keycloak();
+    await kc.init();
+    await use(kc);
+  },
   tagProvider: async ({}, use) => {
     const tag = new TagProvider();
     console.log(`Using test tag: ${tag.base}`);
     await use(tag);
   },
-  appUser: async ({request, tagProvider}, use) => {
+  appUser: async ({request, keycloak, tagProvider}, use) => {
     // Create an AppUser test instance with a unique test tag
     // - creates keycloak user, ledger party, and ledger user
     // - grants rights to the user to act as and read as the party
     const appUser = await base.step('Create a unique test AppUser', async () => {
-      return await AppUser.create(request, tagProvider);
+      return await AppUser.create(request, keycloak, tagProvider);
     });
     await use(appUser);
   },

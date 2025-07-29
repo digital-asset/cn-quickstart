@@ -147,7 +147,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     });
   });
 
-  test('Full License Lifecycle should pass', async ({requestTag, provider, user, appUser}) => {
+  test('Full License Lifecycle should pass', async ({requestTag, keycloak, provider, user, appUser}) => {
     let licenseId!: string;
     await test.step('AppProvider can accept AppInstallRequest and create License', async () => {
       await provider.installs.goto();
@@ -171,7 +171,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     });
 
     await test.step('Onboard AppUser and tap some funds to wallet', async () => {
-      await user.wallet.onboardWalletUser(appUser.userId, appUser.partyId);
+      await user.wallet.onboardWalletUser(keycloak, appUser.userId, appUser.partyId);
       await user.wallet.login();
       await user.wallet.tap(1000);
     });

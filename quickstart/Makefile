@@ -298,6 +298,7 @@ first-run-setup:
 integration-test-env-init: DOCKER_COMPOSE_FILES = -f ./integration-test/compose.yaml
 integration-test-env-init: DOCKER_COMPOSE_PROFILES =
 integration-test-env-init: ## Generate environment variables for integration tests
+	@docker rm -f environment-init 2> /dev/null || true
 	@if [ "$(TEST_MODE)" = "off" ]; then \
 		echo "To run the integration tests Quickstart must be started in test mode. Please run \"make setup\" and enable TEST_MODE when prompted"; \
 		exit 1; \

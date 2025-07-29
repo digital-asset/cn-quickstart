@@ -1,7 +1,7 @@
 import {expect, test, type Page, type Locator} from '@playwright/test';
 import type {APIRequestContext} from 'playwright-core';
 import {WALLET_URL, DEFAULT_PASSWORD} from '../tests/global.ts';
-import {getUserToken} from '../utils/keycloak.ts';
+import {Keycloak} from '../utils/keycloak.ts';
 import {onboardWalletUser} from '../utils/wallet.ts';
 
 export default class Wallet {
@@ -19,9 +19,9 @@ export default class Wallet {
     await this.page.getByRole('button', {name: 'Send Payment'}).click();
   }
 
-  public async onboardWalletUser(userId: string, partyId: string): Promise<void> {
+  public async onboardWalletUser(keycloak: Keycloak, userId: string, partyId: string): Promise<void> {
     const validator = 'localhost:2' + process.env.VALIDATOR_ADMIN_API_PORT_SUFFIX!;
-    const walletAdminToken = await getUserToken(this.request, process.env.AUTH_APP_USER_WALLET_ADMIN_USER_NAME!, process.env.AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD!, process.env.AUTH_APP_USER_AUTO_CONFIG_CLIENT_ID!);
+    const walletAdminToken = await keycloak.getUserToken(process.env.AUTH_APP_USER_WALLET_ADMIN_USER_NAME!, process.env.AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD!, process.env.AUTH_APP_USER_AUTO_CONFIG_CLIENT_ID!);
     await onboardWalletUser(this.request, walletAdminToken, userId, partyId, validator);
   }
 

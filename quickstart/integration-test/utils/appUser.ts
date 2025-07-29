@@ -2,8 +2,8 @@ import type {APIRequestContext} from 'playwright-core';
 import TagProvider from '../fixtures/workflow';
 import {execFileSync} from 'child_process';
 import {resolve} from 'path';
-import {createUser as createKeycloakUser, getAdminToken} from '../utils/keycloak.ts';
-import {createParty, createUser as createLedgerUser, grantRights} from '../utils/ledger.ts';
+import {Keycloak} from '../utils/keycloak';
+import {createParty, createUser as createLedgerUser, grantRights} from '../utils/ledger';
 
 
 export default class AppUser {
@@ -18,7 +18,7 @@ export default class AppUser {
     this.tagProvider = tagProvider;
   }
 
-  static async create(request: APIRequestContext, tagProvider: TagProvider): Promise<AppUser> {
+  static async create(request: APIRequestContext, keycloak: Keycloak, tagProvider: TagProvider): Promise<AppUser> {
     const instance = new AppUser(request, tagProvider);
     const tag = tagProvider.base;
 
@@ -30,13 +30,13 @@ export default class AppUser {
     const participant = 'localhost:2' + process.env.PARTICIPANT_JSON_API_PORT_SUFFIX;
 
     // 0. Get admin token for the app user participant
-    const adminToken = await getAdminToken(request, secret, clientId, tokenUrl)
+    const adminToken = await keycloak.getAdminToken(secret, clientId)
 
     // 1. Create a new ledger party
     instance.partyId = await createParty(request, adminToken, partyIdHint, participant);
 
     // 2. Create a new keycloak user
-    instance.userId = await createKeycloakUser(request, instance.partyId, tag);
+    instance.userId = await keycloak.createUser(instance.partyId, tag);
 
     // 3. Create a new ledger user
     await createLedgerUser(request, adminToken, instance.userId, tag, instance.partyId, participant);

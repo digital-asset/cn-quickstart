@@ -63,6 +63,7 @@ Both methods support parallel, repeatable end-to-end test runs without restartin
 
 3. **``fixtures``**
    -  Custom fixtures for ``tests/workflow.spec.ts``:
+      - **keycloak** - facade over Keycloak REST admin API
       - **tagProvider** - generates unique tags for each test run 
       - **appUser** - creates unique AppUser setup for each test run to achieve test isolation (that includes new keycloak user, ledger party, ledger user with granted rights and onboarded to wallet)
       - **requestTag** - runs ``make create-app-install-request`` with a unique test tag that is stored in AppInstall.metadata and used in tests
