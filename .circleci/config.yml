@@ -1,0 +1,20 @@
+# Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+version: 2.1
+
+jobs:
+  test:
+    resource_class: small
+    machine:  
+      image: ubuntu-2204:current
+    steps:
+      - checkout
+      - run:
+          command: echo "Hello CI/CD!"
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
