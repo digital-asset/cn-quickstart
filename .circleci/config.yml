@@ -33,7 +33,7 @@ jobs:
   test:
     resource_class: small
     machine:  
-      image: ubuntu-2404:current
+      image: ubuntu-2204:current
     steps:
       - checkout
       - nix
@@ -45,6 +45,11 @@ jobs:
           command: |
             cd quickstart \
             && make help
+      - run:
+          name: make ci-create-env-local
+          command: |
+            cd quickstart \
+            && make ci-create-env-local
       - run:
           name: make build
           command: |
