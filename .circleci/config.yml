@@ -40,6 +40,9 @@ jobs:
     steps:
       - checkout
       - nix
+      - command: |
+          cd quickstart \
+          && make help
 
 workflows:
   version: 2
