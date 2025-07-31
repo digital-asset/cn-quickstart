@@ -3,8 +3,34 @@
 
 version: 2.1
 
-orbs:
-  nix: digital-asset/build
+# orbs:
+#   nix: digital-asset/build
+
+commands:
+  nix:
+    steps:
+      - run:
+          name: Nix preparation
+          command: .circleci/scripts/nix_prep.sh
+      - restore_cache:
+          name: Nix restore cache
+          keys:
+            - nix-qs-{{ checksum "/home/circleci/nix/cache-keys/orb-version" }}-{{ checksum "/home/circleci/nix/cache-keys/nix-checksums" }}
+            - nix-qs-{{ checksum "/home/circleci/nix/cache-keys/orb-version" }}
+      - run:
+          name: Nix Setup
+          command: .circleci/scripts/nix_setup.sh
+      - save_cache:
+          name: Nix save cache
+          key: nix-qs-{{ checksum "/home/circleci/nix/cache-keys/orb-version" }}-{{ checksum "/home/circleci/nix/cache-keys/nix-checksums" }}
+          paths:
+            - /home/circleci/.config/nix
+            - /home/circleci/.local/state
+            - /home/circleci/.nix-bashrc
+            - /home/circleci/.nix-channels
+            - /home/circleci/.nix-defexpr
+            - /home/circleci/.nix-profile
+            - /nix
 
 jobs:
   test:
@@ -13,8 +39,7 @@ jobs:
       image: ubuntu-2204:current
     steps:
       - checkout
-      - run:
-          command: echo "Hello CI/CD!"
+      - nix
 
 workflows:
   version: 2
