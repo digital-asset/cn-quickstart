@@ -40,7 +40,8 @@ jobs:
     steps:
       - checkout
       - nix
-      - command: |
+      - run: 
+         command: |
           cd quickstart \
           && make help
 
