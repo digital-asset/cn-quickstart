@@ -3,6 +3,9 @@
 
 version: 2.1
 
+orbs:
+  nix: dach_ny/nix@1.15.0
+
 jobs:
   test:
     resource_class: small
