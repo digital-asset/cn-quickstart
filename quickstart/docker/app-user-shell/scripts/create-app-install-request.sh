@@ -34,7 +34,7 @@ create_app_install_request() {
                 "provider": "'$appProviderParty'",
                 "user": "'$appUserParty'",
                 "meta": {
-                  "values": []
+                  "values": { }
                 }
               }
             }
