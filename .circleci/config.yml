@@ -29,9 +29,22 @@ commands:
             - /home/circleci/.nix-profile
             - /nix
 
+  quickstart:
+    parameters:
+      command:
+        type: string
+        description: command to run in quickstart directory
+        default: ''
+    steps:
+      - run:
+          name: qs << parameters.command >>
+          command: |
+            cd quickstart \
+            && << parameters.command >>
+
 jobs:
   test:
-    resource_class: small
+    resource_class: medium
     machine:  
       image: ubuntu-2204:current
     steps:
@@ -40,21 +53,14 @@ jobs:
       - run:
           name: Configuration authentication for JFrog
           command: .circleci/scripts/project_auth.sh
-      - run:
-          name: Print make help
-          command: |
-            cd quickstart \
-            && make help
-      - run:
-          name: make ci-create-env-local
-          command: |
-            cd quickstart \
-            && make ci-create-env-local
-      - run:
-          name: make build
-          command: |
-            cd quickstart \
-            && make build
+      - quickstart:
+          command: make help
+      - quickstart:
+          command: make ci-create-env-local
+      - quickstart:
+          command: make install-daml-sdk
+      - quickstart:
+          command: make build
 
 
 workflows:
