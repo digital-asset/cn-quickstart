@@ -1,10 +1,10 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-import {test} from '../fixtures/workflow.ts';
-import {Status, Button as InstallButton} from "../pages/sections/appInstalls.tab.ts";
-import {Button as LicenseButton, Link as LicenseLink} from "../pages/sections/licenses.tab.ts";
-import {Button as LicenseModalButton} from "../pages/sections/licenses.modal.ts";
+import {test} from '../fixtures/workflow';
+import {Status, Button as InstallButton} from "../pages/sections/appInstalls.tab";
+import {Button as LicenseButton, Link as LicenseLink} from "../pages/sections/licenses.tab";
+import {Button as LicenseModalButton} from "../pages/sections/licenses.modal";
 
 test.describe('AppInstall and Licensing workflow', () => {
 

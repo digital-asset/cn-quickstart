@@ -92,8 +92,8 @@ Both methods support parallel, repeatable end-to-end test runs without restartin
 
 4. **``utils``**
    - TypeScript utilities for Keycloak, ledger and wallet REST API interactions.
-   - ``AppUser`` class that allows you to 
-      - ``create`` - creates unique AppUser for each test invocation
+   - ``AppUserSetup`` class that allows you to 
+      - ``create`` - creates unique AppUserSetup for each test invocation
       - ``createAppInstallRequest`` - creates AppInstallRequest with unique test tag for each test invocation. It runs the same shell script as in normal workflow
    - ``RowOps`` helper class for row-level tests data manipulation
 

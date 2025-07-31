@@ -2,11 +2,11 @@ import type {APIRequestContext} from 'playwright-core';
 import TagProvider from '../fixtures/workflow';
 import {execFileSync} from 'child_process';
 import {resolve} from 'path';
-import {Keycloak} from '../utils/keycloak';
-import {createParty, createUser as createLedgerUser, grantRights} from '../utils/ledger';
+import {Keycloak} from './keycloak';
+import {createParty, createUser as createLedgerUser, grantRights} from './ledger';
 
 
-export default class AppUser {
+export default class AppUserSetup {
   request: APIRequestContext;
   tagProvider: TagProvider;
   userName!: string;
@@ -18,8 +18,8 @@ export default class AppUser {
     this.tagProvider = tagProvider;
   }
 
-  static async create(request: APIRequestContext, keycloak: Keycloak, tagProvider: TagProvider): Promise<AppUser> {
-    const instance = new AppUser(request, tagProvider);
+  static async create(request: APIRequestContext, keycloak: Keycloak, tagProvider: TagProvider): Promise<AppUserSetup> {
+    const instance = new AppUserSetup(request, tagProvider);
     const tag = tagProvider.base;
 
     console.log(`Creating user with tag: ${tag}`);
@@ -59,15 +59,11 @@ export default class AppUser {
 
     console.log(`Run create-app-install-request shell script.`);
 
-    if (process.env.DOCKER_RUN === 'true') {
-      execFileSync('bash', ['/app/create-app-install-request.sh'], {env, stdio: 'inherit'});
-    } else {
-      execFileSync('make', ['--no-print-directory', 'create-app-install-request'], {
-        cwd: resolve(__dirname, '../..'),
-        env,
-        stdio: 'inherit',
-      });
-    }
+    execFileSync('make', ['--no-print-directory', 'create-app-install-request'], {
+      cwd: resolve(__dirname, '../..'),
+      env,
+      stdio: 'inherit',
+    });
 
     console.log(`AppInstallRequest created with tag: ${uniqueRequestTag}`);
   }
