@@ -323,6 +323,7 @@ integration-test: integration-test-env-init
 integration-test-local: ## Run integration tests
 integration-test-local: integration-test-env-init
 	@cd integration-test && \
+	npm install && \
 	npx playwright test
 
 .PHONY: show-integration-test-report

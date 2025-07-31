@@ -62,7 +62,7 @@ export default class AppUser {
     if (process.env.DOCKER_RUN === 'true') {
       execFileSync('bash', ['/app/create-app-install-request.sh'], {env, stdio: 'inherit'});
     } else {
-      execFileSync('make', ['create-app-install-request'], {
+      execFileSync('make', ['--no-print-directory', 'create-app-install-request'], {
         cwd: resolve(__dirname, '../..'),
         env,
         stdio: 'inherit',

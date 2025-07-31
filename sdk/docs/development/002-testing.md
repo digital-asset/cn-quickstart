@@ -21,7 +21,7 @@ You can execute the integration tests against a locally deployed Canton Network 
 2. VS Code Integration:  
    - Install the Playwright Test extension and run the tests directly from the editor.
 
-Both methods support parallel, repeatable end-to-end test runs without restarting the Quickstart.
+Both methods support parallel, repeatable end-to-end test runs without restarting the Quickstart instance.
 
 ---
 
@@ -63,13 +63,23 @@ Both methods support parallel, repeatable end-to-end test runs without restartin
 
 3. **``fixtures``**
    -  Custom fixtures for ``tests/workflow.spec.ts``:
-      - **keycloak** - facade over Keycloak REST admin API
-      - **tagProvider** - generates unique tags for each test run 
-      - **appUser** - creates unique AppUser setup for each test run to achieve test isolation (that includes new keycloak user, ledger party, ledger user with granted rights and onboarded to wallet)
-      - **requestTag** - runs ``make create-app-install-request`` with a unique test tag that is stored in AppInstall.metadata and used in tests
-      - **provider** - Quickstart test instance with logged in app-provider - session preserved for whole test suite
-      - **user** - Quickstart test instance with logged in unique test app-user for each test invocation 
-   - Those fixtures are available on demand in each test.
+      - **``keycloak``**
+         Facade over Keycloak REST admin API
+         
+      - **``tagProvider``**  
+         Generates a unique tag for each test run to ensure isolated test data.
+
+      - **``appUserSetup``**  
+         Automates creation of an AppUser, including Keycloak and Ledger user provisioning, ledger party assignment, and wallet onboarding.
+
+      - **``requestTag``**  
+         Executes ``make create-app-install-request`` with the generated tag, establishing an AppInstallRequest for workflow tests.
+
+      - **``provider``**  
+         A session-scoped AppProvider fixture. Authenticates in the Quickstart UI as an app-provider, exposes page object methods for interacting with UI components, and provides state assertions.
+
+      - **``user``**  
+         A session-scoped AppUser fixture. Authenticates a unique test app-user in the Quickstart UI, provides page object methods for user flows, and supports UI assertions.
 
 4. **``pages``**
    - Contains Page Object Models that represent CN Quickstart ``qs.page.ts`` and Splice Wallet ``wallet.page.ts``.
@@ -102,7 +112,7 @@ Both methods support parallel, repeatable end-to-end test runs without restartin
 
 3. **Generate .env files**
    ``make integration-test-env-init``
-   Run once per Quickstart instance to generate test-specific environment variables. 
+   Run once per Quickstart instance to generate the environment variables. 
 
 4. **Run tests in VS Code**
    - Open ``quickstart/integration-test`` in VS Code

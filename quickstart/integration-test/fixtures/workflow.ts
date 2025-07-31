@@ -7,7 +7,7 @@ import {Keycloak} from '../utils/keycloak';
 type Fixtures = {
   keycloak: Keycloak
   tagProvider: TagProvider;
-  appUser: AppUser;
+  appUserSetup: AppUser;
   provider: QS;
   user: QS;
   requestTag: string;
@@ -25,7 +25,7 @@ export const test = base.extend<Fixtures>({
     console.log(`Using test tag: ${tag.base}`);
     await use(tag);
   },
-  appUser: async ({request, keycloak, tagProvider}, use) => {
+  appUserSetup: async ({request, keycloak, tagProvider}, use) => {
     // Create an AppUser test instance with a unique test tag
     // - creates keycloak user, ledger party, and ledger user
     // - grants rights to the user to act as and read as the party
@@ -34,10 +34,10 @@ export const test = base.extend<Fixtures>({
     });
     await use(appUser);
   },
-  requestTag: async ({tagProvider, appUser}, use) => {
+  requestTag: async ({tagProvider, appUserSetup}, use) => {
     const tag = tagProvider.next();
     await base.step('Run create-app-install-request script', async () => {
-      appUser.createAppInstallRequest(tag);
+      appUserSetup.createAppInstallRequest(tag);
     });
 
     await use(tag);
@@ -49,12 +49,12 @@ export const test = base.extend<Fixtures>({
     await use(provider);
     await context.close();
   },
-  user: async ({browser, request, appUser, tagProvider}, use) => {
+  user: async ({browser, request, appUserSetup, tagProvider}, use) => {
     const context = await browser.newContext();
     const userPage = await context.newPage();
     const user = new QS(userPage, request);
     // Login as the test user
-    await user.loginPage.login(appUser.userName, `app user ${tagProvider.base}`);
+    await user.loginPage.login(appUserSetup.userName, `app user ${tagProvider.base}`);
     await use(user);
     await context.close();
   },
