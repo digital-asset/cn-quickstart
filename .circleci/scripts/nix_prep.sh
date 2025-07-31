@@ -48,12 +48,6 @@ EOF
   chown -vR circleci:circleci "${own[@]}"
 )
 
-# # make sure ORB_VERSION is set
-# if [ -z "${ORB_VERSION}" ]; then
-#   echo "ORB_VERSION var not set"
-#   exit 1
-# fi
-
 # always run as root
 if [ ${EUID} == 0 ]; then
   main "${ORB_VERSION:-}" "${ARTIFACTORY_USER:-}" "${ARTIFACTORY_PASSWORD:-}"
