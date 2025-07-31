@@ -3,9 +3,6 @@
 
 version: 2.1
 
-# orbs:
-#   nix: digital-asset/build
-
 commands:
   nix:
     steps:
@@ -36,17 +33,29 @@ jobs:
   test:
     resource_class: small
     machine:  
-      image: ubuntu-2204:current
+      image: ubuntu-2404:current
     steps:
       - checkout
       - nix
-      - run: 
-         command: |
-          cd quickstart \
-          && make help
+      - run:
+          name: Configuration authentication for JFrog
+          command: .circleci/scripts/project_auth.sh
+      - run:
+          name: Print make help
+          command: |
+            cd quickstart \
+            && make help
+      - run:
+          name: make build
+          command: |
+            cd quickstart \
+            && make build
+
 
 workflows:
   version: 2
   test:
     jobs:
-      - test
+      - test:
+          context:
+            - artifactory-readonly
