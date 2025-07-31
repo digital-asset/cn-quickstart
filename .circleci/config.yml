@@ -44,7 +44,7 @@ commands:
 
 jobs:
   test:
-    resource_class: medium
+    resource_class: xlarge
     machine:  
       image: ubuntu-2204:current
     steps:
@@ -64,6 +64,10 @@ jobs:
           command: echo 'export PATH=/home/circleci/.daml/bin:${PATH}' >> $BASH_ENV
       - quickstart:
           command: make build
+      - quickstart:
+          command: make start
+      - quickstart:
+          command: make integration-test
 
 
 workflows:
