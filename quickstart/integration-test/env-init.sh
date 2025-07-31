@@ -6,7 +6,9 @@ set -eo pipefail
 
 source /app/utils.sh
 
-write_to_file "/work/.generated.env" <<EOF
+
+if [ "$TEST_MODE" == "on" ]; then
+write_to_file "/integration-test/.generated.env" <<EOF
 AUTH_MODE=${AUTH_MODE}
 APP_PROVIDER_PARTY=${APP_PROVIDER_PARTY}
 APP_USER_PARTY=${APP_USER_PARTY}
@@ -24,7 +26,6 @@ AUTH_APP_USER_VALIDATOR_CLIENT_ID=${AUTH_APP_USER_VALIDATOR_CLIENT_ID}
 KEYCLOAK_BASE_URL=http://localhost:8082
 EOF
 
-write_to_file "/work/.generated.docker.override.env" <<EOF
-AUTH_APP_USER_TOKEN_URL=${AUTH_APP_USER_ISSUER_URL}/protocol/openid-connect/token
-CANTON_HOST=localhost
-EOF
+else
+  rm -f ./integration-test/.generated.env
+fi

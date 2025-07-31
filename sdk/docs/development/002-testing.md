@@ -40,7 +40,6 @@ Both methods support parallel, repeatable end-to-end test runs without restartin
    - [``workflow.spec.ts``](../../quickstart/integration-test/tests/workflow.spec.ts) contains the main Licensing Workflow tests scenario, walking through login, wallet top-ups, AppInstallRequests, license creation and payments, etc.
 
 4. **Make Targets**  
-   - `integration-test-env-init`: Generates `.env` files for testing based on a running Quickstart instance  
    - `show-integration-test-report`: Serves the Playwright HTML report on port 9323 (`http://0.0.0.0:9323`)  
 
 ---
@@ -110,16 +109,11 @@ Both methods support parallel, repeatable end-to-end test runs without restartin
    ``make setup`` 
    Enable TEST_MODE and OAUTH2 when prompted, then run ``make start``.  
 
-3. **Generate .env files**
-   ``make integration-test-env-init``
-   Run once per Quickstart instance to generate the environment variables. 
-
-4. **Run tests in VS Code**
+3. **Run tests in VS Code**
    - Open ``quickstart/integration-test`` in VS Code
    - Install the [Playwright Test for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright) extension.
-   - If run for the first time in VS Code invoke action `Test: Install Playwright` or  ``npm install``
+   - If run for the first time in VS Code invoke action ``Test: Install Playwright`` or ``npm install``
    - Execute tests via the Playwright view  
 
-5. **Run tests via CLI**
+4. **Run tests via CLI**
    ``make integration-test``
-   A Playwright container (`mcr.microsoft.com/playwright`) executes tests in real browsers, performing logins, navigation, and assertions.  

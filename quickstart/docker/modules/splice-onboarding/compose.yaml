@@ -23,6 +23,7 @@ services:
       - *app-user-auth-env
     environment:
       - AUTH_MODE=${AUTH_MODE}
+      - TEST_MODE=${TEST_MODE}
     volumes:
       - ${MODULES_DIR}/splice-onboarding/docker/entrypoint.sh:/entrypoint.sh
       - ${MODULES_DIR}/splice-onboarding/docker/health-check.sh:/app/health-check.sh
