@@ -17,6 +17,7 @@ pkgs.mkShell {
       jdk21
       nodejs_18
       typescript
+      circleci-cli
     ]
     ++ (lib.optionals stdenv.isDarwin [
       pkgs.libiconv
