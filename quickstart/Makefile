@@ -319,9 +319,15 @@ integration-test: integration-test-env-init
 	@cd integration-test
 	$(call docker-compose, run --rm integration-tests)
 
+.PHONY: integration-test-local
+integration-test-local: ## Run integration tests
+integration-test-local: integration-test-env-init
+	@cd integration-test && \
+	npx playwright test
+
 .PHONY: show-integration-test-report
 show-integration-test-report: ## Show the integration test report
-	@cd integration-test
+	@cd integration-test && \
 	npx playwright show-report --port=9323 --host=0.0.0.0
 
 # Console

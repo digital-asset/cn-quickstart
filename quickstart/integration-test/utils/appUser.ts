@@ -25,7 +25,6 @@ export default class AppUser {
     console.log(`Creating user with tag: ${tag}`);
     const secret = process.env.AUTH_APP_USER_VALIDATOR_CLIENT_SECRET!
     const clientId = process.env.AUTH_APP_USER_VALIDATOR_CLIENT_ID!
-    const tokenUrl = process.env.AUTH_APP_USER_TOKEN_URL!
     const partyIdHint = `${tag}-${process.env.APP_USER_PARTY_HINT || 'app-user'}`;
     const participant = 'localhost:2' + process.env.PARTICIPANT_JSON_API_PORT_SUFFIX;
 
