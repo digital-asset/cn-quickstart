@@ -1,72 +1,52 @@
 # Integration Testing
 
-This document describes the **integration test** (or end-to-end test) for ``Canton Network Quickstart``. It covers:
+This document outlines the end-to-end **integration tests** for ``Canton Network Quickstart``, covering:
 
-- The **overall flow** of the integration test
-- **Technologies** used and key tooling decisions
-- **Utilities** provided to simplify the integration test cycle
-- **How to run** and **extend** the existing integration tests
+- Test workflow and architecture  
+- Core technologies and tooling  
+- Utilities to streamline testing  
+- Instructions for running and extending tests  
 
 ---
 
 ## Overview
 
-The integration tests exercise the entire application in a **fully containerized environment**, verifying that all components (frontend, backend, Daml model, and various supporting services) work together as expected. These tests include UI interactions, API calls, and workflow validation against real services.
+The integration test suite verifies that all components—frontend, backend, Daml models, and supporting services—operate seamlessly together. These tests encompass browser-driven UI interactions, API request verification, and workflow validation against live service endpoints.
 
-Two main approaches are supported, depending on your use case:
+You can execute the integration tests against a locally deployed Canton Network Quickstart instance in test mode using either of the following approaches:
+1. Command Line Interface:  
+   ```shell
+   make integration-test
+   ```
+2. VS Code Integration:  
+   - Install the Playwright Test extension and run the tests directly from the editor.
 
-1. **``make integration-test``**
-   - Primary target to run the integration tests
-   - Spins up a clean, dedicated Docker-in-Docker container for the test.
-   - Builds the project artifacts, creates isolated Docker images, starts the application in that nested container, and then runs end-to-end browser tests.
-   - Cleans up after itself, ensuring a repeatable, isolated test environment.
-
-2. **``make integration-test-ci``**
-   - Utility target, primarily used in CI pipelines.
-   - Relies on the application running on **your host machine** rather than in an isolated environment, which means it must be unpolluted from prior interactions.
-   - Creates the necessary AppInstallRequests and runs the test container **against your locally running Docker Compose** services.
+Both methods support parallel, repeatable end-to-end test runs without restarting the Quickstart instance.
 
 ---
 
 ## Key Technologies and Components
 
-1. **Docker & Docker Compose**
+1. **Docker Compose**
    - Orchestrate the local environment and all dependent containers (e.g. Canton participant, Keycloak, Observability stack, NGINX, etc.).
    - The ``Makefile`` defines the primary commands for building images and controlling container life cycles.
 
-2. **Playwright**
-   - A browser automation framework for end-to-end testing.
-   - Used to interact with the application’s web UIs (e.g., the “AppProvider” and “AppUser” frontends, the wallet UI).
+2. **Playwright**  
+   - Browser automation framework for end-to-end UI testing  
+   - Interacts with AppProvider, AppUser frontends, and the wallet UI  
 
-3. **Node.js** integration test harness
-   - The file [``integration-test/setup-and-run-tests.js``](../../quickstart/integration-test/setup-and-run-tests.js) is a custom Node.js script.
-   - It automates building artifacts, preparing a Docker-in-Docker test runner, transferring images into that container, and executing the Playwright tests in a nested environment.
-
-4. **TypeScript Test Suite**
+3. **TypeScript Test Suite**
    - Located in [``integration-test/tests/``](../../quickstart/integration-test/tests/).
-   - [``workflow.spec.ts``](../../quickstart/integration-test/tests/workflow.spec.ts) contains the main scenario, walking through login, wallet top-ups, AppInstallRequests, license creation and payments, etc.
+   - [``workflow.spec.ts``](../../quickstart/integration-test/tests/workflow.spec.ts) contains the main Licensing Workflow tests scenario, walking through login, wallet top-ups, AppInstallRequests, license creation and payments, etc.
 
-5. **Make Targets**
-   - Several Make targets in the root [``Makefile``](../../quickstart/Makefile) facilitate the workflow:
-     - **``integration-test``**: Runs ``setup-and-run-tests.js`` for a fully isolated Docker-in-Docker approach.
-     - **``integration-test-ci``**: Assumes the environment is already running locally. Creates the required requests and runs a single ephemeral test container using the host's Docker network.
+4. **Make Targets**  
+   - `show-integration-test-report`: Serves the Playwright HTML report on port 9323 (`http://0.0.0.0:9323`)  
 
 ---
 
-## Provided Utilities
+## Directory Structure
 
-1. **``integration-test/setup-and-run-tests.js``**
-   - A Node.js script that:
-     1. Builds the local project (by calling ``make build``).
-     2. Builds or reuses a Docker-in-Docker image (named ``quickstart-end2end-runner`` by default).
-     3. Spins up that container with a persistent volume for Docker state.
-     4. Loads required Docker images inside the nested Docker engine to work around authentication issues for propriatary images, and to avoid repeated pulls.
-     5. Launches the application (``make start``) inside the container.
-     6. Creates sample requests (e.g., AppInstallRequests).
-     7. Runs the Playwright tests in a nested container.
-   - Cleans up upon completion to restore the host environment to a clean state.
-
-2. **``integration-test/tests/workflow.spec.ts``**
+1. **``tests/workflow.spec.ts``**
    - The main test suite using [Playwright](https://playwright.dev/).
    - Simulates user actions for both “AppUser” and “AppProvider” roles:
      - Logging into the system
@@ -75,49 +55,65 @@ Two main approaches are supported, depending on your use case:
      - Issuing and renewing licenses
      - Using the wallet UI for payments
 
-3. **``integration-test/package.json``**
-   - Declares dependencies for the integration test environment, primarily ``@playwright/test`` for browser automation.
-   - Installs TypeScript types (e.g., ``@types/node``) if needed for local editing or linting.
+2. **``tests/login.spec.ts``**
+   - Test suite to test:
+      -  Logging in to Quickstart as both AppUser and AppProvider (preserving storage state for the latter)
+      -  Logging in to Splice Wallet as AppUser
+
+3. **``fixtures``**
+   -  Custom fixtures for ``tests/workflow.spec.ts``:
+      - **``keycloak``**
+         Facade over Keycloak REST admin API
+         
+      - **``tagProvider``**  
+         Generates a unique tag for each test run to ensure isolated test data.
+
+      - **``appUserSetup``**  
+         Automates creation of an AppUser, including Keycloak and Ledger user provisioning, ledger party assignment, and wallet onboarding.
+
+      - **``requestTag``**  
+         Executes ``make create-app-install-request`` with the generated tag, establishing an AppInstallRequest for workflow tests.
+
+      - **``provider``**  
+         A session-scoped AppProvider fixture. Authenticates in the Quickstart UI as an app-provider, exposes page object methods for interacting with UI components, and provides state assertions.
+
+      - **``user``**  
+         A session-scoped AppUser fixture. Authenticates a unique test app-user in the Quickstart UI, provides page object methods for user flows, and supports UI assertions.
+
+4. **``pages``**
+   - Contains Page Object Models that represent CN Quickstart ``qs.page.ts`` and Splice Wallet ``wallet.page.ts``.
+   - Quickstart Class has multiple sections:
+      - ``appInstalls.tab.ts``
+      - ``appInstalls.modal.ts``
+      - ``licenses.tab.ts``
+      - ``login.ts``
+   - That promotes code reuse help with test suite maintenance.
+
+4. **``utils``**
+   - TypeScript utilities for Keycloak, ledger and wallet REST API interactions.
+   - ``AppUserSetup`` class that allows you to 
+      - ``create`` - creates unique AppUserSetup for each test invocation
+      - ``createAppInstallRequest`` - creates AppInstallRequest with unique test tag for each test invocation. It runs the same shell script as in normal workflow
+   - ``RowOps`` helper class for row-level tests data manipulation
 
 ---
 
 ## How the Testing Setup Works
 
-Below is a high-level summary of the integration test flow:
 
 1. **Build everything**
-   - ``make build`` compiles the frontend, backend, and Daml model, then builds the Docker images.
+   ``make build`` 
+   Compiles the frontend, backend, and Daml model, then builds the Docker images.
 
-2. **Create sample AppInstallRequests**
-   - The test scenarios require multiple ``AppInstallRequests`` to be created. The script (or ``integration-test-ci`` target) automatically creates them.
+2. **Run Quickstart in the test mode**
+   ``make setup`` 
+   Enable TEST_MODE and OAUTH2 when prompted, then run ``make start``.  
 
-3. **Run Playwright tests**
-   - A container with the official Playwright image (``mcr.microsoft.com/playwright``) is invoked.
-   - The tests in ``integration-test/tests/`` open the application in real browsers, perform logins, navigate flows, and assert expected states.
+3. **Run tests in VS Code**
+   - Open ``quickstart/integration-test`` in VS Code
+   - Install the [Playwright Test for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright) extension.
+   - If run for the first time in VS Code invoke action ``Test: Install Playwright`` or ``npm install``
+   - Execute tests via the Playwright view  
 
-4. **Tear down**
-   - At the end of ``integration-test``, the Docker-in-Docker container is removed, and volumes are retained only if necessary.
-
----
-
-## Typical Usage
-
-### Fully Automated, Isolated Testing
-
-```bash
-# Runs tests in a single ephemeral Docker environment
-make integration-test
-```
-
-- This is especially handy if you want a completely **clean environment** each time.
-- Great for verifying local changes without leaving leftover containers or images.
-
-### Testing Against a Locally Running Environment
-
-```bash
-# 1. Run the integration tests using the host's environment
-make integration-test-ci # depends on, and runs, make start
-```
-
-- This workflow is meant to be used in **CI pipelines**.
-- The test container simply attaches to the local Docker network and runs the same suite of Playwright tests.
+4. **Run tests via CLI**
+   ``make integration-test``

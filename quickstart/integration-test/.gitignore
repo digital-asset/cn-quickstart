@@ -5,3 +5,8 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Dynamic configuration
+.generated.env
+.generated.docker.override.env
+/storage/

@@ -12,10 +12,14 @@ generate_jwt() {
 
 share_file() {
   local relative_path="$1"
-  local full_path="/onboarding/${relative_path}"
-  echo ">>>> writing to ${full_path}"
-  mkdir -p "$(dirname "${full_path}")"
-  cat > "${full_path}"
+  write_to_file "/onboarding/${relative_path}"
+}
+
+write_to_file() {
+  local absolute_path="$1"
+  echo ">>>> writing to ${absolute_path}" >&2
+  mkdir -p "$(dirname "${absolute_path}")"
+  cat > "${absolute_path}"
 }
 
 get_admin_token() {
@@ -253,7 +257,7 @@ allocate_party() {
 
   namespace=$(get_participant_namespace "$token" "$participant")
 
-  party=$(curl_check "http://$participant:7575/v2/parties/party?parties=$partyIdHint::$namespace" "$token" "application/json" |
+  party=$(curl_check "http://$participant/v2/parties/party?parties=$partyIdHint::$namespace" "$token" "application/json" |
     jq -r '.partyDetails[0].party')
 
   if [ -n "$party" ] && [ "$party" != "null" ]; then
@@ -262,7 +266,7 @@ allocate_party() {
     return
   fi
 
-  curl_check "http://$participant:7575/v2/parties" "$token" "application/json" \
+  curl_check "http://$participant/v2/parties" "$token" "application/json" \
     --data-raw '{
       "partyIdHint": "'$partyIdHint'",
       "displayName" : "'$partyIdHint'",
@@ -274,7 +278,7 @@ get_participant_namespace() {
   local token=$1
   local participant=$2
   echo "get_participant_namespace $participant" >&2
-  curl_check "http://$participant:7575/v2/parties/participant-id" "$token" "application/json" |
+  curl_check "http://$participant/v2/parties/participant-id" "$token" "application/json" |
     jq -r .participantId | sed 's/^participant:://'
 }
 
@@ -283,8 +287,8 @@ onboard_wallet_user() {
   local user=$2
   local party=$3
   local validator=$4
-  echo "onboard_wallet_user $user $party $validator" >&2
-  curl_check "http://$validator:5003/api/validator/v0/admin/users" "$token" "application/json" \
+  echo "onboard_wallet_user $user $party $validator $token" >&2
+  curl_check "http://$validator/api/validator/v0/admin/users" "$token" "application/json" \
     --data-raw '{
       "party_id": "'$party'",
       "name":"'$user'"

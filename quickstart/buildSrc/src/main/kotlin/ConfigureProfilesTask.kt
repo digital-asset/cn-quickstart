@@ -7,7 +7,7 @@ import java.io.File
 
 open class ConfigureProfilesTask : DefaultTask() {
 
-    enum class OptionType { BOOLEAN, PARTY_HINT, AUTH_MODE }
+    enum class OptionType { BOOLEAN, PARTY_HINT, AUTH_MODE, TEST_MODE }
 
     data class Option(
         val promptText: String,
@@ -30,7 +30,8 @@ open class ConfigureProfilesTask : DefaultTask() {
                 "Specify a party hint (this will identify the participant in the network)",
                 "PARTY_HINT",
                 OptionType.PARTY_HINT
-            )
+            ),
+            Option("Enable TEST_MODE", "TEST_MODE", OptionType.TEST_MODE),
         )
 
         options.forEach { option ->
@@ -55,6 +56,25 @@ open class ConfigureProfilesTask : DefaultTask() {
                     val stringValue = promptForPartyHint(option.promptText)
                     option.value = stringValue
                     println("  ${option.envVarName} set to '$stringValue'.\n")
+                }
+
+                OptionType.TEST_MODE -> {
+                    val boolValue = promptForBoolean(option.promptText, default = false)
+                    option.value = if (boolValue) {
+                        "on"
+                    } else {
+                        "off"
+                    }
+                    println("  ${option.envVarName} set to '${option.value}'.\n")
+                    if (boolValue)
+                        println (
+                            """
+                            CAUTION: Not intended for use in production environments.
+                            Activates the test profile in the backend service.
+                            When enabled, party ID resolution is derived from the JWT token's party_id claim, overriding the tenant registration's party ID.
+                            This feature is designed for testing purposes to generate a unique AppUser party for each test run and ensure isolation.                            
+                            """.trimIndent()
+                        )
                 }
             }
             System.out.flush()

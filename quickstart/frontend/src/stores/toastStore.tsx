@@ -23,6 +23,7 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
     const timeoutIdRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const hideError = useCallback(() => {
+        setMessage('')
         setShow(false)
         if (timeoutIdRef.current !== null) {
             clearTimeout(timeoutIdRef.current)

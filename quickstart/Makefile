@@ -190,7 +190,9 @@ create-app-install-request: ## Submit an App Install Request from the App User p
 
 .PHONY: restart-backend
 restart-backend: build-backend ## Build and start the application
-	$(call docker-compose, restart backend-service)
+	$(call docker-compose, rm -s -f backend-service)
+	$(call docker-compose, rm -s -f register-app-user-tenant)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
 
 .PHONY: restart-frontend
 restart-frontend: build-frontend ## Build and start the application
@@ -293,16 +295,24 @@ first-run-setup:
 	@exit 2
 
 .PHONY: integration-test
-integration-test: DOCKER_COMPOSE_FILES = -f ./integration-test/compose.yaml
-integration-test: DOCKER_COMPOSE_PROFILES =
 integration-test: ## Run integration tests
+	@docker rm -f environment-init 2> /dev/null || true
+	@if [ "$(TEST_MODE)" = "off" ]; then \
+		echo "To run the integration tests Quickstart must be started in test mode. Please run \"make setup\" and enable TEST_MODE when prompted"; \
+		exit 1; \
+	fi
 	@if [ "$(AUTH_MODE)" = "shared-secret" ]; then \
 		echo "Integration tests supported only for AUTH_MODE=oauth2."; \
 		exit 1; \
 	fi
-	@cd integration-test && npm install
-	$(call docker-compose, run --rm integration-tests)
+	@cd integration-test && \
+	npm install && \
+	npx playwright test
 
+.PHONY: show-integration-test-report
+show-integration-test-report: ## Show the integration test report
+	@cd integration-test && \
+	npx playwright show-report --port=9323 --host=0.0.0.0
 
 # Console
 .PHONY: canton-console
