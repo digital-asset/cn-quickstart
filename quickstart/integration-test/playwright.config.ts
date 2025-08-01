@@ -1,10 +1,14 @@
-import { defineConfig, devices } from '@playwright/test';
+import {defineConfig, devices} from '@playwright/test';
 import * as dotenv from 'dotenv';
-import path from 'path';
+import {existsSync} from 'fs';
+import * as path from 'path';
 
-dotenv.config({ path: path.resolve(__dirname, '.generated.env') });
-if (process.env.DOCKER_RUN === 'true')
-  dotenv.config({ path: path.resolve(__dirname, '.generated.docker.override.env'), override: true });
+const envPath = path.resolve(__dirname, '.generated.env');
+if (!existsSync(envPath)) {
+  throw new Error("Run Quickstart in TEST_MODE please.");
+}
+dotenv.config({path: envPath});
+
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -28,10 +32,11 @@ export default defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ['list'],
-    ['html', { open: 'never' }]
+    ['html', {open: 'never'}]
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
+    browserName: 'chromium',
     actionTimeout: 20_000,
     // default timeout for navigation/waitForNavigation
     navigationTimeout: 30_000,
@@ -40,18 +45,15 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
-  /* Configure projects for major browsers */
   projects: [
     {
       name: 'login',
       testMatch: '**/login.spec.ts',
-      use: { ...devices['Desktop Firefox'] },
     },
 
     {
       name: 'workflow',
       testMatch: '**/workflow.spec.ts',
-      use: { ...devices['Desktop Firefox'] },
       dependencies: ['login'],
     }
   ],

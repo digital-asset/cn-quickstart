@@ -294,10 +294,8 @@ first-run-setup:
 	@echo "Environment file generated, Please re-run your previous command to continue."
 	@exit 2
 
-.PHONY: integration-test-env-init
-integration-test-env-init: DOCKER_COMPOSE_FILES = -f ./integration-test/compose.yaml
-integration-test-env-init: DOCKER_COMPOSE_PROFILES =
-integration-test-env-init: ## Generate environment variables for integration tests
+.PHONY: integration-test
+integration-test: ## Run integration tests
 	@docker rm -f environment-init 2> /dev/null || true
 	@if [ "$(TEST_MODE)" = "off" ]; then \
 		echo "To run the integration tests Quickstart must be started in test mode. Please run \"make setup\" and enable TEST_MODE when prompted"; \
@@ -307,21 +305,6 @@ integration-test-env-init: ## Generate environment variables for integration tes
 		echo "Integration tests supported only for AUTH_MODE=oauth2."; \
 		exit 1; \
 	fi
-	rm -f ./integration-test/.generated.env && \
-	rm -f ./integration-test/.generated.docker.override.env && \
-	$(call docker-compose, run --rm environment-init)
-
-.PHONY: integration-test
-integration-test: DOCKER_COMPOSE_FILES = -f ./integration-test/compose.yaml
-integration-test: DOCKER_COMPOSE_PROFILES =
-integration-test: ## Run integration tests
-integration-test: integration-test-env-init
-	@cd integration-test
-	$(call docker-compose, run --rm integration-tests)
-
-.PHONY: integration-test-local
-integration-test-local: ## Run integration tests
-integration-test-local: integration-test-env-init
 	@cd integration-test && \
 	npm install && \
 	npx playwright test
