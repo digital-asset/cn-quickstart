@@ -392,7 +392,7 @@ ci-create-env-local:
 ci-install-playwright:
 	cd integration-test \
 		&& npm install \
-		&& npx playwright install
+		&& npx playwright install --with-deps
 
 # Run arbitrary command with environment variables set
 ifneq ($(origin COMMAND), undefined)
