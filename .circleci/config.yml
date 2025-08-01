@@ -75,7 +75,14 @@ jobs:
           command: make start
       - quickstart:
           command: make integration-test
-
+      - store_artifacts:
+          when: always
+          path: quickstart/integration-test/playwright-report/
+          destination: playwright-report
+      - store_artifacts:
+          when: always
+          path: quickstart/integration-test/test-results/
+          destination: test-results
 
 workflows:
   version: 2
