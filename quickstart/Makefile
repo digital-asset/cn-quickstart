@@ -389,6 +389,11 @@ ci-create-env-local:
 	echo "PARTY_HINT=quickstart-circleci-1" >> .env.local
 	echo "TEST_MODE=on" >> .env.local
 
+ci-install-playwright:
+	cd integration-test \
+		&& npm install \
+		&& npx playwright install
+
 # Run arbitrary command with environment variables set
 ifneq ($(origin COMMAND), undefined)
 .DEFAULT_GOAL := run-command
