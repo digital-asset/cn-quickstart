@@ -63,7 +63,7 @@ jobs:
           name: add /home/circleci/.daml/bin to $PATH
           command: echo 'export PATH=/home/circleci/.daml/bin:${PATH}' >> $BASH_ENV
       - quickstart:
-          command: ci-install-playwright
+          command: make ci-install-playwright
       - quickstart:
           command: make build
       - quickstart:
