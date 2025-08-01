@@ -18,11 +18,18 @@ plugins {
 
 tasks.register<Exec>("compileDaml") {
     dependsOn("verifyDamlSdkVersion")
+    val sdkVars = computeSdkVariables()
+    val requiredVersion = sdkVars["damlSdkVersion"] as String
     commandLine("daml", "damlc", "build", "--all")
+      .setEnvironment(mapOf("DAML_SDK_VERSION" to requiredVersion))
 }
 
 tasks.register<Exec>("testDaml") {
+    dependsOn("verifyDamlSdkVersion")
+    val sdkVars = computeSdkVariables()
+    val requiredVersion = sdkVars["damlSdkVersion"] as String
     commandLine("daml", "test", "--project-root", "licensing-tests")
+      .setEnvironment(mapOf("DAML_SDK_VERSION" to requiredVersion))
 }
 
 tasks.register<com.digitalasset.transcode.codegen.java.gradle.JavaCodegenTask>("codeGen") {
@@ -149,33 +156,20 @@ tasks.register("verifyDamlSdkVersion") {
 
         val versionLine = output.toString()
             .lineSequence()
-            .firstOrNull { it.contains("default SDK version") }
+            .firstOrNull { it.contains(requiredVersion) }
             ?.trim()
 
-        val installedVersion = versionLine?.replace(Regex("\\s*\\(default SDK version.*\\)\\s*"), "")?.trim()
-
-        if (installedVersion == null) {
+        if (versionLine == null) {
             throw GradleException(
                 """
-                ❌ Could not determine DAML SDK version. 
-                   Is it installed and on your PATH?
-
-                💡 Please try running: make install-daml-sdk
-                """.trimIndent())
-        }
-
-        if (installedVersion != requiredVersion) {
-            throw GradleException(
-                """
-                ❌ DAML SDK version mismatch:
+                ❌ Could not find required DAML SDK version:
                    Required:  $requiredVersion
-                   Installed: $installedVersion
-                
+
                 💡 Please try running: make install-daml-sdk
                 """.trimIndent()
             )
         } else {
-            println("✅ DAML SDK version $installedVersion is installed.")
+            println("✅ DAML SDK version $requiredVersion is installed.")
         }
 
     }
