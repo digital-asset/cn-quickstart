@@ -68,8 +68,8 @@ use; Daml SDK support files; and, IDE project artifacts for Visual Code
 or other IDEs.
 
 `.envrc` This is a part of the Direnv configuration. Specifically it
-activates the Nix environment for the project via a call to `use nix`
-which uses the `shell.nix` file to set up the development environment
+activates the Nix environment for the project via a call to `use flake`
+which uses the `flake.nix` file to set up the development environment
 using nix-shell [9]_.
 
 `LICENSE`, `terms.md`, `Security.md`, and `README.md`. The License is 0BSD.
@@ -90,10 +90,9 @@ stability.
 
 `sdk/` contains the source to this documentation, using reStructuredText.
 
-**Current Dependencies declared in `shell.nix`**
-   - npins
+**Current Dependencies declared in `nix/shell.nix`**
    - jdk21
-   - nodejs_18
+   - nodejs_20
    - typescript
 
 These are in addition to the Nix stdenv environment [11]_.
