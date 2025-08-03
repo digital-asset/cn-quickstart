@@ -44,16 +44,19 @@ When components like validators or participant nodes receive requests, they vali
 Keycloak configuration
 ----------------------
 
+Predefined users each have their own environment file.
+`app-provider`'s `.env` file is `/env/app-provider-auth-on.env`,
+and 
 The default .env configuration includes predefined users in each realm:
 
--  **User "Pat”** (AUTH_APP_PROVIDER_WALLET_ADMIN_USER_NAME=pat)
+-  **User "app-provider”** (AUTH_APP_PROVIDER_WALLET_ADMIN_USER_NAME=app-provider)
 
 -  **UUID**: 553c6754-8879-41c9-ae80-b302f5af92c9
       (AUTH_APP_PROVIDER_WALLET_ADMIN_USER_ID)
 
 AppUser realm:
 
--  **User "Alice"** (AUTH_APP_USER_WALLET_ADMIN_USER_NAME=alice)
+-  **User "AppUser"** (AUTH_APP_USER_WALLET_ADMIN_USER_NAME=app-user)
 
 -  **UUID**: 92a520cb-2f09-4e55-b465-d178c6cfe5e4
       (AUTH_APP_USER_WALLET_ADMIN_USER_ID)

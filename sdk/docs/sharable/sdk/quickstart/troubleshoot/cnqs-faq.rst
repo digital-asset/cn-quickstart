@@ -131,6 +131,16 @@ The gradle daemon has been disabled to prevent parallel processing of transcodeg
 Gradle tasks had been known to create order and concurrency issues which caused files to get cleaned too early.
 Always prefer to use the make commands.
 
+**What Daml SDK version should I use?**
+
+Please refer to the `MainNet <https://docs.dev.sync.global/app_dev/overview/version_information.html>`__ 
+and `TestNet <https://docs.test.sync.global/app_dev/overview/version_information.html>`__ 
+Splice documentation for guidance regarding version information.
+
+**How do I obtain Splice contract DAR files?**
+
+All Splice DARs are available in the `Splice repository <https://github.com/hyperledger-labs/splice/tree/main/daml/dars>`__.
+
 **What version of the Java SDK does the CN Quickstart use?**
 
 The CN App Quickstart uses Java SDK version ``Eclipse Temurin JDK version 21``.
