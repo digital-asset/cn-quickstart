@@ -52,6 +52,8 @@ jobs:
       # After installing browser libraries, we need to ensure that the executor is able to perform an automatic/non-interactive restart
       - NEEDRESTART_MODE: a
       - DEBIAN_FRONTEND: noninteractive
+      - COMPOSE_ANSI: never
+      - COMPOSE_PROGRESS: plain
     steps:
       - checkout
       - nix
