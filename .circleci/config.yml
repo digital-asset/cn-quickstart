@@ -3,6 +3,16 @@
 
 version: 2.1
 
+# the default pipeline parameters, which will be updated according to
+# the results of the path-filtering orb
+parameters:
+  run-integration-test:
+    type: boolean
+    default: false
+  run-docs-validation:
+    type: boolean
+    default: false
+
 commands:
   nix:
     steps:
@@ -87,6 +97,17 @@ jobs:
           when: always
           path: quickstart/integration-test/test-results/
           destination: test-results
+
+  validate-documentation:
+    resource_class: small
+    machine:
+      image: ubuntu-2404:2024.11.1
+    steps:
+      - checkout
+      - nix
+    run:
+      command: echo "place holder for docs validation"
+
 
 workflows:
   version: 2
