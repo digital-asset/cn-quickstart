@@ -3,8 +3,7 @@
 
 version: 2.1
 
-# the default pipeline parameters, which will be updated according to
-# the results of the path-filtering orb
+# the default pipeline parameters, which will be updated according to the results of the path-filtering orb in setup:
 parameters:
   run-integration-test:
     type: boolean
@@ -53,15 +52,16 @@ commands:
             && << parameters.command >>
 
 jobs:
-  test:
+  integration-test:
     resource_class: xlarge
     machine:  
       image: ubuntu-2404:2024.11.1
     environment:
       - PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: true
-      # After installing browser libraries, we need to ensure that the executor is able to perform an automatic/non-interactive restart
+      # After installing browser libraries, we need to ensure that the executor is able to perform an automatic/non-interactive restart:
       - NEEDRESTART_MODE: a
       - DEBIAN_FRONTEND: noninteractive
+      # Disable ANSI output for docker compose to reduce noise in output:
       - COMPOSE_ANSI: never
       - COMPOSE_PROGRESS: plain
     steps:
@@ -105,14 +105,18 @@ jobs:
     steps:
       - checkout
       - nix
-    run:
-      command: echo "place holder for docs validation"
+      - run:
+          command: echo "place holder for docs validation"
 
 
 workflows:
-  version: 2
-  test:
+  integration-test:
+    when: << pipeline.parameters.run-integration-test >>
     jobs:
-      - test:
+      - integration-test:
           context:
             - artifactory-readonly
+  documentation:
+    when: << pipeline.parameters.run-docs-validation >>
+    jobs:
+      - validate-documentation
