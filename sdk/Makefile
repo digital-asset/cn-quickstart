@@ -5,7 +5,7 @@ PREVIEW_DIR   ?= .preview
 
 # Poetry provided via nix without polluting ../nix/shell.nix
 POETRY        ?= nix run --extra-experimental-features 'nix-command flakes' 'nixpkgs\#poetry' --
-
+PYTHON        ?= nix run --extra-experimental-features 'nix-command flakes' 'nixpkgs\#python3' --
 
 ###############################################################################
 ### Python/Sphinx Environment Setup ###########################################
@@ -38,7 +38,7 @@ render-preview: poetry-install clean-preview-dir
 host-preview: ## start http server to enable viewing of render-preview output
 host-preview: render-preview
 	@echo "Point your browser to http://localhost:8989/html/ to preview user docs... hit ctrl+c to exit"
-	python3 -m http.server 8989 -d ${PREVIEW_DIR}
+	$(PYTHON) -m http.server 8989 -d ${PREVIEW_DIR}
 
 
 .PHONY: clean-all
