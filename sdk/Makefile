@@ -1,7 +1,11 @@
 # Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 
 # Preview path:
-PREVIEW_DIR           ?= .preview
+PREVIEW_DIR   ?= .preview
+
+# Poetry provided via nix without polluting ../nix/shell.nix
+POETRY        ?= nix run --extra-experimental-features 'nix-command flakes' 'nixpkgs\#poetry' --
+
 
 ###############################################################################
 ### Python/Sphinx Environment Setup ###########################################
@@ -12,8 +16,8 @@ poetry-install: .venv
 poetry-install: ## use poetry to install python modules
 
 .venv:
-	poetry install --no-root
-	poetry debug info
+	$(POETRY) install --no-root
+	$(POETRY) debug info
 
 .PHONY: clean-venv
 clean-venv-dir:
@@ -29,7 +33,7 @@ clean-preview-dir: ## remove the .preview/ directory
 render-preview: ## use sphinx to render html version of docs/user/ documentation
 render-preview: poetry-install clean-preview-dir
 	mkdir -pv ${PREVIEW_DIR}
-	poetry run sphinx-build -M html ./docs/ ./${PREVIEW_DIR} --conf-dir .sphinx/ --fresh-env --fail-on-warning
+	$(POETRY) run sphinx-build -M html ./docs/ ./${PREVIEW_DIR} --conf-dir .sphinx/ --fresh-env --fail-on-warning
 
 host-preview: ## start http server to enable viewing of render-preview output
 host-preview: render-preview

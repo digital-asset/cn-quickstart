@@ -51,6 +51,21 @@ commands:
             cd quickstart \
             && << parameters.command >>
 
+
+  docs:
+    parameters:
+      command:
+        type: string
+        description: command to run in docs directory
+        default: ''
+    steps:
+      - run:
+          name: docs/<< parameters.command >>
+          command: |
+            cd sdk \
+            && << parameters.command >>
+
+
 jobs:
   integration-test:
     resource_class: xlarge
@@ -105,8 +120,11 @@ jobs:
     steps:
       - checkout
       - nix
-      - run:
-          command: echo "place holder for docs validation"
+      - docs:
+          command: make poetry-install
+      - docs:
+          command: make render-preview
+
 
 
 workflows:
