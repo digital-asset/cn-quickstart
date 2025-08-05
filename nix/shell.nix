@@ -1,15 +1,12 @@
 { pkgs, ci }:
 let
   inherit (pkgs) stdenv;
-  requiredPackages = with pkgs; ([
-    # these packages are required both in CI and for local development
+  requiredPackages = with pkgs; ([ # these packages are required both in CI and for local development
     jdk21
     nodejs_20
     typescript
-  ] ++ (if ci then [
-    # these packages should only be installed on CI
-  ] else [
-    # these packages are only installed on developer machines locally
+  ] ++ (if ci then [ # these packages should only be installed on CI
+  ] else [ # these packages are only installed on developer machines locally
   ]));
 in
 pkgs.mkShell {

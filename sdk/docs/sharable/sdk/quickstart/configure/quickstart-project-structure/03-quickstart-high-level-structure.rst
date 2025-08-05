@@ -81,9 +81,9 @@ Nix, this directory can be made the toplevel directory for your project
 — although you will then need to manage your binary dependencies
 manually. The next section covers this directory in detail.
 
-`shell.nix` [10]_ and `nix/` contain the Nix configuration. Familiarity with
-shell.nix is essential, as it manages new dependencies. Note
-`nix/sources.json` pins the nix release to ensure determinacy across
+`flake.nix` [10]_ and `nix/` contain the Nix configuration. Familiarity with
+flake.nix is essential, as it manages new dependencies. Note
+`flake.nix` pins the nix release to ensure determinacy across
 builds. You will want to ensure this gets updated at an appropriate
 cadence that balances staying up to date with development environment
 stability.
