@@ -37,3 +37,6 @@ gradle-app.setting
 
 # MacOS
 .DS_Store
+
+# direnv
+.direnv/

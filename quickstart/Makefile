@@ -382,6 +382,26 @@ update-env-sdk-runtime-version: ## Helper to update DAML_RUNTIME_VERSION in .env
 	sed -i.bak 's/^DAML_RUNTIME_VERSION=.*/DAML_RUNTIME_VERSION='"$$VERSION/" .env; \
 	echo "Updated DAML_RUNTIME_VERSION to $$VERSION"
 
+## Conditional targets for CI/CD, only available if CI == true
+ifeq ($(CI),true)
+
+# Populate .env.local for CI/CD purposes
+.PHONY: ci-create-env-local
+ci-create-env-local:
+	echo "OBSERVABILITY_ENABLED=true" > .env.local
+	echo "AUTH_MODE=oauth2" >> .env.local
+	echo "PARTY_HINT=quickstart-circleci-1" >> .env.local
+	echo "TEST_MODE=on" >> .env.local
+
+# Install playwright dependencies in CI/CD
+.PHONY: ci-install-playwright
+ci-install-playwright:
+	cd integration-test \
+		&& npm ci \
+		&& npx playwright install chromium --with-deps
+
+endif
+
 # Run arbitrary command with environment variables set
 ifneq ($(origin COMMAND), undefined)
 .DEFAULT_GOAL := run-command

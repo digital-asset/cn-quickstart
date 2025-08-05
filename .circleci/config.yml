@@ -1,20 +1,23 @@
-# Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 version: 2.1
 
-jobs:
-  test:
-    resource_class: small
-    machine:  
-      image: ubuntu-2204:current
-    steps:
-      - checkout
-      - run:
-          command: echo "Hello CI/CD!"
+# enable setup dynamic configuration:
+setup: true
+
+# use the path-filtering orb to control jobs based on the path of an updated set of files
+# https://circleci.com/developer/orbs/orb/circleci/path-filtering
+orbs:
+  path-filtering: circleci/path-filtering@2.0.2
 
 workflows:
-  version: 2
-  test:
+  setup:
     jobs:
-      - test
+      # the path-filtering/filter job determines pipeline parameter values based on files changed:
+      - path-filtering/filter:
+          base-revision: main
+          name: check-updated-files
+          # mapping structure: <regex path-to-test> <parameter-to-set> <value-of-pipeline-parameter>
+          mapping: |
+            quickstart/.* run-integration-test true
+            sdk/.* run-docs-validation true
+          # this is the path of the configuration we should trigger once path filtering complete.
+          config-path: .circleci/workflow_config.yml
