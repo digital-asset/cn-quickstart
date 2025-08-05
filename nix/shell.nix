@@ -10,11 +10,7 @@ let
     # these packages should only be installed on CI
   ] else [
     # these packages are only installed on developer machines locally
-    circleci-cli
-  ])) ++ (lib.optionals stdenv.isDarwin [
-          pkgs.libiconv
-          pkgs.darwin.apple_sdk.frameworks.Security
-          ]);
+  ]));
 in
 pkgs.mkShell {
   packages = requiredPackages;
