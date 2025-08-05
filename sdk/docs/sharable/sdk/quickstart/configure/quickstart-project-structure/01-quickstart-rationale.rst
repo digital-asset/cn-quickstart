@@ -1,25 +1,11 @@
 Project overview
 ================
 
-The Canton Network (CN) Quickstart is not a "framework" or "platform". 
-It is a snapshot of a CN project that has spent several sprints creating developer, test, and deployment infrastructure and is transitioning to feature delivery.
+The Canton Network (CN) Quickstart is scaffolding to support development efforts to build, test, and deploy CN applications.
 
-Developer infrastructure and project logistics are more transferable between projects than specific feature delivery. 
-The goal of CN Quickstart is to act as a "bootstrap scaffold", 
-to provide the benefits of early investment in such project infrastructure to every CN Application development team on the network.
+We've resolved the infrastructure problems that every CN application must solve.
+Use the CN Quickstart Application so you and your team can focus on building your application, instead of build systems, deployment configurations, and testing infrastructure.
 
-As a guide to Quickstart, the treatment of supporting topics is necessarily shallow.
-In addition to the online documentation [1]_,
-Digital Asset provides a number of free courses [2]_ covering the Daml
-Language, the Canton Ledger, and architectural considerations. 
-In particular the Technical Solution Architect path [3]_ provides a lot of
-useful background to this guide.
-
-.. [1]
-   https://docs.daml.com/ and https://dev.network.canton.global/index.html
-
-.. [2]
-   https://www.digitalasset.com/training-and-certification
-
-.. [3]
-   https://daml.talentlms.com/catalog/info/id:160
+If you need support beyond the scope of this and other Quickstart guides, 
+consider the online `Daml documentation <https://docs.daml.com/>`__ and `free courses <https://www.digitalasset.com/training-and-certification>`__ covering the Daml Language, the Canton Ledger, and architectural considerations. 
+In particular the `Technical Solution Architect path <https://daml.talentlms.com/catalog/info/id:160>`__ provides useful background to this guide.

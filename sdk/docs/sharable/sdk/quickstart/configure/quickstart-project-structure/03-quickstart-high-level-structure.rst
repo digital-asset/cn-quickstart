@@ -6,7 +6,6 @@ The Canton Quickstart project builds on the ``LocalNet`` docker compose local te
 Specifically, Quickstart uses a module convention to extend the default Validator and Super-Validator provided by Splice with authentication,
 observability, PQS, and application configurations.
 
-For simplicity, Quickstart restricts itself to what is possible with ``docker-compose``. 
 This is sufficient for local development, debugging, and testing; 
 however, for production you should consider if the dynamic resource management, 
 high-availability support provided by Kubernetes is required.
@@ -26,15 +25,15 @@ Top level
 
 Most of the top-level project directory is associated with supporting a portable, consistent cross-platform development environment. 
 It does this using the package manager
-`Nix <https://nixos.org/download/>`__\  [5]_,
-`Direnv <https://direnv.net/>`__\  [6]_, and `Docker Compose <https://docs.docker.com/compose/>`__\  [7]_. 
+`Nix <https://nixos.org/download/>`__,
+`Direnv <https://direnv.net/>`__, and `Docker Compose <https://docs.docker.com/compose/>`__.
 The top-level setup ensures a consistent and repeatable dev, build, and test regardless of choice of environment.
 
 The current toplevel directory contents for a fresh checkout include:
 
 .. code-block:: text
 
-   √ % ls -Algo
+   % ls -Algo
    total 60
    -rw-r--r--  1   427 Jul  2 16:38 .envrc
    drwxr-xr-x 15   480 Jul  7 19:15 .git
@@ -56,7 +55,7 @@ In particular, ``.gitignore`` is configured to exclude build artifacts for the c
 Daml SDK support files; and, IDE project artifacts for Visual Code or other IDEs.
 
 ``.envrc`` This is a part of the Direnv configuration. 
-Specifically it activates the Nix environment for the project via a call to ``use nix`` which uses the ``shell.nix`` file to set up the development environment using nix-shell [8]_.
+Specifically it activates the Nix environment for the project via a call to ``use nix`` which uses the ``shell.nix`` file to set up the development environment using `nix-shell <https://nixos.wiki/wiki/Development_environment_with_nix-shell>`__.
 
 ``LICENSE``, ``terms.md``, ``Security.md``, and ``README.md``. 
 The License is 0BSD.
@@ -68,7 +67,7 @@ If you do not wish to use Nix, this directory can be made the top-level director
 — although, you will need to manage your binary dependencies manually. 
 The next section covers this directory in detail.
 
-``shell.nix`` [9]_ and ``nix/`` contain the Nix configuration. 
+`shell.nix <https://nix.dev/tutorials/first-steps/declarative-shell.html>`__ and ``nix/`` contain the Nix configuration. 
 Familiarity with shell.nix is essential, as it manages new dependencies. 
 Note ``nix/sources.json`` pins the nix release to ensure determinacy across builds. 
 You will want to ensure this gets updated at an appropriate cadence that balances staying up to date with development environment stability.
@@ -81,22 +80,4 @@ You will want to ensure this gets updated at an appropriate cadence that balance
    - nodejs_18
    - typescript
 
-These are in addition to the Nix stdenv environment [10]_.
-
-.. [5]
-   https://nixos.org/download/
-
-.. [6]
-   https://direnv.net/
-
-.. [7]
-   https://docs.docker.com/compose/
-
-.. [8]
-   https://nixos.wiki/wiki/Development_environment_with_nix-shell
-
-.. [9]
-   https://nix.dev/tutorials/first-steps/declarative-shell.html
-
-.. [10]
-   https://nixos.org/manual/nixpkgs/stable/#sec-tools-of-stdenv
+These are in addition to the `Nix stdenv environment <https://nixos.org/manual/nixpkgs/stable/#sec-tools-of-stdenv>`__.
