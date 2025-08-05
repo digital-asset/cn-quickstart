@@ -3,10 +3,7 @@ let
   inherit (pkgs) stdenv;
   requiredPackages = with pkgs; ([
     # these packages are required both in CI and for local development
-    bashInteractive
-    gnumake
     jdk21
-    # nodejs_18
     nodejs_20
     typescript
   ] ++ (if ci then [
