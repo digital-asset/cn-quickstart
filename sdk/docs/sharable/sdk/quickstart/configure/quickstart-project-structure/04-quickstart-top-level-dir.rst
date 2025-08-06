@@ -116,13 +116,13 @@ and the suffix is the usual four-digit port number associated with the relevant 
 
    * - Suffix
      - Service
-   * - `5001`
+   * - `901`
      - Participant Ledger API Port
-   * - `5002`
+   * - `902`
      - Participant Admin API Port
-   * - `5003`
+   * - `903`
      - Validator Admin API Port
-   * - `7575`
+   * - `975`
      - Participant JSON API Port
    * - `5432`
      - Postgres Port
@@ -130,8 +130,8 @@ and the suffix is the usual four-digit port number associated with the relevant 
 For example, the ``JSON API Port`` for the Application User is ``27575``,
 while the ``Ledger API Port`` for the Super Validator is ``25001``.
 
-Important security note regarding port mappings
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Port mappings security
+~~~~~~~~~~~~~~~~~~~~~~
 
 The port mappings for ``LocalNet`` expose the ``AdminAPI`` port and the ``Postgres`` port, 
 both of which would normally be a security risk. 
@@ -141,6 +141,7 @@ However, having direct access to these ports when running on a local developer's
 The port suffixes are defined as environment variables.
 For any port mappings you wish to disable, you can find and remove the relevant Docker ``port``: entry in the appropriate file.
 To name a few ports, the default setup exposes:
+
 - **Ledger API ports** (2901, 3901, 4901): Canton Ledger API access
 - **Admin API ports** (2902, 3902, 4902): system administration
 - **Validator API ports** (2903, 3903, 4903): status monitoring
