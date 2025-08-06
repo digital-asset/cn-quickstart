@@ -51,7 +51,6 @@ commands:
             cd quickstart \
             && << parameters.command >>
 
-
   docs:
     parameters:
       command:
@@ -64,6 +63,20 @@ commands:
           command: |
             cd sdk \
             && << parameters.command >>
+
+  docs-setup:
+    steps:
+      - restore_cache:
+          name: venv restore cache
+          keys:
+            - venv-qs-{{ checksum "./sdk/poetry.lock" }}-{{ checksum "./sdk/pyproject.toml"}}-{{ checksum "./sdk/Makefile" }}
+      - docs:
+          command: make poetry-install
+      - save_cache:
+          name: venv save cache
+          key: venv-qs-{{ checksum "./sdk/poetry.lock" }}-{{ checksum "./sdk/pyproject.toml"}}-{{ checksum "./sdk/Makefile" }}
+          paths:
+            - ./sdk/.venv/
 
 
 jobs:
@@ -120,8 +133,7 @@ jobs:
     steps:
       - checkout
       - nix
-      - docs:
-          command: make poetry-install
+      - docs-setup
       - docs:
           command: make render-preview
 
