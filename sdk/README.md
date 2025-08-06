@@ -16,11 +16,13 @@ $> make help
 Usage: make [target]
 
 Available targets:
-  poetry-install       use poetry to install python modules
+  clean-all            run all clean targets
   clean-preview-dir    remove the .preview/ directory
-  render-preview       use sphinx to render html version of docs/user/ documentation
-  host-preview         start http server to enable viewing of render-preview output
+  clean-venv-dir       remove python virtual environment directory
   help                 Show this help message
+  host-preview         start http server to enable viewing of render-preview output
+  poetry-install       use poetry to install python modules
+  render-preview       use sphinx to render html version of docs/user/ documentation
 ```
 
 ### Rendering and HTML Preview
