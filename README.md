@@ -22,11 +22,11 @@ Technology and design decisions are ultimately up to you. Please be aware that t
 ## Docs and guides
 
 You can find Quickstart documentation in the Canton Network documentation portal.
-- [Quickstart Installation](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation)
-- [Exploring The Demo](https://docs.digitalasset.com/build/3.3/quickstart/operate/explore-the-demo)
-- [Project Structure](https://docs.digitalasset.com/build/3.3/quickstart/configure/project-structure-overview)
-- [FAQ](https://docs.digitalasset.com/build/3.3/quickstart/troubleshoot/cnqs-faq)
-- [Observability and Troubleshooting Overview](https://docs.digitalasset.com/build/3.3/quickstart/observe/observability-troubleshooting-overview)
+- [Quickstart Installation](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation.html)
+- [Exploring The Demo](https://docs.digitalasset.com/build/3.3/quickstart/operate/explore-the-demo.html)
+- [Project Structure](https://docs.digitalasset.com/build/3.3/quickstart/configure/project-structure-overview.html)
+- [FAQ](https://docs.digitalasset.com/build/3.3/quickstart/troubleshoot/cnqs-faq.html)
+- [Observability and Troubleshooting Overview](https://docs.digitalasset.com/build/3.3/quickstart/observe/observability-troubleshooting-overview.html)
 
 ### Technical documentation
 
