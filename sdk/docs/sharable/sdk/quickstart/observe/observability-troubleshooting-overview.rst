@@ -4,11 +4,10 @@ Canton Network quickstart observability & troubleshooting overview
 
 .. wip::
 
-.. Note:: The screenshots in this guide are currently taken from
-   multiple sessions over multiple days and therefore are inconsistent
-   with each other (and in some places the text).
-   This will be rectified once some of the updates to Quickstart
-   currently in flight are committed.
+.. Note:: The screenshots in this guide are taken from
+   multiple sessions and are inconsistent
+   with each other.
+   This will be rectified once some of the updates are committed.
 
 **Contents**
 
@@ -59,7 +58,7 @@ The LocalNet configuration
 --------------------------
 
 The Quickstart runtime configuration is defined in ``.env.local``, 
-which allows each developer the option to bring up a local deployment of the Observability Stack. 
+which allows the option to bring up a local deployment of the Observability Stack. 
 This file can be created using ``$ make setup``,
 which wraps the command ``$ ./gradlew configureProfiles --no-daemon --console=plain --quiet``,
 or can be edited manually to set environment variables ``LOCALNET_ENABLED`` and ``OBSERVABILITY_ENABLED`` to ``true`` or ``false`` as desired.
@@ -166,8 +165,7 @@ For example: if you connect to the ``postgres-splice-app-provider``
 container (default username ``cnadmin``, dbname ``scribe``, and password
 ``supersafe``; then you can use the SQL interface to PQS to examine the
 app-provider’s participant’s local ledger. The SQL API to PQS is
-documented in the daml documentation
-(`https://docs.daml.com/query/pqs-user-guide.html# <https://docs.daml.com/query/pqs-user-guide.html>`__).
+documented in the `daml documentation <https://docs.daml.com/query/pqs-user-guide.html>`__.
 
 Interactive debugger
 ~~~~~~~~~~~~~~~~~~~~
@@ -401,10 +399,10 @@ immediately display the contract in Daml Shell:
    ╙───────────────────────────────────────────────────────────────────────────╜
    postgres-splice-app-provider:5432/scribe 3f → 48>
 
-If the problem is in fact a bug in your smart contract, then exploring
-the transaction and related provenance within Daml Shell and utilizing
+If the problem is a bug in your smart contract, then exploring
+the transaction and related provenance within Daml Shell and using
 the Daml IDE to synthesize and rerun the relevant transactions will
-normally be sufficient to identify the issue. However, if only due to
+normally identify the issue. However, if only due to
 the comparative lines of code, the root cause of most issues will be off
 ledger. Consequently, significant value in these identifiers derives
 from correlating these identifiers with the consolidated logs and other
