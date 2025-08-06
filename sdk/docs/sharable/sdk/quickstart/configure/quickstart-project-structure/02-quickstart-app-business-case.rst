@@ -9,9 +9,10 @@ In the app, providers sell time-based access to their services.
 Users pay with Canton Coin (CC) and manage payments through a Canton Wallet. 
 
 The app involves four parties:
+
 - The **Application Provider** who sells licenses.
 - The **Application User** who buys licenses.
-- The underlying **Amulet** token system (`Canton Coin <https://www.canton.network/blog/canton-coin-a-canton-network-native-payment-application>`__in this case) that handles payments.
+- The underlying **Amulet** token system that handles payments, `Canton Coin <https://www.canton.network/blog/canton-coin-a-canton-network-native-payment-application>`__ by default.
 - The **DSO Party**, the Decentralized Synchronizer Operations Party who operates the Amulet payment system. In CN, this is the Super Validators.
 
 Core business operations
