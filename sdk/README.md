@@ -1,7 +1,8 @@
 ## Documentation Tooling
 
 This directory contains a [Makefile](Makfile) that provides the following functionality:
-- streamline the installation of sphinx and it's dependencies with poetry
+
+- streamline the installation of sphinx and it's dependencies via Poetry
 - run sphinx to validate and render rst files in to html
 - run an http server to preview the rendered html files
 
@@ -10,15 +11,27 @@ This directory contains a [Makefile](Makfile) that provides the following functi
 
 Below covers the provide make targets and what they cover:
 
+```
+$> make help
+Usage: make [target]
 
-### Conversion and Preview
-Convert rst to html to validate docs are rendered correctly:
+Available targets:
+  poetry-install       use poetry to install python modules
+  clean-preview-dir    remove the .preview/ directory
+  render-preview       use sphinx to render html version of docs/user/ documentation
+  host-preview         start http server to enable viewing of render-preview output
+  help                 Show this help message
+```
+
+### Rendering and HTML Preview
+
+Convert from RST to HTML to validate documentation is formatted and renders correctly run:
 
 ```shell
 make render-preview
 ```
 
-Runs render-preview target and start http server to preview documentation in your browser:
+If you want to preview the documentation in your browser, run:
 
 ```shell
 make host-preview
