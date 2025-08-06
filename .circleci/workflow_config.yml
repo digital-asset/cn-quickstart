@@ -1,0 +1,122 @@
+# Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+version: 2.1
+
+# the default pipeline parameters, which will be updated according to the results of the path-filtering orb in setup:
+parameters:
+  run-integration-test:
+    type: boolean
+    default: false
+  run-docs-validation:
+    type: boolean
+    default: false
+
+commands:
+  nix:
+    steps:
+      - run:
+          name: Nix preparation
+          command: .circleci/scripts/nix_prep.sh
+      - restore_cache:
+          name: Nix restore cache
+          keys:
+            - nix-qs-{{ checksum "/home/circleci/nix/cache-keys/orb-version" }}-{{ checksum "/home/circleci/nix/cache-keys/nix-checksums" }}
+            - nix-qs-{{ checksum "/home/circleci/nix/cache-keys/orb-version" }}
+      - run:
+          name: Nix Setup
+          command: .circleci/scripts/nix_setup.sh
+      - save_cache:
+          name: Nix save cache
+          key: nix-qs-{{ checksum "/home/circleci/nix/cache-keys/orb-version" }}-{{ checksum "/home/circleci/nix/cache-keys/nix-checksums" }}
+          paths:
+            - /home/circleci/.config/nix
+            - /home/circleci/.local/state
+            - /home/circleci/.nix-bashrc
+            - /home/circleci/.nix-channels
+            - /home/circleci/.nix-defexpr
+            - /home/circleci/.nix-profile
+            - /nix
+
+  quickstart:
+    parameters:
+      command:
+        type: string
+        description: command to run in quickstart directory
+        default: ''
+    steps:
+      - run:
+          name: quickstart/<< parameters.command >>
+          command: |
+            cd quickstart \
+            && << parameters.command >>
+
+jobs:
+  integration-test:
+    resource_class: xlarge
+    machine:  
+      image: ubuntu-2404:2024.11.1
+    environment:
+      - PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: true
+      # After installing browser libraries, we need to ensure that the executor is able to perform an automatic/non-interactive restart:
+      - NEEDRESTART_MODE: a
+      - DEBIAN_FRONTEND: noninteractive
+      # Disable ANSI output for docker compose to reduce noise in output:
+      - COMPOSE_ANSI: never
+      - COMPOSE_PROGRESS: plain
+    steps:
+      - checkout
+      - nix
+      - run:
+          name: Configuration authentication for JFrog
+          command: .circleci/scripts/project_auth.sh
+      - quickstart:
+          command: make help
+      - quickstart:
+          command: make ci-create-env-local
+      - quickstart:
+          command: make install-daml-sdk
+      - run:
+          name: add /home/circleci/.daml/bin to $PATH
+          command: echo 'export PATH=/home/circleci/.daml/bin:${PATH}' >> $BASH_ENV
+      - quickstart:
+          command: make ci-install-playwright
+      - quickstart:
+          command: make build
+      - quickstart:
+          command: make start
+      - quickstart:
+          command: make integration-test
+      - store_test_results:
+          path: quickstart/integration-test/results.xml
+      - store_artifacts:
+          when: always
+          path: quickstart/integration-test/playwright-report/
+          destination: playwright-report
+      - store_artifacts:
+          when: always
+          path: quickstart/integration-test/test-results/
+          destination: test-results
+
+  validate-documentation:
+    resource_class: small
+    machine:
+      image: ubuntu-2404:2024.11.1
+    steps:
+      - checkout
+      - nix
+      - run:
+          command: echo "place holder for docs validation"
+
+
+workflows:
+  integration-test:
+    when: << pipeline.parameters.run-integration-test >>
+    jobs:
+      - integration-test:
+          context:
+            - artifactory-readonly
+  documentation:
+    when: << pipeline.parameters.run-docs-validation >>
+    jobs:
+      - validate-documentation

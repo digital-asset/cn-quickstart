@@ -36,6 +36,9 @@ Canton Network quickstart observability & troubleshooting overview
    `Correlated Logs and traces using correlation
    identifiers <#correlated-logs-and-traces-using-correlation-identifiers>`__
 
+It's assumed that you have read the quickstart getting started guide and explore the demo.
+If you haven't, we strongly encourage those documents to establish a baseline understanding of observability.
+
 Overview of observability
 =========================
 
@@ -115,7 +118,7 @@ Daml Shell
 ~~~~~~~~~~
 
 Daml Shell is a terminal application that provides interactive local ledger inspection on top of PQS. 
-Quickstart is configured to launch Daml Shell in a docker container and is configured to connect to the included
+Quickstart is configured to launch Daml Shell in a Docker container and is configured to connect to the included
 application provider’s PQS instance. 
 This is easiest to access via the top-level project scripts accessed via ``make`` from ``quickstart/``. 
 To see this in action, build and start the quickstart app then:
@@ -137,13 +140,13 @@ detail of the ``AppInstallRequest`` contract on the ledger.
 Grafana
 ~~~~~~~
 
-The Grafana interface is accessible via its web interface which is port-mapped to http://localhost:3030/, 
+Grafana is accessible via its web interface, which is port-mapped to http://localhost:3030/, 
 and can be opened in the current browser from the command line using ``make open-observe``.
 
-It is recommended that the focus of your debugging should be on using the trace and log facilities provided by Grafana and ledger inspection using Daml Shell. 
-Ensuring that the exported logs and traces are sufficient to support debugging during development also provides assurance that they will be sufficient to support diagnostics in production.
+Your debugging should focus on using Grafana's trace and log facilities, as well as ledger inspection via Daml Shell.
+If you make sure that your exported logs and traces are sufficient to support debugging during development, they are more likely to support diagnostics in production, as well.
 
-There is additional access configured into the quickstart that can assist with debugging on ``LocalNet``. 
+There is additional access configured into the Quickstart that can assist with debugging on ``LocalNet``. 
 Use the same diagnostic tools for development as you will for production. 
 If you add a log line that allows you to identify and fix a bug in development, 
 then keeping it around at ``trace`` or ``debug`` log levels increases your operational readiness. 
@@ -185,17 +188,16 @@ If you review the ``compose.yaml`` file and examine the configuration for backen
       - "5055:5005"
 
 
-This enables remote debugging of the java component backend in the user application (backend-service). 
+This enables remote debugging of the Java component backend in the user application (backend-service). 
 You can use this to connect an IDE Debugger to the service at runtime if required. 
-Keep in mind that we recommend your first resort be Grafana and the consolidated logs in Loki. 
-This keeps the system debugable in production.
+We recommend Grafana as your first resort, along with the consolidated logs in Loki.
+This keeps the system debuggable in production.
 
 Observability and tracing
 =========================
 
 Faulty distributed systems can be notoriously hard to diagnose.
-Quickstart provides, at the start of a project, 
-the sort of observability and diagnostics facilities often only developed toward the end of the project. 
+From the start of a project, Quickstart provides the sort of observability and diagnostics facilities that are otherwise often only developed toward the end.
 Simplifying diagnostics for new Canton Network Applications from the outset of each project is one of the motivations behind the development of Quickstart.
 
 The links in the overview include the official user and reference documentation for the various tools included in Quickstart. 
@@ -205,7 +207,7 @@ it is hoped the following tour of the capabilities configured into Quickstart ca
 Correlation identifiers
 -----------------------
 
-Inspecting any distributed system invariably begins by correlating identifiers—Canton is no different in that regard. 
+Inspecting Canton begins by correlating identifiers, much like inspecting any other distributed system. 
 Canton can accept and/or generate a number of identifiers suitable for correlating across both time, various nodes, and the evolving state of the ledger.
 
 A few of the key identifiers to be aware of are:
@@ -253,7 +255,7 @@ A few of the key identifiers to be aware of are:
 
 
 The goal of the observability configuration is to make it easier to navigate through the provenance of any state or event in the wider system. 
-Any or all of these identifiers can be used to correlate a combination of logs, metrics, state. 
+Any or all of these identifiers can be used to correlate a combination of logs, metrics, and state. 
 Three of these in particular are intended to be set to corresponding business identifiers derived from your specific business domain: application-id, workflow-id, and command-id.
 
 Navigation is enabled by the use of structured logs from as many components as possible [9]_. 

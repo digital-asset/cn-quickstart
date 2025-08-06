@@ -1,283 +1,197 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-import {test, expect, BrowserContext, Page} from '@playwright/test';
-import {getVisibleLocator, createAppInstallRequests} from './helpers';
-
-// Reused runtime values
-const APP_PROVIDER_LOGIN_URL = 'http://app-provider.localhost:3000/login';
-const APP_PROVIDER_APP_INSTALLS_URL = 'http://app-provider.localhost:3000/app-installs';
-const APP_PROVIDER_LICENSES_URL = 'http://app-provider.localhost:3000/licenses';
-const WALLET_URL = 'http://wallet.localhost:2000/';
-const DEFAULT_PASSWORD = 'abc123';
-const REQUEST_STATUS = 'REQUEST';
-const INSTALL_STATUS = 'INSTALL';
-const TEST_RENEWAL_REASON = 'test renewal reason';
+import {test} from '../fixtures/workflow';
+import {Status, Button as InstallButton} from "../pages/sections/appInstalls.tab";
+import {Button as LicenseButton, Link as LicenseLink} from "../pages/sections/licenses.tab";
+import {Button as LicenseModalButton} from "../pages/sections/licenses.modal";
 
 test.describe('AppInstall and Licensing workflow', () => {
-    test.describe.configure({mode: 'serial'});
 
-    let providerContext: BrowserContext;
-    let providerPage: Page;
+  test('Users can see newly added AppInstallRequest', async ({requestTag, provider, user}) => {
+    await provider.installs.goto();
+    await provider.installs.assertMatchingRowCountIs(1, provider.installs.findRowBy(requestTag));
+    await user.installs.goto();
+    await user.installs.assertMatchingRowCountIs(1, user.installs.findRowBy(requestTag));
+  });
 
-    let userContext: BrowserContext;
-    let userPage: Page;
+  test('AppProvider can accept an AppInstallRequest', async ({requestTag, provider}) => {
+    await provider.installs.goto();
+    await provider.installs.withRowMatching(requestTag, async () => {
+      await provider.installs.assertStatus(Status.Request);
+      await provider.installs.clickButton(InstallButton.Accept);
+      await provider.installs.assertStatus(Status.Install);
+    });
+  });
 
-    test.beforeAll(async ({browser, request}) => {
-        providerContext = await browser.newContext();
-        providerPage = await providerContext.newPage();
+  test('AppProvider can reject an AppInstallRequest', async ({requestTag, provider}) => {
+    await provider.installs.goto();
+    await provider.installs.withRowMatching(requestTag, async () => {
+      await provider.installs.assertStatus(Status.Request);
+      await provider.installs.clickButton(InstallButton.Reject);
+      await provider.installs.assertNoMatchingRowExists();
+    });
+  });
 
-        userContext = await browser.newContext();
-        userPage = await userContext.newPage();
-        await createAppInstallRequests(request);
+  test('AppProvider can cancel an AppInstall', async ({requestTag, provider}) => {
+    await provider.installs.goto();
+    await provider.installs.withRowMatching(requestTag, async () => {
+      await provider.installs.assertStatus(Status.Request);
+      await provider.installs.clickButton(InstallButton.Accept);
+      await provider.installs.assertStatus(Status.Install);
+      await provider.installs.clickButton(InstallButton.Cancel);
+      await provider.installs.assertNoMatchingRowExists();
+    });
+  });
+
+  test('AppUser can see accepted AppInstall', async ({requestTag, provider, user}) => {
+    await provider.installs.goto();
+    await provider.installs.withRowMatching(requestTag, async () => {
+      await provider.installs.clickButton(InstallButton.Accept);
+      await provider.installs.assertStatus(Status.Install);
+    });
+    await user.installs.goto();
+    await user.installs.assertMatchingRowCountIs(1, user.installs.findRowBy(requestTag));
+  });
+
+  test('AppUser can cancel an AppInstall', async ({requestTag, provider, user}) => {
+    await provider.installs.goto();
+    await provider.installs.withRowMatching(requestTag, async () => {
+      await provider.installs.clickButton(InstallButton.Accept);
+      await provider.installs.assertStatus(Status.Install);
     });
 
-    test.afterAll(async () => {
-        await providerContext.close();
-        await userContext.close();
+    await user.installs.goto();
+    await user.installs.withRowMatching(requestTag, async () => {
+      await user.installs.clickButton(InstallButton.Cancel);
+      await user.installs.assertNoMatchingRowExists();
+    });
+  });
+
+  test('AppProvider can create licenses', async ({requestTag, provider}) => {
+    await provider.installs.goto();
+    await provider.installs.withRowMatching(requestTag, async () => {
+      await provider.installs.clickButton(InstallButton.Accept);
+      await provider.installs.assertStatus(Status.Install);
+      await provider.installs.clickButton(InstallButton.CreateLicense);
+      await provider.installs.captureLicenseId();
+      await provider.installs.assertLicenseCountIs(1);
+      await provider.installs.clickButton(InstallButton.CreateLicense);
+      await provider.installs.captureLicenseId();
+      await provider.installs.assertLicenseCountIs(2);
+    });
+  });
+
+  test('AppUser can see created licenses', async ({requestTag, provider, user}) => {
+    let licenseIds: string[] = [];
+    await provider.installs.goto();
+    await provider.installs.withRowMatching(requestTag, async () => {
+      await provider.installs.clickButton(InstallButton.Accept);
+      await provider.installs.assertStatus(Status.Install);
+      await provider.installs.clickButton(InstallButton.CreateLicense);
+      licenseIds[0] = await provider.installs.captureLicenseId();
+      await provider.installs.assertLicenseCountIs(1);
+      await provider.installs.clickButton(InstallButton.CreateLicense);
+      licenseIds[1] = await provider.installs.captureLicenseId();
+      await provider.installs.assertLicenseCountIs(2);
     });
 
-    test('Check initial availability of AppUser login link, ensure application ready', async () => {
-        await userPage.goto(APP_PROVIDER_LOGIN_URL);
-        for (let i = 0; i < 10; i++) {
-            if (await userPage.locator('a:has-text("AppUser")').isVisible()) {
-                return;
-            }
-            await new Promise((r) => setTimeout(r, 1000));
-            await userPage.reload();
-        }
-        await expect(userPage.locator('a:has-text("AppUser")'), 'AppUser login link not visible after 10 attempts').toBeVisible();
+    await user.licenses.goto();
+    for (const licenseId of licenseIds) {
+      await user.licenses.assertMatchingRowCountIs(1, user.licenses.findRowBy(licenseId));
+    }
+  });
+
+  test('AppUser sees no license action buttons on non-renewable license', async ({requestTag, provider, user}) => {
+    let licenseIds: string[] = [];
+    await provider.installs.goto();
+    await provider.installs.withRowMatching(requestTag, async () => {
+      await provider.installs.clickButton(InstallButton.Accept);
+      await provider.installs.assertStatus(Status.Install);
+      await provider.installs.clickButton(InstallButton.CreateLicense);
+      licenseIds[0] = await provider.installs.captureLicenseId();
+      await provider.installs.assertLicenseCountIs(1);
+      await provider.installs.clickButton(InstallButton.CreateLicense);
+      licenseIds[1] = await provider.installs.captureLicenseId();
+      await provider.installs.assertLicenseCountIs(2);
     });
 
-    test('AppUser can log in', async () => {
-        await userPage.goto(APP_PROVIDER_LOGIN_URL);
-        await (
-            await getVisibleLocator(userPage, 'a:has-text("AppUser")', 'Has AppUser login link')
-        ).click();
-        await (
-            await getVisibleLocator(userPage, 'input[id="username"]', 'Username field is visible')
-        ).fill('app-user');
-        await (
-            await getVisibleLocator(userPage, 'input[id="password"]', 'Password field is visible')
-        ).fill(DEFAULT_PASSWORD);
-        await (
-            await getVisibleLocator(userPage, 'button[id="kc-login"]', 'Login button is visible')
-        ).click();
-        await expect(userPage.locator('#user-name')).toHaveText('app user');
+    await user.licenses.goto();
+    await user.licenses.withRowMatching(licenseIds[1], async () => {
+      await user.licenses.assertMatchingRowCountIs(1);
+      await user.licenses.assertButtonDoesNotExist(LicenseButton.PayRenewal)
+    });
+  });
+
+  test('AppProvider can expire a license', async ({requestTag, provider}) => {
+    let licenseIds: string[] = [];
+    await provider.installs.goto();
+    await provider.installs.withRowMatching(requestTag, async () => {
+      await provider.installs.clickButton(InstallButton.Accept);
+      await provider.installs.assertStatus(Status.Install);
+      await provider.installs.clickButton(InstallButton.CreateLicense);
+      licenseIds[0] = await provider.installs.captureLicenseId();
+      await provider.installs.assertLicenseCountIs(1);
+      await provider.installs.clickButton(InstallButton.CreateLicense);
+      licenseIds[1] = await provider.installs.captureLicenseId();
+      await provider.installs.assertLicenseCountIs(2);
     });
 
-    test('AppProvider can log in', async () => {
-        await providerPage.goto(APP_PROVIDER_LOGIN_URL);
-        await (
-            await getVisibleLocator(providerPage, 'a:has-text("AppProvider")', 'Has AppProvider login link')
-        ).click();
-        await (
-            await getVisibleLocator(providerPage, 'input[id="username"]', 'Username field is visible')
-        ).fill('app-provider');
-        await (
-            await getVisibleLocator(providerPage, 'input[id="password"]', 'Password field is visible')
-        ).fill(DEFAULT_PASSWORD);
-        await (
-            await getVisibleLocator(providerPage, 'button[id="kc-login"]', 'Login button is visible')
-        ).click();
-        await expect(providerPage.locator('#user-name')).toHaveText('app provider');
+    await provider.licenses.goto();
+    await provider.licenses.withRowMatching(licenseIds[1], async () => {
+      await provider.licenses.clickButton(LicenseButton.Actions);
+      await provider.licenses.modal.fillDescription('e.g. "License expired"', 'Testing license expiration');
+      await provider.licenses.modal.clickButton(LicenseModalButton.Expire);
+      await provider.waitForSuccessMessage('License expired successfully');
+      await provider.licenses.assertNoMatchingRowExists();
+    });
+  });
+
+  test('Full License Lifecycle should pass', async ({requestTag, keycloak, provider, user, appUserSetup}) => {
+    let licenseId!: string;
+    await test.step('AppProvider can accept AppInstallRequest and create License', async () => {
+      await provider.installs.goto();
+      await provider.installs.withRowMatching(requestTag, async () => {
+        await provider.installs.clickButton(InstallButton.Accept);
+        await provider.installs.assertStatus(Status.Install);
+        await provider.installs.clickButton(InstallButton.CreateLicense);
+        licenseId = await provider.installs.captureLicenseId();
+      });
     });
 
-    test('AppUser can sign in to wallet UI', async () => {
-        await userPage.goto(WALLET_URL);
-        await (
-            await getVisibleLocator(userPage, '#oidc-login-button', 'Login button is visible')
-        ).click();
-        await (
-            await getVisibleLocator(userPage, '#password', 'Password field is visible')
-        ).fill(DEFAULT_PASSWORD);
-        await (
-            await getVisibleLocator(userPage, '#kc-login', 'Login button is visible')
-        ).click();
-        await expect(userPage.locator('#logged-in-user')).toBeVisible();
+    const renewalReason = 'test renewal reason';
+    await test.step('AppProvider can create License Renewal', async () => {
+      await provider.licenses.goto();
+      await provider.licenses.withRowMatching(licenseId, async () => {
+        await provider.licenses.clickButton(LicenseButton.Actions);
+        await provider.licenses.modal.fillDescription('e.g. "Renew for next month"', renewalReason);
+        await provider.licenses.modal.clickButton(LicenseModalButton.Renewal);
+        await provider.waitForSuccessMessage('License Renewal initiated successfully');
+      });
     });
 
-    test('Prerequisite: Add funds to AppUser wallet', async () => {
-        await userPage.goto(WALLET_URL);
-        await (
-            await getVisibleLocator(userPage, '#tap-amount-field', 'Tap amount field is visible')
-        ).fill('1000');
-        await (
-            await getVisibleLocator(userPage, '#tap-button', 'Tap button is visible')
-        ).click();
-        test.slow(); // CC processing can take a while
-        await expect(
-            userPage.locator('[data-testid="AccountBalanceWalletIcon"]').first(),
-            'Balance update should show in transaction history.'
-        ).toBeVisible();
+    await test.step('Onboard AppUser and tap some funds to wallet', async () => {
+      await user.wallet.onboardWalletUser(keycloak, appUserSetup.userId, appUserSetup.partyId);
+      await user.wallet.login();
+      await user.wallet.tap(1000);
     });
 
-    test('AppProvider can see all four AppInstallRequests', async () => {
-        await providerPage.goto(APP_PROVIDER_APP_INSTALLS_URL);
-        await expect(
-            providerPage.locator('.app-install-row'),
-            'Should have exactly four rows in the app installs table. Assumes that make create-app-install-request was run four times.'
-        ).toHaveCount(4);
-        await expect(
-            providerPage.locator('td.app-install-status', {hasText: REQUEST_STATUS}),
-            'There should be exactly four "REQUEST" status cells.'
-        ).toHaveCount(4);
+    await test.step('AppUser can pay License Renewal through wallet', async () => {
+      await user.licenses.goto();
+      await user.licenses.withRowMatching(licenseId, async () => {
+        await user.licenses.clickLink(LicenseLink.PayRenewal);
+        await user.licenses.waitForURL(/.*wallet.localhost.*/);
+        await user.wallet.pay(100, renewalReason);
+        await user.licenses.waitForURL(/.*app-provider.localhost.*/);
+      });
     });
 
-    test('AppUser can see all four AppInstallRequests', async () => {
-        await userPage.goto(APP_PROVIDER_APP_INSTALLS_URL);
-        await expect(
-            userPage.locator('.app-install-row'),
-            'Should have exactly four rows in the app installs table. Assumes that make create-app-install-request was run four times.'
-        ).toHaveCount(4);
-        await expect(
-            userPage.locator('td.app-install-status', {hasText: REQUEST_STATUS}),
-            'There should be exactly four "REQUEST" status cells.'
-        ).toHaveCount(4);
+    await test.step('AppProvider can complete License Renewal', async () => {
+      await provider.licenses.goto();
+      await provider.licenses.withRowMatching(licenseId, async () => {
+        await provider.licenses.clickButton(LicenseButton.CompleteRenewal);
+        await provider.waitForSuccessMessage('License renewal completed successfully');
+      });
     });
-
-    test('AppProvider can reject an AppInstallRequest', async () => {
-        await providerPage.goto(APP_PROVIDER_APP_INSTALLS_URL);
-        await providerPage.locator('button.btn-reject-install').first().click();
-        await expect(
-            providerPage.locator('.app-install-row'),
-            'Should have three rows in the app installs table after rejecting one request.'
-        ).toHaveCount(3);
-    });
-
-    test('AppProvider can accept an AppInstallRequests', async () => {
-        await providerPage.goto(APP_PROVIDER_APP_INSTALLS_URL);
-        await providerPage.locator('button.btn-accept-install').first().click();
-        await expect(
-            providerPage.locator('td.app-install-status', {hasText: INSTALL_STATUS}),
-            'Should have exactly one "INSTALL" status cell.'
-        ).toHaveCount(1);
-
-        await providerPage.locator('button.btn-accept-install').first().click();
-        await expect(
-            providerPage.locator('td.app-install-status', {hasText: INSTALL_STATUS}),
-            'Should have exactly two "INSTALL" status cells.'
-        ).toHaveCount(2);
-
-        await providerPage.locator('button.btn-accept-install').first().click();
-        await expect(
-            providerPage.locator('td.app-install-status', {hasText: INSTALL_STATUS}),
-            'Should have exactly three "INSTALL" status cells.'
-        ).toHaveCount(3);
-    });
-
-    test('AppProvider can cancel an AppInstall', async () => {
-        await userPage.goto(APP_PROVIDER_APP_INSTALLS_URL);
-        await userPage.locator('button.btn-cancel-install').first().click();
-        await expect(
-            userPage.locator('.app-install-row'),
-            'Should have exactly two rows in the app installs table. Assumes that make create-app-install-request was run four times before starting this test.'
-        ).toHaveCount(2);
-    });
-
-    test('AppUser can see accepted AppInstalls', async () => {
-        await userPage.goto(APP_PROVIDER_APP_INSTALLS_URL);
-        await expect(
-            userPage.locator('td.app-install-status', {hasText: INSTALL_STATUS}),
-            'Should have exactly two "INSTALL" status cells.'
-        ).toHaveCount(2);
-    });
-
-    test('AppUser can cancel an AppInstall', async () => {
-        await userPage.goto(APP_PROVIDER_APP_INSTALLS_URL);
-        await userPage.locator('button.btn-cancel-install').first().click();
-        await expect(
-            userPage.locator('.app-install-row'),
-            'Should have exactly two rows in the app installs table.'
-        ).toHaveCount(2);
-    });
-
-    test('AppProvider can create licenses', async () => {
-        await providerPage.goto(APP_PROVIDER_APP_INSTALLS_URL);
-        await expect(
-            providerPage.locator('td.app-install-status', {hasText: INSTALL_STATUS}),
-            'Should have one "INSTALL" status cell.'
-        ).toHaveCount(1);
-        await expect(
-            providerPage.locator('.app-install-num-licenses', {hasText: '0'}),
-            'precondition: AppInstall should not have created any licenses yet'
-        ).toHaveCount(1);
-
-        await providerPage.locator('button.btn-create-license').first().click();
-        await expect(providerPage.locator('.app-install-num-licenses', {hasText: '1'})).toHaveCount(1);
-
-        await providerPage.locator('button.btn-create-license').first().click();
-        await expect(providerPage.locator('.app-install-num-licenses', {hasText: '2'})).toHaveCount(1);
-
-        await providerPage.goto(APP_PROVIDER_LICENSES_URL);
-        await expect(providerPage.locator('.license-row')).toHaveCount(2);
-    });
-
-    test('AppUser can see created licenses', async () => {
-        await userPage.goto(APP_PROVIDER_LICENSES_URL);
-        await expect(userPage.locator('.license-row')).toHaveCount(2);
-    });
-
-    test('AppProvider can expire a license', async () => {
-        await providerPage.goto(APP_PROVIDER_LICENSES_URL);
-        await expect(providerPage.locator('.license-row')).toHaveCount(2);
-
-        await providerPage.locator('.license-row .btn-actions-license').first().click();
-        await providerPage.locator('input.input-expire-description').fill('Testing license expiration');
-        await providerPage.locator('button.btn-expire-license').click();
-
-        await expect(providerPage.locator('.license-row')).toHaveCount(1);
-    });
-
-    test('AppUser sees no license action buttons on non-renewable license', async () => {
-        await userPage.goto(APP_PROVIDER_LICENSES_URL);
-        // Checking from user perspective
-        await expect(providerPage.locator('.license-row')).toHaveCount(1);
-        await expect(userPage.locator('.license-actions button')).toHaveCount(0);
-        await expect(userPage.locator('.license-actions a')).toHaveCount(0);
-    });
-
-    test('AppProvider can issue a license renewal', async () => {
-        await providerPage.goto(APP_PROVIDER_LICENSES_URL);
-        await expect(providerPage.locator('.license-row')).toHaveCount(1);
-
-        await providerPage.locator('.btn-actions-license').first().click();
-        await providerPage.locator('input.input-renew-description').fill(TEST_RENEWAL_REASON);
-        await providerPage.locator('button.btn-issue-renewal').click();
-
-        await expect(
-            providerPage.locator('td.license-renew-fee', {hasText: '100'})
-        ).toHaveCount(1);
-        await expect(
-            providerPage.locator('td.license-extension', {hasText: '30 days'})
-        ).toHaveCount(1);
-    });
-
-    test('AppUser can pay License Renewal through wallet workflow', async () => {
-        await userPage.goto(APP_PROVIDER_LICENSES_URL);
-        await (
-            await getVisibleLocator(userPage, '.btn-pay-renewal', 'License payment button visible')
-        ).click();
-        await userPage.waitForURL(/.*wallet.localhost.*/);
-        await expect(
-            userPage.locator('.payment-description', {hasText: TEST_RENEWAL_REASON}),
-            'Matching license renewal reason visible'
-        ).toBeVisible();
-        await (
-            await getVisibleLocator(userPage, '.payment-accept', 'Send payment button visible')
-        ).click();
-        await userPage.waitForURL(/.*app-provider.localhost.*/);
-    });
-
-    test('AppProvider can complete renewal on a paid-for license', async () => {
-        await providerPage.goto(APP_PROVIDER_LICENSES_URL);
-        const completeRenewalBtn = providerPage.locator('.btn-complete-renewal');
-        test.slow(); // payment processing can take a while
-        await expect(completeRenewalBtn, 'Paid license is renewable').toHaveCount(1, {timeout: 30_000});
-        await completeRenewalBtn.click();
-        await expect(
-            completeRenewalBtn,
-            'Complete Renewal button disappears after payment acceptance',
-        ).toHaveCount(0, {timeout: 30_000});
-    });
+  });
 });

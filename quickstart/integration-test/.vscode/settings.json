@@ -1,0 +1,10 @@
+{
+  "files.watcherExclude": {
+    "**/.generated.env": true,
+    "**/.generated.docker.override.env": true,
+    "**/node_modules/**": true,
+    "**/test-results/**": true,
+    "**/playwright-report/**": true,
+    "**/storage/**": true
+  }
+}

@@ -28,8 +28,11 @@ It does this using the package manager
 `Nix <https://nixos.org/download/>`__,
 `Direnv <https://direnv.net/>`__, and `Docker Compose <https://docs.docker.com/compose/>`__.
 The top-level setup ensures a consistent and repeatable dev, build, and test regardless of choice of environment.
+If you do not wish to use Nix, this directory can be made the top-level directory for your project, 
+however, you will need to manage your binary dependencies manually. 
+Review the `Canton Utility Setup <https://docs.digitalasset.com/utilities/0.7/canton-utility-setup/utility-setup.html>`__ if you require utility deployment support. 
 
-The current toplevel directory contents for a fresh checkout include:
+The current top-level directory contents for a fresh checkout include:
 
 .. code-block:: text
 
@@ -60,24 +63,20 @@ Specifically it activates the Nix environment for the project via a call to ``us
 ``LICENSE``, ``terms.md``, ``Security.md``, and ``README.md``. 
 The License is 0BSD.
 
-``docs/`` contains some engineering documentation for the example app.
+``docs`` contains some engineering documentation for the example app.
 
-``quickstart/`` is the main project directory. 
-If you do not wish to use Nix, this directory can be made the top-level directory for your project
-— although, you will need to manage your binary dependencies manually. 
-The next section covers this directory in detail.
+``quickstart`` is the main project directory. 
 
-`shell.nix <https://nix.dev/tutorials/first-steps/declarative-shell.html>`__ and ``nix/`` contain the Nix configuration. 
+`shell.nix <https://nix.dev/tutorials/first-steps/declarative-shell.html>`__ and ``nix`` contain the Nix configuration. 
 Familiarity with shell.nix is essential, as it manages new dependencies. 
 Note ``nix/sources.json`` pins the nix release to ensure determinacy across builds. 
-You will want to ensure this gets updated at an appropriate cadence that balances staying up to date with development environment stability.
+Make sure this gets updated at a cadence that balances staying up to date with development environment stability.
 
 ``sdk/`` contains the source to this documentation, using reStructuredText.
 
-**Current Dependencies declared in `shell.nix`**
-   - npins
+**Current Dependencies declared in `nix/shell.nix`**
    - jdk21
-   - nodejs_18
+   - nodejs_20
    - typescript
 
 These are in addition to the `Nix stdenv environment <https://nixos.org/manual/nixpkgs/stable/#sec-tools-of-stdenv>`__.

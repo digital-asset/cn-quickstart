@@ -58,3 +58,5 @@ services:
     volumes:
       - ./docker/backend-service/onboarding/onboarding.sh:/app/scripts/on/backend-service.sh
       - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
+      - ./integration-test/env-init.sh:/app/scripts/on/integration-tests-environment-init.sh
+      - ./integration-test:/integration-test

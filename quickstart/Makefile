@@ -190,7 +190,9 @@ create-app-install-request: ## Submit an App Install Request from the App User p
 
 .PHONY: restart-backend
 restart-backend: build-backend ## Build and start the application
-	$(call docker-compose, restart backend-service)
+	$(call docker-compose, rm -s -f backend-service)
+	$(call docker-compose, rm -s -f register-app-user-tenant)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
 
 .PHONY: restart-frontend
 restart-frontend: build-frontend ## Build and start the application
@@ -293,16 +295,24 @@ first-run-setup:
 	@exit 2
 
 .PHONY: integration-test
-integration-test: DOCKER_COMPOSE_FILES = -f ./integration-test/compose.yaml
-integration-test: DOCKER_COMPOSE_PROFILES =
 integration-test: ## Run integration tests
+	@docker rm -f environment-init 2> /dev/null || true
+	@if [ "$(TEST_MODE)" = "off" ]; then \
+		echo "To run the integration tests Quickstart must be started in test mode. Please run \"make setup\" and enable TEST_MODE when prompted"; \
+		exit 1; \
+	fi
 	@if [ "$(AUTH_MODE)" = "shared-secret" ]; then \
 		echo "Integration tests supported only for AUTH_MODE=oauth2."; \
 		exit 1; \
 	fi
-	@cd integration-test && npm install
-	$(call docker-compose, run --rm integration-tests)
+	@cd integration-test && \
+	npm install && \
+	npx playwright test
 
+.PHONY: show-integration-test-report
+show-integration-test-report: ## Show the integration test report
+	@cd integration-test && \
+	npx playwright show-report --port=9323 --host=0.0.0.0
 
 # Console
 .PHONY: canton-console
@@ -371,6 +381,26 @@ update-env-sdk-runtime-version: ## Helper to update DAML_RUNTIME_VERSION in .env
 	VERSION=$$(docker run --rm digitalasset/daml-sdk:$$DAML_SDK_VERSION bash -c 'cat /home/daml/.daml/sdk/*/sdk-config.yaml' | grep 'version:' | awk '{print $$2}'); \
 	sed -i.bak 's/^DAML_RUNTIME_VERSION=.*/DAML_RUNTIME_VERSION='"$$VERSION/" .env; \
 	echo "Updated DAML_RUNTIME_VERSION to $$VERSION"
+
+## Conditional targets for CI/CD, only available if CI == true
+ifeq ($(CI),true)
+
+# Populate .env.local for CI/CD purposes
+.PHONY: ci-create-env-local
+ci-create-env-local:
+	echo "OBSERVABILITY_ENABLED=true" > .env.local
+	echo "AUTH_MODE=oauth2" >> .env.local
+	echo "PARTY_HINT=quickstart-circleci-1" >> .env.local
+	echo "TEST_MODE=on" >> .env.local
+
+# Install playwright dependencies in CI/CD
+.PHONY: ci-install-playwright
+ci-install-playwright:
+	cd integration-test \
+		&& npm ci \
+		&& npx playwright install chromium --with-deps
+
+endif
 
 # Run arbitrary command with environment variables set
 ifneq ($(origin COMMAND), undefined)

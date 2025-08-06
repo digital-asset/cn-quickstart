@@ -8,7 +8,7 @@ We intend that you clone the repository and incrementally update the solution to
 We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime.
 However, an OSS developer can benefit from this project by understanding how a CN Global Synchronizer application is structured.
 
-To run the Quickstart you need some binaries from Artifactory. 
+To run the Quickstart, you need some binaries from Artifactory. 
 [Contact us](https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog) to request Artifactory access.
 
 [Binaries terms and conditions](https://github.com/digital-asset/cn-quickstart/blob/main/terms.md).
@@ -18,7 +18,7 @@ Licensed under the BSD Zero Clause License.
 ## Disclaimer
 
 Once you are familiar with the Quickstart Application, review the technology choices and the application design to determine what changes are needed.
-Technology and design decisions are ultimately up to you. 
+These decisions are up to you. 
 The CN Quickstart is a rapidly evolving work in progress.
 
 ## Docs and guides
@@ -147,7 +147,7 @@ The `*.localhost` domains will resolve to your local host IP `127.0.0.1`.
 ## Exploring Quickstart Docker Compose
 
 Before exploring advanced topics, we recommend familiarizing yourself with the core components of the Licensing Model Workflow within Quickstart. 
-In particular, begin by reviewing the implementation of the `backend-service`, which serves as an excellent entry point.
+In particular, the implementation of the `backend-service` serves as an excellent entry point.
 
 If you have already explored the Quickstart web UI and would now like to understand how the Quickstart Docker Compose configuration is orchestrated, start by running a simple setup using `make setup` with Observability and OAuth2 disabled. Then, execute the following command to inspect the resolved configuration for the backend service:
 
@@ -240,13 +240,13 @@ In OAuth2 mode, Quickstart starts a local multi-tenant instance of [keycloak](ht
 Pre-configured users, clients and realms are used directly in Quickstart components and via environment variables. Each component, module or backend-service refers to the pre-configured values in its environment variables. e.g. `docker/modules/keycloak/env/app-provider/on/oauth2.env`, `docker/backend-service/onboarding/env/oauth2.env`
 
 #### Backend service tenant registration
-Only the end users from an organization registered using endpoint `http://backend-service:${BACKEND_PORT}/admin/tenant-registrations` are allowed to log into the Quickstart web-ui. 
-`AppUser` organization is registered on Quickstart startup by calling registration script in `register-app-user-tenant` docker container.
+Only the end users from an organization registered using endpoint `http://backend-service:${BACKEND_PORT}/admin/tenant-registrations` can log into the Quickstart web UI. 
+The `AppUser` organization is registered on the Quickstart startup by calling the registration script in the `register-app-user-tenant` Docker container.
 
 ### Port mappings
 
 You can find the port mappings scheme in the Splice LocalNet [documentation](https://docs.sync.global/app_dev/testing/localnet.html).
-See the [Project structure](sdk/docs/guide/ProjectStructureGuide-20250317.pdf) for more details.
+See the [Project structure guide](https://docs.digitalasset.com/build/3.3/quickstart/configure/project-structure-overview) for more details.
 
 ## Docker Compose-Based Development for LocalNet
 The Quickstart leverages Docker Compose for modular development. 
@@ -254,8 +254,8 @@ Instead of relying on a single extensive docker-compose.yaml file, this approach
 Splice LocalNet is housed within the `docker/modules/localnet` directory. 
 In the `Makefile`, Docker Compose commands are dynamically assembled from Splice LocalNet, Quickstart modules, and Quickstart-specific compose and environment files, arranged in an order that respects the interdependencies of the various components.
 
-Some modules (e.g., Keycloak and Observability) are optional and can be toggled on or off based on the selections made during `make setup`. 
-When the Docker Compose command is executed, all specified Compose YAML files are merged in the order they appear on the command line. 
+Some modules (e.g., Keycloak and Observability) are optional and can be toggled on or off based on your selections made during `make setup`. 
+When the Docker Compose command is executed, it merges all specified Compose YAML files in the order they appear on the command line. 
 Likewise, the environment is built by applying each environment file in sequence; if the same variable is defined in multiple files, the value from the later file will overwrite the previous ones.
 
 The `splice-onboarding` module supports two distinct operational modes. 
@@ -286,12 +286,12 @@ Please note that while Quickstart is designed to streamline local development, d
 In the Quickstart demo, the `splice-onboarding` component facilitates initialization, onboarding, and the execution of scripts that drive the demonstration workflows. 
 However, this component is not intended for use in a production environment. 
 In a production-grade environment, you would typically utilize an orchestration framework such as Kubernetes and replace certain automated configurations with controlled, manual configuration steps. 
-This approach ensures enhanced security and clear separation of services in line with enterprise standards.
+This approach enhances security and clearly separates services in line with enterprise standards.
 
 ### Modules
 
-The Quickstart repository includes several modular components that can be reused in developer projects outside of Quickstart. 
-These modules are located in the `docker/modules` directory by default; however, they can be sourced from any directory by setting the `MODULES_DIR` environment variable accordingly.
+The Quickstart repository includes modular components that can be reused in developer projects outside of Quickstart. 
+These modules are located in the `docker/modules` directory by default, however, they can be sourced from any directory by setting the `MODULES_DIR` environment variable accordingly.
 
 Splice LocalNet is a special module borrowed from the [Splice repository](https://github.com/hyperledger-labs/splice/tree/main/cluster/compose/localnet) and is placed by default in `docker/modules`. It can also be relocated by properly configuring the LOCALNET_DIR environment variable.
 
