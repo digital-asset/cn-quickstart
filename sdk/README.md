@@ -9,7 +9,7 @@ This directory contains a [Makefile](Makfile) that provides the following functi
 
 ## Make Targets
 
-Below covers the provide make targets and what they cover:
+Provided make targets and their descriptions:
 
 ```
 $> make help
