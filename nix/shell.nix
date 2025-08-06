@@ -6,6 +6,9 @@ let
     nodejs_20
     typescript
   ] ++ (if ci then [ # these packages should only be installed on CI
+    circleci-cli
+    poetry
+    python3
   ] else [ # these packages are only installed on developer machines locally
   ]));
 in

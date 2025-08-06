@@ -1,11 +1,14 @@
 # Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: 0BSD
 
+# Set default goal to 'help' if no target is specified
+.DEFAULT_GOAL := help
 # Preview path:
 PREVIEW_DIR   ?= .preview
 
 # Poetry provided via nix without polluting ../nix/shell.nix
-POETRY        ?= nix run --extra-experimental-features 'nix-command flakes' 'nixpkgs\#poetry' --
-PYTHON        ?= nix run --extra-experimental-features 'nix-command flakes' 'nixpkgs\#python3' --
+POETRY        ?= nix run -I nixpkgs=nixpkgs/25.05 --extra-experimental-features 'nix-command flakes' 'nixpkgs\#poetry' --
+PYTHON        ?= nix run -I nixpkgs=nixpkgs/25.05 --extra-experimental-features 'nix-command flakes' 'nixpkgs\#python3' --
 
 ###############################################################################
 ### Python/Sphinx Environment Setup ###########################################
@@ -43,3 +46,11 @@ host-preview: render-preview
 
 .PHONY: clean-all
 clean-all: clean-preview-dir clean-venv-dir
+
+# Help target
+.PHONY: help
+help: ## Show this help message
+	@echo "Usage: make [target]"
+	@echo
+	@echo "Available targets:"
+	@grep -E '^(# )?[a-zA-Z_-]+:.*?## .*$$' Makefile | sed -e 's/^# //' | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
