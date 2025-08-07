@@ -4,98 +4,40 @@ The Canton Quickstart example application
 Business case
 -------------
 
-The Canton Quickstart contains an example application that provides both a
-demonstration of a Canton application targeted at production, and a way
-of exercising the supporting developer scaffolding provided by the
-bootstrap.
+The Quickstart includes a sample licensing app to demonstrate Canton development patterns. 
+In the app, providers sell time-based access to their services.
+Users pay with Canton Coin (CC) and manage payments through a Canton Wallet. 
 
-This example application is a simple license management application that
-allows the application provider to issue licenses to application users.
-Canton Coin is used in this transaction. These users are assumed to be
-retail customers of the provider, with access to Canton and
-a Canton Wallet. We do not assume they are running their any of their own
-infrastructure beyond a (possibly outsourced) validator node.
+The app involves four parties:
 
-The relevant business entities are:
+- The **Application Provider** who sells licenses.
+- The **Application User** who buys licenses.
+- The underlying **Amulet** token system that handles payments, `Canton Coin <https://www.canton.network/blog/canton-coin-a-canton-network-native-payment-application>`__ by default.
+- The **DSO Party**, the Decentralized Synchronizer Operations Party who operates the Amulet payment system. In CN, this is the Super Validators.
 
-**Amulet**: An infrastructure token usable on the Canton synchronizer.
-In the case of an application using Canton Network, this is Canton Coin [4]_.
-
-**DSO Party:** The Decentralized Synchronizer Operations Canton Party.
-This is the party that operates the Amulet token in which the provider
-accepts license payments. In the case of a Canton Network Application,
-this is the Global Synchronizer Foundation.
-
-**Application Provider**: A Canton Party representing the legal
-entity deploying, running, and offering the application to their users
-(customers). In a licensing application, this is the entity offering to
-sell the licenses.
-
-**Application User**: A Canton Party representing the legal
-entity that is a customer of the application provider. In
-this application this is an entity with a need to purchase a license,
-and periodically renew it. Canton Coin is exchanged for the license.
-
-Core workflows happy path business requirement
-----------------------------------------------
+Core business operations
+------------------------
 
 Issuing a license
 ~~~~~~~~~~~~~~~~~
 
-*Given* that an application user (app-user) has been onboarded to the
-licensing application
-
-*When* the application provider (app-provider) instructs the application
-to create a new license for the app-user
-
-*Then* a new expired license is created on the ledger and made
-visible to the app-user
+The provider creates a new license for an onboarded user. 
+The license starts expired and needs to be renewed before use.
 
 Requesting a license renewal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*Given* an app-user has a license (l1)
-
-*And* the current datetime is greater than the expiration date on
-license (l1)
-
-*When* the app-provider instructs the application to request a license
-renewal
-
-*Then* a license renewal is created and made visible to the user
-
-*And* a matching amulet (Canton Coin) payment request is created on
-the ledger
+The provider creates a renewal request, which generates a payment request for the user.
+The user sees the renewal offer and the payment amount. 
+A matching CC payment request is created on the ledger.
 
 Paying for a license renewal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*Given* there is a license renewal request on the ledger
-
-*And* a matching amulet payment request on the ledger
-
-*When* the user indicates they wish to pay the renewal
-
-*Then* the user is redirected to the payment request in their
-wallet, and can approve the request
+The user approves the the payment through their Canton Wallet, 
+which creates an accepted payment contract on the ledger.
 
 Renewing the license
 ~~~~~~~~~~~~~~~~~~~~
 
-*Given* an app-user has approved an amulet payment request associated
-with a license renewal request
-
-*And* there is an AcceptedAppPayment contract (accepted-payment) on the
-ledger corresponding to that approval
-
-*When* the app-provider instructs the application to complete the
-renewal transaction
-
-*Then* the license is updated with a new expiration date = renewal
-duration + max (old expiration date, now)
-
-*And* the app-provider exercises the AcceptedAppPayment_Collect
-choice on accepted-payment
-
-.. [4]
-   https://www.canton.network/blog/canton-coin-a-canton-network-native-payment-application
+The provider processes the accepted payment and updates the license with a new expiration date.

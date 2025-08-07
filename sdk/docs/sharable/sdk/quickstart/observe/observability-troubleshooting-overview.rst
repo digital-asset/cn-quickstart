@@ -4,11 +4,10 @@ Canton Network quickstart observability & troubleshooting overview
 
 .. wip::
 
-.. Note:: The screenshots in this guide are currently taken from
-   multiple sessions over multiple days and therefore are inconsistent
-   with each other (and in some places the text).
-   This will be rectified once some of the updates to Quickstart
-   currently in flight are committed.
+.. Note:: The screenshots in this guide are taken from
+   multiple sessions and are inconsistent
+   with each other.
+   This will be rectified once some of the updates are committed.
 
 **Contents**
 
@@ -36,40 +35,38 @@ Canton Network quickstart observability & troubleshooting overview
    `Correlated Logs and traces using correlation
    identifiers <#correlated-logs-and-traces-using-correlation-identifiers>`__
 
+It's assumed that you have read the quickstart getting started guide and explore the demo.
+If you haven't, we strongly encourage those documents to establish a baseline understanding of observability.
+
 Overview of observability
 =========================
 
-The Canton Network quickstart deployment configuration includes a full
-observability suite. Tools preconfigured for monitoring and
-troubleshooting distributed Canton applications—both in development and
-production. The observability suite provides three key types of
-monitoring data:
+The Canton Network quickstart deployment configuration includes a full observability suite. 
+Tools preconfigured for monitoring and troubleshooting distributed Canton applications—both in development and production. 
+The observability suite provides three key types of monitoring data:
 
 -  **consolidated structured logs** for application and system events
 -  **distributed traces** that visualize end-to-end transaction flows;
    and
 -  **metrics** for monitoring key performance indicators.
 
-The suite allows data types to be correlated with each other to provide
-insights for root cause analysis. In addition, the Canton Ledger also
-provides a variety of correlation and tracing ids that permit tracking
+The suite allows data types to be correlated with each other to provide insights for root cause analysis. 
+In addition, the Canton Ledger also provides a variety of correlation and tracing ids that permit tracking
 transaction provenance across multiple organizations and environments.
 
 The LocalNet configuration
 --------------------------
 
-The Quickstart runtime configuration is defined in ``.env.local``, which
-allows each developer to switch between running a ``LocalNet`` or ``DevNet``
-application deployment; and, whether or not to bring up a local
-deployment of the Observability Stack. This file can be created using ``$ make setup``,
+The Quickstart runtime configuration is defined in ``.env.local``, 
+which allows the option to bring up a local deployment of the Observability Stack. 
+This file can be created using ``$ make setup``,
 which wraps the command ``$ ./gradlew configureProfiles --no-daemon --console=plain --quiet``,
-or can be edited manually to set environment variables ``LOCALNET_ENABLED`` and ``OBSERVABILITY_ENABLED`` to ``true``
-or ``false`` as desired.
+or can be edited manually to set environment variables ``LOCALNET_ENABLED`` and ``OBSERVABILITY_ENABLED`` to ``true`` or ``false`` as desired.
 
 The ``LocalNet`` runtime configuration is handled by ``docker-compose``
 configured in ``compose.yaml`` using environment variables from ``.env`` in the
-``quickstart/`` project root directory. As a result the usual Docker
-commands and tooling applies.
+``quickstart/`` project root directory. 
+The usual Docker commands and tooling applies.
 
 Immediately useful commands you probably already know:
 
@@ -89,14 +86,11 @@ Immediately useful commands you probably already know:
 Observability overview
 ----------------------
 
-The Quickstart application has been built to provide the foundation for
-a production Daml application. As such it includes a full observability
-configuration which is helpful to troubleshoot or debug an application
-when running on the ``LocalNet``. In order to provide a working demo
-Quickstart has naturally had to be opinionated regarding the choice of
-technologies, selecting from modern commonly used technologies. The
-platform itself is agnostic, and individual components can and should be
-replaced as required by your team.
+The Quickstart application provides a foundational production Daml application. 
+It includes a full observability configuration which is helpful to troubleshoot or debug an application.
+As a working demo, Quickstart is opinionated regarding its technology stack. 
+However, the platform itself is agnostic. 
+Individual components can be replaced as required.
 
 The current troubleshooting and debugging services include:
 
@@ -122,12 +116,11 @@ The current troubleshooting and debugging services include:
 Daml Shell
 ~~~~~~~~~~
 
-Daml Shell is a terminal application that provides interactive local
-ledger inspection on top of PQS. Quickstart is configured to launch Daml
-Shell in a docker container and is configured to connect to the included
-application provider’s PQS instance. This is easiest to access via the
-toplevel project scripts accessed via ``make`` from ``quickstart/``. To see this
-in action, build and start the quickstart app then:
+Daml Shell is a terminal application that provides interactive local ledger inspection on top of PQS. 
+Quickstart is configured to launch Daml Shell in a Docker container and is configured to connect to the included
+application provider’s PQS instance. 
+This is easiest to access via the top-level project scripts accessed via ``make`` from ``quickstart/``. 
+To see this in action, build and start the quickstart app then:
 
 Run ``$ make create-app-install-request`` to use ``curl`` to submit the
 ``create AppInstallRequest ...`` command to the ledger [1]_ to initiate user
@@ -146,32 +139,23 @@ detail of the ``AppInstallRequest`` contract on the ledger.
 Grafana
 ~~~~~~~
 
-The Grafana interface is accessible via its web interface which is
-port-mapped to http://localhost:3030/, and can be opened in the current
-browser from the command line using ``make open-observe``.
+Grafana is accessible via its web interface, which is port-mapped to http://localhost:3030/, 
+and can be opened in the current browser from the command line using ``make open-observe``.
 
-It is recommended that the focus of your debugging should be on using
-the trace and log facilities provided by Grafana and ledger inspection
-using Daml Shell. Ensuring that the exported logs and traces are
-sufficient to support debugging during development also provides
-assurance that they will be sufficient to support diagnostics in
-production.
+Your debugging should focus on using Grafana's trace and log facilities, as well as ledger inspection via Daml Shell.
+If you make sure that your exported logs and traces are sufficient to support debugging during development, they are more likely to support diagnostics in production, as well.
 
-There is additional access configured into the quickstart that can
-assist with debugging on ``LocalNet``. To reiterate, best practice is to use
-the same diagnostic tools for development as you will for production. If
-you add a log line that then allows you to identify and fix a bug in
-development, then keeping it around at ``trace`` or ``debug`` log levels
-increases your operational readiness. Conversely, in one sense, using a
-tool that won’t be available in production to debug in development
-reduces your operational readiness.
+There is additional access configured into the Quickstart that can assist with debugging on ``LocalNet``. 
+Use the same diagnostic tools for development as you will for production. 
+If you add a log line that allows you to identify and fix a bug in development, 
+then keeping it around at ``trace`` or ``debug`` log levels increases your operational readiness. 
+Using tools that won’t be available in production to debug in development reduces operational readiness.
 
 Direct Postgres access
 ~~~~~~~~~~~~~~~~~~~~~~
 
-All persistent state in the example application is stored in one or more
-postgres databases. You can use the postgres configuration in ``.env`` to
-connect directly to these instances.
+All persistent state in the example application is stored in one or more postgres databases. 
+You can use the postgres configuration in ``.env`` to connect directly to these instances.
 
 .. code-block::
 
@@ -181,14 +165,12 @@ For example: if you connect to the ``postgres-splice-app-provider``
 container (default username ``cnadmin``, dbname ``scribe``, and password
 ``supersafe``; then you can use the SQL interface to PQS to examine the
 app-provider’s participant’s local ledger. The SQL API to PQS is
-documented in the daml documentation
-(`https://docs.daml.com/query/pqs-user-guide.html# <https://docs.daml.com/query/pqs-user-guide.html>`__).
+documented in the `daml documentation <https://docs.daml.com/query/pqs-user-guide.html>`__.
 
 Interactive debugger
 ~~~~~~~~~~~~~~~~~~~~
 
-If you review the ``compose.yaml`` file and examine the configuration for
-backend-service you will see the lines:
+If you review the ``compose.yaml`` file and examine the configuration for backend-service you will see the lines:
 
 .. code-block::
 
@@ -204,35 +186,27 @@ backend-service you will see the lines:
       - "5055:5005"
 
 
-This enables remote debugging of the java component backend in the user
-application (backend-service). You can use this to connect an IDE
-Debugger to the service at runtime if required. Keep in mind that we
-recommend your first resort be Grafana and the consolidated logs in
-Loki, as this ensures the system remains debugable in production.
+This enables remote debugging of the Java component backend in the user application (backend-service). 
+You can use this to connect an IDE Debugger to the service at runtime if required. 
+We recommend Grafana as your first resort, along with the consolidated logs in Loki.
+This keeps the system debuggable in production.
 
 Observability and tracing
 =========================
 
 Faulty distributed systems can be notoriously hard to diagnose.
-Quickstart provides, at the start of a project, the sort of
-observability and diagnostics facilities often only developed toward the
-end of the project. Simplifying diagnostics for new Canton Network
-Applications from the outset of each project is one of the motivations
-behind the development of Quickstart.
+From the start of a project, Quickstart provides the sort of observability and diagnostics facilities that are otherwise often only developed toward the end.
+Simplifying diagnostics for new Canton Network Applications from the outset of each project is one of the motivations behind the development of Quickstart.
 
-The links in the overview include the official user and reference
-documentation for the various tools included in Quickstart. While there
-is no substitute for the official documentation, it is hoped the
-following tour of the capabilities configured into Quickstart can
-provide a starting point for your own experimentation.
+The links in the overview include the official user and reference documentation for the various tools included in Quickstart. 
+While there is no substitute for the official documentation, 
+it is hoped the following tour of the capabilities configured into Quickstart can provide a starting point for your own experimentation.
 
 Correlation identifiers
 -----------------------
 
-Inspecting any distributed system invariably begins by correlating
-identifiers—Canton is no different in that regard. Canton can accept
-and/or generate a number of identifiers suitable for correlating across
-both time, various nodes, and the evolving state of the ledger.
+Inspecting Canton begins by correlating identifiers, much like inspecting any other distributed system. 
+Canton can accept and/or generate a number of identifiers suitable for correlating across both time, various nodes, and the evolving state of the ledger.
 
 A few of the key identifiers to be aware of are:
 
@@ -278,24 +252,17 @@ A few of the key identifiers to be aware of are:
      -   ``Global, potentially non-unique, identifier for a legal entity on the Canton ledger.`` [8]_
 
 
-The goal of the observability configuration is to make it easier to
-navigate through the provenance of any state or event in the wider
-system. Any or all of these identifiers can be used to correlate a
-combination of logs, metrics, state. Three of these in particular are
-intended to be set to corresponding business identifiers derived from
-your specific business domain — application-id, workflow-id, and
-command-id.
+The goal of the observability configuration is to make it easier to navigate through the provenance of any state or event in the wider system. 
+Any or all of these identifiers can be used to correlate a combination of logs, metrics, and state. 
+Three of these in particular are intended to be set to corresponding business identifiers derived from your specific business domain: application-id, workflow-id, and command-id.
 
-Navigation is enabled by the use of structured logs from as many
-components as possible [9]_. It is recommended that your custom
-components likewise emit structured logs for more accurate consumption
-by OpenTelemetery.
+Navigation is enabled by the use of structured logs from as many components as possible [9]_. 
+It is recommended that your custom components likewise emit structured logs for more accurate consumption by OpenTelemetery.
 
 Direct Ledger inspection using correlation identifiers
 ------------------------------------------------------
 
-Starting from ``$ make stop clean-all && make build start``, we proceed with
-initiating the example application app-user onboarding:
+Starting from ``$ make stop clean-all && make build start``, we proceed with initiating the example application app-user onboarding:
 
 .. code-block::
 
@@ -432,10 +399,10 @@ immediately display the contract in Daml Shell:
    ╙───────────────────────────────────────────────────────────────────────────╜
    postgres-splice-app-provider:5432/scribe 3f → 48>
 
-If the problem is in fact a bug in your smart contract, then exploring
-the transaction and related provenance within Daml Shell and utilizing
+If the problem is a bug in your smart contract, then exploring
+the transaction and related provenance within Daml Shell and using
 the Daml IDE to synthesize and rerun the relevant transactions will
-normally be sufficient to identify the issue. However, if only due to
+normally identify the issue. However, if only due to
 the comparative lines of code, the root cause of most issues will be off
 ledger. Consequently, significant value in these identifiers derives
 from correlating these identifiers with the consolidated logs and other
