@@ -206,15 +206,14 @@ Backend services structure
 The example backend is a `SpringBoot <https://spring.io/projects/spring-boot>`__ application, 
 at the core of which are the API implementation classes in com.digitalasset.quickstart.service.
 
-Most of this code is standard Java SQL-backed JSON-encoded HTTP web service fare. 
-The code itself is divided into seven modules under com.digitalasset.quickstart.*:
+Most of this code is standard Java SQL-backed JSON-encoded HTTP web services. 
+The code is divided into several modules under com.digitalasset.quickstart.*:
 
-`config`: Mostly standard SpringBoot `@ConfigurationProperties` based components; 
-however, SecurityConfig may be worth looking at for how the example application handles CSRF tokens and OAuth2 authentication of login and logout requests.
+`config`: Standard SpringBoot `@ConfigurationProperties` based components.
 
-`oauth`: Amongst other things, provides a client interceptor to authenticate the backend services to the Ledger API.
+`security`: Handles security related-demands including OAuth2, shared-secret auth support, roles, and access control.
 
-`service`: Implements the openAPI endpoints. Mostly a roughly equal split between read-only calls to PQS via the DamlRepository spring component and GRPC calls to the relevant validator via the LedgerApi spring component.
+`service`: Implements the openAPI endpoints, including read-only calls to PQS via the ``DamlRepository`` spring component and GRPC calls to the relevant validator via the ``LedgerApi`` spring component.
 
 `ledger`: The main class here is `LedgerApi` which handles the details of calling the relevant GRPC endpoints required to submit Daml commands and other requests to the Canton Validator.
 
@@ -224,7 +223,7 @@ A `@Repository` component providing business-logic level query and retrieval fac
 `pqs`: The main class is `Pqs`, which provides data-model level query and retrieval. 
 This encapsulates the necessary SQL generation and the JDBC queries against the PQS Postgres database.
 
-`utility`: For the moment this is restricted to the `ObjectMapper` required for JSON transcoding in the web services.
+`utility`: Miscellaneous utility code including `JsonUtil` for JSON encoding and decoding, and `DamlCodeGen` which provides access to the Daml model-generated Java classes.
 
 Ultimately, the main recommendation embedded in this code is to orient the web-service API around a combination of queries and choice invocations. 
 This is hopefully adequately demonstrated in the open API definition. 

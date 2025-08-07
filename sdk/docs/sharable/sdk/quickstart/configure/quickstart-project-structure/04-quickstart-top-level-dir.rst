@@ -127,8 +127,9 @@ and the suffix is the usual four-digit port number associated with the relevant 
    * - `5432`
      - Postgres Port
 
-For example, the ``JSON API Port`` for the Application User is ``27575``,
-while the ``Ledger API Port`` for the Super Validator is ``25001``.
+For example, the ``JSON API Port`` for the Application User is ``2975``,
+while the ``Ledger API Port`` for the Super Validator is ``2901``.
+Splice ``LocalNet`` definitions are published in the `Splice docs <https://docs.dev.sync.global/app_dev/testing/localnet.html#exposed-ports>`__.
 
 Port mappings security
 ~~~~~~~~~~~~~~~~~~~~~~
