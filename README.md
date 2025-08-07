@@ -60,7 +60,7 @@ $ make build
 $ make start
 
 # In a separate shell - run a Canton Console for the App Provider
-$ make console-app-provider
+$ make canton-console
 
 # In a separate shell - run Daml Shell
 $ make shell
