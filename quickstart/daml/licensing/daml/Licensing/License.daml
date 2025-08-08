@@ -1,148 +1,190 @@
--- Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates.
 -- SPDX-License-Identifier: 0BSD
-
--- | A license contract for a CN application that allows the app provider charge
--- a fee and share some of the app rewards that they get back with their users.
 --
--- See the comments on the License template and its choices for design rationale.
+-- | A license contract for a CN application that allows the app provider
+--   to charge a fee for renewing the license. The fee is collected using
+--   the token standard. This license is not itself a token instrument.
 module Licensing.License where
 
-import Licensing.Util
-import Splice.Wallet.Payment
-import Splice.AmuletRules (AppTransferContext(..))
-import Splice.Round
-import Splice.Util
 import DA.Time
-import DA.Assert ((===)) -- (assertWithinDeadline, assertDeadlineExceeded, (===))
-import DA.Action (unless)
+import DA.Assert (assertWithinDeadline, assertDeadlineExceeded, (===))
+import DA.Optional (fromOptional)
+import DA.TextMap as TextMap
 
--- License contract template
-----------------------------
+import Splice.Util as Util (require)
+import Splice.Api.Token.MetadataV1
+import Splice.Api.Token.HoldingV1
+import Splice.Api.Token.AllocationRequestV1
+import Splice.Api.Token.AllocationV1 as Api.Token.AllocationV1
 
 -- | Parameters determining the license behavior.
-data LicenseParams = LicenseParams with
+data LicenseParams = LicenseParams
+  with
     meta : Metadata -- ^ Machine-readable metadata for this license.
   deriving (Eq, Show)
 
-data Group = Group
+-- | A license contract between an app provider and an app user to use the app.
+template License
   with
-    user : Party
-    provider : Party
-    dso: Party
-  deriving (Show, Eq)
-
--- | Information about the license renewal cancellation
-data LicenseRenewalCancel = LicenseRenewalCancel
-  with
-    actor : Party -- Party that ended the renewal request.
-    meta  : Metadata
-    -- ^ Metadata about the cancellation; the reason for the cancellation should
-    -- be provided in here using key "reason".
-  deriving (Eq, Show)
-
--- | A template to track one specific license renewal request.
--- Note that multiple of these can be in flight at any point in time.
-template LicenseRenewalRequest with
-    provider : Party
-    user : Party
-    dso : Party
-    licenseNum : Int
-    licenseFeeCc : Decimal
-    licenseExtensionDuration : RelTime
-    reference : ContractId AppPaymentRequest
-  where 
-    signatory user, provider
-
-    choice LicenseRenewalRequest_Cancel : LicenseRenewalCancel
-      with
-        actor : Party -- Party that exercises the cancellation.
-        meta  : Metadata
-      controller
-        actor
-      do
-        Licensing.Util.require "Actor is a signatory" (actor `elem` signatory this)
-        unless (actor == user || actor == provider) $
-          fail "Actor is not a signatory or the user/provider"
-        pure LicenseRenewalCancel with
-          actor
-          meta
-    postconsuming choice LicenseRenewalRequest_CompleteRenewal : ContractId License
-      with
-        acceptedPaymentCid : ContractId AcceptedAppPayment
-        licenseCid: ContractId License
-        transferContext : AppTransferContext
-      controller provider
-      do
-         -- archival happens via the consuming AcceptedAppPayment_Collect choice
-         acceptedPayment <- fetchUncheckedButArchiveLater acceptedPaymentCid
-         exercise acceptedPaymentCid (AcceptedAppPayment_Collect transferContext)
-         openMiningRound <- exercise @OpenMiningRound transferContext.openMiningRound (OpenMiningRound_Fetch provider)
-         let expectedAcceptedPayment = AcceptedAppPayment with
-               sender = user
-               provider
-               amuletReceiverAmounts = [ReceiverAmuletAmount provider licenseFeeCc]
-               dso 
-               lockedAmulet = acceptedPayment.lockedAmulet
-               round = openMiningRound.round
-               reference
-         acceptedPayment === expectedAcceptedPayment
-         license <- fetchAndArchive Group {user, provider, dso} licenseCid
-         licenseNum === license.licenseNum
-         now <- getTime
-         create License with
-                    dso
-                    user
-                    provider
-                    licenseNum
-                    params = license.params
-                    expiresAt = (max now license.expiresAt) `addRelTime` licenseExtensionDuration       
-
--- | A license contract between an app provider and an app user to use the app
--- for a specific purpose.
-template License with
-    provider : Party -- ^ App provider issuing the license.
-    user : Party -- ^ App user holding the license.
-    dso : Party -- ^ DSO party issuing the CC to be used for billing.
-    expiresAt: Time -- ^ Time when the license expires.
-    licenseNum : Int -- ^ License number identifying this license among all of the ones granted by the provider to this user.
-    params : LicenseParams -- ^ Parameters determining the behavior and purpose of the license.
+    provider : Party -- ^ Party identifying the app provider
+    user : Party -- ^ Party identifying the app user
+    dso : Party -- ^ The DSO party whose amulet is used for billing.
+    expiresAt : Time -- ^ When the license expires. The license is not valid after this time.
+    licenseNum : Int -- ^ The license number
+    params : LicenseParams
+    originalLicenseCid : Optional (ContractId License)
+      -- ^ The contract-id of the first version of this license contract, which
+      -- serves as a unique identifier for the license itself.    
   where
     signatory provider, user
-    
-    nonconsuming choice License_Renew : (ContractId LicenseRenewalRequest, ContractId AppPaymentRequest)
+
+    -- | Renews this license by collecting a fee from the user
+    --   via the token standard. The actual settlement flow
+    --   is defined by the corresponding LicenseRenewalRequest.
+    nonconsuming choice License_Renew : ContractId LicenseRenewalRequest
       with
-        licenseFeeCc: Decimal      
+        licenseFeeInstrumentId : InstrumentId
+        licenseFeeAmount : Decimal
         licenseExtensionDuration : RelTime
-        paymentAcceptanceDuration: RelTime
-        description: Text
+        paymentAcceptanceDuration : RelTime
+        requestedAt : Time
+        prepareUntil : Time
+        settleBefore : Time
+        description : Text
       controller provider
-      do now <- getTime
-         paymentRequest <- create AppPaymentRequest with
-           provider, dso
-           sender = user
-           receiverAmounts = [ReceiverAmount provider (PaymentAmount licenseFeeCc AmuletUnit)]
-           description
-           expiresAt = now `addRelTime` paymentAcceptanceDuration
-         renewalOffer <- create LicenseRenewalRequest
-           with
-             provider, dso, user 
-             licenseFeeCc
-             licenseExtensionDuration
-             licenseNum
-             reference = paymentRequest
-         pure (renewalOffer, paymentRequest)    
+      do
+        assertDeadlineExceeded "requestedAt" requestedAt
+        assertWithinDeadline "prepareUntil" prepareUntil
+        require "prepareUntil < settleBefore" (prepareUntil < settleBefore)
+        create LicenseRenewalRequest with
+          provider
+          user
+          dso
+          licenseNum
+          licenseFeeAmount
+          licenseFeeInstrumentId
+          licenseExtensionDuration
+          prepareUntil
+          settleBefore
+          createdAt = requestedAt
+          originalLicenseCid = fromOptional self originalLicenseCid
+          description
 
-
+    -- | Used if a provider/user chooses to mark the license as expired
+    --   once the time has actually passed.
     choice License_Expire : ()
       with
-        actor : Party -- Party that initiated the expiration.
-        meta : Metadata -- Metadata for this expiration.
+        actor : Party
+        meta : Metadata
       controller actor
       do
-        now <- getTime
-        Licensing.Util.require "Actor is a signatory" (actor `elem` signatory this)
-        Licensing.Util.require "License is not expired yet" (now > expiresAt)        
-        enforceMetadataLimits meta
+        require "Actor is a signatory" (actor `elem` signatory this)
+        assertDeadlineExceeded "expiresAt" expiresAt
 
-instance HasCheckedFetch License Group where
-  contractGroupId License{..} = Group with ..
+-- | A request to renew a license. This is where the token-standard-based
+--   fee settlement is driven. The user is asked to pay the renewal fee
+--   to the provider. Once settled, the old license is archived and a new
+--   license with extended validity is created.
+template LicenseRenewalRequest
+  with
+    provider : Party -- ^ Party identifying the app provider
+    user : Party -- ^ Party identifying the app user
+    dso : Party -- ^ The DSO party whose amulet is used for billing.
+    licenseNum : Int -- ^ The license number
+    licenseFeeAmount : Decimal -- ^ The amount to be paid for the license renewal
+    licenseFeeInstrumentId : InstrumentId -- ^ The instrument used for the license fee payment
+    licenseExtensionDuration : RelTime -- ^ The duration for which the license is extended
+    prepareUntil : Time -- ^ Until when (exclusive) the senders are given time to allocate their assets.
+    settleBefore : Time
+      -- ^ Until when (exclusive) the executor is given time to execute the settlement.
+      --
+      -- SHOULD be strictly after `prepareUntil`.
+    createdAt : Time -- ^ When the settlement was requested
+    originalLicenseCid : ContractId License
+      -- ^ The contract-id of the first version of this license contract, which
+      -- serves as a unique identifier for the license itself. 
+    description : Text -- ^ Reason for renewal   
+
+  where
+    signatory user, provider
+
+    -- | Completes the renewal by finalizing the token-standard-based fee
+    --   transfer via Allocation and creating the new license state.
+    --
+    --   Once the license fee is transferred, the old license is archived
+    --   and replaced with a new license with extended validity.
+    postconsuming choice LicenseRenewalRequest_CompleteRenewal : ContractId License
+      with
+        allocationCid : ContractId Allocation
+        licenseCid : ContractId License
+        extraArgs : ExtraArgs
+      controller provider
+      do
+        assertDeadlineExceeded "prepareUntil" prepareUntil
+        assertWithinDeadline "settleBefore" settleBefore
+
+        alloc <- fetch @Allocation allocationCid
+        let allocView = view @Allocation alloc
+            transferLeg = allocView.allocation.transferLeg
+            settlementRef = (view $ toInterface @AllocationRequest this).settlement.settlementRef
+
+        allocView.allocation.settlement.settlementRef === settlementRef
+        transferLeg.instrumentId === licenseFeeInstrumentId
+        transferLeg.amount === licenseFeeAmount
+        transferLeg.receiver === provider
+        transferLeg.sender === user
+
+        exercise allocationCid (Allocation_ExecuteTransfer extraArgs)
+
+        oldLicense <- fetch licenseCid
+
+        require "license originalLicenseCid matches request" (fromOptional licenseCid oldLicense.originalLicenseCid == originalLicenseCid)
+
+        licenseNum === oldLicense.licenseNum
+        user === oldLicense.user
+        dso === oldLicense.dso
+        provider === oldLicense.provider
+
+        archive licenseCid
+
+        now <- getTime
+        create oldLicense
+          with
+            expiresAt = (max now oldLicense.expiresAt) `addRelTime` licenseExtensionDuration
+            originalLicenseCid = Some originalLicenseCid
+
+    interface instance AllocationRequest for LicenseRenewalRequest where
+      view =
+        AllocationRequestView
+          with
+            settlement =
+              SettlementInfo
+                with
+                  executor = provider
+                  requestedAt = createdAt
+                  allocateBefore = prepareUntil
+                  settleBefore
+                  settlementRef =
+                    Reference
+                      with
+                        id = "LicenseRenewalRequest"
+                        cid = Some (coerceContractId originalLicenseCid)
+                  meta = emptyMetadata
+            transferLegs = TextMap.fromList
+              [("leg0", Api.Token.AllocationV1.TransferLeg
+                  with
+                    sender = user
+                    receiver = provider
+                    amount = licenseFeeAmount
+                    instrumentId = licenseFeeInstrumentId
+                    meta = emptyMetadata)
+              ]
+            meta = Metadata with
+                     values = TextMap.fromList [("splice.lfdecentralizedtrust.org/reason", description)]
+
+      allocationRequest_RejectImpl _ AllocationRequest_Reject{..} = do
+        require "Actor is the user paying the fee" (actor == user)
+        pure ChoiceExecutionMetadata with meta = emptyMetadata
+
+      allocationRequest_WithdrawImpl _ _ =
+        pure ChoiceExecutionMetadata with meta = emptyMetadata
