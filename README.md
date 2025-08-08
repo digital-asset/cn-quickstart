@@ -342,6 +342,36 @@ EOF
 ```
 In this context, `share_file` is a utility function that writes the provided content (the second argument) to the specified file (the first argument) on the shared volume `onboarding`. This volume is also mounted in the `backend-service`, and the startup script (docker/backend-service/start.sh) sources the newly shared script prior to executing the main command of the backend service, thereby ensuring that the `APP_PROVIDER_PARTY` environment variable is available to the service.
 
+## Vite Development
+
+Leverage Vite’s hot module replacement for efficient front-end iteration. To start the Vite development server with live reloading, run:
+
+```bash
+make start-vite-dev
+```
+
+### Debugging in VS Code
+
+To enable client-side debugging in Visual Studio Code, create or update the file `quickstart/frontend/.vscode/launch.json` with the following configuration:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Vite: Chrome Debug",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://app-provider.localhost:5173",
+      "webRoot": "${workspaceFolder}/src"
+    }
+  ]
+}
+```
+
+This setup launches Chrome against the Vite server and maps breakpoints to your source files. 
+
+Note: When you log out and in as a different user, Keycloak will automatically redirect you back to the Quickstart page. To ensure Visual Studio Code detects the source files, please reload the page in your browser.
 
 ## License
 
