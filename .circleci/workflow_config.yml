@@ -51,6 +51,34 @@ commands:
             cd quickstart \
             && << parameters.command >>
 
+  docs:
+    parameters:
+      command:
+        type: string
+        description: command to run in docs directory
+        default: ''
+    steps:
+      - run:
+          name: docs/<< parameters.command >>
+          command: |
+            cd sdk \
+            && << parameters.command >>
+
+  docs-setup:
+    steps:
+      - restore_cache:
+          name: venv restore cache
+          keys:
+            - venv-qs-{{ checksum "./sdk/poetry.lock" }}-{{ checksum "./sdk/pyproject.toml"}}-{{ checksum "./sdk/Makefile" }}
+      - docs:
+          command: make poetry-install
+      - save_cache:
+          name: venv save cache
+          key: venv-qs-{{ checksum "./sdk/poetry.lock" }}-{{ checksum "./sdk/pyproject.toml"}}-{{ checksum "./sdk/Makefile" }}
+          paths:
+            - ./sdk/.venv/
+
+
 jobs:
   integration-test:
     resource_class: xlarge
@@ -105,8 +133,10 @@ jobs:
     steps:
       - checkout
       - nix
-      - run:
-          command: echo "place holder for docs validation"
+      - docs-setup
+      - docs:
+          command: make render-preview
+
 
 
 workflows:
