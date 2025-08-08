@@ -10,6 +10,12 @@ dependencies:
   - daml-stdlib
 data-dependencies:
   # TODO: fetch as artifacts when integrating gradle-daml-plugin https://github.com/DACH-NY/canton-network-node/issues/16393
-- ../dars/splice-amulet-0.1.9.dar
 - ../dars/splice-util-0.1.3.dar
-- ../dars/splice-wallet-payments-0.1.9.dar
+- ../dars/splice-api-token-metadata-v1-1.0.0.dar
+- ../dars/splice-api-token-holding-v1-1.0.0.dar
+- ../dars/splice-api-token-allocation-v1-1.0.0.dar
+- ../dars/splice-api-token-allocation-request-v1-1.0.0.dar
+build-options:
+  - --ghc-option=-Wunused-binds
+  - --ghc-option=-Wunused-matches
+  - -Wno-ledger-time-is-alpha

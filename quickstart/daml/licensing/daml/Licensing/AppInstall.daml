@@ -5,9 +5,9 @@
 -- rights to both the app user and the app provider.
 module Licensing.AppInstall where
 
-import Licensing.Util
 import Licensing.License
-
+import Splice.Api.Token.MetadataV1
+import Splice.Util as Util (require)
 
 -- | Explicit result type to simplify upgrading.
 data AppInstall_CreateLicense_Result = AppInstall_CreateLicense_Result with
@@ -32,7 +32,6 @@ template AppInstall with
         params : LicenseParams -- ^ Parameters of the license to be created.
       controller provider
       do
-        enforceMetadataLimits params.meta
         now <- getTime
   
         -- create the license
@@ -43,6 +42,7 @@ template AppInstall with
           params
           expiresAt = now
           licenseNum = numLicensesCreated + 1
+          originalLicenseCid = None
 
         -- count the number of created licenses for ease of tracking
         installId <- create this with
@@ -52,7 +52,7 @@ template AppInstall with
           installId = installId
           licenseId = licenseId
 
-    -- | Both users and providers  can always opt out of the app installation.
+    -- | Both users and providers can always opt out of the app installation.
     -- Licenses are not cancelled at the same time, but can be cancelled
     -- separately.
     choice  AppInstall_Cancel : ()
@@ -62,7 +62,7 @@ template AppInstall with
       controller actor
       do
         require "Actor is a signatory" (actor `elem` signatory this)
-        enforceMetadataLimits meta
+        pure ()
 
 
 -- | A request by a user to install the app.
@@ -81,8 +81,6 @@ template AppInstallRequest with
         meta : Metadata -- Metadata of the acceptance choice.
       controller provider
       do
-        enforceMetadataLimits meta
-        enforceMetadataLimits installMeta
         create AppInstall with
           dso = dso
           provider = provider
@@ -94,10 +92,5 @@ template AppInstallRequest with
       with
         meta : Metadata -- ^ Machine-readable metadata of the rejection.
       controller provider
-      do enforceMetadataLimits meta
-
-    choice AppInstallRequest_Cancel : ()
-      with
-        meta : Metadata -- ^ Machine-readable metadata of the withdrawal.
-      controller user
-      do enforceMetadataLimits meta
+        do
+          pure ()
