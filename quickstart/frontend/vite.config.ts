@@ -11,6 +11,7 @@ function setProxyCustomHeaders(proxy: any) {
         proxyReq.setHeader('X-Forwarded-For', req.headers['x-forwarded-for'] || req.socket.remoteAddress || '')
         proxyReq.setHeader('X-Forwarded-Proto', 'http')
         proxyReq.setHeader('X-Forwarded-Port', 5173)
+        proxyReq.setHeader('host', 'app-provider.localhost')
     });
 }
 
@@ -23,12 +24,12 @@ export default defineConfig(({ mode }: ConfigEnv) => {
             ViteYaml(),
         ],
         server: {
-            host: 'app-provider.localhost',
+            host: 'localhost',
             proxy: {
                 '/api': {
                     target: `http://localhost:${backendPort}/`,
                     changeOrigin: false,
-                    rewrite: (path) => path.replace(/^\/api/, ''),
+                    rewrite: path => path.replace(/^\/api/, ''),
                     configure: setProxyCustomHeaders
                 },
                 '/login': {
@@ -48,5 +49,5 @@ export default defineConfig(({ mode }: ConfigEnv) => {
                 },
             },
         },
-    };
+    }
 });
