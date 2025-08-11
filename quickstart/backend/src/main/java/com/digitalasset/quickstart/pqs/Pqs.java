@@ -43,7 +43,7 @@ public class Pqs {
     @Autowired
     public Pqs(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.json2Dto = Utils.getConverters(new JsonStringCodec(true, true), Daml.ENTITIES);
+        this.json2Dto = Utils.getConverters(new JsonStringCodec(true, true, false), Daml.ENTITIES);
     }
 
     /**
