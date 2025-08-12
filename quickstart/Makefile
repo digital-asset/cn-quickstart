@@ -176,6 +176,7 @@ test: test-daml ## Run unit tests
 
 .PHONY: test-daml
 test-daml: ## Run daml tests
+test-daml: build-daml
 	./gradlew :daml:testDaml
 
 .PHONY: build-docker-images
