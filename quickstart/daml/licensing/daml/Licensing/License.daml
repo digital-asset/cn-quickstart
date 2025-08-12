@@ -11,7 +11,7 @@ import DA.Assert (assertWithinDeadline, assertDeadlineExceeded, (===))
 import DA.Optional (fromOptional)
 import DA.TextMap as TextMap
 
-import Splice.Util as Util (require)
+import Licensing.Util as Util (require)
 import Splice.Api.Token.MetadataV1
 import Splice.Api.Token.HoldingV1
 import Splice.Api.Token.AllocationRequestV1
@@ -120,7 +120,6 @@ template LicenseRenewalRequest
         extraArgs : ExtraArgs
       controller provider
       do
-        assertDeadlineExceeded "prepareUntil" prepareUntil
         assertWithinDeadline "settleBefore" settleBefore
 
         alloc <- fetch @Allocation allocationCid
