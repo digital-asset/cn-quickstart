@@ -7,7 +7,7 @@ module Licensing.AppInstall where
 
 import Licensing.License
 import Splice.Api.Token.MetadataV1
-import Splice.Util as Util (require)
+import Licensing.Util as Util (require)
 
 -- | Explicit result type to simplify upgrading.
 data AppInstall_CreateLicense_Result = AppInstall_CreateLicense_Result with
