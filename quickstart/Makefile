@@ -150,6 +150,22 @@ build-backend: ## Build the backend service
 build-daml: ## Build the Daml model
 	./gradlew :daml:build distTar
 
+.PHONY: docker-available
+docker-available: ## Check if Docker CLI exists and is running
+	@{ \
+    	  if ! command -v docker >/dev/null 2>&1; then \
+    	    echo "✗ Docker CLI not found – please install Docker."; \
+    	    echo "  See: https://docs.docker.com/engine/install/"; \
+    	    exit 1; \
+    	  fi; \
+    	  if ! docker info >/dev/null 2>&1; then \
+    	    echo "✗ Docker does not appear to be running – please start it."; \
+    	    echo "  See: https://docs.docker.com/engine/daemon/start/"; \
+    	    exit 1; \
+    	  fi; \
+    	  echo "✓ Docker is installed and running"; \
+    }
+
 .PHONY: check-docker
 check-docker: ## Check Docker and Docker Compose versions
 	@{ \
