@@ -29,7 +29,7 @@ data-dependencies:
   - ../../dars/splice-api-token-allocation-v1-1.0.0.dar
   - ../../dars/splice-api-token-allocation-request-v1-1.0.0.dar
   - ../../dars/splice-api-token-allocation-instruction-v1-1.0.0.dar
-  - ../../dars/splice-util-0.1.3.dar
+  - ../../external-test-dars/splice-util-0.1.3.dar
   - ../../dars/splice-amulet-0.1.9.dar
 build-options:
   - --target=2.1

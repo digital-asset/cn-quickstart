@@ -18,7 +18,6 @@ data AppInstall_CreateLicense_Result = AppInstall_CreateLicense_Result with
 
 -- | An installation of the app
 template AppInstall with
-    dso : Party -- ^ The DSO party whose amulet is used for billing.
     provider : Party -- ^ Party identifying the app provider
     user : Party -- ^ Party identifying the app user
     meta : Metadata -- ^ Machine-readable metadata of this installation.
@@ -36,13 +35,11 @@ template AppInstall with
   
         -- create the license
         licenseId <- create License with
-          dso
           user
           provider
           params
           expiresAt = now
           licenseNum = numLicensesCreated + 1
-          originalLicenseCid = None
 
         -- count the number of created licenses for ease of tracking
         installId <- create this with
@@ -67,7 +64,6 @@ template AppInstall with
 
 -- | A request by a user to install the app.
 template AppInstallRequest with
-    dso : Party -- ^ The DSO party whose amulet is used for billing.
     provider : Party -- ^ Party identifying the app provider
     user : Party -- ^ Party identifying the app user
     meta : Metadata -- ^ Metadata of the request. Can be used to correlate the request with other data on the provider side.
@@ -82,7 +78,6 @@ template AppInstallRequest with
       controller provider
       do
         create AppInstall with
-          dso = dso
           provider = provider
           user = user
           meta = installMeta
