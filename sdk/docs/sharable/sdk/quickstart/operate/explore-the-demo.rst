@@ -31,9 +31,6 @@ Prerequisites
 You should have successfully `installed the CN App Quickstart <../download/cnqs-installation.html>`__
 before beginning this demonstration.
 
-Access to the `CN Docker repository <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__
-is needed to successfully pull the Digital Asset artifacts from JFrog Artifactory.
-
 If you need support accessing the JFrog Artifactory, [contact us](https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog).
 
 The CN App Quickstart is a Dockerized application and requires `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__.

@@ -50,9 +50,8 @@ Prerequisites
 =============
 
 Access to the `CN-Quickstart Github repository <https://github.com/digital-asset/cn-quickstart>`__
-and `CN Docker repository <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__
-is needed to successfully pull the Digital Asset artifacts from JFrog
-Artifactory.
+and `digitalasset-docker.jfrog.io` JFrog Artifactory docker repository is needed to successfully pull 
+the Digital Asset artifacts..
 
 If you need access or additional support, [contact us](https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog).
 
@@ -119,7 +118,7 @@ Check the ~/.netrc file
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Necessary artifacts are located in
-`Digital Asset's JFrog Artifactory <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__.
+`Digital Asset's JFrog Artifactory <https://digitalasset.jfrog.io/ui/native/docker>`__.
 These files are accessed through the repository’s build system using a
 `~/.netrc` configuration file.
 
@@ -231,7 +230,6 @@ Login to Docker repositories via the terminal.
 ::
 
    docker login digitalasset-docker.jfrog.io
-   docker login digitalasset-canton-network-docker.jfrog.io
    docker login
 
 The last command requires a `Docker Hub <https://app.docker.com/>`__ username
@@ -401,7 +399,7 @@ Resources
   * `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__
   * `Docker Hub <https://app.docker.com/>`__
   * `GSF list of SV Nodes <https://sync.global/sv-network/>`__
-  * `JFrog CN Artifactory <https://digitalasset.jfrog.io/ui/native/canton-network-docker>`__
+  * `JFrog Artifactory DA Docker <https://digitalasset.jfrog.io/ui/native/docker>`__
   * `Nix <https://nixos.org/download/>`__
   * `Quickstart GitHub repository <https://github.com/digital-asset/cn-quickstart>`__
   * `Validator onboarding documentation <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
