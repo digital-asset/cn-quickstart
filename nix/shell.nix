@@ -3,7 +3,7 @@ let
   inherit (pkgs) stdenv;
   requiredPackages = with pkgs; ([ # these packages are required both in CI and for local development
     jdk21
-    nodejs_20
+    nodejs
     typescript
   ] ++ (if ci then [ # these packages should only be installed on CI
     circleci-cli
