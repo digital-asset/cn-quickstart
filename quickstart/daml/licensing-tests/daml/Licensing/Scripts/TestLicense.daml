@@ -106,7 +106,7 @@ initiateLicenseRenewal description renewalFee extensionDuration (registry, provi
   -- Provider exercises License_Renew to create a LicenseRenewalRequest
   renewalRequestCid <- submit providerParty $
     exerciseCmd licenseCid License_Renew with
-      id = requestId
+      requestId
       licenseFeeInstrumentId = instrumentId
       licenseFeeAmount = renewalFee
       licenseExtensionDuration = extensionDuration
