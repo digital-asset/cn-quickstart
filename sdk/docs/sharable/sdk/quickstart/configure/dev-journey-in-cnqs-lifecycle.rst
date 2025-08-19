@@ -67,6 +67,8 @@ Understanding the build system can save extensive time in development efforts co
 The ``Makefile`` provides standardized commands for common operations.
 
 +-------------------------+--------------------------------------------+
+| **Target**              | **Description**                            |
++-------------------------+--------------------------------------------+
 | make setup              | Configure environment variables and        |
 |                         | dependencies                               |
 +=========================+============================================+
