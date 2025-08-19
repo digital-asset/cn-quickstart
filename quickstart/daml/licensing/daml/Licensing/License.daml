@@ -39,7 +39,7 @@ template License
     --   is defined by the corresponding LicenseRenewalRequest.
     nonconsuming choice License_Renew : ContractId LicenseRenewalRequest
       with
-        id : Text
+        requestId : Text
         licenseFeeInstrumentId : InstrumentId
         licenseFeeAmount : Decimal
         licenseExtensionDuration : RelTime
@@ -54,7 +54,7 @@ template License
         assertWithinDeadline "prepareUntil" prepareUntil
         require "prepareUntil < settleBefore" (prepareUntil < settleBefore)
         create LicenseRenewalRequest with
-          id
+          requestId
           provider
           user
           licenseNum
@@ -83,7 +83,7 @@ template License
 --   license with extended validity is created.
 template LicenseRenewalRequest
   with
-    id : Text -- ^ The identifier of the license renewal request.
+    requestId : Text -- ^ Globally unique id for this renewal request (e.g. a UUID)
     provider : Party -- ^ Party identifying the app provider
     user : Party -- ^ Party identifying the app user
     licenseNum : Int -- ^ The license number
@@ -118,7 +118,7 @@ template LicenseRenewalRequest
         alloc <- fetch @Allocation allocationCid  
         let allocView = view @Allocation alloc
             thisView = view $ toInterface @AllocationRequest this
-            expectedTransferLegId = "licenseFeePayment"
+            expectedTransferLegId = licenseFeePaymentLegId
             expectedTransferLeg = fromSome $ TextMap.lookup expectedTransferLegId thisView.transferLegs
             expectedSettlement = thisView.settlement
 
@@ -145,9 +145,12 @@ template LicenseRenewalRequest
       view =
         let
           meta = Metadata with
-            values = TextMap.fromList [("splice.lfdecentralizedtrust.org/reason", description)
-                                      ,("cn-quickstart.example.org/licenseNum", show licenseNum)
-                                      ]
+            values = TextMap.fromList [
+              ("splice.lfdecentralizedtrust.org/reason", description)
+              -- Communicate the license number for disambiguation using app specific 
+              -- metadata as per https://github.com/global-synchronizer-foundation/cips/blob/main/cip-0056/cip-0056.md#generic-metadata
+              ,("cn-quickstart.example.org/licenseNum", show licenseNum)
+              ]
         in
           AllocationRequestView
             with
@@ -161,11 +164,11 @@ template LicenseRenewalRequest
                     settlementRef =
                       Reference
                         with
-                          id
+                          id = requestId
                           cid = None
                     meta
               transferLegs = TextMap.fromList
-                [("licenseFeePayment", Api.Token.AllocationV1.TransferLeg
+                [(licenseFeePaymentLegId, Api.Token.AllocationV1.TransferLeg
                     with
                       sender = user
                       receiver = provider
@@ -181,3 +184,5 @@ template LicenseRenewalRequest
 
       allocationRequest_WithdrawImpl _ _ =
         pure ChoiceExecutionMetadata with meta = emptyMetadata
+
+licenseFeePaymentLegId = "licenseFeePayment"
