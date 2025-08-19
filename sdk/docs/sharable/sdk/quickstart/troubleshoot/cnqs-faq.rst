@@ -297,6 +297,13 @@ The CN App Quickstart provides several observability options:
 
 3. Consolidated logs view in Grafana
 
+**Why do backend configurations disappear after restarting the backend service?**
+
+Backend service configurations (including tenant registrations, application state, and service registrations) are stored in memory and lost when the service is restarts.
+Run ``make restart-backend`` to rebuild and restart the backend service with configurations restored.
+
+Persistent storage is in our roadmap, but has not been implemented yet.
+
 **Infrastructure & environment**
 --------------------------------
 
@@ -384,6 +391,8 @@ Best practices include:
 **What's the recommended way to query ledger data?**
 
 The Participant Query Store (PQS) is recommended for querying ledger data.
+
+.. _make-target-reference:
 
 **CN App Quickstart Make target reference**
 ===========================================
