@@ -77,4 +77,5 @@ Update at a cadence that balances staying up to date with development environmen
    - jdk21
    - nodejs_20
    - typescript
+   
 These are in addition to the `Nix stdenv environment <https://nixos.org/manual/nixpkgs/stable/#sec-tools-of-stdenv>`__.
