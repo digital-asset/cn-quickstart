@@ -1,53 +1,11 @@
 -- Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: 0BSD
 
--- | Shared utilities for the Licensing contracts.
+-- | Utility functions
 module Licensing.Util where
-
-
-import DA.Action (unless)
-import qualified DA.Map as Map
-import DA.Text as T
-
-
--- Assertions
--------------
 
 -- | Check whether a required condition is true. If it's not, abort the
 -- transaction with a message saying that the requirement was not met.
 require : CanAssert m => Text -> Bool -> m ()
 require msg invariant =
   assertMsg ("The requirement '" <> msg <> "' was not met.") invariant
-
-
--- Metadata
------------
-
--- | Machine-readable metadata intended for automation components to correlate
--- contracts or exercised choices with data stored in off-ledger systems. For
--- example: an identifier for referring to this license, purpose of the license,
--- etc.
---
--- Inspired by k8s support for annotations, see
--- https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
---
--- Note: aim to keep the metadata small, as on-ledger data is costly.
-data Metadata = Metadata with
-    values : Map.Map Text Text
-  deriving (Eq, Show)
-
--- | Empty metadata.
-emptyMetadata : Metadata
-emptyMetadata = Metadata with values = Map.empty
-
-
--- | Easy way to enforce metadata limits within choices.
---
--- We consciously do not enforce the limits in 'ensure' clauses as that makes them harder to
--- change on an upgrade, as lowering the limits may make existing data unreadable.
-enforceMetadataLimits : Metadata -> Update ()
-enforceMetadataLimits (Metadata m) = do
-  let numEntries = Map.size m
-  unless (numEntries <= 128) $ fail $ "Metadata has too many entries " <> show numEntries <> ": max 128"
-  let totalSize = sum [T.length k + T.length v | (k, v) <- Map.toList m]
-  unless (totalSize <= 8192) $ fail $ "Metadata is too large " <> show totalSize <> ": max 8192 chars"
