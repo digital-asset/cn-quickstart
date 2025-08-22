@@ -144,6 +144,14 @@ After starting the application with `make start` you can access the following UI
 
 The `*.localhost` domains will resolve to your local host IP `127.0.0.1`.
 
+## External Token Transfers
+
+For external integrations requiring token transfers, the system uses Registry API endpoints rather than direct contract queries. 
+Unlike direct contract access, external token transfers are handled through Registry API endpoints exposed by the Scan app.
+
+**LocalNet Endpoint:**
+Transfer Factory: `http://scan.localhost:4000/registry/transfer-instruction/v1/transfer-factory`
+
 ## Exploring Quickstart Docker Compose
 
 Before exploring advanced topics, we recommend familiarizing yourself with the core components of the Licensing Model Workflow within Quickstart. 
