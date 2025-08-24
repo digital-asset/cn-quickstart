@@ -16,6 +16,7 @@ services:
       - ./backend/build/distributions/backend.tar:/backend.tar
       - ./docker/backend-service/start.sh:/app/start.sh
       - onboarding:/onboarding
+      - ./backend/build/otel-agent/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar:/otel-agent.jar
     command: /app/start.sh
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"

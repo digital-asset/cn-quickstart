@@ -4,221 +4,191 @@
 import React, { useEffect, useState } from 'react';
 import { useLicenseStore } from '../stores/licenseStore';
 import { useUserStore } from '../stores/userStore';
-import { useLocation } from 'react-router-dom';
+import LicenseRenewalRequestModal from '../components/LicenseRenewalRequestModal.tsx';
+import LicenseExpireModal from '../components/LicenseExpireModal.tsx';
+
+import type {
+  License,
+  // LicenseRenewalRequest, // removed, managed inside RenewalsModal
+} from '../openapi.d.ts';
 
 const LicensesView: React.FC = () => {
-    const {
-        licenses,
-        fetchLicenses,
-        initiateLicenseRenewal,
-        initiateLicenseExpiration,
-        completeLicenseRenewal,
-    } = useLicenseStore();
+  const {
+    licenses,
+    fetchLicenses,
+    initiateLicenseRenewal,
+    initiateLicenseExpiration,
+    completeLicenseRenewal,
+    withdrawLicenseRenewalRequest
+  } = useLicenseStore();
 
-    const { user, fetchUser } = useUserStore();
-    const location = useLocation();
-    const isAdmin = !!user?.isAdmin;
+  const { user, fetchUser } = useUserStore();
+  const isAdmin = !!user?.isAdmin;
 
-    const [selectedLicenseId, setSelectedLicenseId] = useState<string | null>(null);
-    const [renewDescription, setRenewDescription] = useState('');
-    const [expireDescription, setExpireDescription] = useState('');
+  const [selectedLicenseId, setSelectedLicenseId] = useState<string | null>(null);
+  const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
+  const [showExpireModal, setShowExpireModal] = useState(false);
+  const [showRenewalModal, setShowRenewalModal] = useState(false);
 
-    useEffect(() => {
-        fetchUser();
-        fetchLicenses();
-        const intervalId = setInterval(() => {
-            fetchLicenses();
-        }, 5000);
-        return () => clearInterval(intervalId);
-    }, [fetchUser, fetchLicenses]);
+  useEffect(() => {
+    fetchUser();
+    fetchLicenses();
+    const intervalId = setInterval(() => {
+      fetchLicenses();
+    }, 5000);
+    return () => clearInterval(intervalId);
+  }, [fetchUser, fetchLicenses]);
 
-    const closeModal = () => {
-        setSelectedLicenseId(null);
-        setRenewDescription('');
-        setExpireDescription('');
-    };
+  useEffect(() => {
+    if (!selectedLicenseId) {
+    setSelectedLicense(null);
+    return;
+    }
+    setSelectedLicense(licenses.find(l => l.contractId === selectedLicenseId) ?? null);
+  }, [licenses, selectedLicenseId]);
 
-    const handleRenew = async () => {
-        if (!selectedLicenseId) return;
-        await initiateLicenseRenewal(selectedLicenseId, renewDescription);
-        closeModal();
-    };
+  const closeModal = () => {
+    setShowRenewalModal(false);
+    setSelectedLicenseId(null);
+  };
 
-    const handleExpire = async () => {
-        if (!selectedLicenseId) return;
-        await initiateLicenseExpiration(selectedLicenseId, expireDescription);
-        closeModal();
-    };
+  const handleRenew = async (description: string) => {
+    if (!selectedLicenseId || !selectedLicense) return;
+    await initiateLicenseRenewal(selectedLicenseId, description);
+    await fetchLicenses();
+  };
 
-    const handleCompleteRenewal = async (renewalContractId: string) => {
-        await completeLicenseRenewal(renewalContractId);
-        await fetchLicenses();
-    };
+  // Called when user confirms expiration from the LicenseExpireModal
+  const handleExpire = async (description?: string) => {
+    if (!selectedLicenseId) return;
+    await initiateLicenseExpiration(selectedLicenseId, description!);
+    setShowExpireModal(false);
+    setSelectedLicenseId(null);
+    await fetchLicenses();
+  };
 
-    const currentURL = `${window.location.origin}${location.pathname}`;
+  const handleCompleteRenewal = async (renewalContractId: string, renewalRequestContractId: string, allocationContractId: string) => {
+    await completeLicenseRenewal(renewalContractId, renewalRequestContractId, allocationContractId);
+    await fetchLicenses();
+  };
 
-    return (
-        <div>
-            <h2>Licenses</h2>
-            <table className="table table-fixed" id="licenses-table">
-                <thead>
-                <tr>
-                    <th style={{ width: '220px' }}>License Contract ID</th>
-                    <th style={{ width: '100px' }}>DSO</th>
-                    <th style={{ width: '120px' }}>Provider</th>
-                    <th style={{ width: '120px' }}>User</th>
-                    <th style={{ width: '180px' }}>Expires At</th>
-                    <th style={{ width: '110px' }}>License #</th>
-                    <th style={{ width: '100px' }}>Renew Fee</th>
-                    <th style={{ width: '140px' }}>Extension</th>
-                    <th style={{ width: '300px' }}>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                {licenses.map((license) => {
-                    const matchedRequest = license.renewalRequests?.find(
-                        (req) =>
-                            req.dso === license.dso &&
-                            req.provider === license.provider &&
-                            req.user === license.user &&
-                            req.licenseNum === license.licenseNum
-                    );
+  const handleRenewalWithdraw = async (renewalContractId: string) => {
+    if (!selectedLicenseId) return;
+    await withdrawLicenseRenewalRequest(renewalContractId);
+    setShowRenewalModal(false);
+    setSelectedLicenseId(null);
+    await fetchLicenses();
+  };
 
-                    const fee = matchedRequest?.licenseFeeCc;
-                    const extension = matchedRequest?.licenseExtensionDuration;
-                    const payURL = matchedRequest
-                        ? `${(user?.walletUrl || 'http://wallet.localhost:2000').replace(
-                            /\/+$/,
-                            ''
-                        )}/confirm-payment/${matchedRequest.reference}?redirect=${encodeURIComponent(
-                            currentURL
-                        )}`
-                        : '';
+  const formatDateTime = (iso?: string) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    try {
+    // const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return d.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+      // timeZoneName: 'short',
+      // timeZone: tz,
+    });
+    } catch {
+    return d.toString();
+    }
+  };
 
-                    return (
-                        <tr key={license.contractId} className="license-row">
-                            <td className="ellipsis-cell license-contract-id">{license.contractId}</td>
-                            <td className="ellipsis-cell license-dso">{license.dso}</td>
-                            <td className="ellipsis-cell license-provider">{license.provider}</td>
-                            <td className="ellipsis-cell license-user">{license.user}</td>
-                            <td className="ellipsis-cell license-expires-at">{license.expiresAt}</td>
-                            <td className="ellipsis-cell license-number">{license.licenseNum}</td>
-                            <td className="ellipsis-cell license-renew-fee">{fee || ''}</td>
-                            <td className="ellipsis-cell license-extension">{extension || ''}</td>
-                            <td className="license-actions">
-                                {matchedRequest ? (
-                                    <>
-                                        {!isAdmin &&
-                                            user &&
-                                            matchedRequest.user === user.party &&
-                                            !matchedRequest.isPaid && (
-                                                <a
-                                                    href={payURL}
-                                                    className="btn btn-primary me-2 btn-pay-renewal"
-                                                    rel="noopener noreferrer"
-                                                >
-                                                    Pay Renewal
-                                                </a>
-                                            )}
-                                        {isAdmin && matchedRequest.isPaid && (
-                                            <button
-                                                className="btn btn-success btn-complete-renewal"
-                                                onClick={() =>
-                                                    handleCompleteRenewal(matchedRequest.contractId)
-                                                }
-                                            >
-                                                Complete Renewal
-                                            </button>
-                                        )}
-                                    </>
-                                ) : (
-                                    isAdmin && (
-                                        <button
-                                            className="btn btn-primary btn-actions-license"
-                                            onClick={() => setSelectedLicenseId(license.contractId)}
-                                        >
-                                            Actions
-                                        </button>
-                                    )
-                                )}
-                            </td>
-                        </tr>
-                    );
-                })}
-                </tbody>
-            </table>
+  const openExpireModal = (licenseId: string) => {
+    setShowExpireModal(true);
+    setSelectedLicenseId(licenseId);
+  };
 
-            {selectedLicenseId && (
-                <>
-                    <div className="modal-backdrop fade show"></div>
-                    <div className="modal show d-block" tabIndex={-1}>
-                        <div className="modal-dialog modal-lg">
-                            <div className="modal-content">
-                                <div className="modal-header">
-                                    <h5 className="modal-title">
-                                        Actions for License {selectedLicenseId.substring(0, 24)}
-                                    </h5>
-                                    <button
-                                        type="button"
-                                        className="btn-close"
-                                        aria-label="Close"
-                                        onClick={closeModal}
-                                    ></button>
-                                </div>
-                                <div className="modal-body">
-                                    <div className="mb-4">
-                                        <h6>Renew License</h6>
-                                        <p>
-                                            <strong>Extension:</strong> 30 days (P30D),{' '}
-                                            <strong>Payment Acceptance:</strong> 7 days (P7D),{' '}
-                                            <strong>Fee:</strong> 100 CC
-                                        </p>
-                                        <label>Description:</label>
-                                        <input
-                                            className="form-control mb-2 input-renew-description"
-                                            placeholder='e.g. "Renew for next month"'
-                                            value={renewDescription}
-                                            onChange={(e) => setRenewDescription(e.target.value)}
-                                        />
-                                        <button
-                                            className="btn btn-success btn-issue-renewal"
-                                            onClick={handleRenew}
-                                            disabled={!renewDescription.trim()}
-                                        >
-                                            Issue Renewal Payment Request
-                                        </button>
-                                    </div>
-                                    <hr />
-                                    <div className="mb-4">
-                                        <h6>Expire License</h6>
-                                        <label>Description:</label>
-                                        <input
-                                            className="form-control mb-2 input-expire-description"
-                                            placeholder='e.g. "License expired"'
-                                            value={expireDescription}
-                                            onChange={(e) => setExpireDescription(e.target.value)}
-                                        />
-                                        <button
-                                            className="btn btn-danger btn-expire-license"
-                                            onClick={handleExpire}
-                                            disabled={!expireDescription.trim()}
-                                        >
-                                            Expire
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="modal-footer">
-                                    <button className="btn btn-secondary" onClick={closeModal}>
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
-            )}
-        </div>
-    );
+  const openRenewalModal = (licenseId: string) => {
+    setShowRenewalModal(true);
+    setSelectedLicenseId(licenseId);
+  };
+
+  return (
+    <div>
+      <h2>Licenses</h2>
+      <table className="table table-fixed" id="licenses-table">
+        <thead>
+        <tr>
+          <th style={{ width: '220px' }}>License Contract ID</th>
+          {user?.isAdmin && (
+            <th style={{ width: '150px' }}>User</th>
+          )}
+          <th style={{ width: '200px' }}>Expires At</th>
+          <th style={{ width: '110px' }}>License #</th>
+          <th style={{ width: '100px' }}>Pending Renewals</th>
+          <th style={{ width: '100px' }}>Accepted Renewals</th>
+          <th style={{ width: '300px' }}>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {licenses.map((license) => {
+          return (
+            <tr key={license.contractId} className="license-row">
+              <td className="ellipsis-cell license-contract-id">{license.contractId}</td>
+              {user?.isAdmin && (
+                <td className="ellipsis-cell license-user">{license.user}</td>
+              )}
+              <td className="ellipsis-cell license-expires-at">{formatDateTime(license.expiresAt)}</td>
+              <td className="ellipsis-cell license-number">{license.licenseNum}</td>
+              <td className="ellipsis-cell">{license.renewalRequests?.filter(r => !r.allocationCid).length || 0}</td>
+              <td className="ellipsis-cell">{license.renewalRequests?.filter(r => r.allocationCid).length || 0}</td>
+              <td className="license-actions">
+                  {(isAdmin || (license.renewalRequests?.length ?? 0) > 0) && (
+                    <button
+                      className="btn btn-primary btn-actions-license"
+                      onClick={() => openRenewalModal(license.contractId)}
+                    >
+                      Renewals
+                    </button>
+                    )
+                  }
+                  {/* todo send isExpired from backend to avoid client clock skew */}
+                  {license.expiresAt && new Date(license.expiresAt).getTime() < Date.now() && (
+                    <button
+                      className="btn btn-danger btn-expire-license"
+                      onClick={() => openExpireModal(license.contractId)}
+                    >
+                      Expire
+                    </button>
+                  )}
+              </td>
+            </tr>
+          );
+        })}
+        </tbody>
+      </table>
+
+      <LicenseRenewalRequestModal
+        show={showRenewalModal && !!selectedLicenseId && !!selectedLicense}
+        license={selectedLicense}
+        onClose={closeModal}
+        isAdmin={isAdmin}
+        onIssueRenewal={handleRenew}
+        onCompleteRenewal={handleCompleteRenewal}
+        onWithdraw={handleRenewalWithdraw}
+        formatDateTime={formatDateTime}
+      />
+
+      <LicenseExpireModal
+        show={showExpireModal && !!selectedLicense}
+        license={selectedLicense}
+        isAdmin={isAdmin}
+        onClose={() => {
+          setShowExpireModal(false);
+        }}
+        onExpire={handleExpire}
+      />
+    </div>
+  );
 };
 
 export default LicensesView;

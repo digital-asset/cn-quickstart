@@ -38,9 +38,9 @@ const AppInstallsView: React.FC = () => {
             <tr>
               <th style={{ width: '150px' }}>Contract ID</th>
               <th style={{ width: '100px' }}>Status</th>
-              <th style={{ width: '150px' }}>DSO</th>
-              <th style={{ width: '150px' }}>Provider</th>
-              <th style={{ width: '150px' }}>User</th>
+              {user?.isAdmin && (
+                <th style={{ width: '150px' }}>User</th>
+              )}
               <th style={{ width: '300px' }}>Meta</th>
               <th style={{ width: '100px' }}># Licenses</th>
               <th style={{ width: '310px' }}>Actions</th>
@@ -55,15 +55,11 @@ const AppInstallsView: React.FC = () => {
                   <td className="ellipsis-cell app-install-status">
                     {item.status}
                   </td>
-                  <td className="ellipsis-cell app-install-dso">
-                    {item.dso}
-                  </td>
-                  <td className="ellipsis-cell app-install-provider">
-                    {item.provider}
-                  </td>
-                  <td className="ellipsis-cell app-install-user">
-                    {item.user}
-                  </td>
+                  {user?.isAdmin && (
+                    <td className="ellipsis-cell app-install-user">
+                      {item.user}
+                    </td>
+                  )}
                   <td className="ellipsis-cell app-install-meta">
                     {item.meta ? JSON.stringify(item.meta.data) : '{}'}
                   </td>

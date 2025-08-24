@@ -29,7 +29,7 @@ management:
 
 ledger:
   application-id: ${AUTH_APP_PROVIDER_BACKEND_USER_ID:AppId}
-  validator-uri: ${VALIDATOR_URI}
+  registry-base-uri: ${REGISTRY_BASE_URI}
 
 # Access to the application is restricted to authorized end users from organization (e.g. AppProvider, AppUser) registered as tenant.
 # Backend service starts with a single AppProvider internal tenant. Additional tenant registration is available through

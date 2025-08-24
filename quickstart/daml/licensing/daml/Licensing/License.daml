@@ -122,6 +122,7 @@ template LicenseRenewalRequest
             expectedTransferLeg = fromSome $ TextMap.lookup expectedTransferLegId thisView.transferLegs
             expectedSettlement = thisView.settlement
 
+        -- validate that allocation is for this license renewal request
         expectedTransferLegId === allocView.allocation.transferLegId
         expectedTransferLeg === allocView.allocation.transferLeg
         expectedSettlement === allocView.allocation.settlement
@@ -130,7 +131,8 @@ template LicenseRenewalRequest
 
         oldLicense <- fetch licenseCid
         archive licenseCid
-        
+
+        -- validate that the old license is the one that is being renewed
         licenseNum === oldLicense.licenseNum
         user === oldLicense.user
         provider === oldLicense.provider

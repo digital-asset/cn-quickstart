@@ -319,13 +319,19 @@ paths:
           required: true
           schema:
             type: string
-          description: The contract ID of the LicenseRenewalRequest
         - name: commandId
           in: query
           required: true
           schema:
             type: string
           description: The command ID for the ledger transaction
+      requestBody:
+        description: Complete license renewal parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteLicenseRenewalRequest'
       responses:
         '200':
           description: License renewed successfully
@@ -387,6 +393,29 @@ paths:
               schema:
                 type: string
                 nullable: true
+
+  /license-renewal-requests/{contractId}/withdraw:
+    post:
+      summary: Withdraw an LicenseRenewalRequest
+      operationId: withdrawLicenseRenewalRequest
+      parameters:
+        - name: contractId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The contract ID of the LicenseRenewalRequest to withdraw
+        - name: commandId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The command ID for the ledger transaction
+      responses:
+        '200':
+          description: LicenseRenewalRequest withdrawn
+        '400':
+          description: Invalid input
 
 components:
   schemas:
@@ -483,14 +512,11 @@ components:
       type: object
       required:
         - contractId
-        - dso
         - provider
         - user
         - meta
       properties:
         contractId:
-          type: string
-        dso:
           type: string
         provider:
           type: string
@@ -530,7 +556,6 @@ components:
       type: object
       required:
         - contractId
-        - dso
         - provider
         - user
         - meta
@@ -538,8 +563,6 @@ components:
         - licenseNum
       properties:
         contractId:
-          type: string
-        dso:
           type: string
         provider:
           type: string
@@ -586,7 +609,6 @@ components:
       type: object
       required:
         - contractId
-        - dso
         - provider
         - user
         - params
@@ -594,8 +616,6 @@ components:
         - licenseNum
       properties:
         contractId:
-          type: string
-        dso:
           type: string
         provider:
           type: string
@@ -646,12 +666,15 @@ components:
           - contractId
           - provider
           - user
-          - dso
           - licenseNum
-          - licenseFeeCc
+          - licenseFeeAmount
+          - licenseFeeInstrument
           - licenseExtensionDuration
-          - reference
-          - isPaid
+          - prepareUntil
+          - settleBefore
+          - requestedAt
+          - description
+          - requestId
       properties:
         contractId:
           type: string
@@ -659,19 +682,33 @@ components:
           type: string
         user:
           type: string
-        dso:
-          type: string
         licenseNum:
           type: integer
-        licenseFeeCc:
+        licenseFeeAmount:
           type: number
+        licenseFeeInstrument:
+          type: string
         licenseExtensionDuration:
           type: string
           description: "RelTime representing how long the license should be extended."
-        reference:
+        prepareUntil:
+            type: string
+            format: date-time
+            description: "The time until the license renewal request can be prepared."
+        settleBefore:
+            type: string
+            format: date-time
+            description: "The time before which the payment must be settled."
+        requestedAt :
           type: string
-        isPaid:
-          type: boolean
+          format: date-time
+          description: "The time until the license renewal request can be prepared."
+        description:
+          type: string
+        requestId:
+          type: string
+        allocationCid:
+          type: string
 
     LicenseExpireRequest:
       type: object
@@ -681,48 +718,18 @@ components:
         meta:
           $ref: '#/components/schemas/Metadata'
 
-    AppPaymentRequest:
-      type: object
-      properties:
-        contractId:
-          type: string
-        provider:
-          type: string
-        dso:
-          type: string
-        sender:
-          type: string
-        receiverAmounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReceiverAmount'
-        description:
-          type: string
-        expiresAt:
-          type: string
-          format: date-time
-
-    ReceiverAmount:
+    CompleteLicenseRenewalRequest:
       type: object
       required:
-        - receiver
-        - amount
+        - renewalRequestContractId
+        - allocationContractId
       properties:
-        receiver:
+        renewalRequestContractId:
           type: string
-        amount:
-          $ref: '#/components/schemas/PaymentAmount'
-
-    PaymentAmount:
-      type: object
-      required:
-        - amount
-        - unit
-      properties:
-        amount:
-          type: number
-        unit:
+          description: The contract ID of the LicenseRenewalRequest to complete
+        allocationContractId:
           type: string
+          description: The contract ID of the accepted allocation
 
     FeatureFlags:
       type: object
