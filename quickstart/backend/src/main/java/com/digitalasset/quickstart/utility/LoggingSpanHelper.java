@@ -3,15 +3,18 @@
 
 package com.digitalasset.quickstart.utility;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import org.slf4j.Logger;
-
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+
+import org.slf4j.Logger;
 
 /**
  * The {@code LoggingSpanHelper} is a utility class designed to centralize common logging
@@ -137,10 +140,7 @@ public final class LoggingSpanHelper {
      * @param message the log message
      */
     public static void logInfo(Logger logger, String message) {
-        if (logger == null) {
-            return;
-        }
-        logger.atInfo().log(message);
+        logInfo(logger, message, null);
     }
 
     // DEBUG
@@ -172,10 +172,7 @@ public final class LoggingSpanHelper {
      * @param message the log message
      */
     public static void logDebug(Logger logger, String message) {
-        if (logger == null) {
-            return;
-        }
-        logger.atDebug().log(message);
+        logDebug(logger, message, null);
     }
 
     // ERROR
@@ -197,10 +194,13 @@ public final class LoggingSpanHelper {
             attributes.forEach(logBuilder::addKeyValue);
         }
         if (t != null) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
             logBuilder.setCause(t);
+            t.printStackTrace(pw);
+            logger.error(message + t.getMessage() + "\n" + sw);
         }
         logBuilder.log(message);
-        logger.error(message + t.getMessage(), t);
     }
 
     /**
@@ -211,18 +211,7 @@ public final class LoggingSpanHelper {
      * @param t       the throwable to include in the log; may be null
      */
     public static void logError(Logger logger, String message, Throwable t) {
-        if (logger == null) {
-            return;
-        }
-
-        var logBuilder = logger.atError();
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        if (t != null) {
-            logBuilder.setCause(t);
-            t.printStackTrace(pw);
-        }
-        logBuilder.log(message + t.getMessage() + "\n" + sw);
+        logError(logger, message, null, t);
     }
 
     /**
@@ -232,9 +221,75 @@ public final class LoggingSpanHelper {
      * @param message the log message
      */
     public static void logError(Logger logger, String message) {
-        if (logger == null) {
-            return;
-        }
-        logger.atError().log(message);
+        logError(logger, message, null, null);
+    }
+
+
+    public static <T> CompletableFuture<T> traceWithStartEvent(
+            Logger logger,
+            String message,
+            Map<String, Object> baseAttrs,
+            Supplier<CompletableFuture<T>> body) {
+        return _trace(logger, message, baseAttrs, true, body);
+    }
+
+    public static <T> CompletableFuture<T> traceWithStartEventAsync(
+            Logger logger,
+            String message,
+            Map<String, Object> baseAttrs,
+            Supplier<CompletableFuture<T>> body) {
+        return CompletableFuture.supplyAsync(
+                () -> _trace(logger, message, baseAttrs, true, body)
+        ).thenCompose(f -> f);
+    }
+
+    public static <T> CompletableFuture<T> trace(
+            Logger logger,
+            String message,
+            Map<String, Object> baseAttrs,
+            Supplier<CompletableFuture<T>> body) {
+        return _trace(logger, message, baseAttrs, false, body);
+    }
+
+    public static <T> CompletableFuture<T> traceAsync(
+            Logger logger,
+            String message,
+            Map<String, Object> baseAttrs,
+            Supplier<CompletableFuture<T>> body) {
+        return CompletableFuture.supplyAsync(
+                () -> _trace(logger, message, baseAttrs, false, body)
+        ).thenCompose(f -> f);
+    }
+
+    public static <T> CompletableFuture<T> runAndTraceAsync(
+            Logger logger,
+            String message,
+            Map<String, Object> baseAttrs,
+            Supplier<T> body) {
+        return CompletableFuture.supplyAsync(
+                () -> _trace(logger, message, baseAttrs, false, () -> CompletableFuture.completedFuture(body.get()))
+        ).thenCompose(f -> f);
+    }
+
+    private static <T> CompletableFuture<T> _trace(
+            Logger logger,
+            String message,
+            Map<String, Object> baseAttrs,
+            boolean startEvent,
+            Supplier<CompletableFuture<T>> body) {
+        var span = Span.current();
+        if (startEvent) addEventWithAttributes(span, message + " start", baseAttrs);
+        setSpanAttributes(span, baseAttrs);
+        logInfo(logger, message, baseAttrs);
+        return body.get().whenComplete((res, ex) -> {
+            if (ex != null) {
+                logger.error(message + " failed", ex);
+                recordException(span, ex);
+            } else if (res instanceof List<?> listRes) {
+                logger.info(message + " succeeded with {} results", listRes.size());
+            } else {
+                logger.info(message + " succeeded");
+            }
+        });
     }
 }

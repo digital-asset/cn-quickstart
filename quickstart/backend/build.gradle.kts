@@ -90,19 +90,48 @@ openApiGenerate {
     apiPackage = "com.digitalasset.quickstart.api"
 }
 
-// task to generate client-side bindings for scan-proxy
-tasks.register<GenerateTask>("openApiGenerateClient") {
+// task to generate client-side bindings for token metadata standard
+tasks.register<GenerateTask>("openApiGenerateMetadata") {
     generatorName.set("java")
-    inputSpec.set("$projectDir/src/main/resources/vendored/scan-proxy-openapi.yaml")
-    outputDir.set("$buildDir/generated-client")
-    apiPackage.set("com.digitalasset.quickstart.validatorproxy.client.api")
-    modelPackage.set("com.digitalasset.quickstart.validatorproxy.client.model")
+    inputSpec.set("$projectDir/src/main/resources/vendored/token-metadata-v1.yaml")
+    outputDir.set("$buildDir/generated-token-standard-openapi")
+    apiPackage.set("com.digitalasset.quickstart.tokenstandard.openapi.metadata")
+    modelPackage.set("com.digitalasset.quickstart.tokenstandard.openapi.metadata.model")
     configOptions.set(
         mapOf(
             "library" to "native",
             "dateLibrary" to "java8",
             "asyncNative" to "true",
             "jsonLibrary" to "jackson"
+        )
+    )
+    additionalProperties.set(
+        mapOf(
+            "apiNameSuffix" to "MetadataApi"
+        )
+    )
+    generateApiTests.set(false)
+    generateModelTests.set(false)
+}
+
+// task to generate client-side bindings for allocation token standard
+tasks.register<GenerateTask>("openApiGenerateAllocation") {
+    generatorName.set("java")
+    inputSpec.set("$projectDir/src/main/resources/vendored/allocation-v1.yaml")
+    outputDir.set("$buildDir/generated-token-standard-openapi")
+    apiPackage.set("com.digitalasset.quickstart.tokenstandard.openapi.allocation")
+    modelPackage.set("com.digitalasset.quickstart.tokenstandard.openapi.allocation.model")
+    configOptions.set(
+        mapOf(
+            "library" to "native",
+            "dateLibrary" to "java8",
+            "asyncNative" to "true",
+            "jsonLibrary" to "jackson"
+        )
+    )
+    additionalProperties.set(
+        mapOf(
+            "apiNameSuffix" to "AllocationApi"
         )
     )
     generateApiTests.set(false)
@@ -116,6 +145,7 @@ sourceSets {
             srcDirs(
                 "$projectDir/build/generated-spring/src/main/java",
                 "$projectDir/build/generated-client/src/main/java",
+                "$projectDir/build/generated-token-standard-openapi/src/main/java",
                 "$projectDir/build/generated-daml-bindings" // TODO: remove this line once daml plugin is used
             )
         }
@@ -130,7 +160,8 @@ sourceSets {
 tasks.getByName("compileJava").dependsOn(
     ":daml:build",
     "openApiGenerate",
-    "openApiGenerateClient"
+    "openApiGenerateMetadata",
+    "openApiGenerateAllocation"
 )
 
 protobuf {

@@ -10,12 +10,20 @@ x-vars:
     path: ${MODULES_DIR}/pqs/env/app-user/${PQS_APP_USER_PROFILE}/${AUTH_MODE}.env
     required: false
 
+  sv-pqs-env: &sv-pqs-env
+    path: ${MODULES_DIR}/pqs/env/sv/${PQS_SV_PROFILE}/${AUTH_MODE}.env
+    required: false
+
   app-provider-pqs-onboarding-env: &app-provider-pqs-onboarding-env
     path: ${MODULES_DIR}/pqs/onboarding/app-provider/${PQS_APP_PROVIDER_PROFILE}/${AUTH_MODE}.env
     required: false
 
   app-user-pqs-onboarding-env: &app-user-pqs-onboarding-env
     path: ${MODULES_DIR}/pqs/onboarding/app-user/${PQS_APP_USER_PROFILE}/${AUTH_MODE}.env
+    required: false
+
+  sv-pqs-onboarding-env: &sv-pqs-onboarding-env
+    path: ${MODULES_DIR}/pqs/onboarding/sv/${PQS_SV_PROFILE}/${AUTH_MODE}.env
     required: false
 
 volumes:
@@ -70,15 +78,43 @@ services:
     profiles:
       - pqs-app-user
 
+  pqs-sv:
+    image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
+    container_name: pqs-sv
+    working_dir: /daml3.3
+    env_file:
+      - ${LOCALNET_ENV_DIR}/common.env
+      - ${MODULES_DIR}/pqs/env/pqs.env
+      - *sv-pqs-onboarding-env
+      - *sv-pqs-env
+    volumes:
+      - onboarding:/onboarding
+    command:
+      - "pipeline"
+      - "ledger"
+      - "postgres-document"
+    depends_on:
+      canton:
+        condition: service_healthy
+      splice-onboarding:
+        condition: service_healthy
+    restart: on-failure:100
+    profiles:
+      - pqs-sv
+
+
   splice-onboarding:
     env_file:
       - *app-provider-pqs-onboarding-env
       - *app-user-pqs-onboarding-env
+      - *sv-pqs-onboarding-env
     volumes:
       - ${MODULES_DIR}/pqs/onboarding/app-provider/env.sh:/app/scripts/${PQS_APP_PROVIDER_PROFILE}/app-provider-pqs.sh
       - ${MODULES_DIR}/pqs/onboarding/app-user/env.sh:/app/scripts/${PQS_APP_USER_PROFILE}/app-user-pqs.sh
+      - ${MODULES_DIR}/pqs/onboarding/sv/env.sh:/app/scripts/${PQS_SV_PROFILE}/sv-pqs.sh
 
   postgres:
     environment:
       - CREATE_DATABASE_pqs_app_provider=pqs-app-provider
       - CREATE_DATABASE_pqs_app_user=pqs-app-user
+      - CREATE_DATABASE_pqs_sv=pqs-sv

@@ -90,7 +90,7 @@ endif
 ####  PQS
 ############################################################################
 DOCKER_COMPOSE_FILES += -f ${MODULES_DIR}/pqs/compose.yaml
-DOCKER_COMPOSE_PROFILES += --profile pqs-app-provider
+DOCKER_COMPOSE_PROFILES += --profile pqs-app-provider --profile pqs-app-user --profile pqs-sv
 DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/pqs/compose.env
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
   RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/pqs/resource-constraints.yaml
@@ -107,6 +107,9 @@ ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
 endif
 ifeq ($(OBSERVABILITY_ENABLED),true)
   DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ./docker/backend-service/observability.yaml
+endif
+ifeq ($(DEBUG_ENABLED),true)
+  DOCKER_COMPOSE_FILES += -f ./docker/backend-service/debug.yaml
 endif
 
 # Custom overrides if needed
