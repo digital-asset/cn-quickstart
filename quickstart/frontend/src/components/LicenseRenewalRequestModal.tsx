@@ -24,10 +24,17 @@ export default function LicenseRenewalRequestModal({
   onWithdraw,
   formatDateTime,
 }: Props) {
-  const [selectedRenewal, setSelectedRenewal] = useState<LicenseRenewalRequest | null>(null);
-  const [showAcceptModal, setShowAcceptModal] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
+
+  function calculateStatus(renewal: LicenseRenewalRequest) {
+    if (renewal.settleDeadlinePassed) {
+      return 'EXPIRED';
+    }
+    if (!renewal.allocationCid) {
+      return 'AWAITING_ACCEPTANCE';
+    }
+    return 'AWAITING_COMPLETION';
+  }
 
   return (
     <Modal
@@ -35,10 +42,7 @@ export default function LicenseRenewalRequestModal({
       title={
         <div>License Renewal Requests</div>
       }
-      onClose={() => {
-        setSelectedRenewal(null);
-        onClose();
-      }}
+      onClose={onClose}
       backdrop="static"
       size="xl"
       zIndexBase={1500}
@@ -51,57 +55,14 @@ export default function LicenseRenewalRequestModal({
         license={license}
         onIssueRenewal={(request) => {
           setShowNewModal(false);
-          setSelectedRenewal(null);
           onIssueRenewal(request);
         }}
         onClose={() => {
           setShowNewModal(false);
-          setSelectedRenewal(null);
         }}
       > 
 
       </LicenseRenewModal>
-
-      <Modal
-        show={showAcceptModal && !!selectedRenewal}
-        title="Accept Allocation Request"
-        confirmButtonLabel="OK"
-        onClose={() => {
-          setShowAcceptModal(false);
-          setSelectedRenewal(null);
-        }}
-        backdrop="static"
-        size="xl"
-        zIndexBase={2000}
-      >
-        {selectedRenewal && (
-          <p>
-            Please accept the allocation request with reference{' '}
-            <strong>{selectedRenewal.requestId}</strong> from{' '}
-            <strong>{selectedRenewal.provider}</strong> in your wallet.
-          </p>
-        )}
-      </Modal>
-
-      <Modal
-        show={showRejectModal && !!selectedRenewal}
-        title="Reject Allocation Request"
-        confirmButtonLabel="OK"
-        onClose={() => {
-          setShowRejectModal(false);
-          setSelectedRenewal(null);
-        }}
-        backdrop="static"
-        size="lg"
-        zIndexBase={2000}
-      >
-        {selectedRenewal && (
-          <p style={{ whiteSpace: 'pre-wrap' }}>
-            Please exercise choice <strong>AllocationRequest_Reject</strong> on the <strong>AllocationRequest</strong>{' '}
-            on the <strong>app-user's participant</strong> to reject the <strong>LicenseRenewalRequest</strong>.
-          </p>
-        )}
-      </Modal>
 
       <div><strong>License Contract ID:</strong> {license?.contractId.substring(0, 24)}...</div>     
 
@@ -127,8 +88,10 @@ export default function LicenseRenewalRequestModal({
               <th style={{ width: '100px' }}>Prepare Until</th>
               <th style={{ width: '100px' }}>Settle Before</th>
               <th style={{ width: '200px' }}>Description</th>
-              <th style={{ width: '100px' }}>Allocation Id</th>
-              <th style={{ width: '220px' }}>Actions</th>
+              <th style={{ width: '100px' }}>Status</th>
+              {isAdmin && (
+                <th style={{ width: '220px' }}>Actions</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -147,57 +110,39 @@ export default function LicenseRenewalRequestModal({
                     {formatDateTime(renewal.settleBefore)}
                   </td>
                   <td className="ellipsis-cell">{renewal.description}</td>
-                  <td className="ellipsis-cell">{renewal.allocationCid}</td>
-                  <td className="license-actions">
-                    <>
-                      {!isAdmin && !renewal.prepareDeadlinePassed && !renewal.allocationCid && (
-                        <button
-                          className="btn btn-success btn-accept"
-                          onClick={() => {
-                            setSelectedRenewal(renewal);
-                            setShowAcceptModal(true);
-                          }}
-                        >
-                          Accept
-                        </button>
-                      )}
-                      {isAdmin && !renewal.settleDeadlinePassed && renewal.allocationCid && license && (
-                        <button
-                          className="btn btn-success btn-complete-renewal"
-                          onClick={() =>
-                            onCompleteRenewal(
-                              license.contractId,
-                              renewal.contractId,
-                              renewal.allocationCid!
-                            )
-                          }
-                        >
-                          Complete Renewal
-                        </button>
-                      )}
-                    </>
-                    {isAdmin && renewal && (
-                      <button
-                        className="btn btn-danger btn-withdraw"
-                        onClick={() => {
-                          onWithdraw(renewal.contractId);
-                        }}
-                      >
-                        Withdraw
-                      </button>
-                    )}
-                    {!isAdmin && renewal && (
-                      <button
-                        className="btn btn-danger btn-expire-reject"
-                          onClick={() => {
-                            setSelectedRenewal(renewal);
-                            setShowRejectModal(true);
-                          }}
-                      >
-                        Reject
-                      </button>
-                    )}
+                  <td className="ellipsis-cell">
+                    {calculateStatus(renewal)}
                   </td>
+                  {isAdmin && (
+                    <td className="license-actions">
+                      <>
+                        {isAdmin && !renewal.settleDeadlinePassed && renewal.allocationCid && license && (
+                          <button
+                            className="btn btn-success btn-complete-renewal"
+                            onClick={() =>
+                              onCompleteRenewal(
+                                license.contractId,
+                                renewal.contractId,
+                                renewal.allocationCid!
+                              )
+                            }
+                          >
+                            Complete Renewal
+                          </button>
+                        )}
+                      </>
+                      {isAdmin && renewal && (
+                        <button
+                          className="btn btn-danger btn-withdraw"
+                          onClick={() => {
+                            onWithdraw(renewal.contractId);
+                          }}
+                        >
+                          Withdraw
+                        </button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               );
             })}
