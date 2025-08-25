@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import Modal from './Modal.tsx';
-import type { License, LicenseRenewalRequest } from '../openapi';
+import type { License, LicenseRenewalRequest, LicenseRenewRequest } from '../openapi';
+import LicenseRenewModal from '../components/LicenseRenewModal.tsx';
 
 type Props = {
   show: boolean;
   license: License | null;
   onClose: () => void;
   isAdmin: boolean;
-  onIssueRenewal: (description: string) => Promise<void> | void;
+  onIssueRenewal: (request: LicenseRenewRequest) => Promise<void> | void;
   onCompleteRenewal: (licenseContractId: string, renewalContractId: string, allocationCid: string) => Promise<void> | void;
   onWithdraw: (renewalContractId: string) => Promise<void> | void;
   formatDateTime: (iso?: string) => string;
@@ -23,20 +24,19 @@ export default function LicenseRenewalRequestModal({
   onWithdraw,
   formatDateTime,
 }: Props) {
-  const [renewDescription, setRenewDescription] = useState('');
   const [selectedRenewal, setSelectedRenewal] = useState<LicenseRenewalRequest | null>(null);
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showNewModal, setShowNewModal] = useState(false);
 
   return (
     <Modal
       show={show}
       title={
-        <div><strong>License Contract ID:</strong> {license?.contractId.substring(0, 24)}...</div>
+        <div>License Renewal Requests</div>
       }
       onClose={() => {
         setSelectedRenewal(null);
-        setRenewDescription('');
         onClose();
       }}
       backdrop="static"
@@ -45,17 +45,33 @@ export default function LicenseRenewalRequestModal({
       dialogClassName="auto-width-modal"
       contentClassName="auto-width-content"
     >
-      {/* Accept nested modal (portals to body; z-index above the Renewals modal) */}
+
+      <LicenseRenewModal
+        show={showNewModal && isAdmin}
+        license={license}
+        onIssueRenewal={(request) => {
+          setShowNewModal(false);
+          setSelectedRenewal(null);
+          onIssueRenewal(request);
+        }}
+        onClose={() => {
+          setShowNewModal(false);
+          setSelectedRenewal(null);
+        }}
+      > 
+
+      </LicenseRenewModal>
+
       <Modal
         show={showAcceptModal && !!selectedRenewal}
         title="Accept Allocation Request"
-        confirmButtonTitle="OK"
+        confirmButtonLabel="OK"
         onClose={() => {
           setShowAcceptModal(false);
           setSelectedRenewal(null);
         }}
         backdrop="static"
-        size="lg"
+        size="xl"
         zIndexBase={2000}
       >
         {selectedRenewal && (
@@ -70,7 +86,7 @@ export default function LicenseRenewalRequestModal({
       <Modal
         show={showRejectModal && !!selectedRenewal}
         title="Reject Allocation Request"
-        confirmButtonTitle="OK"
+        confirmButtonLabel="OK"
         onClose={() => {
           setShowRejectModal(false);
           setSelectedRenewal(null);
@@ -87,38 +103,19 @@ export default function LicenseRenewalRequestModal({
         )}
       </Modal>
 
+      <div><strong>License Contract ID:</strong> {license?.contractId.substring(0, 24)}...</div>     
 
+      <br />
       {isAdmin && (
-        <div className="mb-4">
-          <h6>Renew License</h6>
-          <p>
-            <strong>Extension:</strong> 30 days (P30D),{' '}
-            <strong>Payment Acceptance:</strong> 7 days (P7D),{' '}
-            <strong>Fee:</strong> 100 CC
-          </p>
-          <label>Description:</label>
-          <input
-            className="form-control mb-2 input-renew-description"
-            placeholder='e.g. "Renew for next month"'
-            value={renewDescription}
-            onChange={(e) => setRenewDescription(e.target.value)}
-          />
-          <button
-            className="btn btn-success btn-issue-renewal"
-            onClick={async () => {
-              if (!renewDescription.trim()) return;
-              await onIssueRenewal(renewDescription);
-              setRenewDescription('');
-            }}
-            disabled={!renewDescription.trim()}
-          >
-            Issue Renewal Payment Request
-          </button>
-        </div>
+        <button
+          className="btn btn-success btn-issue-renewal"
+          onClick={() => setShowNewModal(true)}
+        >
+          New
+        </button>
       )}
 
       <div className="renewals">
-        <h2>Renewals</h2>
         <table className="table table-fixed xtable-bordered" id="renewals-table">
           <thead>
             <tr>
@@ -129,7 +126,7 @@ export default function LicenseRenewalRequestModal({
               <th style={{ width: '30px' }}>Fee</th>
               <th style={{ width: '100px' }}>Prepare Until</th>
               <th style={{ width: '100px' }}>Settle Before</th>
-              <th style={{ width: '70px' }}>Description</th>
+              <th style={{ width: '200px' }}>Description</th>
               <th style={{ width: '100px' }}>Allocation Id</th>
               <th style={{ width: '220px' }}>Actions</th>
             </tr>
@@ -143,13 +140,17 @@ export default function LicenseRenewalRequestModal({
                   <td className="ellipsis-cell renewal-requested-at">{formatDateTime(renewal.requestedAt)}</td>
                   <td className="ellipsis-cell">{renewal.licenseExtensionDuration}</td>
                   <td className="ellipsis-cell">{renewal.licenseFeeAmount}</td>
-                  <td className="ellipsis-cell">{formatDateTime(renewal.prepareUntil)}</td>
-                  <td className="ellipsis-cell">{formatDateTime(renewal.settleBefore)}</td>
+                  <td className={`ellipsis-cell ${renewal.prepareDeadlinePassed && 'deadline-passed'}`}>
+                    {formatDateTime(renewal.prepareUntil)}
+                  </td>
+                  <td className={`ellipsis-cell ${renewal.settleDeadlinePassed && 'deadline-passed'}`}>
+                    {formatDateTime(renewal.settleBefore)}
+                  </td>
                   <td className="ellipsis-cell">{renewal.description}</td>
                   <td className="ellipsis-cell">{renewal.allocationCid}</td>
                   <td className="license-actions">
                     <>
-                      {!isAdmin && !renewal.allocationCid && (
+                      {!isAdmin && !renewal.prepareDeadlinePassed && !renewal.allocationCid && (
                         <button
                           className="btn btn-success btn-accept"
                           onClick={() => {
@@ -160,7 +161,7 @@ export default function LicenseRenewalRequestModal({
                           Accept
                         </button>
                       )}
-                      {isAdmin && renewal.allocationCid && license && (
+                      {isAdmin && !renewal.settleDeadlinePassed && renewal.allocationCid && license && (
                         <button
                           className="btn btn-success btn-complete-renewal"
                           onClick={() =>
@@ -177,7 +178,7 @@ export default function LicenseRenewalRequestModal({
                     </>
                     {isAdmin && renewal && (
                       <button
-                        className="btn btn-warning btn-withdraw"
+                        className="btn btn-danger btn-withdraw"
                         onClick={() => {
                           onWithdraw(renewal.contractId);
                         }}

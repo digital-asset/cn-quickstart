@@ -6,10 +6,11 @@ import { useLicenseStore } from '../stores/licenseStore';
 import { useUserStore } from '../stores/userStore';
 import LicenseRenewalRequestModal from '../components/LicenseRenewalRequestModal.tsx';
 import LicenseExpireModal from '../components/LicenseExpireModal.tsx';
+import { formatDateTime } from '../utils/format';
 
 import type {
   License,
-  // LicenseRenewalRequest, // removed, managed inside RenewalsModal
+  LicenseRenewRequest,
 } from '../openapi.d.ts';
 
 const LicensesView: React.FC = () => {
@@ -52,9 +53,9 @@ const LicensesView: React.FC = () => {
     setSelectedLicenseId(null);
   };
 
-  const handleRenew = async (description: string) => {
+  const handleRenew = async (request: LicenseRenewRequest) => {
     if (!selectedLicenseId || !selectedLicense) return;
-    await initiateLicenseRenewal(selectedLicenseId, description);
+    await initiateLicenseRenewal(selectedLicenseId, request);
     await fetchLicenses();
   };
 
@@ -68,38 +69,17 @@ const LicensesView: React.FC = () => {
   };
 
   const handleCompleteRenewal = async (renewalContractId: string, renewalRequestContractId: string, allocationContractId: string) => {
-    await completeLicenseRenewal(renewalContractId, renewalRequestContractId, allocationContractId);
+    const licenseId = await completeLicenseRenewal(renewalContractId, renewalRequestContractId, allocationContractId);
+    if (licenseId) {
+      setSelectedLicenseId(licenseId);
+    }
     await fetchLicenses();
   };
 
   const handleRenewalWithdraw = async (renewalContractId: string) => {
     if (!selectedLicenseId) return;
     await withdrawLicenseRenewalRequest(renewalContractId);
-    setShowRenewalModal(false);
-    setSelectedLicenseId(null);
     await fetchLicenses();
-  };
-
-  const formatDateTime = (iso?: string) => {
-    if (!iso) return '';
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return iso;
-    try {
-    // const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return d.toLocaleString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-      // timeZoneName: 'short',
-      // timeZone: tz,
-    });
-    } catch {
-    return d.toString();
-    }
   };
 
   const openExpireModal = (licenseId: string) => {
@@ -137,7 +117,9 @@ const LicensesView: React.FC = () => {
               {user?.isAdmin && (
                 <td className="ellipsis-cell license-user">{license.user}</td>
               )}
-              <td className="ellipsis-cell license-expires-at">{formatDateTime(license.expiresAt)}</td>
+              <td className={`ellipsis-cell license-expires-at ${license.isExpired && 'deadline-passed'}`}>
+                {formatDateTime(license.expiresAt)}
+              </td>
               <td className="ellipsis-cell license-number">{license.licenseNum}</td>
               <td className="ellipsis-cell">{license.renewalRequests?.filter(r => !r.allocationCid).length || 0}</td>
               <td className="ellipsis-cell">{license.renewalRequests?.filter(r => r.allocationCid).length || 0}</td>
@@ -152,7 +134,7 @@ const LicensesView: React.FC = () => {
                     )
                   }
                   {/* todo send isExpired from backend to avoid client clock skew */}
-                  {license.expiresAt && new Date(license.expiresAt).getTime() < Date.now() && (
+                  {license.expiresAt && license.isExpired && (
                     <button
                       className="btn btn-danger btn-expire-license"
                       onClick={() => openExpireModal(license.contractId)}
@@ -181,7 +163,6 @@ const LicensesView: React.FC = () => {
       <LicenseExpireModal
         show={showExpireModal && !!selectedLicense}
         license={selectedLicense}
-        isAdmin={isAdmin}
         onClose={() => {
           setShowExpireModal(false);
         }}

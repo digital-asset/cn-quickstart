@@ -335,6 +335,10 @@ paths:
       responses:
         '200':
           description: License renewed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LicenseRenewalResult'
         '400':
           description: Invalid input
         '404':
@@ -614,6 +618,7 @@ components:
         - params
         - expiresAt
         - licenseNum
+        - isExpired
       properties:
         contractId:
           type: string
@@ -628,6 +633,8 @@ components:
           format: date-time
         licenseNum:
           type: integer
+        isExpired:
+          type: boolean
         renewalRequests:
           type: array
           items:
@@ -643,21 +650,34 @@ components:
 
     LicenseRenewRequest:
       type: object
+      description: Parameters used to initiate a license renewal.
       required:
         - licenseFeeCc
         - licenseExtensionDuration
-        - paymentAcceptanceDuration
+        - prepareUntilDuration
+        - settleBeforeDuration
         - description
       properties:
         licenseFeeCc:
           type: number
+          description: License fee amount
         licenseExtensionDuration:
           type: string
-          description: "The duration to extend the license (e.g., 'P30D' for 30 days)."
-        paymentAcceptanceDuration:
+          description: "ISO-8601 duration specifying the requested extension period (e.g. 'P30D' for 30 days)."
+        prepareUntilDuration:
           type: string
-          description: "The duration the payment request will remain valid."
+          description: "ISO-8601 duration after which the allocation request will be not accepted."
+        settleBeforeDuration:
+          type: string
+          description: "ISO-8601 duration within which the transfer must be settled."
         description:
+          type: string
+          description: Human-readable explanation of the renewal request.
+
+    LicenseRenewalResult:
+      type: object
+      properties:
+        licenseId:
           type: string
 
     LicenseRenewalRequest:
@@ -675,6 +695,8 @@ components:
           - requestedAt
           - description
           - requestId
+          - prepareDeadlinePassed
+          - settleDeadlinePassed
       properties:
         contractId:
           type: string
@@ -709,6 +731,10 @@ components:
           type: string
         allocationCid:
           type: string
+        prepareDeadlinePassed:
+          type: boolean
+        settleDeadlinePassed:
+          type: boolean
 
     LicenseExpireRequest:
       type: object

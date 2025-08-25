@@ -43,7 +43,6 @@ template License
         licenseFeeInstrumentId : InstrumentId
         licenseFeeAmount : Decimal
         licenseExtensionDuration : RelTime
-        paymentAcceptanceDuration : RelTime
         requestedAt : Time
         prepareUntil : Time
         settleBefore : Time

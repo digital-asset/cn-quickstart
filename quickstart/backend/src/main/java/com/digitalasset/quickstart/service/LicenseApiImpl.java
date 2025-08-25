@@ -27,7 +27,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -84,30 +83,36 @@ public class LicenseApiImpl implements LicensesApi {
                 Map.of(),
                 () -> damlRepository.findActiveLicenses(party).thenApply(res -> res.stream().map(l -> {
                             var license = l.license();
+                            var licencePayload = license.payload();
+                            var now = Instant.now();
                             License licenseApi = new License();
                             licenseApi.setContractId(license.cid().getContractId);
-                            licenseApi.setProvider(license.payload().getProvider.getParty);
-                            licenseApi.setUser(license.payload().getUser.getParty);
+                            licenseApi.setProvider(licencePayload.getProvider.getParty);
+                            licenseApi.setUser(licencePayload.getUser.getParty);
+                            licenseApi.setIsExpired(!licencePayload.getExpiresAt.isAfter(now));
                             var metaApi = new Metadata();
                             var paramsApi = new LicenseParams();
-                            licenseApi.setParams(paramsApi.meta(metaApi.data(license.payload().getParams.getMeta.getValues)));
-                            licenseApi.setExpiresAt(toOffsetDateTime(license.payload().getExpiresAt));
-                            licenseApi.setLicenseNum(license.payload().getLicenseNum.intValue());
+                            licenseApi.setParams(paramsApi.meta(metaApi.data(licencePayload.getParams.getMeta.getValues)));
+                            licenseApi.setExpiresAt(toOffsetDateTime(licencePayload.getExpiresAt));
+                            licenseApi.setLicenseNum(licencePayload.getLicenseNum.intValue());
                             var renewalsApi = l.renewals().stream().map(r -> {
                                 var renewalApi = new LicenseRenewalRequest();
+                                var renewalPayload = r.renewal().payload();
                                 renewalApi.setContractId(r.renewal().cid().getContractId);
-                                renewalApi.setProvider(r.renewal().payload().getProvider.getParty);
-                                renewalApi.setUser(r.renewal().payload().getUser.getParty);
-                                renewalApi.setLicenseNum(r.renewal().payload().getLicenseNum.intValue());
-                                renewalApi.setLicenseFeeAmount(r.renewal().payload().getLicenseFeeAmount);
-                                renewalApi.setDescription(r.renewal().payload().getDescription);
-                                renewalApi.setPrepareUntil(toOffsetDateTime(r.renewal().payload().getPrepareUntil));
-                                renewalApi.setSettleBefore(toOffsetDateTime(r.renewal().payload().getSettleBefore));
-                                renewalApi.setRequestedAt(toOffsetDateTime(r.renewal().payload().getRequestedAt));
-                                renewalApi.setRequestId(r.renewal().payload().getRequestId);
-                                long micros = r.renewal().payload().getLicenseExtensionDuration.getMicroseconds;
+                                renewalApi.setProvider(renewalPayload.getProvider.getParty);
+                                renewalApi.setUser(renewalPayload.getUser.getParty);
+                                renewalApi.setLicenseNum(renewalPayload.getLicenseNum.intValue());
+                                renewalApi.setLicenseFeeAmount(renewalPayload.getLicenseFeeAmount);
+                                renewalApi.setDescription(renewalPayload.getDescription);
+                                renewalApi.setPrepareUntil(toOffsetDateTime(renewalPayload.getPrepareUntil));
+                                renewalApi.setSettleBefore(toOffsetDateTime(renewalPayload.getSettleBefore));
+                                renewalApi.setRequestedAt(toOffsetDateTime(renewalPayload.getRequestedAt));
+                                renewalApi.setRequestId(renewalPayload.getRequestId);
+                                long micros = renewalPayload.getLicenseExtensionDuration.getMicroseconds;
                                 String approximateDays = (micros / 1_000_000 / 3600 / 24) + " days";
                                 renewalApi.setLicenseExtensionDuration(approximateDays);
+                                renewalApi.setPrepareDeadlinePassed(!renewalPayload.getPrepareUntil.isAfter(now));
+                                renewalApi.setSettleDeadlinePassed(!renewalPayload.getSettleBefore.isAfter(now));
                                 if (r.allocationCid().isPresent()) {
                                     renewalApi.setAllocationCid(r.allocationCid().get().getContractId);
                                 }
@@ -138,13 +143,14 @@ public class LicenseApiImpl implements LicensesApi {
                     var registryAdminIdFut = tokenStandardProxy.getRegistryAdminId();
                     var licenseFut = damlRepository.findLicenseById(contractId);
                     return registryAdminIdFut.thenCombine(licenseFut, Pair::of).thenCompose(registryAdminIdAndLicensePair -> {
+                        var now = Instant.now();
                         License_Renew choice = new License_Renew(UUID.randomUUID().toString(),
                                 new InstrumentId(new Party(registryAdminIdAndLicensePair.first), "Amulet"),
                                 request.getLicenseFeeCc(),
                                 parseRelTime(request.getLicenseExtensionDuration()),
-                                parseRelTime(request.getPaymentAcceptanceDuration()),
-                                Instant.now(),
-                                Instant.now().plus(1, ChronoUnit.HOURS), Instant.now().plus(2, ChronoUnit.HOURS),
+                                now,
+                                now.plus(java.time.Duration.parse(request.getPrepareUntilDuration())),
+                                now.plus(java.time.Duration.parse(request.getSettleBeforeDuration())),
                                 request.getDescription()
                         );
                         return ledger.exerciseAndGetResult(registryAdminIdAndLicensePair.second.contractId, choice, commandId)
@@ -156,7 +162,7 @@ public class LicenseApiImpl implements LicensesApi {
 
     @Override
     @WithSpan
-    public CompletableFuture<ResponseEntity<Void>> completeLicenseRenewal(
+    public CompletableFuture<ResponseEntity<LicenseRenewalResult>> completeLicenseRenewal(
             @SpanAttribute("licenseRenewal.contractId") String contractId,
             @SpanAttribute("licenseRenewal.commandId") String commandId,
             CompleteLicenseRenewalRequest request) {
@@ -194,7 +200,9 @@ public class LicenseApiImpl implements LicensesApi {
                     return ledger.exerciseAndGetResult(new ContractId<>(request.getRenewalRequestContractId()), choice, commandId, disclosures)
                             .thenApply(newLicenseCid -> {
                                 logger.info("newLicenseContractId: {}", newLicenseCid.getContractId);
-                                return ResponseEntity.ok().build();
+                                LicenseRenewalResult result = new LicenseRenewalResult();
+                                result.setLicenseId(newLicenseCid.getContractId);
+                                return ResponseEntity.ok(result);
                             });
                 })
         ));

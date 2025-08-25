@@ -26,8 +26,8 @@ interface LicenseContextType extends LicenseState {
     fetchLicenses: () => Promise<void>;
     renewLicense: (contractId: string, request: LicenseRenewRequest) => Promise<void>;
     expireLicense: (contractId: string, meta: Metadata) => Promise<void>;
-    completeLicenseRenewal: (contractId: string, renewalRequestContractId: string, allocationContractId: string) => Promise<void>;
-    initiateLicenseRenewal: (contractId: string, description: string) => Promise<void>;
+    completeLicenseRenewal: (contractId: string, renewalRequestContractId: string, allocationContractId: string) => Promise<string | undefined>;
+    initiateLicenseRenewal: (contractId: string, request: LicenseRenewRequest) => Promise<void>;
     initiateLicenseExpiration: (contractId: string, description: string) => Promise<void>;
     withdrawLicenseRenewalRequest: (contractId: string) => Promise<void>;
 }
@@ -124,9 +124,10 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
                   allocationContractId: allocationContractId
                 };
 
-                await client.completeLicenseRenewal({ contractId, commandId }, request);
+                const result = await client.completeLicenseRenewal({ contractId, commandId }, request);
                 await fetchLicenses();
                 toast.displaySuccess('License renewal completed successfully');
+                return result.data.licenseId;
             } catch (error: any) {
                 if (error.response?.status === 404) {
                     toast.displayError('The license has not yet been paid for.');
@@ -142,13 +143,7 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
      * Helper to initiate a new License renewal with fixed parameters.
      */
     const initiateLicenseRenewal = useCallback(
-        async (contractId: string, description: string) => {
-            const request: LicenseRenewRequest = {
-                licenseFeeCc: 100,
-                licenseExtensionDuration: 'P30D',
-                paymentAcceptanceDuration: 'P7D',
-                description: description.trim(),
-            };
+        async (contractId: string, request: LicenseRenewRequest) => {
             await renewLicense(contractId, request);
         },
         [renewLicense]

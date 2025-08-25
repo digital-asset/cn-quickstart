@@ -5,7 +5,6 @@ import type { License } from '../openapi';
 type Props = {
   show: boolean;
   license: License | null;
-  isAdmin: boolean;
   onClose: () => void;
   onExpire: (description: string) => Promise<void> | void;
 };
@@ -13,7 +12,6 @@ type Props = {
 export default function LicenseExpireModal({
   show,
   license,
-  isAdmin,
   onClose,
   onExpire,
 }: Props) {
@@ -23,45 +21,40 @@ export default function LicenseExpireModal({
     <Modal
       show={show}
       title={
-        <>
-          <div><strong>License #:</strong> {license?.licenseNum}</div>
-          <div><strong>Contract ID:</strong> {license?.contractId.substring(0, 24)}...</div>
-          {isAdmin && (
-            <div><strong>For User:</strong> {license?.user}</div>
-          )}
-        </>
+        <div>Expire License</div>
       }
       onClose={() => {
         setExpireDescription('');
         onClose();
       }}
+      onConfirm={async () => {
+        if (!expireDescription.trim()) return;
+        await onExpire(expireDescription);
+        setExpireDescription('');
+        onClose();
+      }}   
       backdrop="static"
-      size="xl"
+      size="lg"
       zIndexBase={1500}
-      dialogClassName="auto-width-modal"
+      dialogClassName="xauto-width-modal"
       contentClassName="auto-width-content"
+      confirmButtonClassName="btn-danger btn-expire-license"
+      confirmButtonLabel='Expire'
     >
       <div className="mb-4">
-        <h6>Expire License</h6>
-        <label>Description:</label>
-        <input
-          className="form-control mb-2 input-expire-description"
-          placeholder='e.g. "License expired"'
-          value={expireDescription}
-          onChange={(e) => setExpireDescription(e.target.value)}
-        />
-        <button
-          className="btn btn-danger btn-expire-license"
-          onClick={async () => {
-            if (!expireDescription.trim()) return;
-            await onExpire(expireDescription);
-            setExpireDescription('');
-            onClose();
-          }}
-          disabled={!expireDescription.trim()}
-        >
-          Expire
-        </button>
+        <div><strong>License Contract ID:</strong> {license?.contractId.substring(0, 24)}...</div>
+        <br></br>
+        <div className="d-flex align-items-center mb-2 flex-nowrap">
+          <label htmlFor="expire-description" className="me-2 mb-0 flex-shrink-0">Description:</label>
+          <input
+            id="expire-description"
+            className="form-control input-expire-description flex-grow-1"
+            placeholder=''
+            value={expireDescription}
+            onChange={(e) => setExpireDescription(e.target.value)}
+            style={{ minWidth: 0 }}
+          />
+        </div>
       </div>
     </Modal>
   );

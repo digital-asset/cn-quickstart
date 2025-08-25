@@ -110,7 +110,6 @@ initiateLicenseRenewal description renewalFee extensionDuration (registry, provi
       licenseFeeInstrumentId = instrumentId
       licenseFeeAmount = renewalFee
       licenseExtensionDuration = extensionDuration
-      paymentAcceptanceDuration = paymentWindow
       requestedAt = now
       prepareUntil = now `addRelTime` hours 1
       settleBefore = now `addRelTime` paymentWindow

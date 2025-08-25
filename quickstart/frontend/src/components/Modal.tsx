@@ -4,8 +4,8 @@ import { createPortal } from 'react-dom';
 type ModalProps = {
     show: boolean;
     title: React.ReactNode;
-    confirmButtonTitle?: string;
     onClose: () => void;
+    onConfirm?: () => void;
     children?: React.ReactNode;            // body content
     footer?: React.ReactNode;              // optional footer; default renders a Close button
     size?: 'sm' | 'lg' | 'xl';             // Bootstrap sizes
@@ -15,13 +15,16 @@ type ModalProps = {
     className?: string;                    // extra classes for the .modal container
     dialogClassName?: string;              // extra classes for the .modal-dialog
     contentClassName?: string;             // extra classes for the .modal-content
+    confirmButtonClassName?: string;       // extra classes for the confirm button
+    confirmButtonLabel?: string;
+    confirmButtonDisabled?: boolean;
 };
 
 export default function Modal({
     show,
     title,
-    confirmButtonTitle,
     onClose,
+    onConfirm,
     children,
     footer,
     size,
@@ -31,13 +34,16 @@ export default function Modal({
     className = '',
     dialogClassName = '',
     contentClassName = '',
+    confirmButtonClassName = '',
+    confirmButtonLabel = 'Close',
+    confirmButtonDisabled = false
 }: ModalProps) {
     useEffect(() => {
         if (!show) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape' || e.key === 'Esc') {
-                onClose();
+                onClose?.();
             }
         };
 
@@ -73,7 +79,7 @@ export default function Modal({
                 aria-modal="true"
                 style={{ zIndex: zIndexBase + 5 }}
             >
-                <div className={dialogClasses} onClick={(e) => e.stopPropagation()}>
+                <div className={dialogClasses}  onClick={(e) => e.stopPropagation()}>
                     <div className={['modal-content', contentClassName].filter(Boolean).join(' ')}>
                         <div className="modal-header">
                             <h5 className="modal-title">{title}</h5>
@@ -81,7 +87,10 @@ export default function Modal({
                         </div>
                         <div className="modal-body">{children}</div>
                         <div className="modal-footer">
-                            {footer ?? <button className="btn btn-secondary" onClick={onClose}>{confirmButtonTitle ?? 'Close'}</button>}
+                            {footer ?? <button className={`btn btn-secondary ${confirmButtonClassName}`} 
+                                            disabled={confirmButtonDisabled}
+                                            onClick={() => (onConfirm ? onConfirm() : onClose())}>{confirmButtonLabel}
+                                       </button>}
                         </div>
                     </div>
                 </div>
