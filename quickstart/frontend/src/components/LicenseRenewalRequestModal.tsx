@@ -26,14 +26,26 @@ export default function LicenseRenewalRequestModal({
 }: Props) {
   const [showNewModal, setShowNewModal] = useState(false);
 
-  function calculateStatus(renewal: LicenseRenewalRequest) {
+  function makeStatus(renewal: LicenseRenewalRequest) {
     if (renewal.settleDeadlinePassed) {
-      return 'EXPIRED';
+      return (
+        <span title="This renewal request has expired and may be withdrawn by the app-provider.">
+          EXPIRED
+        </span>
+      );
     }
     if (!renewal.allocationCid) {
-      return 'AWAITING_ACCEPTANCE';
+      return (
+        <span title="Pending allocation acceptance in the app-user's wallet.">
+          AWAITING_ACCEPTANCE
+        </span>
+      );
     }
-    return 'AWAITING_COMPLETION';
+    return (
+      <span title="Pending completion by the app-provider.">
+        AWAITING_COMPLETION
+      </span>
+    );
   }
 
   return (
@@ -110,9 +122,7 @@ export default function LicenseRenewalRequestModal({
                     {formatDateTime(renewal.settleBefore)}
                   </td>
                   <td className="ellipsis-cell">{renewal.description}</td>
-                  <td className="ellipsis-cell">
-                    {calculateStatus(renewal)}
-                  </td>
+                  <td className="ellipsis-cell">{makeStatus(renewal)}</td>
                   {isAdmin && (
                     <td className="license-actions">
                       <>
