@@ -68,6 +68,22 @@ paths:
                 $ref: '#/components/schemas/TenantRegistration'
         '400':
           description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict (tenantId, clientId, or issuerUrl already exists)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     get:
       summary: List all Tenant Registrations
@@ -407,8 +423,6 @@ components:
           type: string
         issuerUrl:
           type: string
-        internal:
-          type: boolean
         users:
           type: array
           items:
@@ -732,3 +746,10 @@ components:
           enum:
             - oauth2
             - shared-secret
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "TenantId is required"

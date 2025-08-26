@@ -4,15 +4,22 @@
 import React, { useEffect, useState } from 'react'
 import {
     useTenantRegistrationStore,
-    TenantRegistration,
+    TenantRegistrationRequest,
 } from '../stores/tenantRegistrationStore'
 
 import {useToast} from '../stores/toastStore';
 import api from '../api';
 import {Client, FeatureFlags} from "../openapi";
 
+declare global {
+    interface Window {
+        __E2E_NOVALIDATE__?: boolean;
+    }
+}
 
 const TenantRegistrationView: React.FC = () => {
+    const isE2E = typeof window !== 'undefined' && !!window.__E2E_NOVALIDATE__;
+
     const {
         registrations,
         fetchTenantRegistrations,
@@ -20,12 +27,11 @@ const TenantRegistrationView: React.FC = () => {
         deleteTenantRegistration,
     } = useTenantRegistrationStore()
 
-    const [formData, setFormData] = useState<TenantRegistration>({
+    const [formData, setFormData] = useState<TenantRegistrationRequest>({
         tenantId: '',
         partyId: '',
         clientId: '',
         issuerUrl: '',
-        internal: false,
         walletUrl: '',
         users: []
     })
@@ -56,24 +62,52 @@ const TenantRegistrationView: React.FC = () => {
         }))
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        await createTenantRegistration(formData)
-        setFormData({
-            tenantId: '',
-            partyId: '',
-            clientId: '',
-            issuerUrl: '',
-            internal: false,
-            walletUrl: '',
-            users: []
+    // Validation driven by feature flags
+    const validate = (): string | null => {
+        if (isE2E) return null;
+        const t = formData.tenantId.trim()
+        const p = formData.partyId.trim()
+        if (!t) return 'Tenant ID is required'
+        if (!p) return 'Party ID is required'
 
-        })
+        if (featureFlags?.authMode === 'oauth2') {
+            if (!formData.clientId?.trim()) return 'Client ID is required (OAuth2)'
+            if (!formData.issuerUrl?.trim()) return 'Issuer URL is required (OAuth2)'
+        }
+
+        if (featureFlags?.authMode === 'shared-secret') {
+            if (!formData.users || formData.users.length === 0) {
+                return 'At least one user is required (Shared Secret)'
+            }
+        }
+        return null
     }
 
-    const handleDelete = async (clientId: string) => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        const error = validate()
+        if (error) {
+            toast.displayError(error)
+            return
+        }
+        try {
+            await createTenantRegistration(formData)
+            setFormData({
+                tenantId: '',
+                partyId: '',
+                clientId: '',
+                issuerUrl: '',
+                walletUrl: '',
+                users: []
+            })
+        } catch (err) {
+            toast.displayError('Failed to create tenant registration with error: ' + (err as Error).message)
+        }
+    }
+
+    const handleDelete = async (tenantId: string) => {
         if (window.confirm('Are you sure you want to delete this tenant registration?')) {
-            await deleteTenantRegistration(clientId)
+            await deleteTenantRegistration(tenantId)
         }
     }
 
@@ -121,7 +155,7 @@ const TenantRegistrationView: React.FC = () => {
                                 className="form-control"
                                 value={formData.clientId}
                                 onChange={handleChange}
-                                required
+                                required={!isE2E}
                             />
                         </div>
                         <div className="mb-3">
@@ -135,7 +169,7 @@ const TenantRegistrationView: React.FC = () => {
                                 className="form-control"
                                 value={formData.issuerUrl}
                                 onChange={handleChange}
-                                required
+                                required={!isE2E}
                             />
                         </div>
                     </>
@@ -163,7 +197,7 @@ const TenantRegistrationView: React.FC = () => {
                           id="users"
                           name="users"
                           className="form-control"
-                          value={formData.users}
+                          value={Array.isArray(formData.users) ? formData.users.join(', ') : (formData.users ?? '')}
                           onChange={handleChange}
                       />
                   </div>
