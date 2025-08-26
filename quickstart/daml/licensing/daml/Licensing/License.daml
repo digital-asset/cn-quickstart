@@ -29,7 +29,11 @@ template License
     provider : Party -- ^ Party identifying the app provider
     user : Party -- ^ Party identifying the app user
     expiresAt : Time -- ^ When the license expires. The license is not valid after this time.
-    licenseNum : Int -- ^ The license number
+    licenseNum : Int 
+      -- ^ The license number.
+      -- Its uniqueness depends on `AppInstall`s being unique.
+      -- Alternatively storing a UUID chosen by the app provider as a globally unique
+      -- license ID is a good option as well. 
     params : LicenseParams
   where
     signatory provider, user
