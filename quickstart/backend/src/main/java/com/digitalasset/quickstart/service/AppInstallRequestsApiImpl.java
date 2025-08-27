@@ -3,21 +3,18 @@
 
 package com.digitalasset.quickstart.service;
 
-import static com.digitalasset.quickstart.utility.ContextAwareCompletableFutures.completeWithin;
-import static quickstart_licensing.licensing.appinstall.AppInstallRequest.TEMPLATE_ID;
+import static com.digitalasset.quickstart.service.ServiceUtils.traceServiceCallAsync;
+import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
 
 import com.digitalasset.quickstart.api.AppInstallRequestsApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
 import com.digitalasset.quickstart.repository.DamlRepository;
-import com.digitalasset.quickstart.security.AuthenticatedPartyProvider;
-import com.digitalasset.quickstart.utility.LoggingSpanHelper;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.annotations.SpanAttribute;
+import com.digitalasset.quickstart.security.AuthUtils;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
+
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+
 import org.openapitools.model.AppInstall;
 import org.openapitools.model.AppInstallRequest;
 import org.openapitools.model.AppInstallRequestAccept;
@@ -28,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Reject;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata;
 
 @Controller
@@ -37,37 +35,33 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
     private static final Logger logger = LoggerFactory.getLogger(AppInstallRequestsApiImpl.class);
 
     private final LedgerApi ledger;
-    private final AuthenticatedPartyProvider authenticatedPartyProvider;
+    private final AuthUtils auth;
     private final DamlRepository damlRepository;
 
     @Autowired
-    public AppInstallRequestsApiImpl(LedgerApi ledger, AuthenticatedPartyProvider authenticatedPartyProvider,
-            DamlRepository damlRepository) {
+    public AppInstallRequestsApiImpl(
+            LedgerApi ledger,
+            AuthUtils auth,
+            DamlRepository damlRepository
+    ) {
         this.ledger = ledger;
-        this.authenticatedPartyProvider = authenticatedPartyProvider;
+        this.auth = auth;
         this.damlRepository = damlRepository;
     }
 
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<AppInstall>> acceptAppInstallRequest(
-            @SpanAttribute("appInstall.contractId") String contractId,
-            @SpanAttribute("appInstall.commandId") String commandId, AppInstallRequestAccept appInstallRequestAccept) {
-        Span span = Span.current();
-        Context parentContext = Context.current();
-
-        Map<String, Object> attributes = Map.of("contractId", contractId, "commandId", commandId, "templateId",
-                TEMPLATE_ID.qualifiedName(), "choiceName", "AppInstallRequest_Accept");
-
-        LoggingSpanHelper.addEventWithAttributes(span, "Starting acceptAppInstallRequest", attributes);
-        LoggingSpanHelper.setSpanAttributes(span, attributes);
-        LoggingSpanHelper.logInfo(logger, "acceptAppInstallRequest: received request", attributes);
-
-        // KV asAdmin
-        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail()).thenCompose(
-                providerParty -> damlRepository.findAppInstallRequestById(contractId).thenCompose(contract -> {
-                    span.addEvent("Fetched contract, checking if request is already accepted");
-
+            String contractId,
+            String commandId,
+            AppInstallRequestAccept appInstallRequestAccept
+    ) {
+        var ctx = tracingCtx(logger, "acceptAppInstallRequest",
+                "contractId", contractId,
+                "commandId", commandId
+        );
+        return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () ->
+                damlRepository.findAppInstallRequestById(contractId).thenCompose(contract -> {
                     var choice = new quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Accept(
                             new splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata(
                                     appInstallRequestAccept.getInstallMeta().getData()),
@@ -76,7 +70,6 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
 
                     return ledger.exerciseAndGetResult(contract.contractId, choice, commandId)
                             .thenApply(appInstallContractId -> {
-                                span.addEvent("Choice exercised, building response AppInstall");
                                 AppInstall appInstall = new AppInstall();
                                 appInstall.setProvider(contract.payload.getProvider.getParty);
                                 appInstall.setUser(contract.payload.getUser.getParty);
@@ -84,33 +77,16 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
                                 appInstall.setNumLicensesCreated(0);
                                 return ResponseEntity.ok(appInstall);
                             });
-                })).whenComplete(completeWithin(parentContext, (res, ex) -> {
-                    if (ex == null) {
-                        LoggingSpanHelper.logDebug(logger, "acceptAppInstallRequest: success", attributes);
-                    } else {
-                        LoggingSpanHelper.logError(logger, "acceptAppInstallRequest: failed", attributes, ex);
-                        LoggingSpanHelper.recordException(span, ex);
-                    }
-                }));
+                })
+        ));
     }
 
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<List<AppInstallRequest>>> listAppInstallRequests() {
-        Span span = Span.current();
-        Context parentContext = Context.current();
-
-        Map<String, Object> attributes = Map.of("templateId", TEMPLATE_ID.qualifiedName());
-
-        LoggingSpanHelper.addEventWithAttributes(span, "Starting listAppInstallRequests", attributes);
-        LoggingSpanHelper.setSpanAttributes(span, attributes);
-        LoggingSpanHelper.logInfo(logger, "listAppInstallRequests: received request, retrieving active requests",
-                attributes);
-
-        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail())
-                .thenCompose(party -> damlRepository.findActiveAppInstallRequests().thenApply(contracts -> {
-                    span.addEvent("Fetched active requests, filtering by current party");
-
+        var ctx = tracingCtx(logger, "listAppInstallRequests");
+        return auth.asAuthenticatedParty(party -> traceServiceCallAsync(ctx, () ->
+                damlRepository.findActiveAppInstallRequests().thenApply(contracts -> {
                     List<AppInstallRequest> result = contracts.stream().filter(contract -> {
                         String user = contract.payload.getUser.getParty;
                         String provider = contract.payload.getProvider.getParty;
@@ -125,52 +101,27 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
                         return appInstallRequest;
                     }).toList();
                     return ResponseEntity.ok(result);
-                })).whenComplete(completeWithin(parentContext, (res, ex) -> {
-                    if (ex == null) {
-                        int count = (res.getBody() == null) ? 0 : res.getBody().size();
-                        logger.atDebug().addKeyValue("recordCount", count).log("listAppInstallRequests: success");
-                    } else {
-                        LoggingSpanHelper.logError(logger, "listAppInstallRequests: failed", attributes, ex);
-                        LoggingSpanHelper.recordException(span, ex);
-                    }
-                }));
+                })
+        ));
     }
 
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<Void>> rejectAppInstallRequest(
-            @SpanAttribute("appInstall.contractId") String contractId,
-            @SpanAttribute("appInstall.commandId") String commandId, AppInstallRequestReject appInstallRequestReject) {
-        Span span = Span.current();
-        Context parentContext = Context.current();
-
-        Map<String, Object> attributes = Map.of("contractId", contractId, "commandId", commandId, "templateId",
-                TEMPLATE_ID.qualifiedName(), "choiceName", "AppInstallRequest_Reject");
-
-        LoggingSpanHelper.addEventWithAttributes(span, "Starting rejectAppInstallRequest", attributes);
-        LoggingSpanHelper.setSpanAttributes(span, attributes);
-        LoggingSpanHelper.logInfo(logger, "rejectAppInstallRequest: received request", attributes);
-
-        // KV asProvider
-        return CompletableFuture.completedFuture(authenticatedPartyProvider.getPartyOrFail()).thenCompose(
-                providerParty -> damlRepository.findAppInstallRequestById(contractId).thenCompose(contract -> {
-                    span.addEvent("Fetched contract, exercising AppInstallRequest_Reject choice");
-
-                    var choice = new quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Reject(
-                            new Metadata(appInstallRequestReject.getMeta().getData()));
-
+            String contractId,
+            String commandId,
+            AppInstallRequestReject appInstallRequestReject
+    ) {
+        var ctx = tracingCtx(logger, "rejectAppInstallRequest",
+                "contractId", contractId,
+                "commandId", commandId
+        );
+        return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () ->
+                damlRepository.findAppInstallRequestById(contractId).thenCompose(contract -> {
+                    var choice = new AppInstallRequest_Reject(new Metadata(appInstallRequestReject.getMeta().getData()));
                     return ledger.exerciseAndGetResult(contract.contractId, choice, commandId)
-                            .thenApply(result -> {
-                                span.addEvent("Choice exercised, returning 200 OK");
-                                return ResponseEntity.ok().<Void>build();
-                            });
-                })).whenComplete(completeWithin(parentContext, (res, ex) -> {
-                    if (ex == null) {
-                        LoggingSpanHelper.logDebug(logger, "rejectAppInstallRequest: success", attributes);
-                    } else {
-                        LoggingSpanHelper.logError(logger, "rejectAppInstallRequest: failed", attributes, ex);
-                        LoggingSpanHelper.recordException(span, ex);
-                    }
-                }));
+                            .thenApply(result -> ResponseEntity.ok().<Void>build());
+                })
+        ));
     }
 }

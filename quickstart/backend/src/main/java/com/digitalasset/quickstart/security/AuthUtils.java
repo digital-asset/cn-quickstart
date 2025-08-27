@@ -2,37 +2,56 @@ package com.digitalasset.quickstart.security;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
-import org.springframework.beans.factory.annotation.Value;
 
-// This class is a placeholder for utility methods related to authentication.
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
 public class AuthUtils {
     private final AuthenticatedPartyProvider authenticatedPartyProvider;
+    private final Auth auth;
+    private static final Logger logger = LoggerFactory.getLogger(AuthUtils.class);
 
     @Value("${application.tenants.AppProvider.partyId}")
     private String appProviderPartyId;
 
-    AuthUtils(AuthenticatedPartyProvider authenticatedPartyProvider) {
+    AuthUtils(AuthenticatedPartyProvider authenticatedPartyProvider, Auth auth) {
         // Prevent instantiation
         this.authenticatedPartyProvider = authenticatedPartyProvider;
+        this.auth = auth;
     }
 
     public String getAppProviderPartyId() {
         return appProviderPartyId;
     }
 
-    public <T> CompletableFuture<T> asAdminParty(Function<String, CompletableFuture<T>> future) {
-        var authParty = authenticatedPartyProvider.getParty();
-        if (authParty.isPresent() && authParty.get().equals(appProviderPartyId))
-            return CompletableFuture.completedFuture(appProviderPartyId).thenCompose(future);
-        else
-            return CompletableFuture.failedFuture(new IllegalStateException(
-                    "Authenticated party is not the AppProvider party: " + authParty.orElse("None")));
+    public <T> CompletableFuture<ResponseEntity<T>> asAdminParty(Function<String, CompletableFuture<ResponseEntity<T>>> cf) {
+        return asAuthenticatedParty(party -> {
+            if (party.equals(appProviderPartyId)) {
+                return cf.apply(party);
+            } else {
+                logger.error("Access denied: authenticated party '{}' does not match AppProvider party '{}'.", party, appProviderPartyId);
+                return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.FORBIDDEN));
+            }
+        });
     }
 
-    public <T> CompletableFuture<T> asAuthenticatedParty(Function<String, CompletableFuture<T>> future) {
+    public <T> CompletableFuture<ResponseEntity<T>> asAuthenticatedParty(Function<String, CompletableFuture<ResponseEntity<T>>> cf) {
         var authParty = authenticatedPartyProvider.getParty();
-        return authParty.map(s -> CompletableFuture.completedFuture(s).thenCompose(future))
-                .orElseGet(() -> CompletableFuture.failedFuture(new IllegalStateException(
-                        "Authenticated party is not the AppProvider party: " + authParty.orElse("None"))));
+        return authParty.map(s -> CompletableFuture.completedFuture(s).thenCompose(cf))
+                .orElseGet(() -> {
+                    logger.error("Authentication failed: no authenticated party present in the security context");
+                    return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
+                });
+    }
+
+    public boolean isOAuth2Enabled() {
+        return auth ==  Auth.OAUTH2;
+    }
+
+    public boolean isSharedSecretEnabled() {
+        return auth ==  Auth.SHARED_SECRET;
     }
 }

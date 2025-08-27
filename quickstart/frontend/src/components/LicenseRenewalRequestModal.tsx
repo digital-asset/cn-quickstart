@@ -120,6 +120,8 @@ export default function LicenseRenewalRequestModal({
                   </td>
                   <td className={`ellipsis-cell ${renewal.settleDeadlinePassed && 'deadline-passed'}`}>
                     {formatDateTime(renewal.settleBefore)}
+                    {/* KV date component and remove server side computation of settleDeadlinePassed */}
+                    {/* fix sv PQS config  */}
                   </td>
                   <td className="ellipsis-cell">{renewal.description}</td>
                   <td className="ellipsis-cell">{makeStatus(renewal)}</td>

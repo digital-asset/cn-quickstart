@@ -3,7 +3,7 @@
 
 package com.digitalasset.quickstart.pqs;
 
-import static com.digitalasset.quickstart.utility.LoggingSpanHelper.*;
+import static com.digitalasset.quickstart.utility.TracingUtils.*;
 
 import com.digitalasset.transcode.Converter;
 import com.digitalasset.transcode.codec.json.JsonStringCodec;
@@ -54,15 +54,11 @@ public class Pqs {
     @WithSpan
     public <T extends Template> CompletableFuture<List<Contract<T>>> active(Class<T> clazz) {
         Identifier identifier = Utils.getTemplateIdByClass(clazz);
-        return runAndTraceAsync(
-                logger,
-                "Fetching active contracts",
-                Map.of("templateId", identifier.qualifiedName()),
-                () -> {
-                    String sql = "select contract_id, payload from active(?)";
-                    return jdbcTemplate.query(sql, new PqsContractRowMapper<>(identifier), identifier.qualifiedName());
-                }
-        );
+        var ctx = tracingCtx(logger, "active", "templateId", identifier.qualifiedName());
+        return runAndTraceAsync(ctx, () -> {
+            String sql = "select contract_id, payload from active(?)";
+            return jdbcTemplate.query(sql, new PqsContractRowMapper<>(identifier), identifier.qualifiedName());
+        });
     }
 
     /**
@@ -73,16 +69,17 @@ public class Pqs {
     public <T extends Template> CompletableFuture<List<Contract<T>>> activeWhere(
             Class<T> clazz,
             String whereClause,
-            Object... params) {
+            Object... params
+    ) {
         Identifier identifier = Utils.getTemplateIdByClass(clazz);
-        return runAndTraceAsync(
-                logger,
-                "Fetching active contracts with custom whereClause",
-                Map.of("templateId", identifier.qualifiedName(), "whereClause", whereClause),
-                () -> {
-                    String sql = "select contract_id, payload from active(?) where " + whereClause;
-                    return jdbcTemplate.query(sql, new PqsContractRowMapper<>(identifier), combineParams(identifier.qualifiedName(), params));
-                });
+        var ctx = tracingCtx(logger, "activeWhere",
+                "templateId", identifier.qualifiedName(),
+                "whereClause", whereClause
+        );
+        return runAndTraceAsync(ctx, () -> {
+            String sql = "select contract_id, payload from active(?) where " + whereClause;
+            return jdbcTemplate.query(sql, new PqsContractRowMapper<>(identifier), combineParams(identifier.qualifiedName(), params));
+        });
     }
 
     /**
@@ -93,19 +90,20 @@ public class Pqs {
     public <T extends Template> CompletableFuture<Optional<Contract<T>>> singleActiveWhere(
             Class<T> clazz,
             String whereClause,
-            Object... params) {
+            Object... params
+    ) {
         Identifier identifier = Utils.getTemplateIdByClass(clazz);
-        return runAndTraceAsync(
-                logger,
-                "Fetching active contracts with custom whereClause",
-                Map.of("templateId", identifier.qualifiedName(), "whereClause", whereClause),
-                () -> {
-                    String sql = "select contract_id, payload from active(?) where " + whereClause;
-                    List<Contract<T>> results = jdbcTemplate.query(sql, new PqsContractRowMapper<>(identifier),
-                            combineParams(identifier.qualifiedName(), params));
-                    return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
-                }
+        var ctx = tracingCtx(logger, "PQS singleActiveWhere",
+                "templateId", identifier.qualifiedName(),
+                "whereClause", whereClause,
+                "params", params
         );
+        return runAndTraceAsync(ctx, () -> {
+            String sql = "select contract_id, payload from active(?) where " + whereClause;
+            List<Contract<T>> results = jdbcTemplate.query(sql, new PqsContractRowMapper<>(identifier),
+                    combineParams(identifier.qualifiedName(), params));
+            return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        });
     }
 
     /**
@@ -114,28 +112,29 @@ public class Pqs {
     @WithSpan
     public <T extends Template> CompletableFuture<Contract<T>> byContractId(
             Class<T> clazz,
-            @SpanAttribute("backend.get.contract.id") String id) {
+            String id
+    ) {
         Identifier identifier = Utils.getTemplateIdByClass(clazz);
-        return runAndTraceAsync(
-                logger,
-                "Fetching contract by ID", Map.of("templateId", identifier.qualifiedName(), "contractId", id),
-                () -> {
-                    String sql = "select contract_id, payload from lookup_contract(?, ?)";
-                    return jdbcTemplate.queryForObject(sql, new PqsContractRowMapper<>(identifier), id, identifier.qualifiedName());
-                }
+        var ctx = tracingCtx(logger, "byContractId",
+                "templateId", identifier.qualifiedName(),
+                "contractId", id
         );
+        return runAndTraceAsync(ctx, () -> {
+            String sql = "select contract_id, payload from lookup_contract(?, ?)";
+            return jdbcTemplate.queryForObject(sql, new PqsContractRowMapper<>(identifier), id, identifier.qualifiedName());
+        });
     }
 
     @WithSpan
     public CompletableFuture<Void> query(String sql, RowCallbackHandler callback, Object... params) {
-        return runAndTraceAsync(
-                logger,
-
-                "Executing custom query", Map.of("sql", sql),
-                () -> {
-                    jdbcTemplate.query(sql, callback, params);
-                    return null;
-                });
+        var ctx = tracingCtx(logger, "query",
+                "sql", sql,
+                "params", params
+        );
+        return runAndTraceAsync(ctx, () -> {
+            jdbcTemplate.query(sql, callback, params);
+            return null;
+        });
     }
 
     private Object[] combineParams(String qname, Object... params) {

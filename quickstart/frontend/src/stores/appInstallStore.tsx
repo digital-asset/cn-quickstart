@@ -52,9 +52,8 @@ export const AppInstallProvider = ({ children }: { children: React.ReactNode }) 
                 meta: r.meta,
                 numLicensesCreated: 0,
             }));
-
             const unifiedInstallRecords: AppInstallUnified[] = installs.map((i) => ({
-                status: 'INSTALL',
+                status: 'INSTALL', 
                 contractId: i.contractId,
                 provider: i.provider,
                 user: i.user,

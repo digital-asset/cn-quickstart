@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static com.digitalasset.quickstart.utility.LoggingSpanHelper.*;
+import static com.digitalasset.quickstart.utility.TracingUtils.*;
 
 @Component
 public class LedgerApi {
@@ -80,21 +80,17 @@ public class LedgerApi {
             T entity,
             String commandId
     ) {
-        return traceWithStartEvent(
-                logger,
-                "Submitting create command",
-                Map.of(
-                        "commandId", commandId,
-                        "templateId", entity.templateId().toString(),
-                        "applicationId", APP_ID
-                ),
-                () -> {
-                    CommandsOuterClass.Command.Builder command = CommandsOuterClass.Command.newBuilder();
-                    ValueOuterClass.Value payload = dto2Proto.template(entity.templateId()).convert(entity);
-                    command.getCreateBuilder().setTemplateId(toIdentifier(entity.templateId())).setCreateArguments(payload.getRecord());
-                    return submitCommands(List.of(command.build()), commandId).<Void>thenApply(submitResponse -> null);
-                }
+        var ctx = tracingCtx(logger, "Creating contract",
+                "commandId", commandId,
+                "templateId", entity.templateId().toString(),
+                "applicationId", APP_ID
         );
+        return traceWithStartEvent(ctx, () -> {
+            CommandsOuterClass.Command.Builder command = CommandsOuterClass.Command.newBuilder();
+            ValueOuterClass.Value payload = dto2Proto.template(entity.templateId()).convert(entity);
+            command.getCreateBuilder().setTemplateId(toIdentifier(entity.templateId())).setCreateArguments(payload.getRecord());
+            return submitCommands(List.of(command.build()), commandId).<Void>thenApply(submitResponse -> null);
+        });
     }
 
     @WithSpan
@@ -115,71 +111,67 @@ public class LedgerApi {
             String commandId,
             List<CommandsOuterClass.DisclosedContract> disclosedContracts
     ) {
-        return trace(
-                logger,
-                "Exercising choice",
-                Map.of(
-                        "commandId", commandId,
-                        "contractId", contractId.getContractId,
-                        "choiceName", choice.choiceName(),
-                        "templateId", choice.templateId().toString(),
-                        "applicationId", APP_ID
-                ),
-                () -> {
-                    CommandsOuterClass.Command.Builder cmdBuilder = CommandsOuterClass.Command.newBuilder();
-                    ValueOuterClass.Value payload =
-                            dto2Proto.choiceArgument(choice.templateId(), choice.choiceName()).convert(choice);
-
-                    cmdBuilder.getExerciseBuilder()
-                            .setTemplateId(toIdentifier(choice.templateId()))
-                            .setContractId(contractId.getContractId)
-                            .setChoice(choice.choiceName())
-                            .setChoiceArgument(payload);
-
-                    CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
-                            .setCommandId(commandId)
-                            .addActAs(appProviderParty)
-                            .addReadAs(appProviderParty)
-                            .addCommands(cmdBuilder.build());
-
-                    if (disclosedContracts != null && !disclosedContracts.isEmpty()) {
-                        commandsBuilder.addAllDisclosedContracts(disclosedContracts);
-                    }
-
-                    CommandServiceOuterClass.SubmitAndWaitRequest request =
-                            CommandServiceOuterClass.SubmitAndWaitRequest.newBuilder()
-                                    .setCommands(commandsBuilder.build())
-                                    .build();
-
-                    addEventWithAttributes(Span.current(), "built ledger submit request", Map.of());
-                    logger.info("Submitting ledger command");
-                    return toCompletableFuture(commands.submitAndWaitForTransactionTree(request))
-                            .thenApply(response -> {
-                                TransactionOuterClass.TransactionTree txTree = response.getTransaction();
-                                long offset = txTree.getOffset();
-                                String workflowId = txTree.getWorkflowId();
-                                Map<Integer, TransactionOuterClass.TreeEvent> eventsById = txTree.getEventsByIdMap();
-                                Integer eventId = eventsById.isEmpty() ? null : Collections.min(eventsById.keySet());
-                                TransactionOuterClass.TreeEvent event = eventId != null ? txTree.getEventsByIdMap().get(eventId) : null;
-
-                                Map<String, Object> completionAttrs = new HashMap<>();
-                                completionAttrs.put("ledgerOffset", offset);
-                                completionAttrs.put("workflowId", workflowId);
-                                if (eventId != null) {
-                                    completionAttrs.put("eventId", eventId);
-                                }
-
-                                setSpanAttributes(Span.current(), completionAttrs);
-                                logInfo(logger, "Exercised choice", completionAttrs);
-
-                                ValueOuterClass.Value resultPayload = event != null ? event.getExercised().getExerciseResult() : ValueOuterClass.Value.getDefaultInstance();
-
-                                @SuppressWarnings("unchecked")
-                                Result result = (Result) proto2Dto.choiceResult(choice.templateId(), choice.choiceName()).convert(resultPayload);
-                                return result;
-                            });
-                }
+        var ctx = tracingCtx(logger, "Exercising choice",
+                "commandId", commandId,
+                "contractId", contractId.getContractId,
+                "choiceName", choice.choiceName(),
+                "templateId", choice.templateId().toString(),
+                "applicationId", APP_ID
         );
+        return trace(ctx, () -> {
+            CommandsOuterClass.Command.Builder cmdBuilder = CommandsOuterClass.Command.newBuilder();
+            ValueOuterClass.Value payload =
+                    dto2Proto.choiceArgument(choice.templateId(), choice.choiceName()).convert(choice);
+
+            cmdBuilder.getExerciseBuilder()
+                    .setTemplateId(toIdentifier(choice.templateId()))
+                    .setContractId(contractId.getContractId)
+                    .setChoice(choice.choiceName())
+                    .setChoiceArgument(payload);
+
+            CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
+                    .setCommandId(commandId)
+                    .addActAs(appProviderParty)
+                    .addReadAs(appProviderParty)
+                    .addCommands(cmdBuilder.build());
+
+            if (disclosedContracts != null && !disclosedContracts.isEmpty()) {
+                commandsBuilder.addAllDisclosedContracts(disclosedContracts);
+            }
+
+            CommandServiceOuterClass.SubmitAndWaitRequest request =
+                    CommandServiceOuterClass.SubmitAndWaitRequest.newBuilder()
+                            .setCommands(commandsBuilder.build())
+                            .build();
+
+            addEventWithAttributes(Span.current(), "built ledger submit request", Map.of());
+            logger.info("Submitting ledger command");
+            return toCompletableFuture(commands.submitAndWaitForTransactionTree(request))
+                    .thenApply(response -> {
+                        TransactionOuterClass.TransactionTree txTree = response.getTransaction();
+                        long offset = txTree.getOffset();
+                        String workflowId = txTree.getWorkflowId();
+                        Map<Integer, TransactionOuterClass.TreeEvent> eventsById = txTree.getEventsByIdMap();
+                        Integer eventId = eventsById.isEmpty() ? null : Collections.min(eventsById.keySet());
+                        TransactionOuterClass.TreeEvent event = eventId != null ? txTree.getEventsByIdMap().get(eventId) : null;
+
+                        Map<String, Object> completionAttrs = new HashMap<>();
+                        completionAttrs.put("ledgerOffset", offset);
+                        completionAttrs.put("workflowId", workflowId);
+                        if (eventId != null) {
+                            completionAttrs.put("eventId", eventId);
+                        }
+
+                        setSpanAttributes(Span.current(), completionAttrs);
+                        logInfo(logger, "Exercised choice", completionAttrs);
+
+                        ValueOuterClass.Value resultPayload = event != null ? event.getExercised().getExerciseResult() : ValueOuterClass.Value.getDefaultInstance();
+
+                        @SuppressWarnings("unchecked")
+                        Result result = (Result) proto2Dto.choiceResult(choice.templateId(), choice.choiceName()).convert(resultPayload);
+                        return result;
+                    });
+        });
     }
 
     @WithSpan
@@ -196,33 +188,29 @@ public class LedgerApi {
             String commandId,
             List<CommandsOuterClass.DisclosedContract> disclosedContracts
     ) {
-        return trace(
-                logger,
-                "Submitting commands",
-                Map.of(
-                        "commands.count", cmds.size(),
-                        "commandId", commandId,
-                        "applicationId", APP_ID
-                ),
-                () -> {
-                    CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
-                            .setCommandId(commandId)
-                            .addActAs(appProviderParty)
-                            .addReadAs(appProviderParty)
-                            .addAllCommands(cmds);
-
-                    if (disclosedContracts != null && !disclosedContracts.isEmpty()) {
-                        commandsBuilder.addAllDisclosedContracts(disclosedContracts);
-                    }
-
-                    CommandSubmissionServiceOuterClass.SubmitRequest request =
-                            CommandSubmissionServiceOuterClass.SubmitRequest.newBuilder()
-                                    .setCommands(commandsBuilder.build())
-                                    .build();
-
-                    return toCompletableFuture(submission.submit(request));
-                }
+        var ctx = tracingCtx(logger, "Submitting commands",
+                "commands.count", cmds.size(),
+                "commandId", commandId,
+                "applicationId", APP_ID
         );
+        return trace(ctx, () -> {
+            CommandsOuterClass.Commands.Builder commandsBuilder = CommandsOuterClass.Commands.newBuilder()
+                    .setCommandId(commandId)
+                    .addActAs(appProviderParty)
+                    .addReadAs(appProviderParty)
+                    .addAllCommands(cmds);
+
+            if (disclosedContracts != null && !disclosedContracts.isEmpty()) {
+                commandsBuilder.addAllDisclosedContracts(disclosedContracts);
+            }
+
+            CommandSubmissionServiceOuterClass.SubmitRequest request =
+                    CommandSubmissionServiceOuterClass.SubmitRequest.newBuilder()
+                            .setCommands(commandsBuilder.build())
+                            .build();
+
+            return toCompletableFuture(submission.submit(request));
+        });
     }
 
     private static <T> CompletableFuture<T> toCompletableFuture(ListenableFuture<T> listenableFuture) {

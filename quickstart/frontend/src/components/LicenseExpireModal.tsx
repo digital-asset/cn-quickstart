@@ -21,7 +21,7 @@ export default function LicenseExpireModal({
     <Modal
       show={show}
       title={
-        <div>Expire License</div>
+        <div>Archive License</div>
       }
       onClose={() => {
         setExpireDescription('');
@@ -39,7 +39,7 @@ export default function LicenseExpireModal({
       dialogClassName="xauto-width-modal"
       contentClassName="auto-width-content"
       confirmButtonClassName="btn-danger btn-expire-license"
-      confirmButtonLabel='Expire'
+      confirmButtonLabel='Archive'
     >
       <div className="mb-4">
         <div><strong>License Contract ID:</strong> {license?.contractId.substring(0, 24)}...</div>

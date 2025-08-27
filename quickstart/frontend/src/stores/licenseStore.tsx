@@ -8,6 +8,7 @@ import { generateCommandId } from '../utils/commandId';
 import type {
   Client, CompleteLicenseRenewalRequest,
   License,
+  LicenseRenewalResult,
   LicenseRenewRequest,
   Metadata,
 } from '../openapi.d.ts';
@@ -26,7 +27,7 @@ interface LicenseContextType extends LicenseState {
     fetchLicenses: () => Promise<void>;
     renewLicense: (contractId: string, request: LicenseRenewRequest) => Promise<void>;
     expireLicense: (contractId: string, meta: Metadata) => Promise<void>;
-    completeLicenseRenewal: (contractId: string, renewalRequestContractId: string, allocationContractId: string) => Promise<string | undefined>;
+    completeLicenseRenewal: (contractId: string, renewalRequestContractId: string, allocationContractId: string) => Promise<LicenseRenewalResult | undefined>;
     initiateLicenseRenewal: (contractId: string, request: LicenseRenewRequest) => Promise<void>;
     initiateLicenseExpiration: (contractId: string, description: string) => Promise<void>;
     withdrawLicenseRenewalRequest: (contractId: string) => Promise<void>;
@@ -127,7 +128,7 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
                 const result = await client.completeLicenseRenewal({ contractId, commandId }, request);
                 await fetchLicenses();
                 toast.displaySuccess('License renewal completed successfully');
-                return result.data.licenseId;
+                return result.data;
             } catch (error: any) {
                 if (error.response?.status === 404) {
                     toast.displayError('The license has not yet been paid for.');

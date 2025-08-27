@@ -6,7 +6,9 @@
 
 package com.digitalasset.quickstart.service;
 
-import static com.digitalasset.quickstart.utility.LoggingSpanHelper.*;
+import static com.digitalasset.quickstart.service.ServiceUtils.ensurePresent;
+import static com.digitalasset.quickstart.service.ServiceUtils.traceServiceCallAsync;
+import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
 
 import com.daml.ledger.api.v2.CommandsOuterClass;
 import com.daml.ledger.api.v2.ValueOuterClass;
@@ -20,7 +22,6 @@ import com.digitalasset.transcode.java.ContractId;
 import com.digitalasset.transcode.java.Party;
 import com.google.protobuf.ByteString;
 import daml_stdlib_da_time_types.da.time.types.RelTime;
-import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
 import java.time.Duration;
@@ -46,8 +47,7 @@ import splice_api_token_metadata_v1.splice.api.token.metadatav1.ChoiceContext;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.ExtraArgs;
 
 /**
- * License management service for handling contract-based operations on
- * Licenses.
+ * Management service for handling contract-based operations on Licenses.
  */
 @Controller
 @RequestMapping("${openapi.asset.base-path:}")
@@ -64,7 +64,8 @@ public class LicenseApiImpl implements LicensesApi {
             LedgerApi ledger,
             DamlRepository damlRepository,
             TokenStandardProxy tokenStandardProxy,
-            AuthUtils authUtils) {
+            AuthUtils authUtils
+    ) {
         this.ledger = ledger;
         this.damlRepository = damlRepository;
         this.tokenStandardProxy = tokenStandardProxy;
@@ -77,160 +78,184 @@ public class LicenseApiImpl implements LicensesApi {
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<List<License>>> listLicenses() {
-        return auth.asAuthenticatedParty(party -> traceWithStartEventAsync(
-                logger,
-                "listLicenses",
-                Map.of(),
-                () -> damlRepository.findActiveLicenses(party).thenApply(res -> res.stream().map(l -> {
-                            var license = l.license();
-                            var licencePayload = license.payload();
-                            var now = Instant.now();
-                            License licenseApi = new License();
-                            licenseApi.setContractId(license.cid().getContractId);
-                            licenseApi.setProvider(licencePayload.getProvider.getParty);
-                            licenseApi.setUser(licencePayload.getUser.getParty);
-                            licenseApi.setIsExpired(!licencePayload.getExpiresAt.isAfter(now));
-                            var metaApi = new Metadata();
-                            var paramsApi = new LicenseParams();
-                            licenseApi.setParams(paramsApi.meta(metaApi.data(licencePayload.getParams.getMeta.getValues)));
-                            licenseApi.setExpiresAt(toOffsetDateTime(licencePayload.getExpiresAt));
-                            licenseApi.setLicenseNum(licencePayload.getLicenseNum.intValue());
-                            var renewalsApi = l.renewals().stream().map(r -> {
-                                var renewalApi = new LicenseRenewalRequest();
-                                var renewalPayload = r.renewal().payload();
-                                renewalApi.setContractId(r.renewal().cid().getContractId);
-                                renewalApi.setProvider(renewalPayload.getProvider.getParty);
-                                renewalApi.setUser(renewalPayload.getUser.getParty);
-                                renewalApi.setLicenseNum(renewalPayload.getLicenseNum.intValue());
-                                renewalApi.setLicenseFeeAmount(renewalPayload.getLicenseFeeAmount);
-                                renewalApi.setDescription(renewalPayload.getDescription);
-                                renewalApi.setPrepareUntil(toOffsetDateTime(renewalPayload.getPrepareUntil));
-                                renewalApi.setSettleBefore(toOffsetDateTime(renewalPayload.getSettleBefore));
-                                renewalApi.setRequestedAt(toOffsetDateTime(renewalPayload.getRequestedAt));
-                                renewalApi.setRequestId(renewalPayload.getRequestId);
-                                long micros = renewalPayload.getLicenseExtensionDuration.getMicroseconds;
-                                String approximateDays = (micros / 1_000_000 / 3600 / 24) + " days";
-                                renewalApi.setLicenseExtensionDuration(approximateDays);
-                                renewalApi.setPrepareDeadlinePassed(!renewalPayload.getPrepareUntil.isAfter(now));
-                                renewalApi.setSettleDeadlinePassed(!renewalPayload.getSettleBefore.isAfter(now));
-                                if (r.allocationCid().isPresent()) {
-                                    renewalApi.setAllocationCid(r.allocationCid().get().getContractId);
-                                }
-                                return renewalApi;
-                            }).toList();
-                            licenseApi.setRenewalRequests(renewalsApi.stream().sorted(Comparator.comparing(LicenseRenewalRequest::getRequestedAt)).toList());
-                            return licenseApi;
-                        }).sorted(Comparator.comparing(License::getUser)
-                                .thenComparingInt(License::getLicenseNum)).toList())
-                        .thenApply(ResponseEntity::ok)
+        var ctx = tracingCtx(logger, "listLicenses");
+        return auth.asAuthenticatedParty(party -> traceServiceCallAsync(ctx, () ->
+                damlRepository.findActiveLicenses(party).thenApply(res -> res.stream()
+                        .map(LicenseApiImpl::toLicenseApi)
+                        .sorted(Comparator.comparing(License::getUser).thenComparingInt(License::getLicenseNum))
+                        .toList()
+                ).thenApply(ResponseEntity::ok)
         ));
     }
 
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<Void>> renewLicense(
-            @SpanAttribute("license.contractId") String contractId,
-            @SpanAttribute("license.commandId") String commandId,
-            LicenseRenewRequest request) {
-        return auth.asAdminParty(party -> traceWithStartEventAsync(
-                logger,
-                "renewLicense",
-                Map.of(
-                        "contractId", contractId,
-                        "commandId", commandId
-                ),
-                () -> {
-                    var registryAdminIdFut = tokenStandardProxy.getRegistryAdminId();
-                    var licenseFut = damlRepository.findLicenseById(contractId);
-                    return registryAdminIdFut.thenCombine(licenseFut, Pair::of).thenCompose(registryAdminIdAndLicensePair -> {
-                        var now = Instant.now();
-                        License_Renew choice = new License_Renew(UUID.randomUUID().toString(),
-                                new InstrumentId(new Party(registryAdminIdAndLicensePair.first), "Amulet"),
-                                request.getLicenseFeeCc(),
-                                parseRelTime(request.getLicenseExtensionDuration()),
-                                now,
-                                now.plus(java.time.Duration.parse(request.getPrepareUntilDuration())),
-                                now.plus(java.time.Duration.parse(request.getSettleBeforeDuration())),
-                                request.getDescription()
-                        );
-                        return ledger.exerciseAndGetResult(registryAdminIdAndLicensePair.second.contractId, choice, commandId)
-                                .thenApply(r -> ResponseEntity.ok().build());
-                    });
-                })
+            String contractId,
+            String commandId,
+            LicenseRenewRequest request
+    ) {
+        var ctx = tracingCtx(logger, "renewLicense",
+                "contractId", contractId,
+                "commandId", commandId
         );
+        return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () -> {
+            var registryAdminIdFut = tokenStandardProxy.getRegistryAdminId();
+            var licenseFut = damlRepository.findLicenseById(contractId); // KV fix rework to return Optional
+            return registryAdminIdFut.thenCombine(licenseFut, (adminId, license) -> {
+                var now = Instant.now();
+                License_Renew choice = new License_Renew(
+                        UUID.randomUUID().toString(),
+                        new InstrumentId(new Party(adminId), "Amulet"),
+                        request.getLicenseFeeCc(),
+                        parseRelTime(request.getLicenseExtensionDuration()),
+                        now,
+                        now.plus(Duration.parse(request.getPrepareUntilDuration())),
+                        now.plus(Duration.parse(request.getSettleBeforeDuration())),
+                        request.getDescription()
+                );
+                return ledger.exerciseAndGetResult(license.contractId, choice, commandId)
+                        .thenApply(r -> ResponseEntity.ok().<Void>build());
+            }).thenCompose(x -> x);
+        }));
     }
+
 
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<LicenseRenewalResult>> completeLicenseRenewal(
-            @SpanAttribute("licenseRenewal.contractId") String contractId,
-            @SpanAttribute("licenseRenewal.commandId") String commandId,
-            CompleteLicenseRenewalRequest request) {
-        return auth.asAdminParty(party -> traceWithStartEventAsync(
-                logger,
-                "completeLicenseRenewal",
-                Map.of(
-                        "contractId", contractId,
-                        "commandId", commandId
-                ),
-                () -> tokenStandardProxy.getAllocationTransferContext(request.getAllocationContractId()).thenCompose(choiceContext -> {
-                    var disclosures = choiceContext.getDisclosedContracts()
-                            .stream()
-                            .map(this::toLedgerApiDisclosedContract)
-                            .toList();
-                    Map<String, AnyValue> choiceContextMap = disclosures
-                            .stream()
-                            .map(dc -> {
-                                var entityName = dc.getTemplateId().getEntityName();
-                                if (entityName.equals("AmuletRules")) {
-                                    return Pair.of("amulet-rules", toAnyValueContractId(dc.getContractId()));
-                                } else if (entityName.equals("OpenMiningRound")) {
-                                    return Pair.of("open-round", toAnyValueContractId(dc.getContractId()));
-                                } else {
-                                    return null;
-                                }
-                            })
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.toMap(Pair::first, Pair::second));
-                    LicenseRenewalRequest_CompleteRenewal choice = new LicenseRenewalRequest_CompleteRenewal(
-                            new ContractId<>(request.getAllocationContractId()),
-                            new ContractId<>(contractId),
-                            new ExtraArgs(new ChoiceContext(choiceContextMap), toTokenStandarMetadata(Map.of()))
-                    );
-                    return ledger.exerciseAndGetResult(new ContractId<>(request.getRenewalRequestContractId()), choice, commandId, disclosures)
-                            .thenApply(newLicenseCid -> {
-                                logger.info("newLicenseContractId: {}", newLicenseCid.getContractId);
-                                LicenseRenewalResult result = new LicenseRenewalResult();
-                                result.setLicenseId(newLicenseCid.getContractId);
-                                return ResponseEntity.ok(result);
-                            });
-                })
-        ));
+            String contractId,
+            String commandId,
+            CompleteLicenseRenewalRequest request
+    ) {
+        var ctx = tracingCtx(logger, "completeLicenseRenewal",
+                "contractId", contractId,
+                "commandId", commandId
+        );
+        return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () -> {
+            var choiceContextFut = tokenStandardProxy.getAllocationTransferContext(request.getAllocationContractId());
+            var renewalFut = damlRepository.findActiveLicenseRenewalRequestById(request.getRenewalRequestContractId());
+            return choiceContextFut.thenCombine(renewalFut, (c, r) -> {
+                var choiceContext = ensurePresent(c, "Transfer context not found for allocation {}", request.getAllocationContractId());
+                var renewal = ensurePresent(r, "Active renewal request not found for contract {}", request.getRenewalRequestContractId());
+                TransferContext transferContext = prepareTransferContext(
+                        choiceContext.getDisclosedContracts(),
+                        Map.of(
+                                "AmuletRules", "amulet-rules",
+                                "OpenMiningRound", "open-round"
+                        )
+                );
+                LicenseRenewalRequest_CompleteRenewal choice = new LicenseRenewalRequest_CompleteRenewal(
+                        new ContractId<>(request.getAllocationContractId()),
+                        new ContractId<>(contractId),
+                        transferContext.extraArgs
+                );
+                return ledger.exerciseAndGetResult(renewal.contractId, choice, commandId, transferContext.disclosedContracts)
+                        .thenApply(newLicenseCid -> {
+                            logger.info("newLicenseContractId: {}", newLicenseCid.getContractId);
+                            LicenseRenewalResult result = new LicenseRenewalResult();
+                            result.setLicenseId(newLicenseCid.getContractId);
+                            return ResponseEntity.ok(result);
+                        });
+            }).thenCompose(x -> x);
+        }));
     }
 
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<String>> expireLicense(
-            @SpanAttribute("contractId") String contractId,
-            @SpanAttribute("commandId") String commandId,
-            LicenseExpireRequest licenseExpireRequest) {
-        return auth.asAuthenticatedParty(party -> traceWithStartEventAsync(
-                logger,
-                "expireLicense",
-                Map.of(
-                        "contractId", contractId,
-                        "commandId", commandId
-                ),
-                () -> damlRepository.findLicenseById(contractId).thenCompose(contract -> {
+            String contractId,
+            String commandId,
+            LicenseExpireRequest licenseExpireRequest
+    ) {
+        var ctx = tracingCtx(logger, "expireLicense",
+                "contractId", contractId,
+                "commandId", commandId
+        );
+        return auth.asAuthenticatedParty(party -> traceServiceCallAsync(ctx, () ->
+                damlRepository.findLicenseById(contractId).thenCompose(contract -> { // KV make it return Optional
+                    var license = ensurePresent(Optional.ofNullable(contract), "License not found for contract {}", contractId);
                     var meta = licenseExpireRequest.getMeta().getData();
                     if (!party.equals(auth.getAppProviderPartyId())) {
                         meta = new HashMap<>(meta);
                         meta.put("Note", "Triggered by user request");
                     }
                     License_Expire choice = new License_Expire(new Party(auth.getAppProviderPartyId()), toTokenStandarMetadata(meta));
-                    return ledger.exerciseAndGetResult(contract.contractId, choice, commandId)
+                    return ledger.exerciseAndGetResult(license.contractId, choice, commandId)
                             .thenApply(result -> ResponseEntity.ok("License expired successfully"));
-                }))
+                })
+        ));
+    }
+
+    private static License toLicenseApi(DamlRepository.LicenseWithRenewalRequests licenseContract) {
+        var lp = licenseContract.license().payload;
+        var now = Instant.now();
+        License licenseApi = new License();
+        licenseApi.setContractId(licenseContract.license().contractId.getContractId);
+        licenseApi.setProvider(lp.getProvider.getParty);
+        licenseApi.setUser(lp.getUser.getParty);
+        licenseApi.setIsExpired(!lp.getExpiresAt.isAfter(now));
+        var metaApi = new Metadata();
+        var paramsApi = new LicenseParams();
+        licenseApi.setParams(paramsApi.meta(metaApi.data(lp.getParams.getMeta.getValues)));
+        licenseApi.setExpiresAt(toOffsetDateTime(lp.getExpiresAt));
+        licenseApi.setLicenseNum(lp.getLicenseNum.intValue());
+        var renewalsApi = licenseContract.renewals().stream().map(renewalContract ->
+                toLicenseRenewalRequestAPI(renewalContract, now)
+        ).sorted(Comparator.comparing(LicenseRenewalRequest::getRequestedAt)).toList();
+        licenseApi.setRenewalRequests(renewalsApi);
+        return licenseApi;
+    }
+
+    private static LicenseRenewalRequest toLicenseRenewalRequestAPI(DamlRepository.LicenseRenewalRequestWithAllocationCid renewalContract, Instant now) {
+        var rp = renewalContract.renewal().payload;
+        var renewalApi = new LicenseRenewalRequest();
+        renewalApi.setContractId(renewalContract.renewal().contractId.getContractId);
+        renewalApi.setProvider(rp.getProvider.getParty);
+        renewalApi.setUser(rp.getUser.getParty);
+        renewalApi.setLicenseNum(rp.getLicenseNum.intValue());
+        renewalApi.setLicenseFeeAmount(rp.getLicenseFeeAmount);
+        renewalApi.setDescription(rp.getDescription);
+        renewalApi.setPrepareUntil(toOffsetDateTime(rp.getPrepareUntil));
+        renewalApi.setSettleBefore(toOffsetDateTime(rp.getSettleBefore));
+        renewalApi.setRequestedAt(toOffsetDateTime(rp.getRequestedAt));
+        renewalApi.setRequestId(rp.getRequestId);
+        long micros = rp.getLicenseExtensionDuration.getMicroseconds;
+        String approximateDays = (micros / 1_000_000 / 3600 / 24) + " days";
+        renewalApi.setLicenseExtensionDuration(approximateDays);
+        renewalApi.setPrepareDeadlinePassed(!rp.getPrepareUntil.isAfter(now));
+        renewalApi.setSettleDeadlinePassed(!rp.getSettleBefore.isAfter(now));
+        if (renewalContract.allocationCid().isPresent()) {
+            renewalApi.setAllocationCid(renewalContract.allocationCid().get().getContractId);
+        }
+        return renewalApi;
+    }
+
+    private record TransferContext(ExtraArgs extraArgs, List<CommandsOuterClass.DisclosedContract> disclosedContracts) {
+    }
+
+    private TransferContext prepareTransferContext(
+            List<DisclosedContract> disclosedContracts,
+            Map<String, String> metaMap) {
+        var disclosures = disclosedContracts
+                .stream()
+                .map(this::toLedgerApiDisclosedContract)
+                .toList();
+        Map<String, AnyValue> choiceContextMap = disclosures
+                .stream()
+                .map(dc -> {
+                    var metaKey = metaMap.get(dc.getTemplateId().getEntityName());
+                    if (metaKey != null) {
+                        return Map.entry(metaKey, toAnyValueContractId(dc.getContractId()));
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return new TransferContext(
+                new ExtraArgs(new ChoiceContext(choiceContextMap), toTokenStandarMetadata(Map.of())),
+                disclosures
         );
     }
 
@@ -260,12 +285,6 @@ public class LicenseApiImpl implements LicensesApi {
 
         return ValueOuterClass.Identifier.newBuilder().setPackageId(packageId).setModuleName(moduleName)
                 .setEntityName(entityName).build();
-    }
-
-    record Pair<A, B>(A first, B second) {
-        static <A, B> Pair<A, B> of(A a, B b) {
-            return new Pair<>(a, b);
-        }
     }
 
     private AnyValue toAnyValueContractId(String contractId) {

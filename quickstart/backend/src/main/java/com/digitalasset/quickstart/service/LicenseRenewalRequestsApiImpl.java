@@ -7,8 +7,7 @@ import com.digitalasset.quickstart.api.LicenseRenewalRequestsApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.quickstart.security.AuthUtils;
-import io.opentelemetry.instrumentation.annotations.SpanAttribute;
-import org.openapitools.model.*;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -17,15 +16,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import splice_api_token_allocation_request_v1.splice.api.token.allocationrequestv1.AllocationRequest;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.ChoiceContext;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.ExtraArgs;
+import splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static com.digitalasset.quickstart.utility.LoggingSpanHelper.traceWithStartEventAsync;
+import static com.digitalasset.quickstart.service.ServiceUtils.ensurePresent;
+import static com.digitalasset.quickstart.service.ServiceUtils.traceServiceCallAsync;
+import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
 
 /**
- * License management service for handling contract-based operations on
- * Licenses.
+ * Management service for handling contract-based operations on LicenseRenewalRequests.
  */
 @Controller
 @RequestMapping("${openapi.asset.base-path:}")
@@ -37,38 +38,28 @@ public class LicenseRenewalRequestsApiImpl implements LicenseRenewalRequestsApi 
     private final DamlRepository damlRepository;
     private final AuthUtils auth;
 
-    public LicenseRenewalRequestsApiImpl(
-            LedgerApi ledger,
-            DamlRepository damlRepository,
-            AuthUtils authUtils) {
+    public LicenseRenewalRequestsApiImpl(LedgerApi ledger, DamlRepository damlRepository, AuthUtils authUtils) {
         this.ledger = ledger;
         this.damlRepository = damlRepository;
         this.auth = authUtils;
     }
 
     @Override
-    public CompletableFuture<ResponseEntity<Void>> withdrawLicenseRenewalRequest(
-            @SpanAttribute("contractId") String contractId,
-            @SpanAttribute("commandId") String commandId
-    ) {
-        return auth.asAdminParty(party -> traceWithStartEventAsync(
-                logger,
-                "withdrawLicenseRenewalRequest",
-                Map.of(
-                        "contractId", contractId,
-                        "commandId", commandId
-                ),
-                () -> damlRepository.findLicenseRenewalRequestById(contractId).thenCompose(contract -> {
-                    var choice = new AllocationRequest.AllocationRequest_Withdraw(
-                       new ExtraArgs(new ChoiceContext(Map.of()), toTokenStandarMetadata(Map.of()))
-                    );
-                    return ledger.exerciseAndGetResult(contract.contractId, choice, commandId)
-                            .thenApply(result -> ResponseEntity.ok().build());
-                }))
+    @WithSpan
+    public CompletableFuture<ResponseEntity<Void>> withdrawLicenseRenewalRequest(String contractId, String commandId) {
+        var ctx = tracingCtx(logger, "withdrawLicenseRenewalRequest",
+                "contractId", contractId,
+                "commandId", commandId
         );
-    }
-
-    private static splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata toTokenStandarMetadata(Map<String, String> meta) {
-        return new splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata(meta);
+        return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () ->
+                damlRepository.findActiveAllocationRequestById(contractId).thenCompose(allocReq -> {
+                    var allocationRequest = ensurePresent(allocReq, "AllocationRequest {} not found", contractId);
+                    var choice = new AllocationRequest.AllocationRequest_Withdraw(
+                            new ExtraArgs(new ChoiceContext(Map.of()), new Metadata(Map.of()))
+                    );
+                    return ledger.exerciseAndGetResult(allocationRequest.contractId, choice, commandId)
+                            .thenApply(result -> ResponseEntity.ok().build());
+                })
+        ));
     }
 }

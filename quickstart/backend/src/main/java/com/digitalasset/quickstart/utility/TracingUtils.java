@@ -9,15 +9,14 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 
 /**
- * The {@code LoggingSpanHelper} is a utility class designed to centralize common logging
+ * The {@code TracingUtils} is a utility class designed to centralize common logging
  * and OpenTelemetry trace operations. Its primary purpose is to reduce repetitive code
  * when adding the same structured attributes to both log statements and the current
  * OpenTelemetry {@link Span}.
@@ -45,9 +44,12 @@ import org.slf4j.Logger;
  * If your code does not require adding attributes to spans or correlating them with logs,
  * you can bypass this helper and use standard logging calls directly.
  */
-public final class LoggingSpanHelper {
 
-    private LoggingSpanHelper() {
+public final class TracingUtils {
+    public record TracingContext(Logger logger, String message, Map<String, Object> attrs) {
+    }
+
+    private TracingUtils() {
         // Utility class: prevent instantiation
     }
 
@@ -224,71 +226,71 @@ public final class LoggingSpanHelper {
         logError(logger, message, null, null);
     }
 
+    public static TracingContext tracingCtx(Logger logger, Object... args) {
+        if (args == null || args.length % 2 == 0) {
+            throw new IllegalArgumentException("attrs requires an odd number of arguments name, (key, value pairs).");
+        }
+        Map<String, Object> map = new HashMap<>();
+        for (int i = 1; i < args.length; i += 2) {
+            String key = args[i] == null ? "null" : args[i].toString();
+            Object value = args[i + 1];
+            map.put(key, value);
+        }
+        return new TracingContext(logger, args[0].toString(), map);
+    }
 
     public static <T> CompletableFuture<T> traceWithStartEvent(
-            Logger logger,
-            String message,
-            Map<String, Object> baseAttrs,
+            TracingUtils.TracingContext ctx,
             Supplier<CompletableFuture<T>> body) {
-        return _trace(logger, message, baseAttrs, true, body);
+        return _trace(ctx, true, body);
     }
 
     public static <T> CompletableFuture<T> traceWithStartEventAsync(
-            Logger logger,
-            String message,
-            Map<String, Object> baseAttrs,
+            TracingUtils.TracingContext ctx,
             Supplier<CompletableFuture<T>> body) {
         return CompletableFuture.supplyAsync(
-                () -> _trace(logger, message, baseAttrs, true, body)
+                () -> _trace(ctx, true, body)
         ).thenCompose(f -> f);
     }
 
     public static <T> CompletableFuture<T> trace(
-            Logger logger,
-            String message,
-            Map<String, Object> baseAttrs,
+            TracingUtils.TracingContext ctx,
             Supplier<CompletableFuture<T>> body) {
-        return _trace(logger, message, baseAttrs, false, body);
+        return _trace(ctx, false, body);
     }
 
     public static <T> CompletableFuture<T> traceAsync(
-            Logger logger,
-            String message,
-            Map<String, Object> baseAttrs,
+            TracingUtils.TracingContext ctx,
             Supplier<CompletableFuture<T>> body) {
         return CompletableFuture.supplyAsync(
-                () -> _trace(logger, message, baseAttrs, false, body)
+                () -> _trace(ctx, false, body)
         ).thenCompose(f -> f);
     }
 
     public static <T> CompletableFuture<T> runAndTraceAsync(
-            Logger logger,
-            String message,
-            Map<String, Object> baseAttrs,
+            TracingUtils.TracingContext ctx,
             Supplier<T> body) {
         return CompletableFuture.supplyAsync(
-                () -> _trace(logger, message, baseAttrs, false, () -> CompletableFuture.completedFuture(body.get()))
+                () -> _trace(ctx, false, () -> CompletableFuture.completedFuture(body.get()))
         ).thenCompose(f -> f);
     }
 
     private static <T> CompletableFuture<T> _trace(
-            Logger logger,
-            String message,
-            Map<String, Object> baseAttrs,
+            TracingUtils.TracingContext ctx,
             boolean startEvent,
             Supplier<CompletableFuture<T>> body) {
         var span = Span.current();
-        if (startEvent) addEventWithAttributes(span, message + " start", baseAttrs);
-        setSpanAttributes(span, baseAttrs);
-        logInfo(logger, message, baseAttrs);
+        if (startEvent) addEventWithAttributes(span, ctx.message() + " start", ctx.attrs());
+        setSpanAttributes(span, ctx.attrs());
+        logInfo(ctx.logger(), ctx.message(), ctx.attrs());
         return body.get().whenComplete((res, ex) -> {
             if (ex != null) {
-                logger.error(message + " failed", ex);
+                ctx.logger().error(ctx.message() + " failed", ex);
                 recordException(span, ex);
             } else if (res instanceof List<?> listRes) {
-                logger.info(message + " succeeded with {} results", listRes.size());
+                ctx.logger().info(ctx.message() + " succeeded with {} results", listRes.size());
             } else {
-                logger.info(message + " succeeded");
+                ctx.logger().info(ctx.message() + " succeeded");
             }
         });
     }

@@ -11,16 +11,19 @@ import com.digitalasset.quickstart.tokenstandard.openapi.allocation.model.Choice
 import com.digitalasset.quickstart.tokenstandard.openapi.allocation.model.GetChoiceContextRequest;
 import com.digitalasset.quickstart.tokenstandard.openapi.metadata.DefaultMetadataApi;
 import com.digitalasset.quickstart.tokenstandard.openapi.metadata.model.GetRegistryInfoResponse;
-import com.digitalasset.quickstart.utility.LoggingSpanHelper;
-import io.opentelemetry.api.trace.Span;
+import com.digitalasset.quickstart.utility.TracingUtils;
+import com.digitalasset.quickstart.utility.TracingUtils.TracingContext;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
-import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
 
 @Component
 public class TokenStandardProxy {
@@ -38,49 +41,33 @@ public class TokenStandardProxy {
 
     @WithSpan
     public CompletableFuture<String> getRegistryAdminId() {
-        return trace(() -> metadataApi.getRegistryInfo().thenApply(GetRegistryInfoResponse::getAdminId),
-                "Fetching registry admin id");
+        var ctx = tracingCtx(logger, "getRegistryAdminId");
+        return trace(ctx, () ->
+                metadataApi.getRegistryInfo().thenApply(GetRegistryInfoResponse::getAdminId)
+        );
     }
 
     @WithSpan
-    public CompletableFuture<ChoiceContext> getAllocationTransferContext(String allocationId) {
-        return trace(() -> allocationApi.getAllocationTransferContext(allocationId, new GetChoiceContextRequest()),
-                "Fetching allocation transfer context", Map.of("allocationId", allocationId));
+    public CompletableFuture<Optional<ChoiceContext>> getAllocationTransferContext(String allocationId) {
+        var ctx = tracingCtx(logger, "getAllocationTransferContext",
+                "allocationId", allocationId
+        );
+        return trace(ctx, () ->
+                allocationApi.getAllocationTransferContext(allocationId, new GetChoiceContextRequest()).thenApply(Optional::ofNullable)
+        );
     }
 
-    // Boilerplate code for logging, tracing and dealing with unrealistic
-    // ApiExceptions
-    private <T> CompletableFuture<T> trace(ThrowingSupplier<CompletableFuture<T>> supplier, String message,
-                                           Map<String, Object> baseAttrs) {
-        var span = Span.current();
-        LoggingSpanHelper.setSpanAttributes(span, baseAttrs);
-        LoggingSpanHelper.logInfo(logger, message, baseAttrs);
-        final CompletableFuture<T> cs;
-        try {
-            cs = supplier.get();
-        } catch (ApiException e) {
-            // should not be possible - OpenAPI codegen adds false checked `throws`
-            // declaration
-            LoggingSpanHelper.logError(logger, "Unexpected ApiException thrown while:" + message, baseAttrs, e);
-            LoggingSpanHelper.recordException(span, e);
-            CompletableFuture<T> failed = new CompletableFuture<>();
-            failed.completeExceptionally(e);
-            return failed;
-        }
-        return cs.whenComplete((res, ex) -> {
-            if (ex != null) {
-                LoggingSpanHelper.logError(logger, message + " failed", baseAttrs, ex);
-                LoggingSpanHelper.recordException(span, ex);
-            } else {
-                Map<String, Object> attrsWithResult = new java.util.HashMap<>(baseAttrs);
-                attrsWithResult.put("result", res);
-                LoggingSpanHelper.logInfo(logger, message + " succeeded", attrsWithResult);
+    private <T> CompletableFuture<T> trace(
+            TracingContext ctx,
+            ThrowingSupplier<CompletableFuture<T>> supplier) {
+        return TracingUtils.trace(ctx, () -> {
+            try {
+                return supplier.get();
+                // should not be possible - OpenAPI codegen adds false checked `throws` declaration
+            } catch (ApiException e) {
+                throw new CompletionException(e);
             }
         });
-    }
-
-    private <T> CompletableFuture<T> trace(ThrowingSupplier<CompletableFuture<T>> supplier, String message) {
-        return trace(supplier, message, Map.of());
     }
 
     @FunctionalInterface

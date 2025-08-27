@@ -10,18 +10,20 @@ public interface AuthenticatedUserProvider {
      */
     Optional<AuthenticatedUser> getUser();
 
-    class AuthenticatedUser {
+    final class AuthenticatedUser {
         String username;
         String partyId;
         String tenantId;
         List<String> roles;
         Boolean isAdmin;
 
+        AuthenticatedUser() {}
+
         public String getUsername() {
             return username;
         }
 
-        public void setUsername(String username) {
+        void setUsername(String username) {
             this.username = username;
         }
 
@@ -29,7 +31,7 @@ public interface AuthenticatedUserProvider {
             return partyId;
         }
 
-        public void setPartyId(String partyId) {
+        void setPartyId(String partyId) {
             this.partyId = partyId;
         }
 
@@ -37,7 +39,7 @@ public interface AuthenticatedUserProvider {
             return tenantId;
         }
 
-        public void setTenantId(String tenantId) {
+        void setTenantId(String tenantId) {
             this.tenantId = tenantId;
         }
 
@@ -45,7 +47,7 @@ public interface AuthenticatedUserProvider {
             return roles;
         }
 
-        public void setRoles(List<String> roles) {
+        void setRoles(List<String> roles) {
             this.roles = roles;
         }
 
@@ -53,7 +55,7 @@ public interface AuthenticatedUserProvider {
             return isAdmin;
         }
 
-        public void setAdmin(Boolean admin) {
+        void setAdmin(Boolean admin) {
             isAdmin = admin;
         }
     }

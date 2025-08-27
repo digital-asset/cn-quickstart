@@ -95,6 +95,9 @@ public class SpringSecurityOAuth2Config {
                 Collection<GrantedAuthority> authorities = new HashSet<>(defaultGrantedAuthoritiesConverter.convert(jwt));
                 // there is only one AppProvider issuer that can issue JWT to authenticate to ResourceServer
                 // we consider anybody with JWT from that issuer to be admin
+                // KV explain why linking to app config
+                //  add VIRTUAL_PARTY_ID_CLAIM and tenant claims maybe via custom JwtAuthenticationToken  that on getAttributes return also our custom claims
+                //  or maybe check for virtual_partyId claim in authorities instead of claims???
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
                 return authorities;
             }

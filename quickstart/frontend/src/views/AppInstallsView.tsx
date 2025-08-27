@@ -22,7 +22,7 @@ const AppInstallsView: React.FC = () => {
     fetchAll();
     const intervalId = setInterval(() => {
       fetchAll();
-    }, 1000);
+    }, 5000);
     return () => clearInterval(intervalId);
   }, [fetchUser, fetchAll]);
 
@@ -37,12 +37,13 @@ const AppInstallsView: React.FC = () => {
             <thead>
             <tr>
               <th style={{ width: '150px' }}>Contract ID</th>
-              <th style={{ width: '100px' }}>Status</th>
+
               {user?.isAdmin && (
                 <th style={{ width: '150px' }}>User</th>
               )}
-              <th style={{ width: '300px' }}>Meta</th>
               <th style={{ width: '100px' }}># Licenses</th>
+              <th style={{ width: '300px' }}>Meta</th>
+              <th style={{ width: '250px' }}>Status</th>              
               <th style={{ width: '310px' }}>Actions</th>
             </tr>
             </thead>
@@ -52,30 +53,32 @@ const AppInstallsView: React.FC = () => {
                   <td className="ellipsis-cell app-install-contract-id">
                     {item.contractId}
                   </td>
-                  <td className="ellipsis-cell app-install-status">
-                    {item.status}
-                  </td>
                   {user?.isAdmin && (
                     <td className="ellipsis-cell app-install-user">
                       {item.user}
                     </td>
                   )}
-                  <td className="ellipsis-cell app-install-meta">
-                    {item.meta ? JSON.stringify(item.meta.data) : '{}'}
-                  </td>
                   <td className="app-install-num-licenses" data-testid="num-licenses">
                     {item.numLicensesCreated}
                   </td>
+                  <td className="ellipsis-cell app-install-meta">
+                    {item.meta ? JSON.stringify(item.meta.data) : '{}'}
+                  </td>
+                  <td className="ellipsis-cell app-install-status">
+                    {item.status === 'REQUEST' ? 'AWAITING_ACCEPTANCE' : 'ACCEPTED'}
+                  </td>                  
                   <td className="app-install-actions">
                     {item.status === 'REQUEST' ? (
                         user?.isAdmin ? (
                             <div className="btn-group" role="group">
-                              <button
-                                  className="btn btn-success btn-accept-install"
-                                  onClick={() => accept(item.contractId, item.meta, {})}
-                              >
-                                Accept
-                              </button>
+                              {unifiedInstalls.findIndex((i) => i.status === 'INSTALL') === -1 && (
+                                <button
+                                    className="btn btn-success btn-accept-install"
+                                    onClick={() => accept(item.contractId, item.meta, {})}
+                                >
+                                  Accept
+                                </button>
+                              )}
                               <button
                                   className="btn btn-warning btn-reject-install"
                                   onClick={() => reject(item.contractId, {})}

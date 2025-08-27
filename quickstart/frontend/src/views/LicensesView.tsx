@@ -69,9 +69,9 @@ const LicensesView: React.FC = () => {
   };
 
   const handleCompleteRenewal = async (renewalContractId: string, renewalRequestContractId: string, allocationContractId: string) => {
-    const licenseId = await completeLicenseRenewal(renewalContractId, renewalRequestContractId, allocationContractId);
-    if (licenseId) {
-      setSelectedLicenseId(licenseId);
+    const result = await completeLicenseRenewal(renewalContractId, renewalRequestContractId, allocationContractId);
+    if (result) {
+      setSelectedLicenseId(result.licenseId!);
     }
     await fetchLicenses();
   };
@@ -106,6 +106,7 @@ const LicensesView: React.FC = () => {
           <th style={{ width: '110px' }}>License #</th>
           <th style={{ width: '100px' }}>Pending Renewals</th>
           <th style={{ width: '100px' }}>Accepted Renewals</th>
+          <th style={{ width: '130px' }}>Status</th>          
           <th style={{ width: '300px' }}>Actions</th>
         </tr>
         </thead>
@@ -123,6 +124,7 @@ const LicensesView: React.FC = () => {
               <td className="ellipsis-cell license-number">{license.licenseNum}</td>
               <td className="ellipsis-cell">{license.renewalRequests?.filter(r => !r.allocationCid).length || 0}</td>
               <td className="ellipsis-cell">{license.renewalRequests?.filter(r => r.allocationCid).length || 0}</td>
+              <td className="ellipsis-cell license-status">{license.isExpired ? 'EXPIRED' : 'ACTIVE'}</td>
               <td className="license-actions">
                   {(isAdmin || (license.renewalRequests?.length ?? 0) > 0) && (
                     <button
@@ -133,13 +135,12 @@ const LicensesView: React.FC = () => {
                     </button>
                     )
                   }
-                  {/* todo send isExpired from backend to avoid client clock skew */}
                   {license.expiresAt && license.isExpired && (
                     <button
                       className="btn btn-danger btn-expire-license"
                       onClick={() => openExpireModal(license.contractId)}
                     >
-                      Expire
+                      Archive
                     </button>
                   )}
               </td>
