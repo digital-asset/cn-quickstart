@@ -11,7 +11,7 @@ x-vars:
     required: false
 
   sv-pqs-env: &sv-pqs-env
-    path: ${MODULES_DIR}/pqs/env/sv/${PQS_SV_PROFILE}/${AUTH_MODE}.env
+    path: ${MODULES_DIR}/pqs/env/sv/${PQS_SV_PROFILE}.env
     required: false
 
   app-provider-pqs-onboarding-env: &app-provider-pqs-onboarding-env
@@ -20,10 +20,6 @@ x-vars:
 
   app-user-pqs-onboarding-env: &app-user-pqs-onboarding-env
     path: ${MODULES_DIR}/pqs/onboarding/app-user/${PQS_APP_USER_PROFILE}/${AUTH_MODE}.env
-    required: false
-
-  sv-pqs-onboarding-env: &sv-pqs-onboarding-env
-    path: ${MODULES_DIR}/pqs/onboarding/sv/${PQS_SV_PROFILE}/${AUTH_MODE}.env
     required: false
 
 volumes:
@@ -85,7 +81,6 @@ services:
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
       - ${MODULES_DIR}/pqs/env/pqs.env
-      - *sv-pqs-onboarding-env
       - *sv-pqs-env
     volumes:
       - onboarding:/onboarding
@@ -107,7 +102,6 @@ services:
     env_file:
       - *app-provider-pqs-onboarding-env
       - *app-user-pqs-onboarding-env
-      - *sv-pqs-onboarding-env
     volumes:
       - ${MODULES_DIR}/pqs/onboarding/app-provider/env.sh:/app/scripts/${PQS_APP_PROVIDER_PROFILE}/app-provider-pqs.sh
       - ${MODULES_DIR}/pqs/onboarding/app-user/env.sh:/app/scripts/${PQS_APP_USER_PROFILE}/app-user-pqs.sh

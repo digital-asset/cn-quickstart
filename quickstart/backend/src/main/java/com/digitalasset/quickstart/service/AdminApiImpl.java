@@ -68,7 +68,8 @@ public class AdminApiImpl implements AdminApi {
                 "partyId", request.getPartyId()
         );
 
-        // TODO KV fix cannot use auth.asAdminParty(party -> here. if this endpoint is accessed from CLI providing JWT token directly
+        // TODO KV fix
+        //  We cannot use auth.asAdminParty(party -> here. if this endpoint is accessed from CLI providing JWT token directly
         //  The endpoint is still protected as SpringSecurityOAuth2Config -> HttpSecurity requires role ADMIN for it
         //  but it is annoying that we cannot use the same pattern as in other endpoints
         return traceServiceCallAsync(ctx, () -> CompletableFuture.supplyAsync(() -> {
@@ -83,7 +84,8 @@ public class AdminApiImpl implements AdminApi {
                             logger.info("Creating user {} with roles {}", user, request.getInternal() ? "ADMIN" : "USER");
                             try {
                                 userDetailsManager.get().createUser(
-                                        // TODO KV fix this leak, should not rely on Spring Security here
+                                        // TODO KV https://github.com/digital-asset/cn-quickstart/issues/235
+                                        //  fix this API leak, we should not rely on Spring Security here
                                         org.springframework.security.core.userdetails.User
                                                 .withUsername(user)
                                                 .password("{noop}")

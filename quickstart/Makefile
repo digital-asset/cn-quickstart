@@ -90,7 +90,13 @@ endif
 ####  PQS
 ############################################################################
 DOCKER_COMPOSE_FILES += -f ${MODULES_DIR}/pqs/compose.yaml
-DOCKER_COMPOSE_PROFILES += --profile pqs-app-provider --profile pqs-app-user --profile pqs-sv
+DOCKER_COMPOSE_PROFILES += --profile pqs-app-provider
+ifeq ($(PQS_APP_USER_PROFILE),on)
+  DOCKER_COMPOSE_PROFILES += --profile pqs-app-user
+endif
+ifeq ($(PQS_SV_PROFILE),on)
+  DOCKER_COMPOSE_PROFILES += --profile pqs-sv
+endif
 DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/pqs/compose.env
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
   RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/pqs/resource-constraints.yaml
@@ -202,6 +208,14 @@ restart-backend: build-backend ## Build and start the application
 restart-frontend: build-frontend ## Build and start the application
 	$(call docker-compose, restart nginx)
 
+.PHONY: restart-service
+restart-service:
+	@if [ -z "${SERVICE}" ]; then \
+	  echo "Usage: make restart-service SERVICE=<service>"; exit 1; \
+	fi
+	$(call docker-compose, rm -s -f ${SERVICE})
+	$(call docker-compose, up -d --no-recreate)
+
 # Run targets
 .PHONY: start
 ifeq ($(OBSERVABILITY_ENABLED),true)
@@ -214,8 +228,12 @@ start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability
 
 .PHONY: start-vite-dev
 start-vite-dev: ## Start the frontend application in development mode
-	@echo "Starting application and Vite frontend development server..."
-	make start && cd frontend && npm run dev
+	make start vite-dev
+
+.PHONY: vite-dev
+vite-dev:
+	@echo "Starting Vite frontend development server..."
+	cd frontend && npm run dev
 
 .PHONY: stop
 stop: ## Stop the application and observability services

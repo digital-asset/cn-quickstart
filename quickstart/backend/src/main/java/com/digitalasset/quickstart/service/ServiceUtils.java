@@ -23,7 +23,7 @@ class ServiceUtils {
                 body.get().exceptionally(t -> {
                     if (t.getCause() instanceof ServiceException e) {
                         ctx.logger().warn(e.getMessage(), e);
-                        return (T) ResponseEntity.status(e.getCode()).body(e.getMessage());
+                        return (T) ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
                     }
                     throw new CompletionException(t);
                 })

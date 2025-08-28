@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import Modal from './Modal.tsx';
-import DurationInput , { toISO_8601 } from './DurationInput';
+import DurationInput from './DurationInput';
 import type { License, LicenseRenewRequest } from '../openapi';
 import { formatDateTime } from '../utils/format';
+import { toISO_8601 } from '../utils/duration';
+
 
 type RenewData = {
   extension: string;
@@ -81,7 +83,7 @@ export default function LicenseRenewModal({
                   <label className="text-end pe-2 mb-0">Extension:</label>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                    <DurationInput
-                      units="dm"
+                      units="dhm"
                       value={renewData.extension}
                       onChange={(v) => {
                         update({ extension: v });
@@ -104,7 +106,7 @@ export default function LicenseRenewModal({
                   <label className="text-end pe-2 mb-0">Prepare in:</label>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <DurationInput
-                      units="smd"
+                      units="smhd"
                       value={renewData.prepareIn}
                       onChange={(v) => {
                         update({ prepareIn: v });
@@ -115,7 +117,7 @@ export default function LicenseRenewModal({
                   <label className="text-end pe-2 mb-0">Settle in:</label>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <DurationInput
-                      units="smd"
+                      units="smhd"
                       value={renewData.settleIn}
                       onChange={(v) => {
                         update({ settleIn: v });

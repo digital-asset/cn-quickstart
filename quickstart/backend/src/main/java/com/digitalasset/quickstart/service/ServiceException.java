@@ -6,21 +6,19 @@ import org.slf4j.helpers.MessageFormatter;
 import org.slf4j.helpers.FormattingTuple;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Custom exception class for service layer errors.
+ * Extends ResponseStatusException to include HTTP status codes.
+ * Uses SLF4J's MessageFormatter for message formatting.
+ */
+ class ServiceException extends ResponseStatusException {
 
-class ServiceException extends ResponseStatusException {
-    private final HttpStatus code;
-
-    public ServiceException(HttpStatus code, String message, Object... args) {
-        this(code, MessageFormatter.arrayFormat(message, args));
+    ServiceException(HttpStatus status, String message, Object... args) {
+        this(status, MessageFormatter.arrayFormat(message, args));
     }
 
-    private ServiceException(HttpStatus code, FormattingTuple tuple) {
-        super(code, tuple.getMessage(), tuple.getThrowable());
-        this.code = code;
-    }
-
-    public HttpStatus getCode() {
-        return code;
+    private ServiceException(HttpStatus status, FormattingTuple tuple) {
+        super(status, tuple.getMessage(), tuple.getThrowable());
     }
 }
 

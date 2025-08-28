@@ -25,6 +25,7 @@ const LicensesView: React.FC = () => {
 
   const { user, fetchUser } = useUserStore();
   const isAdmin = !!user?.isAdmin;
+  const userWallet = user?.walletUrl || 'http://wallet.localhost:2000';
 
   const [selectedLicenseId, setSelectedLicenseId] = useState<string | null>(null);
   const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
@@ -124,7 +125,7 @@ const LicensesView: React.FC = () => {
               <td className="ellipsis-cell license-number">{license.licenseNum}</td>
               <td className="ellipsis-cell">{license.renewalRequests?.filter(r => !r.allocationCid).length || 0}</td>
               <td className="ellipsis-cell">{license.renewalRequests?.filter(r => r.allocationCid).length || 0}</td>
-              <td className="ellipsis-cell license-status">{license.isExpired ? 'EXPIRED' : 'ACTIVE'}</td>
+              <td className="ellipsis-cell license-status">{license.isExpired ? 'INVALID' : 'VALID'}</td>
               <td className="license-actions">
                   {(isAdmin || (license.renewalRequests?.length ?? 0) > 0) && (
                     <button
@@ -140,7 +141,7 @@ const LicensesView: React.FC = () => {
                       className="btn btn-danger btn-expire-license"
                       onClick={() => openExpireModal(license.contractId)}
                     >
-                      Archive
+                      Expire
                     </button>
                   )}
               </td>
@@ -155,6 +156,7 @@ const LicensesView: React.FC = () => {
         license={selectedLicense}
         onClose={closeModal}
         isAdmin={isAdmin}
+        userWallet={userWallet}
         onIssueRenewal={handleRenew}
         onCompleteRenewal={handleCompleteRenewal}
         onWithdraw={handleRenewalWithdraw}

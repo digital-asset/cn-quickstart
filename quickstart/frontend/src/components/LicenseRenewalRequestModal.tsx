@@ -8,6 +8,7 @@ type Props = {
   license: License | null;
   onClose: () => void;
   isAdmin: boolean;
+  userWallet: string;
   onIssueRenewal: (request: LicenseRenewRequest) => Promise<void> | void;
   onCompleteRenewal: (licenseContractId: string, renewalContractId: string, allocationCid: string) => Promise<void> | void;
   onWithdraw: (renewalContractId: string) => Promise<void> | void;
@@ -19,6 +20,7 @@ export default function LicenseRenewalRequestModal({
   license,
   onClose,
   isAdmin,
+  userWallet,
   onIssueRenewal,
   onCompleteRenewal,
   onWithdraw,
@@ -99,11 +101,9 @@ export default function LicenseRenewalRequestModal({
               <th style={{ width: '30px' }}>Fee</th>
               <th style={{ width: '100px' }}>Prepare Until</th>
               <th style={{ width: '100px' }}>Settle Before</th>
-              <th style={{ width: '200px' }}>Description</th>
-              <th style={{ width: '100px' }}>Status</th>
-              {isAdmin && (
-                <th style={{ width: '220px' }}>Actions</th>
-              )}
+              <th style={{ width: '100px' }}>Description</th>
+              <th style={{ width: '150px', minWidth: '150px' }}>Status</th>
+              <th style={{ width: '220px' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -154,6 +154,10 @@ export default function LicenseRenewalRequestModal({
                         </button>
                       )}
                     </td>
+                  )}
+
+                  {!isAdmin && !renewal.settleDeadlinePassed && !renewal.allocationCid && (
+                    <td>Please accept the allocation request in your <a href={`${userWallet}/allocations`} target='_blank'>wallet</a>.</td>
                   )}
                 </tr>
               );

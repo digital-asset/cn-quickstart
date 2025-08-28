@@ -20,7 +20,7 @@ register_tenant() {
    --data-raw '{
      "tenantId": "AppUser",
      "partyId": "'$partyId'",
-     "walletUrl": "http://wallet.localhost:'${APP_USER_UI_PORT}'/",
+     "walletUrl": "http://wallet.localhost:'${APP_USER_UI_PORT}'",
      "clientId": "'$clientId'",
      "issuerUrl": "'$issuerUrl'",
      "internal": false
