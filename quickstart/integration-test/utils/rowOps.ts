@@ -11,7 +11,7 @@ export default class RowOps {
   findRowBy = (pattern: string | RegExp): Locator => {
     const nameMatcher = pattern instanceof RegExp ? pattern : new RegExp(pattern);
     const cell = this.page.getByRole('cell', {name: nameMatcher});
-    return this.page.locator('role=row', {has: cell});
+    return this.page.getByRole('row').filter({ has: cell });
   }
 
   public async withRowMatching(

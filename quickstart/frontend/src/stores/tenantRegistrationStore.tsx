@@ -96,7 +96,6 @@ export const TenantRegistrationProvider = ({
     const deleteTenantRegistration = useCallback(async (tenantId: string) => {
         try {
             const client = await api.getClient()
-            // New name: deleteTenantRegistration
             await client.deleteTenantRegistration({ tenantId: tenantId })
             setRegistrations((prev) => prev.filter((reg) => reg.tenantId !== tenantId))
             toast.displaySuccess('Tenant registration deleted')

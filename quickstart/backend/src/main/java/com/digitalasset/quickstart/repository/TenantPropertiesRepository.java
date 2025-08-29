@@ -90,8 +90,11 @@ public class TenantPropertiesRepository {
      * Save (or overwrite) a tenant's extra properties.
      * Called when we create a new tenant registration at runtime, etc.
      */
-    public void addTenant(String tenantId, TenantProperties props) {
-        tenants.put(tenantId, props);
+    public void addTenant(String tenantId, TenantProperties props) throws IllegalArgumentException {
+        TenantProperties previous = tenants.putIfAbsent(tenantId, props);
+        if (previous != null) {
+            throw new IllegalArgumentException("Duplicate tenantId not allowed: " + tenantId);
+        }
     }
 
     /**

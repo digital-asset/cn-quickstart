@@ -11,15 +11,8 @@ import {useToast} from '../stores/toastStore';
 import api from '../api';
 import {Client, FeatureFlags} from "../openapi";
 
-declare global {
-    interface Window {
-        __E2E_NOVALIDATE__?: boolean;
-    }
-}
 
 const TenantRegistrationView: React.FC = () => {
-    const isE2E = typeof window !== 'undefined' && !!window.__E2E_NOVALIDATE__;
-
     const {
         registrations,
         fetchTenantRegistrations,
@@ -64,7 +57,6 @@ const TenantRegistrationView: React.FC = () => {
 
     // Validation driven by feature flags
     const validate = (): string | null => {
-        if (isE2E) return null;
         const t = formData.tenantId.trim()
         const p = formData.partyId.trim()
         if (!t) return 'Tenant ID is required'
@@ -155,7 +147,7 @@ const TenantRegistrationView: React.FC = () => {
                                 className="form-control"
                                 value={formData.clientId}
                                 onChange={handleChange}
-                                required={!isE2E}
+                                required
                             />
                         </div>
                         <div className="mb-3">
@@ -169,7 +161,7 @@ const TenantRegistrationView: React.FC = () => {
                                 className="form-control"
                                 value={formData.issuerUrl}
                                 onChange={handleChange}
-                                required={!isE2E}
+                                required
                             />
                         </div>
                     </>

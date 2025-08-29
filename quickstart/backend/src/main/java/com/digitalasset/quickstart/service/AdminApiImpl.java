@@ -41,7 +41,6 @@ import static com.digitalasset.quickstart.utility.ContextAwareCompletableFutures
 import static com.digitalasset.quickstart.utility.ContextAwareCompletableFutures.supplyWithin;
 
 import jakarta.validation.constraints.NotNull;
-import org.apache.coyote.BadRequestException;
 
 @Controller
 @RequestMapping("${openapi.asset.base-path:}")

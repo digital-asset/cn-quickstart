@@ -4,7 +4,7 @@ import java.util.Collection;
 
 public interface AuthClientRegistrationRepository {
 
-    String registerClient(Client client);
+    String registerClient(Client client) throws IllegalArgumentException;
     void removeClientRegistration(String tenantId, String clientId);
     void removeClientRegistrations(String tenantId);
     Collection<Client> getClientRegistrations();
