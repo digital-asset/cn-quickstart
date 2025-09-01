@@ -3,7 +3,6 @@ import AppInstalls from "./sections/appInstalls.tab";
 import Licenses from "./sections/licenses/licenses.tab.ts";
 import Wallet from './wallet.page.ts';
 import Login from './sections/login.ts';
-import type {APIRequestContext} from 'playwright-core';
 
 export default class QS {
   loginPage: Login
@@ -12,7 +11,7 @@ export default class QS {
   wallet: Wallet
   private page: Page;
 
-  constructor(page: Page, request: APIRequestContext) {
+  constructor(page: Page) {
     this.page = page;
     this.loginPage = new Login(page);
     this.installs = new AppInstalls(page);
