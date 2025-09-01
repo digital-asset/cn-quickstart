@@ -50,13 +50,26 @@ export default function LicenseRenewalRequestModal({
     );
   }
 
+  function handleIssueRenewal(request: LicenseRenewRequest) {
+    setShowNewModal(false);
+    onIssueRenewal(request);
+  }
+
+  function handleClose() {
+    if (showNewModal) {
+      setShowNewModal(false);
+    } else {
+      onClose();
+    }
+  }
+
   return (
     <Modal
       show={show}
       title={
         <div>License Renewal Requests</div>
       }
-      onClose={onClose}
+      onClose={handleClose}
       backdrop="static"
       size="xl"
       zIndexBase={1500}
@@ -67,16 +80,9 @@ export default function LicenseRenewalRequestModal({
       <LicenseRenewModal
         show={showNewModal && isAdmin}
         license={license}
-        onIssueRenewal={(request) => {
-          setShowNewModal(false);
-          onIssueRenewal(request);
-        }}
-        onClose={() => {
-          setShowNewModal(false);
-        }}
-      > 
-
-      </LicenseRenewModal>
+        onIssueRenewal={handleIssueRenewal}
+        onClose={handleClose}
+      /> 
 
       <div><strong>License Contract ID:</strong> {license?.contractId.substring(0, 24)}...</div>     
 
@@ -110,8 +116,8 @@ export default function LicenseRenewalRequestModal({
             {license?.renewalRequests?.map((renewal) => {
               return (
                 <tr key={renewal.contractId} className="renewal-row">
-                  <td className="ellipsis-cell renewal-contract-id">{renewal.contractId}</td>
-                  <td className="ellipsis-cell renewal-request-id">{renewal.requestId}</td>
+                  <td className="ellipsis-cell renewal-contract-id" data-testid="renewal-contract-id">{renewal.contractId}</td>
+                  <td className="ellipsis-cell renewal-request-id" data-testid="renewal-request-id">{renewal.requestId}</td>
                   <td className="ellipsis-cell renewal-requested-at">{formatDateTime(renewal.requestedAt)}</td>
                   <td className="ellipsis-cell">{renewal.licenseExtensionDuration}</td>
                   <td className="ellipsis-cell">{renewal.licenseFeeAmount}</td>
@@ -121,51 +127,44 @@ export default function LicenseRenewalRequestModal({
                   <td className={`ellipsis-cell ${renewal.settleDeadlinePassed && 'deadline-passed'}`}>
                     {formatDateTime(renewal.settleBefore)}
                     {/* KV date component and remove server side computation of settleDeadlinePassed */}
-                    {/* fix sv PQS config  */}
                   </td>
                   <td className="ellipsis-cell">{renewal.description}</td>
                   <td className="ellipsis-cell">{makeStatus(renewal)}</td>
-                  {isAdmin && (
-                    <td className="license-actions">
-                      <>
-                        {isAdmin && !renewal.settleDeadlinePassed && renewal.allocationCid && license && (
-                          <button
-                            className="btn btn-success btn-complete-renewal"
-                            onClick={() =>
-                              onCompleteRenewal(
-                                license.contractId,
-                                renewal.contractId,
-                                renewal.allocationCid!
-                              )
-                            }
-                          >
-                            Complete Renewal
-                          </button>
-                        )}
-                      </>
-                      {isAdmin && renewal && (
-                        <button
-                          className="btn btn-danger btn-withdraw"
-                          onClick={() => {
-                            onWithdraw(renewal.contractId);
-                          }}
-                        >
-                          Withdraw
-                        </button>
-                      )}
-                    </td>
-                  )}
-
-                  {!isAdmin && !renewal.settleDeadlinePassed && !renewal.allocationCid && (
-                    <td>Please accept the allocation request in your <a href={`${userWallet}/allocations`} target='_blank'>wallet</a>.</td>
-                  )}
+                  <td className="renewals-actions">
+                    {isAdmin && !renewal.settleDeadlinePassed && renewal.allocationCid && license && (
+                      <button
+                        className="btn btn-success btn-complete-renewal"
+                        onClick={() =>
+                          onCompleteRenewal(
+                            license.contractId,
+                            renewal.contractId,
+                            renewal.allocationCid!
+                          )
+                        }
+                      >
+                        Complete Renewal
+                      </button>
+                    )}
+                    {isAdmin && renewal && (
+                      <button
+                        className="btn btn-danger btn-withdraw"
+                        onClick={() => {
+                          onWithdraw(renewal.contractId);
+                        }}
+                      >
+                        Withdraw
+                      </button>
+                    )}
+                    {!isAdmin && !renewal.settleDeadlinePassed && !renewal.allocationCid && (
+                      <>Please accept the allocation request in your <a href={`${userWallet}/allocations`} target='_blank'>wallet</a>.</>
+                    )}
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
-      {/* Footer omitted to use Modal's default Close button */}
     </Modal>
   );
 }

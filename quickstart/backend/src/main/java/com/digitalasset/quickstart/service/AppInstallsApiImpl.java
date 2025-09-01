@@ -95,7 +95,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
         return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () ->
                 damlRepository.findAppInstallById(contractId).thenCompose(contract -> {
                     String providerParty = contract.payload.getProvider.getParty;
-                    if (!party.equals(providerParty)) { // KV check this
+                    if (!party.equals(providerParty)) {
                         throw new ServiceException(HttpStatus.FORBIDDEN, "Insufficient permissions");
                     }
                     Metadata paramsMeta = new Metadata(createLicenseRequest.getParams().getMeta().getData());

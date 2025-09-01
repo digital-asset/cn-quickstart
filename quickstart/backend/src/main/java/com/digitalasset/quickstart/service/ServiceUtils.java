@@ -19,15 +19,12 @@ class ServiceUtils {
     static <T> CompletableFuture<T> traceServiceCallAsync(
             TracingUtils.TracingContext ctx,
             Supplier<CompletableFuture<T>> body) {
-        return TracingUtils.traceWithStartEventAsync(ctx, () ->
-                body.get().exceptionally(t -> {
-                    if (t.getCause() instanceof ServiceException e) {
-                        ctx.logger().warn(e.getMessage(), e);
-                        return (T) ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
-                    }
-                    throw new CompletionException(t);
-                })
-        );
+        return TracingUtils.traceWithStartEventAsync(ctx, body).exceptionally(t -> {
+            if (t.getCause() instanceof ServiceException e) {
+                return (T) ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
+            }
+            throw new CompletionException(t);
+        });
     }
 }
 

@@ -23,7 +23,7 @@ services:
       - TEST_AUTH_APP_USER_WALLET_ADMIN_USER_NAME=${TEST_AUTH_APP_USER_WALLET_ADMIN_USER_NAME:-}
       - TEST_AUTH_APP_USER_WALLET_ADMIN_USER_ID=${TEST_AUTH_APP_USER_WALLET_ADMIN_USER_ID:-}
       - TEST_APP_USER_PARTY=${TEST_APP_USER_PARTY:-}
-    entrypoint: [ "/entrypoint.sh", "--exit-on-finish" ]
+    entrypoint: [ "/entrypoint.sh", "--exit-on-error" ]
     networks:
       - ${DOCKER_NETWORK}
     depends_on: !reset []

@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { useLicenseStore } from '../stores/licenseStore';
 import { useUserStore } from '../stores/userStore';
 import LicenseRenewalRequestModal from '../components/LicenseRenewalRequestModal.tsx';
-import LicenseExpireModal from '../components/LicenseExpireModal.tsx';
+import LicenseArchiveModal from '../components/LicenseExpireModal.tsx';
 import { formatDateTime } from '../utils/format';
 
 import type {
@@ -29,7 +29,7 @@ const LicensesView: React.FC = () => {
 
   const [selectedLicenseId, setSelectedLicenseId] = useState<string | null>(null);
   const [selectedLicense, setSelectedLicense] = useState<License | null>(null);
-  const [showExpireModal, setShowExpireModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showRenewalModal, setShowRenewalModal] = useState(false);
 
   useEffect(() => {
@@ -43,30 +43,33 @@ const LicensesView: React.FC = () => {
 
   useEffect(() => {
     if (!selectedLicenseId) {
-    setSelectedLicense(null);
-    return;
+      setSelectedLicense(null);
+      return;
     }
     setSelectedLicense(licenses.find(l => l.contractId === selectedLicenseId) ?? null);
   }, [licenses, selectedLicenseId]);
 
-  const closeModal = () => {
-    setShowRenewalModal(false);
-    setSelectedLicenseId(null);
+  const openArchiveModal = (licenseId: string) => {
+    setShowArchiveModal(true);
+    setSelectedLicenseId(licenseId);
   };
 
-  const handleRenew = async (request: LicenseRenewRequest) => {
-    if (!selectedLicenseId || !selectedLicense) return;
-    await initiateLicenseRenewal(selectedLicenseId, request);
-    await fetchLicenses();
-  };
-
-  // Called when user confirms expiration from the LicenseExpireModal
-  const handleExpire = async (description?: string) => {
+  const handleArchive = async (description?: string) => {
     if (!selectedLicenseId) return;
     await initiateLicenseExpiration(selectedLicenseId, description!);
-    setShowExpireModal(false);
+    setShowArchiveModal(false);
     setSelectedLicenseId(null);
     await fetchLicenses();
+  };
+
+  const closeArchiveModal = () => {
+    setShowArchiveModal(false);
+    setSelectedLicenseId(null);
+  };
+
+  const openRenewalModal = (licenseId: string) => {
+    setShowRenewalModal(true);
+    setSelectedLicenseId(licenseId);
   };
 
   const handleCompleteRenewal = async (renewalContractId: string, renewalRequestContractId: string, allocationContractId: string) => {
@@ -83,15 +86,17 @@ const LicensesView: React.FC = () => {
     await fetchLicenses();
   };
 
-  const openExpireModal = (licenseId: string) => {
-    setShowExpireModal(true);
-    setSelectedLicenseId(licenseId);
+  const closeRenewalsModal = () => {
+    setShowRenewalModal(false);
+    setSelectedLicenseId(null);
   };
 
-  const openRenewalModal = (licenseId: string) => {
-    setShowRenewalModal(true);
-    setSelectedLicenseId(licenseId);
+  const handleRenew = async (request: LicenseRenewRequest) => {
+    if (!selectedLicenseId || !selectedLicense) return;
+    await initiateLicenseRenewal(selectedLicenseId, request);
+    await fetchLicenses();
   };
+
 
   return (
     <div>
@@ -125,7 +130,7 @@ const LicensesView: React.FC = () => {
               <td className="ellipsis-cell license-number">{license.licenseNum}</td>
               <td className="ellipsis-cell">{license.renewalRequests?.filter(r => !r.allocationCid).length || 0}</td>
               <td className="ellipsis-cell">{license.renewalRequests?.filter(r => r.allocationCid).length || 0}</td>
-              <td className="ellipsis-cell license-status">{license.isExpired ? 'INVALID' : 'VALID'}</td>
+              <td className="ellipsis-cell license-status">{license.isExpired ? 'EXPIRED' : 'ACTIVE'}</td>
               <td className="license-actions">
                   {(isAdmin || (license.renewalRequests?.length ?? 0) > 0) && (
                     <button
@@ -139,9 +144,9 @@ const LicensesView: React.FC = () => {
                   {license.expiresAt && license.isExpired && (
                     <button
                       className="btn btn-danger btn-expire-license"
-                      onClick={() => openExpireModal(license.contractId)}
+                      onClick={() => openArchiveModal(license.contractId)}
                     >
-                      Expire
+                      Archive
                     </button>
                   )}
               </td>
@@ -152,9 +157,9 @@ const LicensesView: React.FC = () => {
       </table>
 
       <LicenseRenewalRequestModal
-        show={showRenewalModal && !!selectedLicenseId && !!selectedLicense}
+        show={showRenewalModal && !!selectedLicense}
         license={selectedLicense}
-        onClose={closeModal}
+        onClose={closeRenewalsModal}
         isAdmin={isAdmin}
         userWallet={userWallet}
         onIssueRenewal={handleRenew}
@@ -163,13 +168,11 @@ const LicensesView: React.FC = () => {
         formatDateTime={formatDateTime}
       />
 
-      <LicenseExpireModal
-        show={showExpireModal && !!selectedLicense}
+      <LicenseArchiveModal
+        show={showArchiveModal && !!selectedLicense}
         license={selectedLicense}
-        onClose={() => {
-          setShowExpireModal(false);
-        }}
-        onExpire={handleExpire}
+        onClose={closeArchiveModal}
+        onArchive={handleArchive}
       />
     </div>
   );

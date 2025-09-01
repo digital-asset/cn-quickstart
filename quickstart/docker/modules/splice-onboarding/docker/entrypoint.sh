@@ -12,6 +12,16 @@ if [ "$1" == "--init" ] || [ "$1" == "--run-forever" ]; then
     touch /app/do-init
   fi
   tail -f /dev/null
+elif [ "$1" == "--exit-on-error" ]; then
+  while true; do
+    if [ -f /tmp/error ]; then
+      exit 1
+    fi
+    if [ -f /tmp/all-done ]; then
+      exit 0
+    fi
+    sleep 1
+  done
 elif [ "$1" == "--exit-on-finish" ]; then
   while [ ! -f /tmp/all-done ]; do sleep 1; done
 else

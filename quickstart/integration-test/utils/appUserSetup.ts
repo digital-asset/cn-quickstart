@@ -59,10 +59,7 @@ export default class AppUserSetup {
 
     console.log(`Run create-app-install-request shell script.`);
 
-    // TODO with this timeout/killSignal docker container still hangs around indefinitely in case of error
-    //  even though playwright is unblocked.
-    //  Probably we need to do TERM-based timeout with trap for TERM/EXIT
-    const timeoutMs = Number(process.env.CREATE_APP_INSTALL_REQUEST_TIMEOUT_MS) || 1 * 60 * 1000; // default 1 minute
+    const timeoutMs = Number(process.env.CREATE_APP_INSTALL_REQUEST_TIMEOUT_MS) || 1 * 30 * 1000; // default 30 seconds
     execFileSync('make', ['--no-print-directory', 'create-app-install-request'], {
       cwd: resolve(__dirname, '../..'),
       env,

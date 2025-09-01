@@ -71,7 +71,7 @@ const AppInstallsView: React.FC = () => {
                     {item.status === 'REQUEST' ? (
                         user?.isAdmin ? (
                             <div className="btn-group" role="group">
-                              {unifiedInstalls.findIndex((i) => i.status === 'INSTALL') === -1 && (
+                              {unifiedInstalls.findIndex((i) => i.status === 'INSTALL' && i.user === item.user) === -1 && (
                                 <button
                                     className="btn btn-success btn-accept-install"
                                     onClick={() => accept(item.contractId, item.meta, {})}

@@ -13,7 +13,7 @@ export default function DurationInput({
   selectStyle?: CSSProperties;
   units?: Map<string, string> | string;
 }) {
-  const m = /^(\d+)(.)$/.exec(value || '');
+  const m = /^(\d+)([smhd])$/.exec(value || '');
   const num = m ? Number(m[1]) : 0;
 
   const defaultLabels: Record<string, string> = {

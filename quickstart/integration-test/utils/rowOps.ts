@@ -23,6 +23,14 @@ export default class RowOps {
     await withRow(row)
   }
 
+  public async withMatchedRow(
+    row: Locator,
+    withRow: (row: Locator) => Promise<void>
+  ): Promise<void> {
+    this.matchingRow = row;
+    await withRow(row)
+  }
+
   public async assertNoMatchingRowExists(row: Locator = this.matchingRow): Promise<void> {
     await expect(
       row,

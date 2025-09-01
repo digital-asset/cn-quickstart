@@ -25,11 +25,11 @@ create_app_install_request() {
   local uniqueTestTag=$6
 
   local uniqueRequestIdentifier="$(date +%s%N)"
-  local metadata={}
+  local metadata="{}"
 
   if [ -n "${uniqueTestTag}" ]; then
     uniqueRequestIdentifier=${uniqueTestTag}
-    metadata='{["test", "'${uniqueTestTag}'"]}'
+    metadata="{\"test\":\"$uniqueTestTag\"}"
   fi
 
   echo "create_app_install_request $appUserParty $appProviderParty $participant $uniqueTestTag" >&2
