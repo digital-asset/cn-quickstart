@@ -99,7 +99,7 @@ public class LicenseApiImpl implements LicensesApi {
         );
         return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () -> {
             var registryAdminIdFut = tokenStandardProxy.getRegistryAdminId();
-            var licenseFut = damlRepository.findLicenseById(contractId); // KV fix rework to return Optional
+            var licenseFut = damlRepository.findLicenseById(contractId);
             return registryAdminIdFut.thenCombine(licenseFut, (adminId, license) -> {
                 var now = Instant.now();
                 License_Renew choice = new License_Renew(
@@ -171,7 +171,7 @@ public class LicenseApiImpl implements LicensesApi {
                 "commandId", commandId
         );
         return auth.asAuthenticatedParty(party -> traceServiceCallAsync(ctx, () ->
-                damlRepository.findLicenseById(contractId).thenCompose(contract -> { // KV make it return Optional
+                damlRepository.findLicenseById(contractId).thenCompose(contract -> {
                     var license = ensurePresent(Optional.ofNullable(contract), "License not found for contract {}", contractId);
                     var meta = licenseExpireRequest.getMeta().getData();
                     if (!party.equals(auth.getAppProviderPartyId())) {

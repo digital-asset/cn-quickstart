@@ -68,8 +68,9 @@ public class AdminApiImpl implements AdminApi {
                 "partyId", request.getPartyId()
         );
 
-        // TODO KV fix
-        //  We cannot use auth.asAdminParty(party -> here. if this endpoint is accessed from CLI providing JWT token directly
+        // TODO KV https://github.com/digital-asset/cn-quickstart/issues/237
+        //  consider storing partyId/tenantId as GrantedAuthority instead of using JWT claims
+        //  Problem: We cannot use auth.asAdminParty(party -> here. if this endpoint is accessed from CLI providing JWT token directly
         //  The endpoint is still protected as SpringSecurityOAuth2Config -> HttpSecurity requires role ADMIN for it
         //  but it is annoying that we cannot use the same pattern as in other endpoints
         return traceServiceCallAsync(ctx, () -> CompletableFuture.supplyAsync(() -> {

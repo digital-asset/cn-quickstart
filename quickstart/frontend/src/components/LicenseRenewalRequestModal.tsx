@@ -126,7 +126,8 @@ export default function LicenseRenewalRequestModal({
                   </td>
                   <td className={`ellipsis-cell ${renewal.settleDeadlinePassed && 'deadline-passed'}`}>
                     {formatDateTime(renewal.settleBefore)}
-                    {/* KV date component and remove server side computation of settleDeadlinePassed */}
+                    {/* TODO https://github.com/digital-asset/cn-quickstart/issues/239
+                         date component and remove server side computation of settleDeadlinePassed */}
                   </td>
                   <td className="ellipsis-cell">{renewal.description}</td>
                   <td className="ellipsis-cell">{makeStatus(renewal)}</td>

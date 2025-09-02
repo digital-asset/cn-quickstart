@@ -202,7 +202,7 @@ create-app-install-request: ## Submit an App Install Request from the App User p
 restart-backend: build-backend ## Build and start the application
 	$(call docker-compose, rm -s -f backend-service)
 	$(call docker-compose, rm -s -f register-app-user-tenant)
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate register-app-user-tenant)
 
 .PHONY: restart-frontend
 restart-frontend: build-frontend ## Build and start the application

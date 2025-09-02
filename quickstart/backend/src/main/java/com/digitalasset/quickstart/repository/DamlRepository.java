@@ -36,12 +36,12 @@ public class DamlRepository {
         this.pqs = pqs;
     }
 
-    public static record LicenseRenewalRequestWithAllocationCid(
+    public record LicenseRenewalRequestWithAllocationCid(
             Contract<LicenseRenewalRequest> renewal,
             Optional<ContractId<Allocation>> allocationCid) {
     }
 
-    public static record LicenseWithRenewalRequests(
+    public record LicenseWithRenewalRequests(
             Contract<License> license,
             List<LicenseRenewalRequestWithAllocationCid> renewals) {
     }
@@ -114,7 +114,9 @@ public class DamlRepository {
         ).thenApply(v -> new java.util.ArrayList<>(map.values()));
     }
 
-    // KV we should be looking for active ones  only
+    // TODO https://github.com/digital-asset/cn-quickstart/issues/238
+    //  all find functions findById here should look for active contracts only
+    //  and return Optional<Contract<T>>
     /**
      * Fetches a License contract by contract ID.
      */
