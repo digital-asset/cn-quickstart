@@ -10,8 +10,12 @@ x-vars:
     path: ${APP_USER_AUTH_ENV}
     required: false
 
+  qs-project-labels: &qs_project_label
+    qs.project.label: ${PROJECT_LABEL}
+
 volumes:
   onboarding:
+    labels: *qs_project_label
 
 services:
   splice-onboarding:
@@ -43,3 +47,4 @@ services:
     depends_on:
       splice:
         condition: service_healthy
+    labels: *qs_project_label

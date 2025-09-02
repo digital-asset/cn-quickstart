@@ -1,13 +1,18 @@
 # Copyright (c) 2023, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+x-vars:
+  qs-project-labels: &qs_project_label
+    qs.project.label: ${PROJECT_LABEL}
+
 services:
   backend-service:
     image: "eclipse-temurin:${JAVA_VERSION}"
     container_name: backend-service
     labels:
-      - "description=Backend service supporting the Quickstart Licensing workflow.
-      Note: The APP_PROVIDER_PARTY environment variable is dynamically resolved at runtime before the main process is initiated."
+      description: "Backend service supporting the Quickstart Licensing workflow.
+        Note: The APP_PROVIDER_PARTY environment variable is dynamically resolved at runtime before the main process is initiated."
+      <<: *qs_project_label
     working_dir: /app
     env_file:
       - ./docker/backend-service/env/app.env
