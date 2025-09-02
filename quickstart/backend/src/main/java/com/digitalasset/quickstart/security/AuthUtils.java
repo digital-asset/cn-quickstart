@@ -18,7 +18,6 @@ public class AuthUtils {
     private String appProviderPartyId;
 
     AuthUtils(AuthenticatedPartyProvider authenticatedPartyProvider, Auth auth) {
-        // Prevent instantiation
         this.authenticatedPartyProvider = authenticatedPartyProvider;
         this.auth = auth;
     }
@@ -33,18 +32,16 @@ public class AuthUtils {
                 return cf.apply(party);
             } else {
                 logger.error("Access denied: authenticated party '{}' does not match AppProvider party '{}'.", party, appProviderPartyId);
-                return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.FORBIDDEN));
+                return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.FORBIDDEN).build());
             }
         });
     }
 
     public <T> CompletableFuture<ResponseEntity<T>> asAuthenticatedParty(Function<String, CompletableFuture<ResponseEntity<T>>> cf) {
-        var authParty = authenticatedPartyProvider.getParty();
-        return authParty.map(s -> CompletableFuture.completedFuture(s).thenCompose(cf))
-                .orElseGet(() -> {
-                    logger.error("Authentication failed: no authenticated party present in the security context");
-                    return CompletableFuture.completedFuture(new ResponseEntity<>(HttpStatus.UNAUTHORIZED));
-                });
+        return authenticatedPartyProvider.getParty().map(cf).orElseGet(() -> {
+            logger.error("Authentication failed: no authenticated party present in the security context");
+            return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+        });
     }
 
     public boolean isOAuth2Enabled() {

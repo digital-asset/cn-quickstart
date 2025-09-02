@@ -7,12 +7,11 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 
 /**
@@ -46,7 +45,7 @@ import org.slf4j.Logger;
  */
 
 public final class TracingUtils {
-    public record TracingContext(Logger logger, String message, Map<String, Object> attrs) {
+    public record TracingContext(Logger logger, String message, Map<String, Object> attrs, Span span) {
     }
 
     private TracingUtils() {
@@ -196,11 +195,7 @@ public final class TracingUtils {
             attributes.forEach(logBuilder::addKeyValue);
         }
         if (t != null) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
             logBuilder.setCause(t);
-            t.printStackTrace(pw);
-            logger.error(message + t.getMessage() + "\n" + sw);
         }
         logBuilder.log(message);
     }
@@ -226,9 +221,19 @@ public final class TracingUtils {
         logError(logger, message, null, null);
     }
 
-    public static TracingContext tracingCtx(Logger logger, Object... args) {
+    /**
+     * Create a TracingContext with a message and optional key-value attribute pairs.
+     * The args must contain an odd number of elements: the first is the message (String),
+     * followed by pairs of key (String) and value (Object).
+     *
+     * @param logger the SLF4J logger; may not be null
+     * @param args   the message followed by key-value pairs; must be odd in length
+     * @return a TracingContext containing the logger, message, and attributes map
+     * @throws IllegalArgumentException if args is null or has an even number of elements
+     */
+    public static TracingContext tracingCtx(@NotNull Logger logger, Object... args) {
         if (args == null || args.length % 2 == 0) {
-            throw new IllegalArgumentException("attrs requires an odd number of arguments name, (key, value pairs).");
+            throw new IllegalArgumentException("attrs requires an odd number of arguments message plus multiple key, value pairs.");
         }
         Map<String, Object> map = new HashMap<>();
         for (int i = 1; i < args.length; i += 2) {
@@ -236,7 +241,8 @@ public final class TracingUtils {
             Object value = args[i + 1];
             map.put(key, value);
         }
-        return new TracingContext(logger, args[0].toString(), map);
+
+        return new TracingContext(logger, args[0].toString(), map, Span.current());
     }
 
     public static <T> CompletableFuture<T> traceWithStartEvent(
@@ -279,14 +285,13 @@ public final class TracingUtils {
             TracingUtils.TracingContext ctx,
             boolean startEvent,
             Supplier<CompletableFuture<T>> body) {
-        var span = Span.current();
-        if (startEvent) addEventWithAttributes(span, ctx.message() + " start", ctx.attrs());
-        setSpanAttributes(span, ctx.attrs());
+        if (startEvent) addEventWithAttributes(ctx.span, ctx.message() + " start", ctx.attrs());
+        setSpanAttributes(ctx.span, ctx.attrs());
         logInfo(ctx.logger(), ctx.message(), ctx.attrs());
         return body.get().whenComplete((res, ex) -> {
             if (ex != null) {
                 ctx.logger().error(ctx.message() + " failed", ex);
-                recordException(span, ex);
+                recordException(ctx.span, ex);
             } else if (res instanceof List<?> listRes) {
                 ctx.logger().info(ctx.message() + " succeeded with {} results", listRes.size());
             } else {

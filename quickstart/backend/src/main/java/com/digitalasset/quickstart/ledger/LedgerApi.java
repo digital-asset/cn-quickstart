@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -89,7 +90,7 @@ public class LedgerApi {
             CommandsOuterClass.Command.Builder command = CommandsOuterClass.Command.newBuilder();
             ValueOuterClass.Value payload = dto2Proto.template(entity.templateId()).convert(entity);
             command.getCreateBuilder().setTemplateId(toIdentifier(entity.templateId())).setCreateArguments(payload.getRecord());
-            return submitCommands(List.of(command.build()), commandId).<Void>thenApply(submitResponse -> null);
+            return submitCommands(List.of(command.build()), commandId).thenApply(submitResponse -> null);
         });
     }
 
@@ -213,16 +214,17 @@ public class LedgerApi {
         });
     }
 
+
     private static <T> CompletableFuture<T> toCompletableFuture(ListenableFuture<T> listenableFuture) {
         CompletableFuture<T> completableFuture = new CompletableFuture<>();
-        Futures.addCallback(listenableFuture, new FutureCallback<T>() {
+        Futures.addCallback(listenableFuture, new FutureCallback<>() {
             @Override
             public void onSuccess(T result) {
                 completableFuture.complete(result);
             }
 
             @Override
-            public void onFailure(Throwable t) {
+            public void onFailure(@Nonnull Throwable t) {
                 completableFuture.completeExceptionally(t);
             }
         }, MoreExecutors.directExecutor());
@@ -249,7 +251,7 @@ public class LedgerApi {
         @Override
         public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method, CallOptions callOptions, Channel next) {
             ClientCall<ReqT, RespT> clientCall = next.newCall(method, callOptions);
-            return new ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(clientCall) {
+            return new ForwardingClientCall.SimpleForwardingClientCall<>(clientCall) {
                 @Override
                 public void start(Listener<RespT> responseListener, Metadata headers) {
                     headers.put(AUTHORIZATION_HEADER, "Bearer " + tokenProvider.getToken());

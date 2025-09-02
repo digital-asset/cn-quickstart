@@ -10,7 +10,6 @@ import com.digitalasset.quickstart.api.AppInstallsApi;
 import com.digitalasset.quickstart.ledger.LedgerApi;
 import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.quickstart.security.AuthUtils;
-import com.digitalasset.quickstart.security.AuthenticatedPartyProvider;
 import com.digitalasset.transcode.java.Party;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
@@ -40,17 +39,14 @@ public class AppInstallsApiImpl implements AppInstallsApi {
     private final LedgerApi ledger;
     private final DamlRepository damlRepository;
     private final AuthUtils auth;
-    private final AuthenticatedPartyProvider authenticatedPartyProvider;
 
     private static final Logger logger = LoggerFactory.getLogger(AppInstallsApiImpl.class);
 
     @Autowired
-    public AppInstallsApiImpl(LedgerApi ledger, DamlRepository damlRepository, AuthUtils auth,
-                              AuthenticatedPartyProvider authenticatedPartyProvider) {
+    public AppInstallsApiImpl(LedgerApi ledger, DamlRepository damlRepository, AuthUtils auth) {
         this.ledger = ledger;
         this.damlRepository = damlRepository;
         this.auth = auth;
-        this.authenticatedPartyProvider = authenticatedPartyProvider;
     }
 
     @Override

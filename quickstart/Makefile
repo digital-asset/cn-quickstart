@@ -214,7 +214,7 @@ restart-service:
 	  echo "Usage: make restart-service SERVICE=<service>"; exit 1; \
 	fi
 	$(call docker-compose, rm -s -f ${SERVICE})
-	$(call docker-compose, up -d --no-recreate)
+	$(call docker-compose, up -d --no-recreate ${SERVICE})
 
 # Run targets
 .PHONY: start

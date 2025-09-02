@@ -9,6 +9,7 @@ package com.digitalasset.quickstart.service;
 import static com.digitalasset.quickstart.service.ServiceUtils.ensurePresent;
 import static com.digitalasset.quickstart.service.ServiceUtils.traceServiceCallAsync;
 import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
+import static com.digitalasset.quickstart.utility.Utils.*;
 
 import com.daml.ledger.api.v2.CommandsOuterClass;
 import com.daml.ledger.api.v2.ValueOuterClass;
@@ -21,13 +22,10 @@ import com.digitalasset.quickstart.tokenstandard.openapi.allocation.model.Disclo
 import com.digitalasset.transcode.java.ContractId;
 import com.digitalasset.transcode.java.Party;
 import com.google.protobuf.ByteString;
-import daml_stdlib_da_time_types.da.time.types.RelTime;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -287,18 +285,8 @@ public class LicenseApiImpl implements LicensesApi {
                 .setEntityName(entityName).build();
     }
 
-    private AnyValue toAnyValueContractId(String contractId) {
+    private static AnyValue toAnyValueContractId(String contractId) {
         return new AnyValue.AnyValue_AV_ContractId(new ContractId<>(contractId));
-    }
-
-    private static RelTime parseRelTime(String durationStr) {
-        Duration duration = Duration.parse(durationStr);
-        long micros = duration.toNanos() / 1_000;
-        return new RelTime(micros);
-    }
-
-    private static OffsetDateTime toOffsetDateTime(Instant instant) {
-        return instant == null ? null : OffsetDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 
     private static splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata toTokenStandarMetadata(Map<String, String> meta) {

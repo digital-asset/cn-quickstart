@@ -30,7 +30,7 @@ public class TokenStandardProxy {
     private final DefaultAllocationApi allocationApi;
     private final DefaultMetadataApi metadataApi;
 
-    private final Logger logger = LoggerFactory.getLogger(TokenStandardProxy.class);
+    private static final Logger logger = LoggerFactory.getLogger(TokenStandardProxy.class);
 
     public TokenStandardProxy(LedgerConfig ledgerConfig) {
         ApiClient apiClient = new ApiClient();
