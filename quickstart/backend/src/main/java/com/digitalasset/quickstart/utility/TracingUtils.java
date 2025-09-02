@@ -45,7 +45,7 @@ import org.slf4j.Logger;
  */
 
 public final class TracingUtils {
-    public record TracingContext(Logger logger, String message, Map<String, Object> attrs, Span span) {
+    public record TracingContext(Logger logger, String message, Map<String, Object> attrs) {
     }
 
     private TracingUtils() {
@@ -241,8 +241,7 @@ public final class TracingUtils {
             Object value = args[i + 1];
             map.put(key, value);
         }
-
-        return new TracingContext(logger, args[0].toString(), map, Span.current());
+        return new TracingContext(logger, args[0].toString(), map);
     }
 
     public static <T> CompletableFuture<T> traceWithStartEvent(
@@ -285,13 +284,17 @@ public final class TracingUtils {
             TracingUtils.TracingContext ctx,
             boolean startEvent,
             Supplier<CompletableFuture<T>> body) {
-        if (startEvent) addEventWithAttributes(ctx.span, ctx.message() + " start", ctx.attrs());
-        setSpanAttributes(ctx.span, ctx.attrs());
+        // Note: Capturing span here works well, relying on OT CompletableFuture instrumentation
+        // If we later need more control over context propagation we can always capture io.opentelemetry.context.Context
+        // in TracingContext and call Context.makeCurrent() where we need.
+        var span = Span.current();
+        if (startEvent) addEventWithAttributes(span, ctx.message() + " start", ctx.attrs());
+        setSpanAttributes(span, ctx.attrs());
         logInfo(ctx.logger(), ctx.message(), ctx.attrs());
         return body.get().whenComplete((res, ex) -> {
             if (ex != null) {
                 ctx.logger().error(ctx.message() + " failed", ex);
-                recordException(ctx.span, ex);
+                recordException(span, ex);
             } else if (res instanceof List<?> listRes) {
                 ctx.logger().info(ctx.message() + " succeeded with {} results", listRes.size());
             } else {
