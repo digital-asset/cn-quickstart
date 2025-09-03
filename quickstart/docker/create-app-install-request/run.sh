@@ -18,22 +18,21 @@ fi
 
 create_app_install_request() {
   local token=$1
-  local dsoParty=$2
-  local appUserParty=$3
-  local appProviderParty=$4
-  local participantUserId=$5
-  local participant=$6
-  local uniqueTestTag=$7
+  local appUserParty=$2
+  local appProviderParty=$3
+  local participantUserId=$4
+  local participant=$5
+  local uniqueTestTag=$6
 
   local uniqueRequestIdentifier="$(date +%s%N)"
-  local metadata=[]
+  local metadata="{}"
 
   if [ -n "${uniqueTestTag}" ]; then
     uniqueRequestIdentifier=${uniqueTestTag}
-    metadata='[["test", "'${uniqueTestTag}'"]]'
+    metadata="{\"test\":\"$uniqueTestTag\"}"
   fi
 
-  echo "create_app_install_request $dsoParty $appUserParty $appProviderParty $participant $uniqueTestTag" >&2
+  echo "create_app_install_request $appUserParty $appProviderParty $participant $uniqueTestTag" >&2
   local body=$(cat << EOF
       {
         "commands": [
@@ -41,7 +40,6 @@ create_app_install_request() {
             "CreateCommand": {
               "templateId": "#quickstart-licensing:Licensing.AppInstall:AppInstallRequest",
               "createArguments": {
-                "dso": "$dsoParty",
                 "provider": "$appProviderParty",
                 "user": "$appUserParty",
                 "meta": {
@@ -78,10 +76,10 @@ EOF
 if [ "$AUTH_MODE" == "oauth2" ]; then
   # generate APP_USER_PARTICIPANT_ADMIN_TOKEN on every run
   APP_USER_WALLET_ADMIN_TOKEN=$(get_user_token $AUTH_APP_USER_WALLET_ADMIN_USER_NAME $AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD $AUTH_APP_USER_AUTO_CONFIG_CLIENT_ID $AUTH_APP_USER_TOKEN_URL)
-  create_app_install_request "$APP_USER_WALLET_ADMIN_TOKEN" $DSO_PARTY $APP_USER_PARTY $APP_PROVIDER_PARTY $AUTH_APP_USER_WALLET_ADMIN_USER_ID "$CANTON_HOST:2${PARTICIPANT_JSON_API_PORT_SUFFIX}" ${TEST_UNIQUE_REQUEST_TAG}
+  create_app_install_request "$APP_USER_WALLET_ADMIN_TOKEN" $APP_USER_PARTY $APP_PROVIDER_PARTY $AUTH_APP_USER_WALLET_ADMIN_USER_ID "$CANTON_HOST:2${PARTICIPANT_JSON_API_PORT_SUFFIX}" ${TEST_UNIQUE_REQUEST_TAG}
 
 else
   # static APP_USER_WALLET_ADMIN_TOKEN
-  create_app_install_request "$APP_USER_WALLET_ADMIN_TOKEN" $DSO_PARTY $APP_USER_PARTY $APP_PROVIDER_PARTY $AUTH_APP_USER_WALLET_ADMIN_USER_NAME "$CANTON_HOST:2${PARTICIPANT_JSON_API_PORT_SUFFIX}" "${TEST_UNIQUE_REQUEST_TAG}"
+  create_app_install_request "$APP_USER_WALLET_ADMIN_TOKEN" $APP_USER_PARTY $APP_PROVIDER_PARTY $AUTH_APP_USER_WALLET_ADMIN_USER_NAME "$CANTON_HOST:2${PARTICIPANT_JSON_API_PORT_SUFFIX}" "${TEST_UNIQUE_REQUEST_TAG}"
 fi
 

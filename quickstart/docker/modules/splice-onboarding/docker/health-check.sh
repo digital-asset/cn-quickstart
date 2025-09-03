@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: 0BSD
 
 set -eo pipefail
+trap 'touch /tmp/error' ERR
 exec > /proc/1/fd/1 2>&1
 
 if [ ! -f /tmp/all-done ]; then

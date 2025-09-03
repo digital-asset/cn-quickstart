@@ -95,6 +95,8 @@ public class SpringSecurityOAuth2Config {
                 Collection<GrantedAuthority> authorities = new HashSet<>(defaultGrantedAuthoritiesConverter.convert(jwt));
                 // there is only one AppProvider issuer that can issue JWT to authenticate to ResourceServer
                 // we consider anybody with JWT from that issuer to be admin
+                // TODO KV https://github.com/digital-asset/cn-quickstart/issues/237
+                //  consider storing partyId/tenantId as GrantedAuthority instead of using JWT claims
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
                 return authorities;
             }
@@ -113,7 +115,7 @@ public class SpringSecurityOAuth2Config {
                 OAuth2AuthorizedClientProviderBuilder.builder()
                         .clientCredentials()
                         .authorizationCode()
-                        .refreshToken() // TODO verify
+                        .refreshToken()
                         .build();
 
         AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager =

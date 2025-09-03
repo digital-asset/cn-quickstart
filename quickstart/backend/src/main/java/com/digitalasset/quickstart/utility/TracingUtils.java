@@ -3,18 +3,19 @@
 
 package com.digitalasset.quickstart.utility;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+
+import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Map;
-
 /**
- * The {@code LoggingSpanHelper} is a utility class designed to centralize common logging
+ * The {@code TracingUtils} is a utility class designed to centralize common logging
  * and OpenTelemetry trace operations. Its primary purpose is to reduce repetitive code
  * when adding the same structured attributes to both log statements and the current
  * OpenTelemetry {@link Span}.
@@ -42,9 +43,12 @@ import java.util.Map;
  * If your code does not require adding attributes to spans or correlating them with logs,
  * you can bypass this helper and use standard logging calls directly.
  */
-public final class LoggingSpanHelper {
 
-    private LoggingSpanHelper() {
+public final class TracingUtils {
+    public record TracingContext(Logger logger, String message, Map<String, Object> attrs) {
+    }
+
+    private TracingUtils() {
         // Utility class: prevent instantiation
     }
 
@@ -137,10 +141,7 @@ public final class LoggingSpanHelper {
      * @param message the log message
      */
     public static void logInfo(Logger logger, String message) {
-        if (logger == null) {
-            return;
-        }
-        logger.atInfo().log(message);
+        logInfo(logger, message, null);
     }
 
     // DEBUG
@@ -172,10 +173,7 @@ public final class LoggingSpanHelper {
      * @param message the log message
      */
     public static void logDebug(Logger logger, String message) {
-        if (logger == null) {
-            return;
-        }
-        logger.atDebug().log(message);
+        logDebug(logger, message, null);
     }
 
     // ERROR
@@ -200,7 +198,6 @@ public final class LoggingSpanHelper {
             logBuilder.setCause(t);
         }
         logBuilder.log(message);
-        logger.error(message + t.getMessage(), t);
     }
 
     /**
@@ -211,18 +208,7 @@ public final class LoggingSpanHelper {
      * @param t       the throwable to include in the log; may be null
      */
     public static void logError(Logger logger, String message, Throwable t) {
-        if (logger == null) {
-            return;
-        }
-
-        var logBuilder = logger.atError();
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        if (t != null) {
-            logBuilder.setCause(t);
-            t.printStackTrace(pw);
-        }
-        logBuilder.log(message + t.getMessage() + "\n" + sw);
+        logError(logger, message, null, t);
     }
 
     /**
@@ -232,9 +218,88 @@ public final class LoggingSpanHelper {
      * @param message the log message
      */
     public static void logError(Logger logger, String message) {
-        if (logger == null) {
-            return;
+        logError(logger, message, null, null);
+    }
+
+    /**
+     * Create a TracingContext with a message and optional key-value attribute pairs.
+     * The args must contain an odd number of elements: the first is the message (String),
+     * followed by pairs of key (String) and value (Object).
+     *
+     * @param logger the SLF4J logger; may not be null
+     * @param args   the message followed by key-value pairs; must be odd in length
+     * @return a TracingContext containing the logger, message, and attributes map
+     * @throws IllegalArgumentException if args is null or has an even number of elements
+     */
+    public static TracingContext tracingCtx(@NotNull Logger logger, Object... args) {
+        if (args == null || args.length % 2 == 0) {
+            throw new IllegalArgumentException("attrs requires an odd number of arguments message plus multiple key, value pairs.");
         }
-        logger.atError().log(message);
+        Map<String, Object> map = new HashMap<>();
+        for (int i = 1; i < args.length; i += 2) {
+            String key = args[i] == null ? "null" : args[i].toString();
+            Object value = args[i + 1];
+            map.put(key, value);
+        }
+        return new TracingContext(logger, args[0].toString(), map);
+    }
+
+    public static <T> CompletableFuture<T> traceWithStartEvent(
+            TracingUtils.TracingContext ctx,
+            Supplier<CompletableFuture<T>> body) {
+        return _trace(ctx, true, body);
+    }
+
+    public static <T> CompletableFuture<T> traceWithStartEventAsync(
+            TracingUtils.TracingContext ctx,
+            Supplier<CompletableFuture<T>> body) {
+        return CompletableFuture.supplyAsync(
+                () -> _trace(ctx, true, body)
+        ).thenCompose(f -> f);
+    }
+
+    public static <T> CompletableFuture<T> trace(
+            TracingUtils.TracingContext ctx,
+            Supplier<CompletableFuture<T>> body) {
+        return _trace(ctx, false, body);
+    }
+
+    public static <T> CompletableFuture<T> traceAsync(
+            TracingUtils.TracingContext ctx,
+            Supplier<CompletableFuture<T>> body) {
+        return CompletableFuture.supplyAsync(
+                () -> _trace(ctx, false, body)
+        ).thenCompose(f -> f);
+    }
+
+    public static <T> CompletableFuture<T> runAndTraceAsync(
+            TracingUtils.TracingContext ctx,
+            Supplier<T> body) {
+        return CompletableFuture.supplyAsync(
+                () -> _trace(ctx, false, () -> CompletableFuture.completedFuture(body.get()))
+        ).thenCompose(f -> f);
+    }
+
+    private static <T> CompletableFuture<T> _trace(
+            TracingUtils.TracingContext ctx,
+            boolean startEvent,
+            Supplier<CompletableFuture<T>> body) {
+        // Note: Capturing span here works well, relying on OT CompletableFuture instrumentation
+        // If we later need more control over context propagation we can always capture io.opentelemetry.context.Context
+        // in TracingContext and call Context.makeCurrent() where we need.
+        var span = Span.current();
+        if (startEvent) addEventWithAttributes(span, ctx.message() + " start", ctx.attrs());
+        setSpanAttributes(span, ctx.attrs());
+        logInfo(ctx.logger(), ctx.message(), ctx.attrs());
+        return body.get().whenComplete((res, ex) -> {
+            if (ex != null) {
+                ctx.logger().error(ctx.message() + " failed", ex);
+                recordException(span, ex);
+            } else if (res instanceof List<?> listRes) {
+                ctx.logger().info(ctx.message() + " succeeded with {} results", listRes.size());
+            } else {
+                ctx.logger().info(ctx.message() + " succeeded");
+            }
+        });
     }
 }

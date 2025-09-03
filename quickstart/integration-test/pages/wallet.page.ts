@@ -1,28 +1,31 @@
 import {expect, test, type Page, type Locator} from '@playwright/test';
-import type {APIRequestContext} from 'playwright-core';
-import {WALLET_URL, DEFAULT_PASSWORD} from '../tests/global.ts';
-import {Keycloak} from '../utils/keycloak.ts';
-import {onboardWalletUser} from '../utils/wallet.ts';
+import {WALLET_URL, DEFAULT_PASSWORD} from '../tests/global';
+import {Keycloak} from '../utils/keycloak';
+import {onboardWalletUser} from '../utils/wallet';
 
 export default class Wallet {
   page: Page;
-  request: APIRequestContext;
 
-  constructor(page: Page, request: APIRequestContext) {
+  constructor(page: Page) {
     this.page = page;
-    this.request = request;
   }
 
-  public async pay(amount: number, description: string): Promise<void> {
-    await expect(this.page.locator('.payment-description', {hasText: description})).toBeVisible();
-    await expect(this.page.locator('#confirm-payment')).toContainText(`Send ${amount} CC to`);
-    await this.page.getByRole('button', {name: 'Send Payment'}).click();
+  public async acceptAllocationRequest(amount: number, description: string, renewalRequestId: string): Promise<void> {
+    const allocationRequest = this.page.locator('.allocation-request', { hasText: renewalRequestId });
+    const table = await allocationRequest.getByRole('table');
+    await expect(table.getByText(description)).toBeVisible();
+    await expect(table.getByText(`${amount} Amulet`)).toBeVisible();
+    await table.getByRole('button', { name: 'Accept' }).click();
   }
 
   public async onboardWalletUser(keycloak: Keycloak, userId: string, partyId: string): Promise<void> {
     const validator = 'localhost:2' + process.env.VALIDATOR_ADMIN_API_PORT_SUFFIX!;
-    const walletAdminToken = await keycloak.getUserToken(process.env.AUTH_APP_USER_WALLET_ADMIN_USER_NAME!, process.env.AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD!, process.env.AUTH_APP_USER_AUTO_CONFIG_CLIENT_ID!);
-    await onboardWalletUser(this.request, walletAdminToken, userId, partyId, validator);
+    const walletAdminToken = await keycloak.getUserToken(
+      process.env.AUTH_APP_USER_WALLET_ADMIN_USER_NAME!, 
+      process.env.AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD!, 
+      process.env.AUTH_APP_USER_AUTO_CONFIG_CLIENT_ID!
+    );
+    await onboardWalletUser(this.page.request, walletAdminToken, userId, partyId, validator);
   }
 
   public async login(): Promise<void> {
@@ -43,5 +46,9 @@ export default class Wallet {
       this.page.locator('[data-testid="AccountBalanceWalletIcon"]').first(),
       'Balance update should show in transaction history.'
     ).toBeVisible();
+  }
+
+  public async waitForURL(url: string | RegExp): Promise<void> {
+    await this.page.waitForURL(url);
   }
 }

@@ -1,6 +1,27 @@
-import {ConfigEnv, defineConfig, loadEnv} from 'vite'
+import {ConfigEnv, defineConfig, Plugin, loadEnv} from 'vite'
 import react from '@vitejs/plugin-react'
 import ViteYaml from '@modyfi/vite-plugin-yaml'
+
+
+function printWelcomeMessage(): Plugin {
+  return {
+    name: 'print-welcome-message',
+    configureServer(server) {
+      const print = () => server.config.logger.info(
+        `  \x1b[97mVisit \x1b[96mhttp://app-provider.localhost\x1b[1;96m:${server.config.server.port}\x1b[0m\x1b[97m to start\x1b[0m`
+      );
+      const http = server.httpServer;
+      if (http && (http.listening || (http as any)._handle)) {
+        print();
+      } else if (http) {
+        http.once('listening', print);
+      } else {
+        // fallback for older vite/node combos
+        setTimeout(print, 100);
+      }
+    },
+  };
+}
 
 function setProxyCustomHeaders(proxy: any) {
     proxy.on('proxyReq', (proxyReq: any, req: any) => {
@@ -22,9 +43,12 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         plugins: [
             react(),
             ViteYaml(),
+            printWelcomeMessage()
         ],
         server: {
             host: 'localhost',
+            strictPort: true,
+            allowedHosts: ['app-provider.localhost'],
             proxy: {
                 '/api': {
                     target: `http://localhost:${backendPort}/`,

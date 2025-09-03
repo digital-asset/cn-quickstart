@@ -59,10 +59,13 @@ export default class AppUserSetup {
 
     console.log(`Run create-app-install-request shell script.`);
 
+    const timeoutMs = Number(process.env.CREATE_APP_INSTALL_REQUEST_TIMEOUT_MS) || 1 * 30 * 1000; // default 30 seconds
     execFileSync('make', ['--no-print-directory', 'create-app-install-request'], {
       cwd: resolve(__dirname, '../..'),
       env,
       stdio: 'inherit',
+      timeout: timeoutMs,
+      killSignal: 'SIGKILL',
     });
 
     console.log(`AppInstallRequest created with tag: ${uniqueRequestTag}`);
