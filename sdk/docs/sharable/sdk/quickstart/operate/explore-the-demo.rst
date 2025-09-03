@@ -135,49 +135,84 @@ The install request appears in the list.
 
 Click “Accept”.
 
-.. image:: images/app-installs-new-install-request.png
-   :alt: install request
-
-The ``AppInstallRequest`` is Accepted. 
-The actions update to create or cancel the license.
-
-Click “Create License”.
-
-.. image:: images/accept-app-install-request.png
+.. image:: images/accept-awaiting-request.png
    :alt: accept request
 
+The ``AppInstallRequest`` is Accepted. 
+
+.. image:: images/success-accepted-appinstallrequest.png
+   :alt: accepted request
+
+The actions update to Cancel and Create license.
+
+Click Create License.
 The license is created and the “# Licenses” field is updated.
 
-.. image:: images/create-license-success.png
+.. image:: images/created-license.png
    :alt: create license
 
-Next, navigate to the "Licenses" menu and select “Actions.”
+Next, navigate to the Licenses menu and select Renewals.
 
-.. image:: images/licenses-view.png
+.. image:: images/new-license-select-renewals.png
    :alt: Licenses view
 
-An “Actions for License” modal opens with an option to renew or expire the license.
+A "License Renewal Request” modal opens with an option to renew a license.
+
+.. image:: images/license-renewal-request-modal.png
+   :alt: license renewal request modal
+
+Click the button labeled as New to open the "Renew License" modal.
+
+.. image:: images/renew-license-modal.png
+   :alt: renew license modal
+
+In the modal, set the number of days to renew the license, the fee, time to prepare the license, and time to settle the license.
+You must add a description to proceed.
+
+"Prepare in" is an indication for the sender (app-user) that they are expected to accept allocation before that time.
+"Settle in" is a time that the provider has to `completeRenewal`. 
+After that, the allocation will be expired.
+
+Click Issue License Renewal Request to proceed.
+
+.. image:: images/new-license-renewal-request.png
+   :alt: new license renewal request
+
 Per the Daml contract, licenses are created in an expired state.
 To activate the license, a renewal payment request must be issued.
-Enter a description for the license renewal request, then click the green “Issue Renewal Payment Request” button.
 
-.. image:: images/activate-license-modal.png
-   :alt: issue renewal
+To make payment, navigate to the Canton Wallet at http://wallet.localhost:2000/.
+You can find the wallet's location by navigating to the App Provider's "Tenants" menu.
 
-The license renewal process is initiated and a 30-day extension becomes available for a fee of $100 CC.
+.. image:: images/app-provider-tenants.png
+   :alt: AppProvider Tenants menu
 
-.. image:: images/license-renewal-request-success.png
-   :alt: license available
+You should be logged in as the ``App-User`` in the Canton Wallet.
+Find the "Allocations" menu and accept the "Allocation Request" before the "Allocate before" time expires.
 
-The app-provider has done as much as they are able until the app-user pays the renewal fee.
+.. image:: images/cc-wallet-accept-allocation.png
+   :alt: CC Wallet accept allocation
 
-   💡For the next step we recommend opening a separate browser in incognito mode.
-   Each user should be logged into separate browsers for most consistent results.
-   For example, if you logged into ``AppProvider`` using Chrome, you would use Firefox when logging into ``AppUser``.
+If the allocation request is accepted, a new "Allocations" section appears.
+This section shows the ``licenseFeePayment``.
 
-Navigate to http://localhost:3000/ using a separate browser in incognito or private mode.
+.. image:: images/cc-wallet-accepted-allocation.png
+   :alt: CC Wallet accepted allocation
 
-Your login screen will look as it had when you logged in as ``AppProvider``.
+Return to the Quickstart as the ``AppProvider``.
+In the Licenses menu, select Renewals.
+This opens the License Renewals Request modal. 
+Click the green Complete Renewal button.
+
+.. image:: images/app-provider-complete-renewal-after-payment.png
+   :alt: complete renewal after payment
+
+A confirmation appears that the license renewal completed successfully.
+
+.. image:: images/license-renewal-completed-successfully.png
+   :alt: renewal success after payment
+
+Log out from the ``AppProvider`` and log in as ``AppUser``.
 
 **OAUTH2 disabled**
 
@@ -198,61 +233,17 @@ Login as ``AppUser`` with “app-user" as the username and the password is “ab
 .. image:: images/appuser-auth-login-view.png
    :alt: AppUser login screen
 
-**The App User Licenses Menu**
+The AppInstall now shows as accepted.
 
-As the app-user, go to the **Licenses** view and click the “Pay renewal” button.
+.. image:: images/accepted-app-install.png
+   :alt: accepted AppInstall
 
-.. image:: images/appuser-licenses-view.png
-   :alt: License view
+The license shows as active.
 
-**OAUTH2 disabled**
+.. image:: images/app-user-license-active.png
+   :alt: logout AppProvider
 
-When OAUTH2 is disabled, you are directed to log in to the Canton Wallet, directly.
-Use "app-user" as the username.
-
-.. image:: images/appuser-canton-coin-wallet-login-noauth.png
-   :alt: AppUser Canton Coin no auth
-
-**OAUTH2 enabled**
-
-When OAUTH2 is enabled, you log in to the Canton Coin Wallet by clicking “LOG IN WITH OAUTH2”.
-
-.. image:: images/16-cc-wallet-login.png
-   :alt: CC Wallet login
-
-This navigates to a keycloak login.
-
-Enter the app-user username and password.
-
-.. image:: images/app-user-reauth.png
-   :alt: appuser reauth login
-   :width: 60%
-
-**Canton Coin Wallet**
-
-Signing in navigates to a preloaded Canton Coin Wallet.
-Click **Send Payment**.
-
-.. image:: images/cc-wallet-send-payment.png
-   :alt: CC Wallet view
-
-Return to the ``AppProvider``’s License Renewal Requests View.
-The ``AppProvider`` may now Complete the Renewal.
-
-.. image:: images/app-provider-complete-renewal.png
-   :alt: complete renewal
-
-Clicking “Complete Renewal” results in a Success.
-
-.. image:: images/renew-license-success.png
-   :alt: renewal success
-
-The App User's License view shows the activated license.
-
-.. image:: images/app-user-activated-license.png
-   :alt: Activated license
-
-Congratulations. You’ve successfully created and activated a license with a payment transfer!
+Congratulations. You’ve successfully created and activated a license with a payment allocation in Canton wallet!
 
 Canton Console
 --------------

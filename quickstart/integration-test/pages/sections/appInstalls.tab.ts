@@ -1,11 +1,11 @@
 import {expect, type Page, type Locator} from '@playwright/test';
-import RowOps from '../../utils/rowOps.ts';
+import RowOps from '../../utils/rowOps';
 
 const APP_PROVIDER_APP_INSTALLS_URL = 'http://app-provider.localhost:3000/app-installs';
 
 export enum Status {
-  Request = 'REQUEST',
-  Install = 'INSTALL',
+  AwaitingAcceptance = 'AWAITING_ACCEPTANCE',
+  Accepted = 'ACCEPTED',
 }
 
 export enum Button {

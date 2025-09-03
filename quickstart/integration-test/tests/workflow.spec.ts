@@ -1,10 +1,13 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-import {test} from '../fixtures/workflow';
-import {Status, Button as InstallButton} from "../pages/sections/appInstalls.tab";
-import {Button as LicenseButton, Link as LicenseLink} from "../pages/sections/licenses.tab";
-import {Button as LicenseModalButton} from "../pages/sections/licenses.modal";
+import {Locator, test} from '../fixtures/workflow';
+import {Status as InstallStatus, Button as InstallButton} from "../pages/sections/appInstalls.tab";
+import {Button as LicenseButton} from "../pages/sections/licenses/licenses.tab";
+import {Button as ArchiveModalButton} from "../pages/sections/licenses/archive.modal";
+import {Button as RenewalsModalButton, Link as RenewalsModalLink, Status as RenewalsModalStatus} from "../pages/sections/licenses/renewals/renewals.modal";
+import {Button as IssueRenewalModalButton} from "../pages/sections/licenses/renewals/issueRenewal.modal";
+
 
 test.describe('AppInstall and Licensing workflow', () => {
 
@@ -18,16 +21,16 @@ test.describe('AppInstall and Licensing workflow', () => {
   test('AppProvider can accept an AppInstallRequest', async ({requestTag, provider}) => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
-      await provider.installs.assertStatus(Status.Request);
+      await provider.installs.assertStatus(InstallStatus.AwaitingAcceptance);
       await provider.installs.clickButton(InstallButton.Accept);
-      await provider.installs.assertStatus(Status.Install);
+      await provider.installs.assertStatus(InstallStatus.Accepted);
     });
   });
 
   test('AppProvider can reject an AppInstallRequest', async ({requestTag, provider}) => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
-      await provider.installs.assertStatus(Status.Request);
+      await provider.installs.assertStatus(InstallStatus.AwaitingAcceptance);
       await provider.installs.clickButton(InstallButton.Reject);
       await provider.installs.assertNoMatchingRowExists();
     });
@@ -36,9 +39,9 @@ test.describe('AppInstall and Licensing workflow', () => {
   test('AppProvider can cancel an AppInstall', async ({requestTag, provider}) => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
-      await provider.installs.assertStatus(Status.Request);
+      await provider.installs.assertStatus(InstallStatus.AwaitingAcceptance);
       await provider.installs.clickButton(InstallButton.Accept);
-      await provider.installs.assertStatus(Status.Install);
+      await provider.installs.assertStatus(InstallStatus.Accepted);
       await provider.installs.clickButton(InstallButton.Cancel);
       await provider.installs.assertNoMatchingRowExists();
     });
@@ -48,7 +51,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
       await provider.installs.clickButton(InstallButton.Accept);
-      await provider.installs.assertStatus(Status.Install);
+      await provider.installs.assertStatus(InstallStatus.Accepted);
     });
     await user.installs.goto();
     await user.installs.assertMatchingRowCountIs(1, user.installs.findRowBy(requestTag));
@@ -58,7 +61,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
       await provider.installs.clickButton(InstallButton.Accept);
-      await provider.installs.assertStatus(Status.Install);
+      await provider.installs.assertStatus(InstallStatus.Accepted);
     });
 
     await user.installs.goto();
@@ -72,7 +75,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
       await provider.installs.clickButton(InstallButton.Accept);
-      await provider.installs.assertStatus(Status.Install);
+      await provider.installs.assertStatus(InstallStatus.Accepted);
       await provider.installs.clickButton(InstallButton.CreateLicense);
       await provider.installs.captureLicenseId();
       await provider.installs.assertLicenseCountIs(1);
@@ -87,7 +90,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
       await provider.installs.clickButton(InstallButton.Accept);
-      await provider.installs.assertStatus(Status.Install);
+      await provider.installs.assertStatus(InstallStatus.Accepted);
       await provider.installs.clickButton(InstallButton.CreateLicense);
       licenseIds[0] = await provider.installs.captureLicenseId();
       await provider.installs.assertLicenseCountIs(1);
@@ -102,33 +105,12 @@ test.describe('AppInstall and Licensing workflow', () => {
     }
   });
 
-  test('AppUser sees no license action buttons on non-renewable license', async ({requestTag, provider, user}) => {
+  test('AppProvider can archive a license', async ({requestTag, provider}) => {
     let licenseIds: string[] = [];
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
       await provider.installs.clickButton(InstallButton.Accept);
-      await provider.installs.assertStatus(Status.Install);
-      await provider.installs.clickButton(InstallButton.CreateLicense);
-      licenseIds[0] = await provider.installs.captureLicenseId();
-      await provider.installs.assertLicenseCountIs(1);
-      await provider.installs.clickButton(InstallButton.CreateLicense);
-      licenseIds[1] = await provider.installs.captureLicenseId();
-      await provider.installs.assertLicenseCountIs(2);
-    });
-
-    await user.licenses.goto();
-    await user.licenses.withRowMatching(licenseIds[1], async () => {
-      await user.licenses.assertMatchingRowCountIs(1);
-      await user.licenses.assertButtonDoesNotExist(LicenseButton.PayRenewal)
-    });
-  });
-
-  test('AppProvider can expire a license', async ({requestTag, provider}) => {
-    let licenseIds: string[] = [];
-    await provider.installs.goto();
-    await provider.installs.withRowMatching(requestTag, async () => {
-      await provider.installs.clickButton(InstallButton.Accept);
-      await provider.installs.assertStatus(Status.Install);
+      await provider.installs.assertStatus(InstallStatus.Accepted);
       await provider.installs.clickButton(InstallButton.CreateLicense);
       licenseIds[0] = await provider.installs.captureLicenseId();
       await provider.installs.assertLicenseCountIs(1);
@@ -139,10 +121,10 @@ test.describe('AppInstall and Licensing workflow', () => {
 
     await provider.licenses.goto();
     await provider.licenses.withRowMatching(licenseIds[1], async () => {
-      await provider.licenses.clickButton(LicenseButton.Actions);
-      await provider.licenses.modal.fillDescription('e.g. "License expired"', 'Testing license expiration');
-      await provider.licenses.modal.clickButton(LicenseModalButton.Expire);
-      await provider.waitForSuccessMessage('License expired successfully');
+      await provider.licenses.clickButton(LicenseButton.Archive);
+      await provider.licenses.archiveModal.fillDescription('Testing license archival');
+      await provider.licenses.archiveModal.clickButton(ArchiveModalButton.Archive);
+      await provider.waitForSuccessMessage('License archived successfully');
       await provider.licenses.assertNoMatchingRowExists();
     });
   });
@@ -153,7 +135,7 @@ test.describe('AppInstall and Licensing workflow', () => {
       await provider.installs.goto();
       await provider.installs.withRowMatching(requestTag, async () => {
         await provider.installs.clickButton(InstallButton.Accept);
-        await provider.installs.assertStatus(Status.Install);
+        await provider.installs.assertStatus(InstallStatus.Accepted);
         await provider.installs.clickButton(InstallButton.CreateLicense);
         licenseId = await provider.installs.captureLicenseId();
       });
@@ -161,11 +143,14 @@ test.describe('AppInstall and Licensing workflow', () => {
 
     const renewalReason = 'test renewal reason';
     await test.step('AppProvider can create License Renewal', async () => {
-      await provider.licenses.goto();
-      await provider.licenses.withRowMatching(licenseId, async () => {
-        await provider.licenses.clickButton(LicenseButton.Actions);
-        await provider.licenses.modal.fillDescription('e.g. "Renew for next month"', renewalReason);
-        await provider.licenses.modal.clickButton(LicenseModalButton.Renewal);
+      const licenses = provider.licenses;
+      await licenses.goto();
+      await licenses.withRowMatching(licenseId, async () => {
+        await licenses.clickButton(LicenseButton.Renewals);
+        const renewals = licenses.renewalsModal;
+        await renewals.clickButton(RenewalsModalButton.New, renewals.modal);
+        await renewals.issueRenewalModal.fillDescription(renewalReason);
+        await renewals.issueRenewalModal.clickButton(IssueRenewalModalButton.IssueLicenseRenewalRequest);
         await provider.waitForSuccessMessage('License Renewal initiated successfully');
       });
     });
@@ -176,21 +161,30 @@ test.describe('AppInstall and Licensing workflow', () => {
       await user.wallet.tap(1000);
     });
 
+    let renewalRequestId!: string;
     await test.step('AppUser can pay License Renewal through wallet', async () => {
-      await user.licenses.goto();
-      await user.licenses.withRowMatching(licenseId, async () => {
-        await user.licenses.clickLink(LicenseLink.PayRenewal);
-        await user.licenses.waitForURL(/.*wallet.localhost.*/);
-        await user.wallet.pay(100, renewalReason);
-        await user.licenses.waitForURL(/.*app-provider.localhost.*/);
+      const licenses = user.licenses;
+      await licenses.goto();
+      await licenses.withRowMatching(licenseId, async () => {
+        await licenses.clickButton(LicenseButton.Renewals);
+        const renewals = licenses.renewalsModal;
+        await renewals.withRowMatching(RenewalsModalStatus.AwaitingAcceptance, async () => {
+          renewalRequestId = await renewals.getRequestId();
+          const wallet = await renewals.clickLink(RenewalsModalLink.WalletLink);
+          await wallet.waitForURL(/.*wallet.localhost.*allocations/);
+          await wallet.acceptAllocationRequest(100, renewalReason, renewalRequestId);
+        });
       });
     });
 
     await test.step('AppProvider can complete License Renewal', async () => {
-      await provider.licenses.goto();
-      await provider.licenses.withRowMatching(licenseId, async () => {
-        await provider.licenses.clickButton(LicenseButton.CompleteRenewal);
-        await provider.waitForSuccessMessage('License renewal completed successfully');
+      const licenses = provider.licenses;
+      await licenses.withRowMatching(licenseId, async () => {
+        const renewals = licenses.renewalsModal;
+        await renewals.withRowMatching(renewalRequestId, async () => {
+          await renewals.clickButton(RenewalsModalButton.CompleteRenewal);
+          await provider.waitForSuccessMessage('License renewal completed successfully');
+        });
       });
     });
   });

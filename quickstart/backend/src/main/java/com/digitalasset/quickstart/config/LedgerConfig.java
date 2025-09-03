@@ -13,8 +13,7 @@ public class LedgerConfig {
     private String host = "localhost";
     private int port = 6865;
     private String applicationId;
-    private String validatorUri;
-
+    private String registryBaseUri;
 
     public String getHost() {
         return host;
@@ -40,12 +39,11 @@ public class LedgerConfig {
         this.applicationId = applicationId;
     }
 
-    public String getValidatorUri() {
-        return validatorUri;
+    public String getRegistryBaseUri() {
+        return registryBaseUri;
     }
 
-    public void setValidatorUri(String validatorUri) {
-        this.validatorUri = validatorUri;
+    public void setRegistryBaseUri(String registryBaseUri) {
+        this.registryBaseUri = registryBaseUri;
     }
 }
-

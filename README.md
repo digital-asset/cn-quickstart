@@ -342,17 +342,33 @@ EOF
 ```
 In this context, `share_file` is a utility function that writes the provided content (the second argument) to the specified file (the first argument) on the shared volume `onboarding`. This volume is also mounted in the `backend-service`, and the startup script (docker/backend-service/start.sh) sources the newly shared script prior to executing the main command of the backend service, thereby ensuring that the `APP_PROVIDER_PARTY` environment variable is available to the service.
 
-## Vite Development
+## Local Development
 
-Leverage Vite’s hot module replacement for efficient front-end iteration. To start the Vite development server with live reloading, run:
+### Frontend
+
+#### Restart frontend
+Run:
+```bash
+make restart-frontend
+```
+This target restarts the frontend and handles any required rebuilds.
+
+#### Vite development
+Use Vite's hot-module reloading for fast UI iteration:
 
 ```bash
 make start-vite-dev
 ```
+or, if Quickstart is already running:
+```bash
+make vite-dev
+```
+Open the app at: http://app-provider.localhost:5173
 
-### Debugging in VS Code
+Note: Use the same host/port so OAuth redirects (Keycloak) continue to work.
 
-To enable client-side debugging in Visual Studio Code, create or update the file `quickstart/frontend/.vscode/launch.json` with the following configuration:
+#### Debugging in VS Code
+Create or update quickstart/frontend/.vscode/launch.json with:
 
 ```json
 {
@@ -363,15 +379,46 @@ To enable client-side debugging in Visual Studio Code, create or update the file
       "type": "chrome",
       "request": "launch",
       "url": "http://app-provider.localhost:5173",
-      "webRoot": "${workspaceFolder}/src"
+      "webRoot": "${workspaceFolder}/quickstart/frontend/src"
     }
   ]
 }
 ```
 
-This setup launches Chrome against the Vite server and maps breakpoints to your source files. 
+This launches Chrome against the Vite server and maps breakpoints to your source files. If you change user sessions (login/logout) or Keycloak redirects occur, reload the page so VS Code can resolve sources.
 
-Note: When you log out and in as a different user, Keycloak will automatically redirect you back to the Quickstart page. To ensure Visual Studio Code detects the source files, please reload the page in your browser.
+### Backend service
+
+#### Restart backend
+Run:
+```bash
+make restart-backend
+```
+This target restarts the backend, handles dependent services (e.g., register-app-user-tenant), and rebuilds the service if needed.
+
+#### Debug backend service
+Enable remote JVM debugging by setting:
+```bash
+export DEBUG_ENABLED=true
+make restart-backend
+```
+This opens port 5005. Use the following JVM agent options for your remote debugger:
+```
+-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+```
+Configure your IDE (IntelliJ, VS Code) to attach to port 5005 for step-through debugging.
+
+Example in IntelliJ Idea
+![remote-debug-settings](sdk/docs/images/remote-debug-settings.png)
+
+### Viewing logs
+For interactive local log inspection we recommend lnav (https://lnav.org/). Install the Canton log format and use it to view ``*.clog`` files. Example Canton lnav format definition:
+https://github.com/hyperledger-labs/splice/blob/main/canton/canton-json.lnav.json
+
+Open the logs directory with lnav to filter and analyze logs efficiently.
+
+
+
 
 ## License
 

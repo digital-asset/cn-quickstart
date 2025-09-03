@@ -42,17 +42,17 @@ export const test = base.extend<Fixtures>({
 
     await use(tag);
   },
-  provider: async ({browser, request}, use) => {
+  provider: async ({browser}, use) => {
     const context = await browser.newContext({storageState: PROVIDER_STORAGE});
     const providerPage = await context.newPage();
-    const provider = new QS(providerPage, request);
+    const provider = new QS(providerPage);
     await use(provider);
     await context.close();
   },
-  user: async ({browser, request, appUserSetup, tagProvider}, use) => {
+  user: async ({browser, appUserSetup, tagProvider}, use) => {
     const context = await browser.newContext();
     const userPage = await context.newPage();
-    const user = new QS(userPage, request);
+    const user = new QS(userPage);
     // Login as the test user
     await user.loginPage.login(appUserSetup.userName, `app user ${tagProvider.base}`);
     await use(user);
