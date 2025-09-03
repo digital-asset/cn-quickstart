@@ -319,16 +319,26 @@ paths:
           required: true
           schema:
             type: string
-          description: The contract ID of the LicenseRenewalRequest
         - name: commandId
           in: query
           required: true
           schema:
             type: string
           description: The command ID for the ledger transaction
+      requestBody:
+        description: Complete license renewal parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteLicenseRenewalRequest'
       responses:
         '200':
           description: License renewed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LicenseRenewalResult'
         '400':
           description: Invalid input
         '404':
@@ -387,6 +397,29 @@ paths:
               schema:
                 type: string
                 nullable: true
+
+  /license-renewal-requests/{contractId}/withdraw:
+    post:
+      summary: Withdraw an LicenseRenewalRequest
+      operationId: withdrawLicenseRenewalRequest
+      parameters:
+        - name: contractId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The contract ID of the LicenseRenewalRequest to withdraw
+        - name: commandId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The command ID for the ledger transaction
+      responses:
+        '200':
+          description: LicenseRenewalRequest withdrawn
+        '400':
+          description: Invalid input
 
 components:
   schemas:
@@ -483,14 +516,11 @@ components:
       type: object
       required:
         - contractId
-        - dso
         - provider
         - user
         - meta
       properties:
         contractId:
-          type: string
-        dso:
           type: string
         provider:
           type: string
@@ -530,7 +560,6 @@ components:
       type: object
       required:
         - contractId
-        - dso
         - provider
         - user
         - meta
@@ -538,8 +567,6 @@ components:
         - licenseNum
       properties:
         contractId:
-          type: string
-        dso:
           type: string
         provider:
           type: string
@@ -586,16 +613,14 @@ components:
       type: object
       required:
         - contractId
-        - dso
         - provider
         - user
         - params
         - expiresAt
         - licenseNum
+        - isExpired
       properties:
         contractId:
-          type: string
-        dso:
           type: string
         provider:
           type: string
@@ -608,6 +633,8 @@ components:
           format: date-time
         licenseNum:
           type: integer
+        isExpired:
+          type: boolean
         renewalRequests:
           type: array
           items:
@@ -623,21 +650,34 @@ components:
 
     LicenseRenewRequest:
       type: object
+      description: Parameters used to initiate a license renewal.
       required:
         - licenseFeeCc
         - licenseExtensionDuration
-        - paymentAcceptanceDuration
+        - prepareUntilDuration
+        - settleBeforeDuration
         - description
       properties:
         licenseFeeCc:
           type: number
+          description: License fee amount
         licenseExtensionDuration:
           type: string
-          description: "The duration to extend the license (e.g., 'P30D' for 30 days)."
-        paymentAcceptanceDuration:
+          description: "ISO-8601 duration specifying the requested extension period (e.g. 'P30D' for 30 days)."
+        prepareUntilDuration:
           type: string
-          description: "The duration the payment request will remain valid."
+          description: "ISO-8601 duration after which the allocation request will be not accepted."
+        settleBeforeDuration:
+          type: string
+          description: "ISO-8601 duration within which the transfer must be settled."
         description:
+          type: string
+          description: Human-readable explanation of the renewal request.
+
+    LicenseRenewalResult:
+      type: object
+      properties:
+        licenseId:
           type: string
 
     LicenseRenewalRequest:
@@ -646,12 +686,17 @@ components:
           - contractId
           - provider
           - user
-          - dso
           - licenseNum
-          - licenseFeeCc
+          - licenseFeeAmount
+          - licenseFeeInstrument
           - licenseExtensionDuration
-          - reference
-          - isPaid
+          - prepareUntil
+          - settleBefore
+          - requestedAt
+          - description
+          - requestId
+          - prepareDeadlinePassed
+          - settleDeadlinePassed
       properties:
         contractId:
           type: string
@@ -659,18 +704,36 @@ components:
           type: string
         user:
           type: string
-        dso:
-          type: string
         licenseNum:
           type: integer
-        licenseFeeCc:
+        licenseFeeAmount:
           type: number
+        licenseFeeInstrument:
+          type: string
         licenseExtensionDuration:
           type: string
           description: "RelTime representing how long the license should be extended."
-        reference:
+        prepareUntil:
+            type: string
+            format: date-time
+            description: "The time until the license renewal request can be prepared."
+        settleBefore:
+            type: string
+            format: date-time
+            description: "The time before which the payment must be settled."
+        requestedAt :
           type: string
-        isPaid:
+          format: date-time
+          description: "The time until the license renewal request can be prepared."
+        description:
+          type: string
+        requestId:
+          type: string
+        allocationCid:
+          type: string
+        prepareDeadlinePassed:
+          type: boolean
+        settleDeadlinePassed:
           type: boolean
 
     LicenseExpireRequest:
@@ -681,48 +744,18 @@ components:
         meta:
           $ref: '#/components/schemas/Metadata'
 
-    AppPaymentRequest:
-      type: object
-      properties:
-        contractId:
-          type: string
-        provider:
-          type: string
-        dso:
-          type: string
-        sender:
-          type: string
-        receiverAmounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReceiverAmount'
-        description:
-          type: string
-        expiresAt:
-          type: string
-          format: date-time
-
-    ReceiverAmount:
+    CompleteLicenseRenewalRequest:
       type: object
       required:
-        - receiver
-        - amount
+        - renewalRequestContractId
+        - allocationContractId
       properties:
-        receiver:
+        renewalRequestContractId:
           type: string
-        amount:
-          $ref: '#/components/schemas/PaymentAmount'
-
-    PaymentAmount:
-      type: object
-      required:
-        - amount
-        - unit
-      properties:
-        amount:
-          type: number
-        unit:
+          description: The contract ID of the LicenseRenewalRequest to complete
+        allocationContractId:
           type: string
+          description: The contract ID of the accepted allocation
 
     FeatureFlags:
       type: object

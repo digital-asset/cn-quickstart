@@ -1,16 +1,16 @@
 import {type Page, type Locator} from '@playwright/test';
 
 export enum Button {
-  Expire = 'Expire',
-  Renewal = 'Issue Renewal Payment Request'
+  IssueLicenseRenewalRequest = 'Issue License Renewal Request'
 }
 
-export default class LicensesModal {
+export default class IssueRenewalModal {
   page: Page;
 
   constructor(page: Page) {
     this.page = page;
   }
+
 
   button = (name: Button): Locator => {
     return this.page.getByRole('button', {name: name});
@@ -20,8 +20,8 @@ export default class LicensesModal {
     await this.button(button).click();
   }
 
-  public async fillDescription(inputName: string, description: string): Promise<void> {
-    const input = this.page.getByRole('textbox', {name: inputName});
+  public async fillDescription(description: string): Promise<void> {
+    const input = this.page.getByRole('textbox');
     await input.click();
     await input.fill(description);
   }

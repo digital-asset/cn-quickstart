@@ -1,0 +1,3 @@
+content of token standard yaml files are from [token standard repository](https://github.com/hyperledger-labs/splice/tree/main/token-standard)
+1. [original link](https://github.com/hyperledger-labs/splice/blob/cc35906236f2eb67841301a89e9467d428f6d28f/token-standard/splice-api-token-metadata-v1/openapi/token-metadata-v1.yaml) to [token-metadata.yaml](token-metadata.yaml)
+2. [original link](https://github.com/hyperledger-labs/splice/blob/cc35906236f2eb67841301a89e9467d428f6d28f/token-standard/splice-api-token-allocation-v1/openapi/allocation-v1.yaml) to [allocation-v1.yaml](allocation-v1.yaml)

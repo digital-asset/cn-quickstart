@@ -7,7 +7,7 @@ services:
     container_name: backend-service
     labels:
       - "description=Backend service supporting the Quickstart Licensing workflow.
-      Note: The APP_PROVIDER_PARTY environment variable is dynamically resolved at runtime before the main process is initiated."
+       Note: The APP_PROVIDER_PARTY environment variable is dynamically resolved at runtime before the main process is initiated."
     working_dir: /app
     env_file:
       - ./docker/backend-service/env/app.env
@@ -16,6 +16,7 @@ services:
       - ./backend/build/distributions/backend.tar:/backend.tar
       - ./docker/backend-service/start.sh:/app/start.sh
       - onboarding:/onboarding
+      - ./backend/build/otel-agent/opentelemetry-javaagent-${OTEL_AGENT_VERSION}.jar:/otel-agent.jar
     command: /app/start.sh
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"

@@ -17,3 +17,24 @@
 .table.nowrap th {
   white-space: nowrap;
 }
+
+
+.modal-dialog.modal-dialog-centered.auto-width-modal {
+    max-width: 85vw !important; /* remove Bootstrap cap */
+    margin: 1.75rem auto;
+}
+
+.renewals {
+    margin: 20px;
+}
+
+.deadline-passed::after {
+  content: "\2757"; /* exclamation */
+  color: #e74c3c;
+  font-weight: 700;
+  display: inline-block;
+  margin-left: 0px;
+  padding-left: 0px;
+  vertical-align: top;
+  pointer-events: none;
+}

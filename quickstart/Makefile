@@ -91,6 +91,12 @@ endif
 ############################################################################
 DOCKER_COMPOSE_FILES += -f ${MODULES_DIR}/pqs/compose.yaml
 DOCKER_COMPOSE_PROFILES += --profile pqs-app-provider
+ifeq ($(PQS_APP_USER_PROFILE),on)
+  DOCKER_COMPOSE_PROFILES += --profile pqs-app-user
+endif
+ifeq ($(PQS_SV_PROFILE),on)
+  DOCKER_COMPOSE_PROFILES += --profile pqs-sv
+endif
 DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/pqs/compose.env
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
   RESOURCE_CONSTRAINT_CONFIG += -f ${MODULES_DIR}/pqs/resource-constraints.yaml
@@ -107,6 +113,9 @@ ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
 endif
 ifeq ($(OBSERVABILITY_ENABLED),true)
   DOCKER_COMPOSE_OBSERVABILITY_FILES += -f ./docker/backend-service/observability.yaml
+endif
+ifeq ($(DEBUG_ENABLED),true)
+  DOCKER_COMPOSE_FILES += -f ./docker/backend-service/debug.yaml
 endif
 
 # Custom overrides if needed
@@ -176,6 +185,7 @@ test: test-daml ## Run unit tests
 
 .PHONY: test-daml
 test-daml: ## Run daml tests
+test-daml: build-daml
 	./gradlew :daml:testDaml
 
 .PHONY: build-docker-images
@@ -192,11 +202,19 @@ create-app-install-request: ## Submit an App Install Request from the App User p
 restart-backend: build-backend ## Build and start the application
 	$(call docker-compose, rm -s -f backend-service)
 	$(call docker-compose, rm -s -f register-app-user-tenant)
-	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
+	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate register-app-user-tenant)
 
 .PHONY: restart-frontend
 restart-frontend: build-frontend ## Build and start the application
 	$(call docker-compose, restart nginx)
+
+.PHONY: restart-service
+restart-service:
+	@if [ -z "${SERVICE}" ]; then \
+	  echo "Usage: make restart-service SERVICE=<service>"; exit 1; \
+	fi
+	$(call docker-compose, rm -s -f ${SERVICE})
+	$(call docker-compose, up -d --no-recreate ${SERVICE})
 
 # Run targets
 .PHONY: start
@@ -210,8 +228,12 @@ start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability
 
 .PHONY: start-vite-dev
 start-vite-dev: ## Start the frontend application in development mode
-	@echo "Starting application and Vite frontend development server..."
-	make start && cd frontend && npm run dev
+	make start vite-dev
+
+.PHONY: vite-dev
+vite-dev:
+	@echo "Starting Vite frontend development server..."
+	cd frontend && npm run dev
 
 .PHONY: stop
 stop: ## Stop the application and observability services

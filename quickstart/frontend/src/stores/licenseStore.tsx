@@ -6,10 +6,11 @@ import { useToast } from './toastStore';
 import api from '../api';
 import { generateCommandId } from '../utils/commandId';
 import type {
-    Client,
-    License,
-    LicenseRenewRequest,
-    Metadata,
+  Client, CompleteLicenseRenewalRequest,
+  License,
+  LicenseRenewalResult,
+  LicenseRenewRequest,
+  Metadata,
 } from '../openapi.d.ts';
 
 /**
@@ -26,8 +27,9 @@ interface LicenseContextType extends LicenseState {
     fetchLicenses: () => Promise<void>;
     renewLicense: (contractId: string, request: LicenseRenewRequest) => Promise<void>;
     expireLicense: (contractId: string, meta: Metadata) => Promise<void>;
-    completeLicenseRenewal: (contractId: string) => Promise<void>;
-    initiateLicenseRenewal: (contractId: string, description: string) => Promise<void>;
+    completeLicenseRenewal: (contractId: string, renewalRequestContractId: string, allocationContractId: string) => Promise<LicenseRenewalResult | undefined>;
+    withdrawLicenseRenewalRequest: (contractId: string) => Promise<void>;
+    initiateLicenseRenewal: (contractId: string, request: LicenseRenewRequest) => Promise<void>;
     initiateLicenseExpiration: (contractId: string, description: string) => Promise<void>;
 }
 
@@ -79,11 +81,11 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
             try {
                 const client: Client = await api.getClient();
                 const commandId = generateCommandId();
-                const response = await client.expireLicense({ contractId, commandId }, { meta });
+                await client.expireLicense({ contractId, commandId }, { meta });
                 await fetchLicenses();
-                toast.displaySuccess(response.data || 'License expired successfully');
+                toast.displaySuccess('License archived successfully');
             } catch (error: any) {
-                const errorMessage = error?.response?.data || 'Error expiring License';
+                const errorMessage = error?.response?.data || 'Error archiving License';
                 toast.displayError(errorMessage);
             }
         },
@@ -94,13 +96,20 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
      * Completes the renewal flow after the renewal request has been paid.
      */
     const completeLicenseRenewal = useCallback(
-        async (contractId: string) => {
+        async (contractId: string, renewalRequestContractId: string, allocationContractId: string) => {
             try {
                 const client: Client = await api.getClient();
                 const commandId = generateCommandId();
-                await client.completeLicenseRenewal({ contractId, commandId });
+
+                const request: CompleteLicenseRenewalRequest = {
+                  renewalRequestContractId: renewalRequestContractId,
+                  allocationContractId: allocationContractId
+                };
+
+                const result = await client.completeLicenseRenewal({ contractId, commandId }, request);
                 await fetchLicenses();
                 toast.displaySuccess('License renewal completed successfully');
+                return result.data;
             } catch (error: any) {
                 if (error.response?.status === 404) {
                     toast.displayError('The license has not yet been paid for.');
@@ -113,16 +122,29 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
     );
 
     /**
+     * Sends a request to withdraw a specific License renewal request.
+     */
+    const withdrawLicenseRenewalRequest = useCallback(
+        async (contractId: string) => {
+            try {
+                const client: Client = await api.getClient();
+                const commandId = generateCommandId();
+                await client.withdrawLicenseRenewalRequest({ contractId, commandId });
+                await fetchLicenses();
+                toast.displaySuccess('License renewal request withdrawn successfully');
+            } catch (error: any) {
+                const errorMessage = error?.response?.data || 'Error withdrawing License renewal request';
+                toast.displayError(errorMessage);
+            }
+        },
+        [fetchLicenses, toast]
+    );      
+
+    /**
      * Helper to initiate a new License renewal with fixed parameters.
      */
     const initiateLicenseRenewal = useCallback(
-        async (contractId: string, description: string) => {
-            const request: LicenseRenewRequest = {
-                licenseFeeCc: 100,
-                licenseExtensionDuration: 'P30D',
-                paymentAcceptanceDuration: 'P7D',
-                description: description.trim(),
-            };
+        async (contractId: string, request: LicenseRenewRequest) => {
             await renewLicense(contractId, request);
         },
         [renewLicense]
@@ -149,8 +171,9 @@ export const LicenseProvider = ({ children }: { children: React.ReactNode }) => 
                 renewLicense,
                 expireLicense,
                 completeLicenseRenewal,
+                withdrawLicenseRenewalRequest,
                 initiateLicenseRenewal,
-                initiateLicenseExpiration,
+                initiateLicenseExpiration
             }}
         >
             {children}
