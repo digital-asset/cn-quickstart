@@ -22,9 +22,6 @@ x-vars:
     path: ${MODULES_DIR}/pqs/onboarding/app-user/${PQS_APP_USER_PROFILE}/${AUTH_MODE}.env
     required: false
 
-  qs-project-labels: &qs_project_label
-    qs.project.label: ${PROJECT_LABEL}
-
 volumes:
   onboarding:
 
@@ -52,7 +49,6 @@ services:
     restart: on-failure:100
     profiles:
       - pqs-app-provider
-    labels: *qs_project_label
 
   pqs-app-user:
     image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
@@ -77,7 +73,6 @@ services:
     restart: on-failure:100
     profiles:
       - pqs-app-user
-    labels: *qs_project_label
 
   pqs-sv:
     image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}

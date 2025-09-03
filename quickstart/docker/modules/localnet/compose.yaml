@@ -17,20 +17,14 @@ x-vars:
     path: ${SV_AUTH_ENV}
     required: false
 
-  qs-project-labels: &qs_project_label
-    qs.project.label: ${PROJECT_LABEL}
-
 volumes:
   postgres:
-    labels: *qs_project_label
   domain-upgrade-dump:
-    labels: *qs_project_label
 
 networks:
   default:
     name: ${DOCKER_NETWORK}
     driver: bridge
-    labels: *qs_project_label
 
 services:
   ###############################################################################################################
@@ -63,7 +57,6 @@ services:
       - app-provider
       - app-user
       - sv
-    labels: *qs_project_label
 
   nginx:
     image: "nginx:${NGINX_VERSION}"
@@ -97,7 +90,6 @@ services:
       - app-provider
       - app-user
       - sv
-    labels: *qs_project_label
 
   canton:
     image: "${IMAGE_REPO}canton:${IMAGE_TAG}"
@@ -138,7 +130,6 @@ services:
       - app-provider
       - app-user
       - sv
-    labels: *qs_project_label
 
   splice:
     image: "${IMAGE_REPO}splice-app:${IMAGE_TAG}"
@@ -175,7 +166,6 @@ services:
       - app-provider
       - app-user
       - sv
-    labels: *qs_project_label
 
   console:
     build:
@@ -198,7 +188,6 @@ services:
     tty: true
     profiles:
       - console
-    labels: *qs_project_label
 
   swagger-ui:
     image: swaggerapi/swagger-ui
@@ -211,7 +200,6 @@ services:
       - "${SWAGGER_UI_PORT}:8080"
     profiles:
       - swagger-ui
-    labels: *qs_project_label
 
   ###############################################################################################################
   ### Application User
@@ -224,7 +212,6 @@ services:
       - *app-user-auth-env
     profiles:
       - app-user
-    labels: *qs_project_label
 
   ans-web-ui-app-user:
     image: "${IMAGE_REPO}ans-web-ui:${IMAGE_TAG}"
@@ -236,7 +223,6 @@ services:
       - SPLICE_APP_WALLET_REDIRECT=http://wallet.localhost:${APP_USER_UI_PORT}
     profiles:
       - app-user
-    labels: *qs_project_label
 
   ###############################################################################################################
   ### Application Provider
@@ -249,7 +235,6 @@ services:
       - *app-provider-auth-env
     profiles:
       - app-provider
-    labels: *qs_project_label
 
   ans-web-ui-app-provider:
     image: "${IMAGE_REPO}ans-web-ui:${IMAGE_TAG}"
@@ -261,7 +246,6 @@ services:
       - SPLICE_APP_WALLET_REDIRECT=http://wallet.localhost:${APP_PROVIDER_UI_PORT}
     profiles:
       - app-provider
-    labels: *qs_project_label
 
   ###############################################################################################################
   ### SUPER VALIDATOR
@@ -274,7 +258,6 @@ services:
       - *sv-auth-env
     profiles:
       - sv
-    labels: *qs_project_label
 
   sv-web-ui:
     image: "${IMAGE_REPO}sv-web-ui:${IMAGE_TAG}"
@@ -284,7 +267,6 @@ services:
       - *sv-auth-env
     profiles:
       - sv
-    labels: *qs_project_label
 
   scan-web-ui:
     image: "${IMAGE_REPO}scan-web-ui:${IMAGE_TAG}"
@@ -294,4 +276,3 @@ services:
       - *sv-auth-env
     profiles:
       - sv
-    labels: *qs_project_label

@@ -20,9 +20,6 @@ x-vars:
     path: ${MODULES_DIR}/keycloak/env/app-user/${APP_USER_PROFILE}/ans.oauth2.env
     required: false
 
-  qs-project-labels: &qs_project_label
-    qs.project.label: ${PROJECT_LABEL}
-
 services:
   nginx-keycloak:
     image: "nginx:${NGINX_VERSION}"
@@ -42,7 +39,6 @@ services:
           - keycloak.localhost
     profiles:
       - keycloak
-    labels: *qs_project_label
 
   keycloak:
     image: "${KEYCLOAK_IMAGE}:${KEYCLOAK_VERSION}"
@@ -63,7 +59,6 @@ services:
         condition: service_healthy
     profiles:
       - keycloak
-    labels: *qs_project_label
 
   postgres:
     environment:

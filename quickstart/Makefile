@@ -11,8 +11,6 @@ ifneq (,$(wildcard .env))
     include .env
 endif
 
-export QS_LABEL="qs.project.label=$(PROJECT_LABEL)"
-
 # export SPLICE_VERSION as IMAGE_TAG mandatory for Splice LocalNet
 export IMAGE_TAG=$(SPLICE_VERSION)
 
@@ -373,20 +371,20 @@ clean-application: ## like clean-docker, but leave observability services runnin
 	$(call docker-compose, down -v)
 
 .PHONY: clean-all
-clean-all: clean clean-docker clean-all-docker## Stop and remove all build artifacts, Docker containers and volumes
+clean-all: clean clean-docker clean-all-docker ## Stop and remove all build artifacts, Docker containers and volumes
 
 .PHONY: clean-all-docker
 clean-all-docker: ## Stop and remove all Docker containers network and volumes created by the project
-	@echo "⛔ Removing QS containers (label=$(QS_LABEL))..."
-	@cids="$$(docker ps -aq --filter "label=$(QS_LABEL)")"; \
+	@echo "⛔ Removing QS containers (network=$(DOCKER_NETWORK))..."
+	@cids="$$(docker ps -aq --filter "network=$(DOCKER_NETWORK)")"; \
     if [ -n "$$cids" ]; then docker rm -f $$cids; else echo "  (none)";fi
 
-	@echo "🧹 Removing QS networks (label=$(QS_LABEL))..."
-	@nids="$$(docker network ls -q --filter "label=$(QS_LABEL)")"; \
+	@echo "🧹 Removing $(DOCKER_NETWORK) network..."
+	@nids="$$(docker network ls -q --filter "name=$(DOCKER_NETWORK)")"; \
 	if [ -n "$$nids" ]; then docker network rm $$nids; else echo "  (none)";fi
 
-	@echo "🗑️  Removing QS volumes (label=$(QS_LABEL))..."
-	@vids="$$(docker volume ls -q --filter "label=$(QS_LABEL)")"; \
+	@echo "🗑️  Removing QS volumes (label=$(DOCKER_NETWORK))..."
+	@vids="$$(docker volume ls -q --filter "name=^$(DOCKER_NETWORK)")"; \
 	if [ -n "$$vids" ]; then docker volume rm $$vids; else echo "  (none)";fi
 
 .PHONY: install-daml-sdk
