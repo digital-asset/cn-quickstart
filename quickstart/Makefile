@@ -167,7 +167,7 @@ docker-available: ## Check if Docker CLI exists and is running
     }
 
 .PHONY: check-docker
-check-docker: ## Check Docker and Docker Compose versions
+check-docker: docker-available ## Check Docker and Docker Compose versions
 	@{ \
     	  min_docker="27.0.0"; \
     	  have_docker=$$(docker version --format '{{.Client.Version}}' | sed 's/-.*//'); \
@@ -195,23 +195,23 @@ test-daml: ## Run daml tests
 	./gradlew :daml:testDaml
 
 .PHONY: build-docker-images
-build-docker-images:
+build-docker-images: docker-available
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) build)
 
 .PHONY: create-app-install-request
 create-app-install-request: DOCKER_COMPOSE_FILES = -f docker/create-app-install-request/compose.yaml
 create-app-install-request: DOCKER_COMPOSE_PROFILES =
-create-app-install-request: ## Submit an App Install Request from the App User participant node
+create-app-install-request: docker-available ## Submit an App Install Request from the App User participant node
 	$(call docker-compose, run --rm container)
 
 .PHONY: restart-backend
-restart-backend: build-backend ## Build and start the application
+restart-backend: build-backend docker-available ## Build and start the application
 	$(call docker-compose, rm -s -f backend-service)
 	$(call docker-compose, rm -s -f register-app-user-tenant)
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
 
 .PHONY: restart-frontend
-restart-frontend: build-frontend ## Build and start the application
+restart-frontend: build-frontend docker-available ## Build and start the application
 	$(call docker-compose, restart nginx)
 
 # Run targets
@@ -230,11 +230,11 @@ start-vite-dev: ## Start the frontend application in development mode
 	make start && cd frontend && npm run dev
 
 .PHONY: stop
-stop: ## Stop the application and observability services
+stop: docker-available ## Stop the application and observability services
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) down)
 
 .PHONY: stop-application
-stop-application: ## Stop the application, leaving observability services running
+stop-application: docker-available ## Stop the application, leaving observability services running
 	$(call docker-compose, down)
 
 .PHONY: restart
@@ -242,23 +242,23 @@ restart: stop start ## Restart the application
 
 # Utility targets
 .PHONY: status
-status: ## Show status of Docker containers
+status: docker-available ## Show status of Docker containers
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) ps)
 
 .PHONY: compose-config
-compose-config:
+compose-config: docker-available
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) config)
 
 .PHONY: logs
-logs: ## Show logs of Docker containers
+logs: docker-available ## Show logs of Docker containers
 	$(call docker-compose, logs)
 
 .PHONY: tail
-tail: ## Tail logs of Docker containers
+tail: docker-available ## Tail logs of Docker containers
 	$(call docker-compose, logs -f)
 
 .PHONY: capture-logs
-capture-logs: ## Monitor docker events and capture logs
+capture-logs: docker-available ## Monitor docker events and capture logs
 	@network_name="quickstart"; \
 	canton_services=("canton" "splice" "backend-service"); \
 	mkdir -p ./logs; rm -rf ./logs/*; \
@@ -311,7 +311,7 @@ first-run-setup:
 	@exit 2
 
 .PHONY: integration-test
-integration-test: ## Run integration tests
+integration-test: docker-available ## Run integration tests
 	@docker rm -f environment-init 2> /dev/null || true
 	@if [ "$(TEST_MODE)" = "off" ]; then \
 		echo "To run the integration tests Quickstart must be started in test mode. Please run \"make setup\" and enable TEST_MODE when prompted"; \
@@ -332,11 +332,11 @@ show-integration-test-report: ## Show the integration test report
 
 # Console
 .PHONY: canton-console
-canton-console: ## Start the Canton console
+canton-console: docker-available ## Start the Canton console
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) run --rm --name canton-console console)
 
 .PHONY: clean-canton-console
-clean-canton-console: ## Stop and remove the Canton console container
+clean-canton-console: docker-available ## Stop and remove the Canton console container
 	docker rm -f canton-console 2> /dev/null || true
 
 # Shell
@@ -344,11 +344,11 @@ clean-canton-console: ## Stop and remove the Canton console container
 shell: DOCKER_COMPOSE_FILES = -f ${MODULES_DIR}/daml-shell/compose.yaml
 shell: DOCKER_COMPOSE_ENVFILE += --env-file ${MODULES_DIR}/daml-shell/compose.env
 shell: DOCKER_COMPOSE_PROFILES =
-shell: ## Start Daml Shell
+shell: docker-available ## Start Daml Shell
 	$(call docker-compose, run --rm daml-shell)
 
 .PHONY: clean-shell
-clean-shell: ## Stop and remove the Daml Shell container
+clean-shell: docker-available ## Stop and remove the Daml Shell container
 	docker rm -f quickstart-daml-shell 2> /dev/null || true
 
 # Clean targets
@@ -361,7 +361,7 @@ clean-docker: clean-shell clean-canton-console ## Stop and remove application Do
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) down -v)
 
 .PHONY: clean-application
-clean-application: ## like clean-docker, but leave observability services running
+clean-application: docker-available ## like clean-docker, but leave observability services running
 	$(call docker-compose, down -v)
 
 .PHONY: clean-all
