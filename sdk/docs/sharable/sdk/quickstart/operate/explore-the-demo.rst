@@ -1,3 +1,5 @@
+.. _quickstart-explore-the-demo:
+
 ======================================================
 Explore the Canton Network Application Quickstart demo
 ======================================================
@@ -20,22 +22,15 @@ The App Quickstart application is intended to be incrementally extended by your 
 When you are familiar with the App Quickstart, review the technology choices and application design to determine what changes are needed.
 Technology and design decisions are ultimately up to you.
 
-As a result, the CN App Quickstart guides may be a little out of step with the application.
-If you find errors or other inconsistencies, please contact your representative at Digital Asset.
-
-This section works through a complete business operation within the CN App Quickstart.
+This How-To works through a complete business operation within the CN App Quickstart.
+If you find errors, please contact your representative at Digital Asset.
 
 Prerequisites
 =============
 
-You should have successfully `installed the CN App Quickstart <../download/cnqs-installation.html>`__
-before beginning this demonstration.
+Install the `CN App Quickstart <../download/cnqs-installation.html>`__ before beginning this demonstration.
 
-If you need support accessing the JFrog Artifactory, [contact us](https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog).
-
-The CN App Quickstart is a Dockerized application and requires `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__.
-It is recommended to allocate 8 GB of memory to properly run the required Docker containers.
-If you witness unhealthy containers, please consider allocating additional resources, if possible.
+`Contact us <https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog>`__ if you need support accessing JFrog Artifactory.
 
 Walkthrough
 ===========
@@ -43,7 +38,7 @@ Walkthrough
 The CN App Quickstart can run with or without authorization, based on your business needs.
 Toggle authorization with the ``make setup`` command in the ``quickstart`` subdirectory.
 ``make setup`` asks to enable Observability, OAUTH2, and specify a party hint.
-In this demo, we use the default party hint, and we show OAUTH2 as enabled and disabled.
+In this demo, we disable ``TEST MODE``, use the default party hint, and show OAUTH2 as enabled and disabled.
 When OAUTH2 makes a difference, we display both paths one after the other. 
 You can follow your path and ignore the other.
 You may enable Observability, but it is not required for this demo.
@@ -106,9 +101,9 @@ Fill in the login credentials: username: app-provider, password: abc123
 
 **The App Installs Menu**
 
-Once you are logged in select “AppInstalls” in the menu.
+Once you are logged in select **AppInstalls** in the menu.
 
-.. image:: images/appinstalls-default-view.png
+.. image:: images/qs-demo-app-installs-view.png
    :alt: App Installs view
 
 Open a terminal to create an app install request.
@@ -133,7 +128,7 @@ Return to the browser.
 
 The install request appears in the list.
 
-Click “Accept”.
+Click **Accept**.
 
 .. image:: images/accept-awaiting-request.png
    :alt: accept request
@@ -145,13 +140,13 @@ The ``AppInstallRequest`` is Accepted.
 
 The actions update to Cancel and Create license.
 
-Click Create License.
+Click **Create License**.
 The license is created and the “# Licenses” field is updated.
 
 .. image:: images/created-license.png
    :alt: create license
 
-Next, navigate to the Licenses menu and select Renewals.
+Next, navigate to the Licenses menu and select **Renewals**.
 
 .. image:: images/new-license-select-renewals.png
    :alt: Licenses view
@@ -161,7 +156,7 @@ A "License Renewal Request” modal opens with an option to renew a license.
 .. image:: images/license-renewal-request-modal.png
    :alt: license renewal request modal
 
-Click the button labeled as New to open the "Renew License" modal.
+Click **New** to open the "Renew License" modal.
 
 .. image:: images/renew-license-modal.png
    :alt: renew license modal
@@ -173,7 +168,7 @@ You must add a description to proceed.
 "Settle in" is a time that the provider has to `completeRenewal`. 
 After that, the allocation will be expired.
 
-Click Issue License Renewal Request to proceed.
+Click **Issue License Renewal Request**.
 
 .. image:: images/new-license-renewal-request.png
    :alt: new license renewal request
@@ -181,28 +176,41 @@ Click Issue License Renewal Request to proceed.
 Per the Daml contract, licenses are created in an expired state.
 To activate the license, a renewal payment request must be issued.
 
-To make payment, navigate to the Canton Wallet at http://wallet.localhost:2000/.
-You can find the wallet's location by navigating to the App Provider's "Tenants" menu.
+To make payment, navigate to the Canton Wallet at http://wallet.localhost:2000/allocations and log in as ``app-user`` if prompted.
+
+You can find the wallet's location by: 
+
+1. Reading the `Splice Local Network docs <https://docs.dev.sync.global/app_dev/testing/localnet.html#application-uis>`__.
+2. Navigating to the App Provider's "Tenants" menu.
 
 .. image:: images/app-provider-tenants.png
    :alt: AppProvider Tenants menu
 
-You should be logged in as the ``App-User`` in the Canton Wallet.
-Find the "Allocations" menu and accept the "Allocation Request" before the "Allocate before" time expires.
+3. Logging into the app as ``app-user``, navigating to the Licenses menu, then clicking the **Renewals** action.
 
-.. image:: images/cc-wallet-accept-allocation.png
+.. image:: images/app-user-licenses-menu.png
+   :alt: AppUser Licenses menu
+
+If prompted, log in to the Canton Coin Wallet as ``app-user``.
+
+.. image:: images/canton-coin-wallet-app-user-log-in.png
+   :alt: Canton Coin Wallet login
+
+Verify you are in the "Allocations" menu and accept the "Allocation Request" before the "Allocate before" time expires.
+
+.. image:: images/canton-coin-wallet-allocations-menu.png
    :alt: CC Wallet accept allocation
 
 If the allocation request is accepted, a new "Allocations" section appears.
-This section shows the ``licenseFeePayment``.
+This section shows the ``licenseFeePayment`` information.
 
-.. image:: images/cc-wallet-accepted-allocation.png
+.. image:: images/canton-coin-wallet-accepted-allocation.png
    :alt: CC Wallet accepted allocation
 
 Return to the Quickstart as the ``AppProvider``.
-In the Licenses menu, select Renewals.
+In the Licenses menu, select **Renewals**.
 This opens the License Renewals Request modal. 
-Click the green Complete Renewal button.
+Click the green **Complete Renewal** button.
 
 .. image:: images/app-provider-complete-renewal-after-payment.png
    :alt: complete renewal after payment
@@ -276,7 +284,7 @@ Returns a detailed categorization of participants.
 
 Shows a list of all participant references.
 
-.. image:: images/canton-console-participants.all.png
+.. image:: images/canton-console-participants-all.png
    :alt: Participant synchronizer
 
 ::
@@ -285,7 +293,7 @@ Shows a list of all participant references.
 
 Is a diagnostic tool that displays the health of Canton Network participants.
 
-.. image:: images/health.status.png
+.. image:: images/health-status.png
    :alt: Ping yourself
 
 Daml Shell
@@ -349,7 +357,7 @@ The default activity view shows the total CC balance and the Validator rewards.
 .. image:: images/36-cc-balance.png
    :alt: CC balance
 
-Select the Network Info menu to view SV identification.
+Select the **Network Info** menu to view SV identification.
 
 .. image:: images/34-active-svs.png
    :alt: Active SVs
@@ -365,7 +373,7 @@ Observability Dashboard
 .. note:: Observability may no longer work while App Quickstart is under revisions.
 
 In a web browser, navigate to http://localhost:3030/dashboards to view
-the observability dashboards. Select “Quickstart - consolidated logs”.
+the observability dashboards. Select **Quickstart - consolidated logs**.
 
 .. image:: images/38-obs-dash.png
    :alt: observability dashboard
@@ -406,5 +414,5 @@ Next steps
 ==========
 
 You’ve completed a business operation in the CN App Quickstart and have been introduced to the basics of the Canton Console and Daml Shell.
-
-Learn more about Daml Shell and the project structure in the Project Structure guide.
+We encourage you to explore the CN App Quickstart codebase and modify it to meet your business needs.
+You might be interested in learning more about the App Quickstart :ref:`quickstart-project-structure-overview` or the :ref:`quickstart-development-journey-lifecycle`.

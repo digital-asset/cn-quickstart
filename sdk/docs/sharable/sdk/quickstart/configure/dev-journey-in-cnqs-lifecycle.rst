@@ -1,7 +1,7 @@
+.. _quickstart-development-journey-lifecycle:
+
 Development journey in the CN Quickstart lifecycle
 ==================================================
-
-.. wip::
 
 **Contents**
 
@@ -78,7 +78,7 @@ The ``Makefile`` provides standardized commands for common operations.
 | make start              | Start the application stack                |
 +-------------------------+--------------------------------------------+
 
-The full list of make targets is maintained in the :ref:`make-target-reference`. 
+The full list of make targets is maintained in the :ref:`make-target-reference`.
 In terminal, see available targets by running ``make help`` from the ``quickstart`` directory.
 
 The Makefile serves as the primary control panel for interacting with the CN Quickstart environment.
