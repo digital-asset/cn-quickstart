@@ -390,7 +390,7 @@ clean-application: docker-available ## like clean-docker, but leave observabilit
 clean-all: clean clean-docker clean-all-docker ## Stop and remove all build artifacts, Docker containers and volumes
 
 .PHONY: clean-all-docker
-clean-all-docker: ## Stop and remove all Docker containers network and volumes created by the project
+clean-all-docker: docker-available ## Stop and remove all Docker containers network and volumes created by the project
 	@echo "⛔ Removing QS containers (network=$(DOCKER_NETWORK))..."
 	@cids="$$(docker ps -aq --filter "network=$(DOCKER_NETWORK)")"; \
     if [ -n "$$cids" ]; then docker rm -f $$cids; else echo "  (none)";fi
