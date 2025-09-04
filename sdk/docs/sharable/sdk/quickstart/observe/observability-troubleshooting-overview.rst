@@ -1,5 +1,7 @@
+.. _quickstart-observability-troubleshooting-overview:
+
 ==================================================================
-Canton Network quickstart observability & troubleshooting overview
+Canton Network Quickstart observability & troubleshooting overview
 ==================================================================
 
 .. wip::

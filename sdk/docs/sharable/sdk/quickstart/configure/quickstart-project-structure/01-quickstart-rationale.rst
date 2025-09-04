@@ -1,7 +1,7 @@
 .. _quickstart-project-structure-overview:
 
-Project overview
-================
+Project structure overview
+==========================
 
 The Canton Network (CN) Quickstart is scaffolding to support development efforts to build, test, and deploy CN applications.
 
