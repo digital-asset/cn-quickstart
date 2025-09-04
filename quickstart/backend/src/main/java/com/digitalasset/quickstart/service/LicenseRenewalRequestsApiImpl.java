@@ -53,7 +53,7 @@ public class LicenseRenewalRequestsApiImpl implements LicenseRenewalRequestsApi 
         );
         return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () ->
                 damlRepository.findActiveAllocationRequestById(contractId).thenCompose(allocReq -> {
-                    var allocationRequest = ensurePresent(allocReq, "AllocationRequest {} not found", contractId);
+                    var allocationRequest = ensurePresent(allocReq, "AllocationRequest %s not found", contractId);
                     var choice = new AllocationRequest.AllocationRequest_Withdraw(
                             new ExtraArgs(new ChoiceContext(Map.of()), new Metadata(Map.of()))
                     );

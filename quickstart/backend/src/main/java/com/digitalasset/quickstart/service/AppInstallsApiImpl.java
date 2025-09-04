@@ -27,6 +27,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 import quickstart_licensing.licensing.appinstall.AppInstall.AppInstall_Cancel;
 import quickstart_licensing.licensing.appinstall.AppInstall.AppInstall_CreateLicense;
 import quickstart_licensing.licensing.license.LicenseParams;
@@ -92,7 +93,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
                 damlRepository.findAppInstallById(contractId).thenCompose(contract -> {
                     String providerParty = contract.payload.getProvider.getParty;
                     if (!party.equals(providerParty)) {
-                        throw new ServiceException(HttpStatus.FORBIDDEN, "Insufficient permissions");
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Insufficient permissions");
                     }
                     Metadata paramsMeta = new Metadata(createLicenseRequest.getParams().getMeta().getData());
                     LicenseParams params = new LicenseParams(paramsMeta);
@@ -124,7 +125,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
                     String userParty = contract.payload.getUser.getParty;
                     if (!party.equals(userParty)
                             && !party.equals(contract.payload.getProvider.getParty)) {
-                        throw new ServiceException(HttpStatus.FORBIDDEN, "party {} is not the user nor provider", party);
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN, String.format("party %s is not the user nor provider", party));
                     }
                     Metadata meta = new Metadata(appInstallCancel.getMeta().getData());
                     // topologically we can only act as the provider

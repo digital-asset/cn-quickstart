@@ -18,7 +18,7 @@ export default class QS {
     this.loginPage = new Login(page);
     this.installs = new AppInstalls(page);
     this.licenses = new Licenses(page);
-    this.tenants = new Tenants(page, request);
+    this.tenants = new Tenants(page);
     this.wallet = new Wallet(page);
   }
 

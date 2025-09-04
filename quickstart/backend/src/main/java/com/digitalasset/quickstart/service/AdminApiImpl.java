@@ -72,14 +72,14 @@ public class AdminApiImpl implements AdminApi {
         if (request.getPartyId() == null || request.getPartyId().isBlank()) {
             throw badRequestExc.apply("partyId is required");
         }
-        if (auth == Auth.OAUTH2) {
+        if (auth.isOAuth2Enabled()) {
             if (request.getClientId() == null || request.getClientId().isBlank()) {
                 throw badRequestExc.apply("clientId is required in OAuth2 mode");
             }
             if (request.getIssuerUrl() == null || request.getIssuerUrl().isBlank()) {
                 throw badRequestExc.apply("issuerUrl is required in OAuth2 mode");
             }
-        } else if (auth == Auth.SHARED_SECRET) {
+        } else if (auth.isSharedSecretEnabled()) {
             if (request.getUsers() == null || request.getUsers().isEmpty()) {
                 throw badRequestExc.apply("at least one user is required in shared-secret mode");
             }
@@ -91,7 +91,7 @@ public class AdminApiImpl implements AdminApi {
         if (tenantPropertiesRepository.getTenant(request.getTenantId()) != null) {
             throw conflictExc.apply("TenantId already exists");
         }
-        if (auth == Auth.OAUTH2) {
+        if (auth.isOAuth2Enabled()) {
             boolean clientIssuerCombinationExists = authClientRegistrationRepository.getClientRegistrations().stream()
               .anyMatch(c -> c.getClientId().equals(request.getClientId()) && c.getIssuerURL().equals(request.getIssuerUrl()));
             if (clientIssuerCombinationExists) {
@@ -113,11 +113,13 @@ public class AdminApiImpl implements AdminApi {
             logger.info("Creating user {} with roles {}", user, "USER");
             try {
                 userDetailsManager.get().createUser(
-                  org.springframework.security.core.userdetails.User
-                    .withUsername(user)
-                    .password("{noop}")
-                    .roles("USER")
-                    .build()
+                    // TODO KV https://github.com/digital-asset/cn-quickstart/issues/235
+                    //  fix this API leak, we should not rely on Spring Security here
+                    org.springframework.security.core.userdetails.User
+                        .withUsername(user)
+                        .password("{noop}")
+                        .roles("USER")
+                        .build()
                 );
             } catch (Exception e) {
                 logger.error("Error creating user {}: {}", user, e.getMessage());
@@ -152,69 +154,31 @@ public class AdminApiImpl implements AdminApi {
 
     @Override
     @WithSpan
-    public CompletableFuture<ResponseEntity<TenantRegistration>> createTenantRegistration(
-            @SpanAttribute("tenant.request") TenantRegistrationRequest request
-    ) {
-        Span methodSpan = Span.current();
-        Context parentContext = Context.current();
-
-        Map<String, Object> commonAttrs = Map.of(
-                "tenant.tenantId", request.getTenantId(),
-                "tenant.clientId", request.getClientId(),
-                "tenant.party", request.getPartyId()
+    public CompletableFuture<ResponseEntity<TenantRegistration>> createTenantRegistration(TenantRegistrationRequest request) {
+        var ctx = tracingCtx(logger, "createTenantRegistration",
+            "tenantId", request.getTenantId(),
+            "clientId", request.getClientId(),
+            "partyId", request.getPartyId()
         );
-
-        LoggingSpanHelper.setSpanAttributes(methodSpan, commonAttrs);
-        LoggingSpanHelper.logInfo(logger, "createTenantRegistration: Starting async creation", commonAttrs);
-
-        return CompletableFuture
-          .supplyAsync(
-                  supplyWithin(parentContext, () -> {
-                      LoggingSpanHelper.addEventWithAttributes(
-                          methodSpan,
-                          "Executing asynchronous logic for createTenantRegistration",
-                          null
-                      );
-                      try {
-                          validateRequest(request);
-                          ensureTenantIsUnique(request);
-                          if (auth == Auth.OAUTH2) {
-                              registerOAuthClient(request);
-                          } else {
-                              registerSharedSecretUsers(request);
-                          }
-                          // Save extra properties in a separate repository
-                          persistTenantMetadata(request);
-                          // Build the response (OpenAPI model)
-                          URI location = URI.create("/admin/tenant-registrations");
-                          return ResponseEntity.created(location).body(buildResponse(request));
-                      } catch (ResponseStatusException e) {
-                          LoggingSpanHelper.logError(logger,
-                              "createTenantRegistration: Exception occurred", commonAttrs, e);
-                          LoggingSpanHelper.recordException(methodSpan, e);
-                          throw e;
-                      }
-                        })
-                )
-                .whenComplete(
-                        completeWithin(parentContext, (res, ex) -> {
-                            if (ex == null) {
-                                LoggingSpanHelper.logInfo(
-                                        logger,
-                                        "createTenantRegistration: Successfully created tenant registration",
-                                        commonAttrs
-                                );
-                            } else {
-                                LoggingSpanHelper.logError(
-                                        logger,
-                                        "createTenantRegistration: Failed",
-                                        commonAttrs,
-                                        ex
-                                );
-                                LoggingSpanHelper.recordException(methodSpan, ex);
-                            }
-                        })
-                );
+        // TODO KV https://github.com/digital-asset/cn-quickstart/issues/237
+        //  consider storing partyId/tenantId as GrantedAuthority instead of using JWT claims
+        //  Problem: We cannot use auth.asAdminParty(party -> here. if this endpoint is accessed from CLI providing JWT token directly
+        //  The endpoint is still protected as SpringSecurityOAuth2Config -> HttpSecurity requires role ADMIN for it
+        //  but it is annoying that we cannot use the same pattern as in other endpoints
+        return traceServiceCallAsync(ctx, () -> CompletableFuture.supplyAsync(() -> {
+            validateRequest(request);
+            ensureTenantIsUnique(request);
+            if (auth.isOAuth2Enabled()) {
+                registerOAuthClient(request);
+            } else {
+                registerSharedSecretUsers(request);
+            }
+            // Save extra properties in a separate repository
+            persistTenantMetadata(request);
+            // Build the response (OpenAPI model)
+            URI location = URI.create("/admin/tenant-registrations");
+            return ResponseEntity.created(location).body(buildResponse(request));
+        }));
     }
 
     @Override
