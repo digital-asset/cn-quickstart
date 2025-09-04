@@ -387,7 +387,21 @@ clean-application: docker-available ## like clean-docker, but leave observabilit
 	$(call docker-compose, down -v)
 
 .PHONY: clean-all
-clean-all: clean clean-docker ## Stop and remove all build artifacts, Docker containers and volumes
+clean-all: clean clean-docker clean-all-docker ## Stop and remove all build artifacts, Docker containers and volumes
+
+.PHONY: clean-all-docker
+clean-all-docker: docker-available ## Stop and remove all Docker containers network and volumes created by the project
+	@echo "⛔ Removing QS containers (network=$(DOCKER_NETWORK))..."
+	@cids="$$(docker ps -aq --filter "network=$(DOCKER_NETWORK)")"; \
+    if [ -n "$$cids" ]; then docker rm -f $$cids; else echo "  (none)";fi
+
+	@echo "🧹 Removing $(DOCKER_NETWORK) network..."
+	@nids="$$(docker network ls -q --filter "name=$(DOCKER_NETWORK)")"; \
+	if [ -n "$$nids" ]; then docker network rm $$nids; else echo "  (none)";fi
+
+	@echo "🗑️  Removing QS volumes (label=$(DOCKER_NETWORK))..."
+	@vids="$$(docker volume ls -q --filter "name=^$(DOCKER_NETWORK)")"; \
+	if [ -n "$$vids" ]; then docker volume rm $$vids; else echo "  (none)";fi
 
 .PHONY: install-daml-sdk
 install-daml-sdk: ## Install the Daml SDK
