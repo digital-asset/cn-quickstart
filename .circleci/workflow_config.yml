@@ -135,8 +135,6 @@ jobs:
       - nix
       - docs-setup
       - docs:
-          command: make vale-errors
-      - docs:
           command: make render-preview
 
 
