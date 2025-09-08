@@ -3,19 +3,26 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react'
 import { useToast } from './toastStore'
-// @ts-ignore
-import openApi from '../../../common/openapi.yaml'
 import api from "../api.ts";
 
+
+export interface TenantRegistrationRequest {
+    tenantId: string
+    partyId: string
+    walletUrl: string
+    clientId?: string
+    issuerUrl?: string
+    users?: string[]
+}
 
 export interface TenantRegistration {
     tenantId: string
     partyId: string
-    clientId: string
-    issuerUrl: string
+    clientId?: string
+    issuerUrl?: string
     walletUrl: string
     internal: boolean
-    users: string[]
+    users?: string[]
 }
 
 interface TenantRegistrationState {
@@ -24,8 +31,8 @@ interface TenantRegistrationState {
 
 interface TenantRegistrationContextType extends TenantRegistrationState {
     fetchTenantRegistrations: () => Promise<void>
-    createTenantRegistration: (registration: TenantRegistration) => Promise<void>
-    deleteTenantRegistration: (clientId: string) => Promise<void>
+    createTenantRegistration: (registration: TenantRegistrationRequest) => Promise<void>
+    deleteTenantRegistration: (tenantId: string) => Promise<void>
     setRegistrations: React.Dispatch<React.SetStateAction<TenantRegistration[]>>
 }
 
@@ -55,16 +62,31 @@ export const TenantRegistrationProvider = ({
     }, [toast])
 
     const createTenantRegistration = useCallback(
-        async (registration: TenantRegistration) => {
+        async (request: TenantRegistrationRequest) => {
             try {
                 const client = await api.getClient()
                 // New name: createTenantRegistration
-                const response = await client.createTenantRegistration({}, registration)
-                if (response.status !== 200) {
-                    throw new Error(`Unexpected response status: ${response.status}`)
+                const response = await client.createTenantRegistration({}, request)
+                const created = (response as any)?.data as TenantRegistration | undefined;
+                if (created?.tenantId) {
+                    setRegistrations(prev => {
+                        if (prev.some(reg =>
+                            reg.tenantId === created.tenantId ||
+                            reg.clientId === created.clientId ||
+                            reg.issuerUrl === created.issuerUrl)) return prev;
+                        return [...prev, created];
+                    });
+                } else {
+                    // No body? Fallback to a fresh list to keep UI in sync.
+                    const list = await client.listTenantRegistrations();
+                    setRegistrations(list.data);
                 }
-                setRegistrations((prev) => [...prev, response.data])
+                toast.displaySuccess('Tenant registration created')
             } catch (error) {
+                const { status, message } = extractError(error);
+                if (status === 400) return toast.displayError(message ?? 'Invalid input');
+                if (status === 409) return toast.displayError(message ?? 'Conflict: duplicate tenant/client/issuer');
+                if (status === 500) return toast.displayError(message ?? 'Failed to create tenant registration');
                 toast.displayError('Error creating tenant registration')
             }
         },
@@ -74,9 +96,9 @@ export const TenantRegistrationProvider = ({
     const deleteTenantRegistration = useCallback(async (tenantId: string) => {
         try {
             const client = await api.getClient()
-            // New name: deleteTenantRegistration
             await client.deleteTenantRegistration({ tenantId: tenantId })
             setRegistrations((prev) => prev.filter((reg) => reg.tenantId !== tenantId))
+            toast.displaySuccess('Tenant registration deleted')
         } catch (error) {
             toast.displayError('Error deleting tenant registration')
         }
@@ -105,4 +127,14 @@ export const useTenantRegistrationStore = () => {
         )
     }
     return context
+}
+
+function extractError(err: unknown): { status?: number; message?: string } {
+    const anyErr = err as any;
+    const status = anyErr?.response?.status ?? anyErr?.status;
+    const message =
+        anyErr?.response?.data?.message ?? // our ErrorResponse { error, message }
+        anyErr?.message ??
+        'Unexpected error';
+    return { status, message };
 }

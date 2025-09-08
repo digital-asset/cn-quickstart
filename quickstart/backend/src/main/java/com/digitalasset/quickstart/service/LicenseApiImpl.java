@@ -134,8 +134,8 @@ public class LicenseApiImpl implements LicensesApi {
             var choiceContextFut = tokenStandardProxy.getAllocationTransferContext(request.getAllocationContractId());
             var renewalFut = damlRepository.findActiveLicenseRenewalRequestById(request.getRenewalRequestContractId());
             return choiceContextFut.thenCombine(renewalFut, (c, r) -> {
-                var choiceContext = ensurePresent(c, "Transfer context not found for allocation {}", request.getAllocationContractId());
-                var renewal = ensurePresent(r, "Active renewal request not found for contract {}", request.getRenewalRequestContractId());
+                var choiceContext = ensurePresent(c, "Transfer context not found for allocation %s", request.getAllocationContractId());
+                var renewal = ensurePresent(r, "Active renewal request not found for contract %s", request.getRenewalRequestContractId());
                 TransferContext transferContext = prepareTransferContext(
                         choiceContext.getDisclosedContracts(),
                         Map.of(
@@ -172,7 +172,7 @@ public class LicenseApiImpl implements LicensesApi {
         );
         return auth.asAuthenticatedParty(party -> traceServiceCallAsync(ctx, () ->
                 damlRepository.findLicenseById(contractId).thenCompose(contract -> {
-                    var license = ensurePresent(Optional.ofNullable(contract), "License not found for contract {}", contractId);
+                    var license = ensurePresent(Optional.ofNullable(contract), "License not found for contract %s", contractId);
                     var meta = licenseExpireRequest.getMeta().getData();
                     if (!party.equals(auth.getAppProviderPartyId())) {
                         meta = new HashMap<>(meta);

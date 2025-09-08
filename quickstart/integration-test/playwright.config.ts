@@ -1,7 +1,9 @@
-import {defineConfig, devices} from '@playwright/test';
+import { defineConfig} from '@playwright/test';
 import * as dotenv from 'dotenv';
 import {existsSync} from 'fs';
 import * as path from 'path';
+
+const { PROVIDER_STORAGE } = require('./tests/global.ts');
 
 const envPath = path.resolve(__dirname, '.generated.env');
 if (!existsSync(envPath)) {
@@ -54,6 +56,14 @@ export default defineConfig({
       name: 'workflow',
       testMatch: '**/workflow.spec.ts',
       dependencies: ['login'],
-    }
+    },
+    {
+      name: 'tenant-registrations',
+      testMatch: '**/tenant-registration.spec.ts',
+      dependencies: ['login'],
+      use: {
+        storageState: PROVIDER_STORAGE,
+      },
+    },
   ],
 });

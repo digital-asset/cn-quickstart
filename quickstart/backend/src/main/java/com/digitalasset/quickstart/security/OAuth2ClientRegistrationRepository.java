@@ -47,19 +47,35 @@ public class OAuth2ClientRegistrationRepository
     }
 
     @Override
-    public String registerClient(Client client) {
+    public String registerClient(Client client) throws IllegalArgumentException {
+        // Prevent duplicates: same combination clientId + issuerURL
+        boolean exists =
+            getClientRegistrations().stream()
+                .anyMatch(c ->
+                              c.getClientId().equals(client.getClientId()) &&
+                                  c.getIssuerURL().equals(client.getIssuerURL()));
+        if (exists) {
+            throw new IllegalArgumentException(
+                "Duplicate client registration not allowed for clientId=" + client.getClientId() +
+                    " and issuerURL=" + client.getIssuerURL());
+        }
         String registrationId = client.getTenantId() + "-" + client.getClientId();
-        registrations.put(
-                registrationId,
-                ClientRegistrations.fromIssuerLocation(client.getIssuerURL())
-                        .registrationId(registrationId)
-                        .clientId(client.getClientId())
-                        .clientName(client.getTenantId())
-                        .scope("openid")
-                        .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
-                        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                        .build()
-        );
+
+        ClientRegistration registration = ClientRegistrations.fromIssuerLocation(client.getIssuerURL())
+                                              .registrationId(registrationId)
+                                              .clientId(client.getClientId())
+                                              .clientName(client.getTenantId())
+                                              .scope("openid")
+                                              .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+                                              .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                                              .build();
+
+        // Prevent duplicates by registrationId
+        ClientRegistration previous = registrations.putIfAbsent(registrationId, registration);
+        if (previous != null) {
+            throw new IllegalStateException("RegistrationId already exists: " + registrationId);
+        }
+
         return registrationId;
     }
 

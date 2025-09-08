@@ -13,15 +13,18 @@ import org.openapitools.model.TenantRegistration;
 import org.openapitools.model.TenantRegistrationRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import io.opentelemetry.instrumentation.annotations.WithSpan;
@@ -31,6 +34,8 @@ import org.slf4j.LoggerFactory;
 
 import static com.digitalasset.quickstart.service.ServiceUtils.traceServiceCallAsync;
 import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
+
+import jakarta.validation.constraints.NotNull;
 
 @Controller
 @RequestMapping("${openapi.asset.base-path:}")
@@ -59,70 +64,120 @@ public class AdminApiImpl implements AdminApi {
         this.tenantPropertiesRepository = tenantPropertiesRepository;
     }
 
+    private void validateRequest(@NotNull TenantRegistrationRequest request) {
+        Function<String, ResponseStatusException> badRequestExc = msg -> new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+        if (request.getTenantId() == null || request.getTenantId().isBlank()) {
+            throw badRequestExc.apply("tenantId is required");
+        }
+        if (request.getPartyId() == null || request.getPartyId().isBlank()) {
+            throw badRequestExc.apply("partyId is required");
+        }
+        if (auth.isOAuth2Enabled()) {
+            if (request.getClientId() == null || request.getClientId().isBlank()) {
+                throw badRequestExc.apply("clientId is required in OAuth2 mode");
+            }
+            if (request.getIssuerUrl() == null || request.getIssuerUrl().isBlank()) {
+                throw badRequestExc.apply("issuerUrl is required in OAuth2 mode");
+            }
+        } else if (auth.isSharedSecretEnabled()) {
+            if (request.getUsers() == null || request.getUsers().isEmpty()) {
+                throw badRequestExc.apply("at least one user is required in shared-secret mode");
+            }
+        }
+    }
+
+    private void ensureTenantIsUnique(TenantRegistrationRequest request) {
+        Function<String, ResponseStatusException> conflictExc = msg -> new ResponseStatusException(HttpStatus.CONFLICT, msg);
+        if (tenantPropertiesRepository.getTenant(request.getTenantId()) != null) {
+            throw conflictExc.apply("TenantId already exists");
+        }
+        if (auth.isOAuth2Enabled()) {
+            boolean clientIssuerCombinationExists = authClientRegistrationRepository.getClientRegistrations().stream()
+              .anyMatch(c -> c.getClientId().equals(request.getClientId()) && c.getIssuerURL().equals(request.getIssuerUrl()));
+            if (clientIssuerCombinationExists) {
+                throw conflictExc.apply("ClientId-IssuerUrl combination already exists");
+            }
+        }
+    }
+
+    private void registerOAuthClient(TenantRegistrationRequest request) {
+            Client c = new Client();
+            c.setTenantId(request.getTenantId());
+            c.setClientId(request.getClientId());
+            c.setIssuerURL(request.getIssuerUrl());
+            authClientRegistrationRepository.registerClient(c);
+    }
+
+    private void registerSharedSecretUsers(TenantRegistrationRequest request) {
+        request.getUsers().forEach(user -> {
+            logger.info("Creating user {} with roles {}", user, "USER");
+            try {
+                userDetailsManager.get().createUser(
+                    // TODO KV https://github.com/digital-asset/cn-quickstart/issues/235
+                    //  fix this API leak, we should not rely on Spring Security here
+                    org.springframework.security.core.userdetails.User
+                        .withUsername(user)
+                        .password("{noop}")
+                        .roles("USER")
+                        .build()
+                );
+            } catch (Exception e) {
+                logger.error("Error creating user {}: {}", user, e.getMessage());
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), e);
+            }
+        });
+    }
+
+    private void persistTenantMetadata(TenantRegistrationRequest request) {
+        TenantPropertiesRepository.TenantProperties props = new TenantPropertiesRepository.TenantProperties();
+        props.setWalletUrl(request.getWalletUrl());
+        props.setPartyId(request.getPartyId());
+        props.setTenantId(request.getTenantId());
+        props.setUsers(request.getUsers());
+        tenantPropertiesRepository.addTenant(request.getTenantId(), props);
+    }
+
+    private TenantRegistration buildResponse(TenantRegistrationRequest request) {
+        TenantRegistration response = new TenantRegistration();
+        response.setTenantId(request.getTenantId());
+        response.setPartyId(request.getPartyId());
+        response.setClientId(request.getClientId());
+        if (request.getIssuerUrl() != null && !request.getIssuerUrl().isBlank()) {
+            response.setIssuerUrl(URI.create(request.getIssuerUrl()));
+        }
+        if (request.getWalletUrl() != null && !request.getWalletUrl().isBlank()) {
+            response.setWalletUrl(URI.create(request.getWalletUrl()));
+        }
+        response.setUsers(request.getUsers());
+        return response;
+    }
+
     @Override
     @WithSpan
     public CompletableFuture<ResponseEntity<TenantRegistration>> createTenantRegistration(TenantRegistrationRequest request) {
         var ctx = tracingCtx(logger, "createTenantRegistration",
-                "tenantId", request.getTenantId(),
-                "clientId", request.getClientId(),
-                "partyId", request.getPartyId()
+            "tenantId", request.getTenantId(),
+            "clientId", request.getClientId(),
+            "partyId", request.getPartyId()
         );
-
         // TODO KV https://github.com/digital-asset/cn-quickstart/issues/237
         //  consider storing partyId/tenantId as GrantedAuthority instead of using JWT claims
         //  Problem: We cannot use auth.asAdminParty(party -> here. if this endpoint is accessed from CLI providing JWT token directly
         //  The endpoint is still protected as SpringSecurityOAuth2Config -> HttpSecurity requires role ADMIN for it
         //  but it is annoying that we cannot use the same pattern as in other endpoints
         return traceServiceCallAsync(ctx, () -> CompletableFuture.supplyAsync(() -> {
+            validateRequest(request);
+            ensureTenantIsUnique(request);
             if (auth.isOAuth2Enabled()) {
-                Client c = new Client();
-                c.setTenantId(request.getTenantId());
-                c.setClientId(request.getClientId());
-                c.setIssuerURL(request.getIssuerUrl());
-                authClientRegistrationRepository.registerClient(c);
+                registerOAuthClient(request);
             } else {
-                request.getUsers().forEach(user -> {
-                            logger.info("Creating user {} with roles {}", user, request.getInternal() ? "ADMIN" : "USER");
-                            try {
-                                userDetailsManager.get().createUser(
-                                        // TODO KV https://github.com/digital-asset/cn-quickstart/issues/235
-                                        //  fix this API leak, we should not rely on Spring Security here
-                                        org.springframework.security.core.userdetails.User
-                                                .withUsername(user)
-                                                .password("{noop}")
-                                                .roles(request.getInternal() ? "ADMIN" : "USER")
-                                                .build()
-                                );
-                            } catch (Exception e) {
-                                logger.error("Error creating user {}: {}", user, e.getMessage());
-                                throw e;
-                            }
-                        }
-                );
+                registerSharedSecretUsers(request);
             }
-
             // Save extra properties in a separate repository
-            TenantPropertiesRepository.TenantProperties props = new TenantPropertiesRepository.TenantProperties();
-            props.setWalletUrl(request.getWalletUrl());
-            props.setPartyId(request.getPartyId());
-            props.setTenantId(request.getTenantId());
-            props.setInternal(request.getInternal());
-            props.setUsers(request.getUsers());
-            tenantPropertiesRepository.addTenant(request.getTenantId(), props);
-
+            persistTenantMetadata(request);
             // Build the response (OpenAPI model)
-            TenantRegistration response = new TenantRegistration();
-            response.setTenantId(request.getTenantId());
-            response.setPartyId(request.getPartyId());
-            response.setInternal(request.getInternal());
-            response.setClientId(request.getClientId());
-            if (request.getIssuerUrl() != null) {
-                response.setIssuerUrl(URI.create(request.getIssuerUrl()));
-            }
-            response.setIssuerUrl(URI.create(request.getIssuerUrl()));
-            response.setWalletUrl(URI.create(props.getWalletUrl()));
-            response.setUsers(request.getUsers());
-            return ResponseEntity.ok(response);
+            URI location = URI.create("/admin/tenant-registrations");
+            return ResponseEntity.created(location).body(buildResponse(request));
         }));
     }
 
