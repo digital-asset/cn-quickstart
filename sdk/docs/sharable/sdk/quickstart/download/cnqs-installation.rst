@@ -15,9 +15,10 @@ Contents
 Introduction
 ============
 
-The Quickstart is designed to help teams become familiar with CN application development by providing scaffolding to kickstart development. 
-The Quickstart application is intended to be incrementally extended by you to meet your specific business needs. 
-Once you are familiar with the Quickstart, please review the technology choices and the application design to determine what changes are needed - technology and design decisions are ultimately up to you.
+The Quickstart application helps you and your team become familiar with CN application development by providing scaffolding to kickstart development. 
+The Quickstart application is intended to be extended to meet your business needs. 
+Once you are familiar with the Quickstart, review the technology choices and application design to determine what changes are needed.
+Technology and design decisions are ultimately up to you.
 
 Overview
 ========

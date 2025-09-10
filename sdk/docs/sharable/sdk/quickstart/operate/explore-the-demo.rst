@@ -4,25 +4,66 @@
 Explore the Canton Network Application Quickstart demo
 ======================================================
 
-Contents
-========
-
-  * `Exploring the demo <#exploring-the-demo>`__
-  * `Prerequisites <#prerequisites>`__
-  * `Walkthrough <#walkthrough>`__
-  * `Next Steps <#next-steps>`__
+.. contents:: Contents
+   :depth: 2
+   :local:
+   :backlinks: top
 
 .. _exploring-the-demo:
 
-Exploring the demo
-==================
+Business case
+=============
 
-Explore the demo is intended to help you become familiar with a Canton Network (CN) business operation within the CN App Quickstart.
-The App Quickstart application is intended to be incrementally extended by your team to meet your business needs.
+The Canton Network (CN) Quickstart is scaffolding to support development efforts to build, test, and deploy CN applications.
+It resolves infrastructure problems that every CN application must solve.
+Use the CN Quickstart Application so you and your team can focus on building your application, instead of build systems, deployment configurations, and testing infrastructure.
+
+Core business operations
+------------------------
+
+The Quickstart features a sample licensing app to demonstrate Canton development patterns. 
+In the app, providers sell time-based access to their services.
+Users pay with Canton Coin (CC) and manage payments through a Canton Wallet. 
+
+The app involves four parties:
+
+- The **Application Provider** who sells licenses.
+- The **Application User** who buys licenses.
+- The underlying **Amulet** token system that handles payments, using `Canton Coin <https://www.canton.network/blog/canton-coin-a-canton-network-native-payment-application>`__.
+- The **DSO Party**, the Decentralized Synchronizer Operations Party who operates the Amulet payment system. In CN, this is the Super Validators.
+
+The application issues licenses using the following process:
+
+Issuing a license
+~~~~~~~~~~~~~~~~~
+
+The provider creates a new license for an onboarded user. 
+The license starts expired and needs to be renewed before use.
+
+Requesting a license renewal
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The provider creates a renewal request, generating a payment request for the user.
+A matching CC payment request is created on the ledger.
+
+Paying for a license renewal
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The user approves the payment through their Canton Wallet, which creates an accepted payment contract on the ledger.
+
+Renewing the license
+~~~~~~~~~~~~~~~~~~~~
+
+The provider processes the accepted payment and updates the license with a new expiration date.
+
+Overview
+========
+
+This How-to helps you become familiar with a Canton Network (CN) business operation within the CN App Quickstart.
+The App Quickstart application is intended to be extended by your team to meet your business needs.
 When you are familiar with the App Quickstart, review the technology choices and application design to determine what changes are needed.
 Technology and design decisions are ultimately up to you.
 
-This How-To works through a complete business operation within the CN App Quickstart.
 If you find errors, please contact your representative at Digital Asset.
 
 Prerequisites
@@ -39,7 +80,7 @@ The CN App Quickstart can run with or without authorization, based on your busin
 Toggle authorization with the ``make setup`` command in the ``quickstart`` subdirectory.
 ``make setup`` asks to enable Observability, OAUTH2, and specify a party hint.
 In this demo, we disable ``TEST MODE``, use the default party hint, and show OAUTH2 as enabled and disabled.
-When OAUTH2 makes a difference, we display both paths one after the other. 
+When OAUTH2 makes a difference, we display both paths, one after the other. 
 You can follow your path and ignore the other.
 You may enable Observability, but it is not required for this demo.
 
@@ -55,15 +96,16 @@ You may enable Observability, but it is not required for this demo.
 .. image:: images/make-setup-with-oauth.png
    :alt: Make setup with auth
 
+Build Quickstart
+----------------
+
 Build and start App Quickstart:
 
 .. code-block:: bash
    
    make build; make start
 
-Open an incognito browser.
-
-Navigate to:
+Open an incognito browser and navigate to:
 
 ::
 
@@ -74,6 +116,9 @@ Alternatively, in the terminal, from quickstart/ run:
 ::
 
   ``make open-app-ui``
+
+Login
+-----
 
 **OAUTH2 disabled**
 
@@ -99,7 +144,8 @@ Fill in the login credentials: username: app-provider, password: abc123
 .. image:: images/login-app-provider-view.png
    :alt: AppProvider login screen
 
-**The App Installs Menu**
+The App Installs Menu
+---------------------
 
 Once you are logged in select **AppInstalls** in the menu.
 
@@ -126,6 +172,9 @@ This command creates an App Installation Request on behalf of the Participant.
 
 Return to the browser.
 
+AppInstallRequest
+-----------------
+
 The install request appears in the list.
 
 Click **Accept**.
@@ -139,6 +188,9 @@ The ``AppInstallRequest`` is Accepted.
    :alt: accepted request
 
 The actions update to Cancel and Create license.
+
+Create a license
+----------------
 
 Click **Create License**.
 The license is created and the “# Licenses” field is updated.
@@ -176,6 +228,9 @@ Click **Issue License Renewal Request**.
 Per the Daml contract, licenses are created in an expired state.
 To activate the license, a renewal payment request must be issued.
 
+Make a payment
+--------------
+
 To make payment, navigate to the Canton Wallet at http://wallet.localhost:2000/allocations and log in as ``app-user`` if prompted.
 
 You can find the wallet's location by: 
@@ -206,6 +261,9 @@ This section shows the ``licenseFeePayment`` information.
 
 .. image:: images/canton-coin-wallet-accepted-allocation.png
    :alt: CC Wallet accepted allocation
+
+Renew the license
+-----------------
 
 Return to the Quickstart as the ``AppProvider``.
 In the Licenses menu, select **Renewals**.
@@ -254,7 +312,7 @@ The license shows as active.
 Congratulations. You’ve successfully created and activated a license with a payment allocation in Canton wallet!
 
 Canton Console
---------------
+==============
 
 The :externalref:`Canton Console <canton_console>` connects to the running application ledger.
 The console allows a developer to bypass the UI to interact with the CN in a more direct manner.
@@ -297,7 +355,7 @@ Is a diagnostic tool that displays the health of Canton Network participants.
    :alt: Ping yourself
 
 Daml Shell
-----------
+==========
 
 The :externalref:`Daml Shell <build_daml_shell_component_howto>` connects to the running PQS database of the application provider’s Participant.
 In the Shell, the assets and their details are available in real time.
@@ -347,7 +405,7 @@ Shows any archived license(s).
    :alt: Archived licenses
 
 Canton Coin Scan
-~~~~~~~~~~~~~~~~
+================
 
 Explore the CC Scan Web UI at http://scan.localhost:4000/.
 
@@ -368,7 +426,7 @@ The Validators menu shows that the local validator has been registered with the 
    :alt: Registered validator
 
 Observability Dashboard
------------------------
+=======================
 
 .. note:: Observability may no longer work while App Quickstart is under revisions.
 
@@ -390,7 +448,7 @@ Select any log entry to view its details.
    :alt: log entry details
 
 SV UIs
-------
+======
 
 Navigate to http://sv.localhost:4000/ for the SV Web UI.
 The SV view displays data directly from the validator in a GUI that is straightforward to navigate.
