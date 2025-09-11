@@ -2,36 +2,33 @@
 Canton Network quickstart installation
 ======================================
 
-Contents
-========
-
-  * `Introduction <#introduction>`__
-  * `Overview <#overview>`__
-  * `Prerequisites <#prerequisites>`__
-  * `Step-by-step instructions <#step-by-step-instructions>`__
-  * `Next steps <#next-steps>`__
-  * `Resources <#resources>`__
+.. contents:: Contents
+   :depth: 2
+   :local:
+   :backlinks: top
 
 Introduction
 ============
 
-The Quickstart application helps you and your team become familiar with CN application development by providing scaffolding to kickstart development. 
-The Quickstart application is intended to be extended to meet your business needs. 
-Once you are familiar with the Quickstart, review the technology choices and application design to determine what changes are needed.
+The Quickstart application helps you and your team become familiar with CN application development by providing **essential** scaffolding. 
+The Quickstart application provides a launchpad and is intended to be extended to meet your business needs. 
+When you are familiar with the Quickstart, review the technology choices and application design to determine what changes are needed.
 Technology and design decisions are ultimately up to you.
 
 Overview
 ========
 
 This guide walks through the installation and ``LocalNet`` deployment of the CN Quickstart.
+We have provided a `fast path installation <#fast-path-installation>`__ 
+and `step-by-step instructions <#step-by-step-instructions>`__, based on level of experience, for your convenience.
 Please contact your representative at Digital Asset if you find errors.
 
-Other documentation
--------------------
+Roadmap
+-------
 
- * To complete a business operation in the example application see :ref:`quickstart-explore-the-demo`.
+ * After installation, :ref:`quickstart-explore-the-demo` to complete a business operation in the example application.
  * For an overview of how the Quickstart project is structured, read :ref:`quickstart-project-structure-overview`.
- * A survey of debugging features is available in the :ref:`quickstart-observability-troubleshooting-overview`.
+ * Learn about debugging features in the :ref:`quickstart-observability-troubleshooting-overview`.
 
 Prerequisites
 =============
@@ -78,6 +75,33 @@ Nix download support
    | (Windows users should run this and all following commands in WSL 2).
 
    ``sh <(curl -L https://nixos.org/nix/install) --daemon``
+
+Fast path installation
+======================
+
+If you are familiar with the prerequisites and have access to JFrog Artifactory, use these abbreviated installation instructions.
+More detailed instructions are provided below.
+
+1. Clone and cd into the ``cn-quickstart`` repository: ``git clone https://github.com/digital-asset/cn-quickstart.git``
+2. Paste your jfrog login and identity token into a global ``~/.netrc`` file.
+
+::
+
+   machine digitalasset.jfrog.io
+   login <username>
+   password <identity_token>
+
+3. Manually set ``.netrc``’s permissions: ``chmod 600 ~/.netrc``
+4. Check for Artifactory connectivity using ``.netrc`` credentials: ``curl -v --netrc "https://digitalasset.jfrog.io/artifactory/api/system/ping"``
+5. Verify that Docker Desktop is running.
+6. Login to Docker repositories via the terminal: ``docker login digitalasset-docker.jfrog.io`` and ``docker login``
+7. **cd** into the ``quickstart`` subdirectory: ``cd quickstart``
+8. Install the Daml SDK from the quickstart subdirectory: ``make install-daml-sdk``
+9. Build the application from the ``quickstart`` subdirectory: ``make build``
+10. Start the application, Canton services and Observability: ``make start``
+11. In a separate shell, from the ``quickstart`` subdirectory, run the Canton Console: ``make canton-console``
+12. In a third shell, from the quickstart subdirectory, begin the Daml Shell: ``make shell``
+13. When complete, close the application and observability services with: ``make stop && make clean-all``
 
 Step-by-step instructions
 =========================

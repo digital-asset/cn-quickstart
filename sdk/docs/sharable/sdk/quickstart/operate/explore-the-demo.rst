@@ -9,8 +9,6 @@ Explore the Canton Network Application Quickstart demo
    :local:
    :backlinks: top
 
-.. _exploring-the-demo:
-
 Business case
 =============
 
