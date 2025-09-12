@@ -48,12 +48,12 @@ You can see dependency list in action with the top-level build target:
    .PHONY: build
    build: build-frontend build-backend build-daml build-docker-images
 
-When the target is invoked, the dependency targets are run and brought up to date (or invoked in the case of phony targets) before any shell command is executed.
+When the target is invoked dependency targets update and run before shell commands are executed.
 
-Other Make features used in the existing file include:
+Other Make features include:
 
-`define` which is used to `define multiline variables <https://www.gnu.org/software/make/manual/html_node/Multi_002dLine.html>`__. In this case,
-we use it to define a simple macro (`open-url-target`) to define cross-platform browser interaction targets (try `make open-app-ui` once the application is started for an example). 
+``define`` which is used to `define multiline variables <https://www.gnu.org/software/make/manual/html_node/Multi_002dLine.html>`__. 
+It's used to define a simple macro (``open-url-target``) for cross-platform browser interaction targets e.g. ``make open-app-ui``. 
 The file also includes:
 
 .. code-block:: text
@@ -64,16 +64,16 @@ The file also includes:
    $(DOCKER_COMPOSE_PROFILES) $(1)
    endef
 
-This provides DRY abstraction around calls to `docker-compose`.
+This provides DRY abstraction around calls to ``docker-compose``.
 
-`call` which is used to `invoke a variable as a function <https://www.gnu.org/software/make/manual/html_node/Call-Function.html>`__.
+``call`` which is used to `invoke a variable as a function <https://www.gnu.org/software/make/manual/html_node/Call-Function.html>`__.
 
-Note that the format of a call invocation is: 
+The format of a call invocation is: 
 `$(call <cmd>[, <args>]*)`. So `$(call open-url-target`, `open-app-ui`, http://localhost:3000) calls `open-url-target` with `$(1)` set to the string `open-app-ui` and `$(2)` set to the URL.
 
-Similarly, the `make status` target uses `$(call docker-compose, ps)` to run `docker-compose ps` with the default arguments. 
-This happens via the `docker-compose` function discussed above. 
-Removing the `@` allows you to see the expanded command.
+Similarly, the ``make status`` target uses ``$(call docker-compose, ps)`` to run ``docker-compose ps`` with the default arguments. 
+This happens via the ``docker-compose`` function discussed above. 
+Removing the ``@`` allows you to see the expanded command.
 
 .. code-block:: text
 
@@ -81,4 +81,4 @@ Removing the `@` allows you to see the expanded command.
     docker compose -f compose.yaml --env-file .env --profile localnet \
     --env-file docker/localnet.env --profile observability ps
 
-`eval <https://www.gnu.org/software/make/manual/html_node/Eval-Function.html>`__ is used to treat the result of calling `open-url-target` as a macro to define dynamic make targets.
+`eval <https://www.gnu.org/software/make/manual/html_node/Eval-Function.html>`__ is used to treat the result of calling ``open-url-target`` as a macro to define dynamic make targets.

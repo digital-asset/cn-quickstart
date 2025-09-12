@@ -137,6 +137,12 @@ Please refer to the `MainNet <https://docs.dev.sync.global/app_dev/overview/vers
 and `TestNet <https://docs.test.sync.global/app_dev/overview/version_information.html>`__ 
 Splice documentation for guidance regarding version information.
 
+**How do I set the Daml SDK version?**
+
+The Daml SDK version is set in ``.env`` as ``DAML_RUNTIME_VERSION``.
+
+You can run ``make install-daml-sdk SDK_VERSION`` at any time to download and install another version of the daml sdk.
+
 **How do I obtain Splice contract DAR files?**
 
 All Splice DARs are available in the `Splice repository <https://github.com/hyperledger-labs/splice/tree/main/daml/dars>`__.

@@ -7,8 +7,10 @@ let
     typescript
   ] ++ (if ci then [ # these packages should only be installed on CI
     circleci-cli
+    docutils
     poetry
     python3
+    (vale.withStyles (styles: [ styles.google ]))
   ] else [ # these packages are only installed on developer machines locally
   ]));
 in
