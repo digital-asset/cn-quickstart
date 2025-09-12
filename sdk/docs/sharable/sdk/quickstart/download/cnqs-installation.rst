@@ -33,7 +33,7 @@ Roadmap
 Prerequisites
 =============
 
-Access to the `CN-Quickstart Github repository <https://github.com/digital-asset/cn-quickstart>`__
+Access to the `CN-Quickstart GitHub repository <https://github.com/digital-asset/cn-quickstart>`__
 and `digitalasset-docker.jfrog.io` JFrog Artifactory docker repository is needed to successfully pull the Digital Asset artifacts.
 
 `Contact us <https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog>`__ if you need access or additional support.
@@ -82,8 +82,8 @@ Fast path installation
 If you are familiar with the prerequisites and have access to JFrog Artifactory, use these abbreviated installation instructions.
 More detailed instructions are provided below.
 
-1. Clone and cd into the ``cn-quickstart`` repository: ``git clone https://github.com/digital-asset/cn-quickstart.git``
-2. Paste your jfrog login and identity token into a global ``~/.netrc`` file.
+1. `Clone from GitHub <#clone-from-github>`__ and cd into the ``cn-quickstart`` repository: ``git clone https://github.com/digital-asset/cn-quickstart.git``
+2. Paste your `jfrog login <#artifactory>`__ and identity token into a global ``~/.netrc`` file.
 
 ::
 
@@ -93,20 +93,23 @@ More detailed instructions are provided below.
 
 3. Manually set ``.netrc``’s permissions: ``chmod 600 ~/.netrc``
 4. Check for Artifactory connectivity using ``.netrc`` credentials: ``curl -v --netrc "https://digitalasset.jfrog.io/artifactory/api/system/ping"``
-5. Verify that Docker Desktop is running.
+5. Verify that the `Docker Desktop <#docker>`__ app is running on your computer: ``docker info``
 6. Login to Docker repositories via the terminal: ``docker login digitalasset-docker.jfrog.io`` and ``docker login``
 7. **cd** into the ``quickstart`` subdirectory: ``cd quickstart``
-8. Install the Daml SDK from the quickstart subdirectory: ``make install-daml-sdk``
-9. Build the application from the ``quickstart`` subdirectory: ``make build``
-10. Start the application, Canton services and Observability: ``make start``
-11. In a separate shell, from the ``quickstart`` subdirectory, run the Canton Console: ``make canton-console``
-12. In a third shell, from the quickstart subdirectory, begin the Daml Shell: ``make shell``
-13. When complete, close the application and observability services with: ``make stop && make clean-all``
+8. `Install the Daml SDK <#install-daml-sdk>`__ from the quickstart subdirectory: ``make install-daml-sdk``
+9. `Configure the local development <#deploy-a-validator-on-localnet>`__ environment: ``make setup``
+10. When prompted, enable Observability and OAuth2, leave the party hint blank to use the default, and disable TEST MODE.
+11. Build the application from the ``quickstart`` subdirectory: ``make build``
+12. Start the application, Canton services and Observability: ``make start``
+13. Optional - In a separate shell, from the ``quickstart`` subdirectory, run the `Canton Console <#connecting-to-the-local-canton-nodes>`__: ``make canton-console``
+14. Optional - In a third shell, from the quickstart subdirectory, begin the Daml Shell: ``make shell``
+15. When complete, `close the application <#closing-the-application>`__ and observability services with: ``make stop && make clean-all``
+16. If applicable, close Canton Console with ``exit`` and close Daml Shell with ``quit``.
 
 Step-by-step instructions
 =========================
 
-Clone from Github
+Clone from GitHub
 -----------------
 
 Clone and **cd** into the ``cn-quickstart`` repository into your local machine.
@@ -231,7 +234,7 @@ a source file (in root) and not a local file.
 Docker
 ------
 
-Verify that Docker Desktop is running.
+Verify that the Docker Desktop application is running on your computer.
 
 Login to Docker repositories via the terminal.
 
@@ -270,7 +273,41 @@ The Daml SDK is large and can take several minutes to complete.
 Deploy a validator on LocalNet
 ------------------------------
 
-Build the application from the ``quickstart`` subdirectory.
+Configure the local development environment by running ``make setup``.
+
+Enable `Observability` and OAuth2. 
+Leave the party hint blank to use the default and disable ``TEST MODE``. 
+
+  The party hint is used as a party node’s alias of their identification hash.
+  The Party Hint is not part of the user’s identity. 
+  It is a convenience feature. 
+  It is possible to have multiple party nodes with the same hint.
+
+::
+
+  | % make setup
+  |  Starting local environment setup tool...
+  |  ./gradlew configureProfiles --no-daemon --console=plain --quiet
+  |  Enable Observability? (Y/n): y
+  |  OBSERVABILITY_ENABLED set to 'true'.
+
+  | Enable OAUTH2? (Y/n): y
+  | AUTH_MODE set to 'oauth2'.
+
+  | Specify a party hint (this will identify the participant in the
+    network) [quickstart-USERNAME-1]:
+  | PARTY_HINT set to ‘quickstart-USERNAME-1’.
+
+  | Enable TEST_MODE? (y/N): n
+  |   TEST_MODE set to 'off'.
+
+  | ``.env.local`` updated successfully.
+
+You can change these choices any time by running ``make setup`` again.
+
+   OAuth2 and Observability may be unstable if your machine has less than 8 GB of memory to allocate to Docker Desktop.
+
+Build the application.
 
 ::
 
@@ -284,44 +321,6 @@ Once complete, start the application, Canton services and Observability.
 ::
 
   `make start`
-
-The first time running ``make start``, a helper assistant prompts to set up a local deployment. 
-It offers the choice of enabling `Observability`, OAuth or dummy (shared-secret) based security, specifying a party hint, and enabling ``TEST MODE``. 
-
-In the future, this helper can be accessed by running ``make setup``.
-
-Begin the first application with ``OAuth2`` and ``Observability`` enabled.
-Disable ``TEST MODE``.
-Leave the party hint blank to use the default.
-
-  The party hint is used as a party node’s alias of their identification hash.
-  The Party Hint is not part of the user’s identity. It is a convenience
-  feature. It is possible to have multiple party nodes with the same hint.
-
-::
-
-  | % make setup
-  |  Starting local environment setup tool...
-  |  ./gradlew configureProfiles --no-daemon --console=plain --quiet
-  |  Enable Observability? (Y/n):
-  |  OBSERVABILITY_ENABLED set to 'true'.
-
-  | Enable OAUTH2? (Y/n):
-  | AUTH_MODE set to 'oauth2'.
-
-  | Specify a party hint (this will identify the participant in the
-    network) [quickstart-USERNAME-1]:
-  | PARTY_HINT set to ‘quickstart-USERNAME-1’.
-
-``.env.local`` updated successfully.
-
-   OAuth2 and Observability may be unstable if your machine has less than
-   8 GB of memory to allocate to Docker Desktop.
-
-If you want to change any of these settings, re-run ``make start`` do so.
-
-At any point you can run ``make install-daml-sdk`` download and install the
-version of the daml sdk required by the quickstart example application.
 
 Connecting to the Local Canton Nodes
 ------------------------------------
