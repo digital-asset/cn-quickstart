@@ -216,7 +216,7 @@ curl_check() {
   local httpCode=$(echo "$response" | tail -n1 | tr -d '\r')
   local responseBody=$(echo "$response" | sed '$d')
 
-  if [ "$httpCode" -ne "200" ]; then
+  if [ "$httpCode" -ne "200" ] && [ "$httpCode" -ne "201" ] && [ "$httpCode" -ne "204" ]; then
     echo "Request failed with HTTP status code $httpCode" >&2
     echo "Response body: $responseBody" >&2
     exit 1
