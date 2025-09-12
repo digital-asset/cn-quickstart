@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
@@ -101,6 +102,8 @@ public class TenantPropertiesRepository {
      * Remove a tenant’s extra properties
      */
     public void removeTenant(String tenantId) {
-        tenants.remove(tenantId);
+        if (tenants.remove(tenantId) == null) {
+            throw new NoSuchElementException(String.format("No tenant found for tenantId = %s.", tenantId ));
+        }
     }
 }

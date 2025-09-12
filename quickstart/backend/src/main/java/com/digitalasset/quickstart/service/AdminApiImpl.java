@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -176,8 +177,9 @@ public class AdminApiImpl implements AdminApi {
             // Save extra properties in a separate repository
             persistTenantMetadata(request);
             // Build the response (OpenAPI model)
-            URI location = URI.create("/admin/tenant-registrations");
-            return ResponseEntity.created(location).body(buildResponse(request));
+            return ResponseEntity
+                       .created(URI.create("/admin/tenant-registrations"))
+                       .body(buildResponse(request));
         }));
     }
 
@@ -186,14 +188,20 @@ public class AdminApiImpl implements AdminApi {
     public CompletableFuture<ResponseEntity<Void>> deleteTenantRegistration(String tenantId) {
         var ctx = tracingCtx(logger, "deleteTenantRegistration", "tenantId", tenantId);
         return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () -> CompletableFuture.supplyAsync(() -> {
-            if (auth.isOAuth2Enabled()) {
-                authClientRegistrationRepository.removeClientRegistrations(tenantId);
-            } else {
-                tenantPropertiesRepository.getTenant(tenantId).getUsers().forEach(userDetailsManager.get()::deleteUser);
-            }
+            try {
+                if (auth.isOAuth2Enabled()) {
+                    authClientRegistrationRepository.removeClientRegistrations(tenantId);
+                } else {
+                    tenantPropertiesRepository.getTenant(tenantId).getUsers().forEach(userDetailsManager.get()::deleteUser);
+                }
 
-            tenantPropertiesRepository.removeTenant(tenantId);
-            return ResponseEntity.ok().<Void>build();
+                tenantPropertiesRepository.removeTenant(tenantId);
+            } catch (NoSuchElementException e) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), e);
+            }
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).<Void>build();
         })));
     }
 
