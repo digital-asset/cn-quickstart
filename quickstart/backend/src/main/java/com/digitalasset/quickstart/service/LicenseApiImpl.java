@@ -7,6 +7,7 @@
 package com.digitalasset.quickstart.service;
 
 import static com.digitalasset.quickstart.service.ServiceUtils.ensurePresent;
+import static com.digitalasset.quickstart.service.ServiceUtils.mapToHttp;
 import static com.digitalasset.quickstart.service.ServiceUtils.traceServiceCallAsync;
 import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
 import static com.digitalasset.quickstart.utility.Utils.*;
@@ -24,6 +25,7 @@ import com.digitalasset.transcode.java.Party;
 import com.google.protobuf.ByteString;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
+import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -113,8 +115,9 @@ public class LicenseApiImpl implements LicensesApi {
                         request.getDescription()
                 );
                 return ledger.exerciseAndGetResult(license.contractId, choice, commandId)
-                        .thenApply(r -> ResponseEntity.ok().<Void>build());
-            }).thenCompose(x -> x);
+                        .<ResponseEntity<Void>>thenApply(r -> ResponseEntity.created(URI.create(String.format("/licenses/%s:renew", contractId))).build());
+                }).thenCompose(x -> x)
+                  .exceptionallyCompose(ex -> CompletableFuture.failedFuture(mapToHttp(ex)));
         }));
     }
 
@@ -181,7 +184,7 @@ public class LicenseApiImpl implements LicensesApi {
                     License_Expire choice = new License_Expire(new Party(auth.getAppProviderPartyId()), toTokenStandarMetadata(meta));
                     return ledger.exerciseAndGetResult(license.contractId, choice, commandId)
                             .thenApply(result -> ResponseEntity.ok("License expired successfully"));
-                })
+                }).exceptionallyCompose(ex -> CompletableFuture.failedFuture(mapToHttp(ex)))
         ));
     }
 
