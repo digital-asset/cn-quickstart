@@ -26,10 +26,12 @@ class ServiceUtils {
     static <T> CompletableFuture<T> traceServiceCallAsync(
             TracingUtils.TracingContext ctx,
             Supplier<CompletableFuture<T>> body) {
-        return TracingUtils.traceWithStartEventAsync(ctx, body);
+        return TracingUtils.traceWithStartEventAsync(ctx, body)
+                   .exceptionallyCompose(ex -> CompletableFuture.failedFuture(mapToHttp(ex)))
+            ;
     }
 
-    static Throwable mapToHttp(Throwable throwable) {
+    private static Throwable mapToHttp(Throwable throwable) {
         //  maintain the original exception if it is already a ResponseStatusException
         if (throwable instanceof ResponseStatusException rse) return rse;
         //  this error is from the findById lookup

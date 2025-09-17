@@ -108,7 +108,7 @@ paths:
                   tenantId: "tenant-ss"
                   partyId: "party-ss"
                   walletUrl: "http://wallet.localhost:2000/"
-                  users: [ "alice@example.com","bob@example.com" ]
+                  users: [ "alice","bob" ]
                   internal: true
       responses:
         '201':

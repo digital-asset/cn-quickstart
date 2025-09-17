@@ -3,7 +3,6 @@
 
 package com.digitalasset.quickstart.service;
 
-import static com.digitalasset.quickstart.service.ServiceUtils.mapToHttp;
 import static com.digitalasset.quickstart.service.ServiceUtils.traceServiceCallAsync;
 import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
 
@@ -107,11 +106,9 @@ public class AppInstallsApiImpl implements AppInstallsApi {
                                 AppInstallCreateLicenseResult result = new AppInstallCreateLicenseResult();
                                 result.setInstallId(contractId);
                                 result.setLicenseId(licenseContractId.getLicenseId.getContractId);
-                                return ResponseEntity
-                                        .created(URI.create(String.format("/app-installs/%s:create-license", contractId)))
-                                        .body(result);
+                                return ResponseEntity.status(HttpStatus.CREATED).body(result);
                             });
-                }).exceptionallyCompose(ex -> CompletableFuture.failedFuture(mapToHttp(ex)))
+                })
         ));
     }
 
@@ -140,7 +137,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
                         AppInstall_Cancel choice = new AppInstall_Cancel(provider, meta);
                         return ledger.exerciseAndGetResult(contract.contractId, choice, commandId)
                                 .thenApply(result -> ResponseEntity.noContent().build());
-                }).exceptionallyCompose(ex -> CompletableFuture.failedFuture(mapToHttp(ex)))
+                })
         ));
     }
 }

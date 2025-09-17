@@ -177,9 +177,7 @@ public class AdminApiImpl implements AdminApi {
             // Save extra properties in a separate repository
             persistTenantMetadata(request);
             // Build the response (OpenAPI model)
-            return ResponseEntity
-                       .created(URI.create("/admin/tenant-registrations"))
-                       .body(buildResponse(request));
+            return ResponseEntity.status(HttpStatus.CREATED).body(buildResponse(request));
         }));
     }
 

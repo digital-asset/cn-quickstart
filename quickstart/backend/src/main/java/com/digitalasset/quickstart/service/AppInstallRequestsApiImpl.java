@@ -3,7 +3,6 @@
 
 package com.digitalasset.quickstart.service;
 
-import static com.digitalasset.quickstart.service.ServiceUtils.mapToHttp;
 import static com.digitalasset.quickstart.service.ServiceUtils.traceServiceCallAsync;
 import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
 
@@ -24,6 +23,7 @@ import org.openapitools.model.AppInstallRequestReject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -77,11 +77,9 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
                                 appInstall.setUser(contract.payload.getUser.getParty);
                                 appInstall.setMeta(appInstallRequestAccept.getInstallMeta());
                                 appInstall.setNumLicensesCreated(0);
-                                return ResponseEntity
-                                           .created(URI.create(String.format("/app-install-requests/%s:accept", contractId)))
-                                           .body(appInstall);
+                                return ResponseEntity.status(HttpStatus.CREATED).body(appInstall);
                             });
-                }).exceptionallyCompose(ex -> CompletableFuture.failedFuture(mapToHttp(ex)))
+                })
         ));
     }
 
@@ -126,7 +124,7 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
                         var choice = new AppInstallRequest_Reject(new Metadata(appInstallRequestReject.getMeta().getData()));
                         return ledger.exerciseAndGetResult(contract.contractId, choice, commandId)
                                    .thenApply(result -> ResponseEntity.noContent().build());
-                }).exceptionallyCompose(ex -> CompletableFuture.failedFuture(mapToHttp(ex)))
+                })
         ));
     }
 }
