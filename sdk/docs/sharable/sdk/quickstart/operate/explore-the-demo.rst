@@ -125,6 +125,7 @@ Begin by logging in as the ``AppProvider`` by entering "app-provider" in the Use
 
 .. image:: images/01-login-app-qs-noauth.png
    :alt: CN App Quickstart Login screen without Auth
+   :width: 60%
 
 **OAUTH2 enabled**
 
@@ -132,6 +133,7 @@ When OAUTH2 is **enabled**, the homepage prompts to login with Keycloak's OAuth 
 
 .. image:: images/01-login-app-qs-auth.png
    :alt: CN App Quickstart Login screen with Auth
+   :width: 60%
 
 Make a mental note that ``AppProvider``’s username is “app-provider” and the password is "abc123" (all lowercase).
 
@@ -141,6 +143,7 @@ Fill in the login credentials: username: app-provider, password: abc123
 
 .. image:: images/login-app-provider-view.png
    :alt: AppProvider login screen
+   :width: 60%
 
 The App Installs Menu
 ---------------------
@@ -184,6 +187,7 @@ The ``AppInstallRequest`` is Accepted.
 
 .. image:: images/success-accepted-appinstallrequest.png
    :alt: accepted request
+   :width: 60%
 
 The actions update to Cancel and Create license.
 
@@ -248,6 +252,7 @@ If prompted, log in to the Canton Coin Wallet as ``app-user``.
 
 .. image:: images/canton-coin-wallet-app-user-log-in.png
    :alt: Canton Coin Wallet login
+   :width: 70%
 
 Verify you are in the "Allocations" menu and accept the "Allocation Request" before the "Allocate before" time expires.
 
@@ -275,6 +280,7 @@ A confirmation appears that the license renewal completed successfully.
 
 .. image:: images/license-renewal-completed-successfully.png
    :alt: renewal success after payment
+   :width: 60%
 
 Log out from the ``AppProvider`` and log in as ``AppUser``.
 
@@ -284,6 +290,7 @@ If OAUTH2 is disabled, simply log in as ``app-user``.
 
 .. image:: images/login-app-user-noauth.png
    :alt: AppUser login screen without Auth
+   :width: 40%
 
 **OAUTH2 enabled**
 
@@ -291,11 +298,13 @@ When OAUTH2 is enabled, you log in using the app-user username and password.
 
 .. image:: images/01-login-app-qs-auth.png
    :alt: login screen
+   :width: 60%
 
 Login as ``AppUser`` with “app-user" as the username and the password is “abc123”.
 
 .. image:: images/appuser-auth-login-view.png
    :alt: AppUser login screen
+   :width: 60%
 
 The AppInstall now shows as accepted.
 
@@ -370,10 +379,11 @@ Run the following commands to see the data:
 
   active
 
-Shows unique identifiers and the asset count
+Shows unique identifiers and the asset count:
 
 .. image:: images/28-shell-ids.png
    :alt: Active identifiers
+   :width: 90%
 
 ::
 
@@ -412,6 +422,7 @@ The default activity view shows the total CC balance and the Validator rewards.
 
 .. image:: images/36-cc-balance.png
    :alt: CC balance
+   :width: 70%
 
 Select the **Network Info** menu to view SV identification.
 
@@ -422,6 +433,7 @@ The Validators menu shows that the local validator has been registered with the 
 
 .. image:: images/37-registered-validator.png
    :alt: Registered validator
+   :width: 80%
 
 Observability Dashboard
 =======================
@@ -455,6 +467,7 @@ Login as ‘sv’.
 
 .. image:: images/33-sv-ui-login.png
    :alt: SV UI login
+   :width: 80%
 
 The UI shows information about the SV and lists the active SVs.
 
