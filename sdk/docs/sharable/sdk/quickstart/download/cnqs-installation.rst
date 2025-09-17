@@ -137,13 +137,13 @@ Check if a ``~/.netrc`` file already exists.
 
 ::
 
-  `cat ~/.netrc`
+   cat ~/.netrc
 
 Create or edit the ``~/.netrc`` file at root.
 
 ::
 
-  `vim ~/.netrc`
+   vim ~/.netrc
 
 Paste the boiler plate content into ``~/.netrc``.
 
@@ -211,7 +211,7 @@ Manually set ``.netrc``’s permissions.
 
 ::
 
-  `chmod 600 ~/.netrc`
+   chmod 600 ~/.netrc
 
 Check for Artifactory connectivity using ``.netrc`` credentials after populating
 the username and password.
@@ -311,7 +311,7 @@ Build the application.
 
 ::
 
-  `make build`
+   make build
 
 .. image:: images/07-build-success-1.png
    :alt: Build success
@@ -320,7 +320,7 @@ Once complete, start the application, Canton services and Observability.
 
 ::
 
-  `make start`
+   make start
 
 Connecting to the Local Canton Nodes
 ------------------------------------
@@ -338,7 +338,7 @@ In a third shell, from the quickstart subdirectory, begin the Daml Shell.
 
 ::
 
-  `make shell`
+   make shell
 
 .. image:: images/12-daml-shell.png
    :alt: Daml shell
@@ -366,7 +366,7 @@ Finally, close the application and observability services with:
 
 ::
 
-  `make stop && make clean-all`
+  make stop && make clean-all
 
 It is wise to run make ``clean-all`` during development and at the end of each
 session to avoid conflict errors on subsequent application builds.
