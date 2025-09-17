@@ -219,7 +219,7 @@ the username and password.
 ::
 
    curl -v --netrc
-   "https://digitalasset.jfrog.io/artifactory/api/system/ping"`
+   "https://digitalasset.jfrog.io/artifactory/api/system/ping"
 
 .. image:: images/04-jfrog-ping.png
    :alt: JFrog connection ping
