@@ -57,14 +57,14 @@ For testing multiple users, use separate browsers or one browser in standard mod
 
 This repository uses `direnv`, `nix`, and `docker-compose` to provide development dependencies:
 
-* how to [install direnv](https://direnv.net/docs/installation.html)
-* how to [install nix](https://nix.dev/install-nix.html)
-* how to [install docker-compose](https://docs.docker.com/compose/install/)
+* how to `install direnv <https://direnv.net/docs/installation.html>`__
+* how to `install nix <https://nix.dev/install-nix.html>`__
+* how to `install docker-compose <https://docs.docker.com/compose/install/>`__
 
 **How do I authenticate on JFrog Artifactory?**
 
 To run the Quickstart App you need some binaries from Artifactory. 
-If you don't have authorization, [contact us](https://www2.digitalasset.com/contact-us-access-to-jfrog) to request Artifactory access.
+If you don't have authorization, `contact us <https://www2.digitalasset.com/contact-us-access-to-jfrog>`__ to request Artifactory access.
 
 **How do I set up my JFrog credentials?**
 
@@ -344,12 +344,18 @@ Contact your sponsoring Super Validator agent for connection information.
 
 **How can I operate a ``DevNet`` node?**
 
-Use the Docker compose ``DevNet`` [deployment from Splice](https://docs.dev.sync.global/validator_operator/validator_compose.html).
+Use the Docker compose ``DevNet`` `deployment from Splice <https://docs.dev.sync.global/validator_operator/validator_compose.html>`__.
 We recommend using the Docker compose configuration for integration and long-term testing.
+
+**Where do I start when I am ready to run an application on my node?**
+
+Refer to the :externalref:`CN Utilities documentation <utility-prerequisites>` for application-specific deployment instructions with an example.
+As a general rule, deploying an app on your node requires installing the application DARs. 
+CN Utilities also includes an image that supports uploading the DARs within your cluster.
 
 **How does my team gain access to an enterprise license?**
 
-Get an Enterprise evaluation license by filling out our [contact form](https://www.digitalasset.com/contact-us?comments=I'm%20requesting%20access%20to%20jFrog).
+Get an Enterprise evaluation license by filling out our `contact form <https://www.digitalasset.com/contact-us?comments=I'm%20requesting%20access%20to%20jFrog>`__.
 The evaluation license is good for six months and is renewable.
 Please allow 24 hours for the request to be processed.
 The evaluation license includes VPN access to ``DevNet``.
