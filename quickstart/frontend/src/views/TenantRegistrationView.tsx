@@ -3,10 +3,9 @@
 
 import React, { useEffect, useState } from 'react'
 import {
-    useTenantRegistrationStore,
-    TenantRegistrationRequest,
+    useTenantRegistrationStore
 } from '../stores/tenantRegistrationStore'
-
+import type { TenantRegistrationRequest } from "../openapi.d.ts"
 import {useToast} from '../stores/toastStore';
 import api from '../api';
 import {Client, FeatureFlags} from "../openapi";
@@ -82,19 +81,15 @@ const TenantRegistrationView: React.FC = () => {
             toast.displayError(error)
             return
         }
-        try {
-            await createTenantRegistration(formData)
-            setFormData({
-                tenantId: '',
-                partyId: '',
-                clientId: '',
-                issuerUrl: '',
-                walletUrl: '',
-                users: []
-            })
-        } catch (err) {
-            toast.displayError('Failed to create tenant registration with error: ' + (err as Error).message)
-        }
+        await createTenantRegistration(formData)
+        setFormData({
+            tenantId: '',
+            partyId: '',
+            clientId: '',
+            issuerUrl: '',
+            walletUrl: '',
+            users: []
+        })
     }
 
     const handleDelete = async (tenantId: string) => {

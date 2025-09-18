@@ -81,7 +81,10 @@ public class OAuth2ClientRegistrationRepository
 
     @Override
     public void removeClientRegistration(String tenantId, String clientId) {
-        registrations.remove(tenantId + "-" + clientId);
+        String key = tenantId + "-" + clientId;
+        if (registrations.remove(key) == null) {
+            throw new NoSuchElementException("No registration found for tenantId=" + tenantId + " clientId=" + clientId);
+        }
     }
 
     public void removeClientRegistrations(String tenantId) {
@@ -89,6 +92,9 @@ public class OAuth2ClientRegistrationRepository
                 .filter(clientRegistration -> clientRegistration.getClientName().equals(tenantId))
                 .map(ClientRegistration::getRegistrationId)
                 .toList();
+        if (keysToRemove.isEmpty()) {
+            throw new NoSuchElementException("No registrations found for tenantId=" + tenantId);
+        }
         keysToRemove.forEach(registrations::remove);
     }
 

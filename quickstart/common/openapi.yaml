@@ -1,12 +1,22 @@
 openapi: 3.0.0
 info:
   title: Backend API
-  description: API to manage AppInstalls and Licenses
+  description: API to manage AppInstalls, Licenses and Tenant Registrations
   version: 1.0.0
+
+tags:
+  - name: Feature Flags
+  - name: Auth
+  - name: Admin
+  - name: App Installs
+  - name: App Installs Requests
+  - name: Licenses
+  - name: licenses Renewal Requests
 
 paths:
   /feature-flags:
     get:
+      tags: [Feature Flags]
       summary: Get feature flags
       operationId: getFeatureFlags
       responses:
@@ -16,76 +26,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FeatureFlags'
-        '400':
-          description: Invalid request
+        '500':
+          $ref: '#/components/responses/InternalError'
   /login-links:
     get:
+      tags: [Auth]
       summary: Get list of links that initiate login
       operationId: listLinks
       responses:
         '200':
-          description: Successful response
+          description: Links that initiate login flows
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/LoginLink'
-        '400':
-          description: Invalid input
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /user:
     get:
+      tags: [Auth]
       summary: Get Authenticated User
       operationId: getAuthenticatedUser
       responses:
         '200':
-          description: Successful response
+          description: Current authenticated user
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthenticatedUser'
         '401':
-          description: Not authenticated
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /admin/tenant-registrations:
-    post:
-      summary: Create Tenant Registration
-      operationId: createTenantRegistration
-      requestBody:
-        description: Tenant Registration object
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TenantRegistrationRequest'
-      responses:
-        '200':
-          description: Registration created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TenantRegistration'
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Conflict (tenantId, clientId, or issuerUrl already exists)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
     get:
+      tags: [Admin]
       summary: List all Tenant Registrations
       operationId: listTenantRegistrations
       responses:
@@ -97,30 +76,76 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/TenantRegistration'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      tags: [Admin]
+      summary: Create Tenant Registration
+      operationId: createTenantRegistration
+      requestBody:
+        description: Tenant Registration object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantRegistrationRequest'
+            examples:
+              oauth2:
+                value:
+                  tenantId: "tenant-123"
+                  partyId: "party-abc"
+                  walletUrl: "http://wallet.localhost:2000/"
+                  clientId: "client-xyz"
+                  issuerUrl: "http://keycloak.localhost:8082/realms/AppProvider"
+                  internal: false
+              sharedSecret:
+                value:
+                  tenantId: "tenant-ss"
+                  partyId: "party-ss"
+                  walletUrl: "http://wallet.localhost:2000/"
+                  users: [ "alice","bob" ]
+                  internal: true
+      responses:
+        '201':
+          description: Registration created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantRegistration'
         '400':
-          description: Invalid request
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /admin/tenant-registrations/{tenantId}:
     delete:
+      tags: [Admin]
       summary: Delete Tenant Registration
       operationId: deleteTenantRegistration
       parameters:
-        - name: tenantId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The tenant ID of the registration to delete
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        '200':
-          description: Tenant Registration deleted
-        '400':
-          description: Invalid tenant ID
+        '204':
+          description: Tenant registration deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Tenant Registration not found
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /app-install-requests:
     get:
+      tags: [App Installs Requests]
       summary: List all AppInstallRequests
       operationId: listAppInstallRequests
       responses:
@@ -132,26 +157,19 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AppInstallRequest'
-        '400':
-          description: Invalid input
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
-  /app-install-requests/{contractId}/accept:
+  /app-install-requests/{contractId}:accept:
     post:
+      tags: [App Installs Requests]
       summary: Accept an AppInstallRequest
       operationId: acceptAppInstallRequest
       parameters:
-        - name: contractId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The contract ID of the AppInstallRequest to accept
-        - name: commandId
-          in: query
-          required: true
-          schema:
-            type: string
-          description: The command ID for the ledger transaction
+        - $ref: '#/components/parameters/ContractId'
+        - $ref: '#/components/parameters/CommandId'
       requestBody:
         description: Acceptance parameters
         required: true
@@ -160,32 +178,28 @@ paths:
             schema:
               $ref: '#/components/schemas/AppInstallRequestAccept'
       responses:
-        '200':
-          description: AppInstall created
+        '201':
+          description: AppInstall created from request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AppInstall'
-        '400':
-          description: Invalid input
-
-  /app-install-requests/{contractId}/reject:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /app-install-requests/{contractId}:reject:
     post:
+      tags: [App Installs Requests]
       summary: Reject an AppInstallRequest
       operationId: rejectAppInstallRequest
       parameters:
-        - name: contractId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The contract ID of the AppInstallRequest to reject
-        - name: commandId
-          in: query
-          required: true
-          schema:
-            type: string
-          description: The command ID for the ledger transaction
+        - $ref: '#/components/parameters/ContractId'
+        - $ref: '#/components/parameters/CommandId'
       requestBody:
         description: Rejection parameters
         required: true
@@ -194,77 +208,20 @@ paths:
             schema:
               $ref: '#/components/schemas/AppInstallRequestReject'
       responses:
-        '200':
+        '204':
           description: AppInstallRequest rejected
-        '400':
-          description: Invalid input
-
-  /app-installs/{contractId}/create-license:
-    post:
-      summary: Create a License using the AppInstall
-      operationId: createLicense
-      parameters:
-        - name: contractId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The contract ID of the AppInstall to use
-        - name: commandId
-          in: query
-          required: true
-          schema:
-            type: string
-          description: The command ID for the ledger transaction
-      requestBody:
-        description: License creation parameters
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AppInstallCreateLicenseRequest'
-      responses:
-        '200':
-          description: License created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppInstallCreateLicenseResult'
-        '400':
-          description: Invalid input
-
-  /app-installs/{contractId}/cancel:
-    post:
-      summary: Cancel an AppInstall
-      operationId: cancelAppInstall
-      parameters:
-        - name: contractId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The contract ID of the AppInstall to cancel
-        - name: commandId
-          in: query
-          required: true
-          schema:
-            type: string
-          description: The command ID for the ledger transaction
-      requestBody:
-        description: Cancellation parameters
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AppInstallCancel'
-      responses:
-        '200':
-          description: AppInstall canceled
-        '400':
-          description: Invalid input
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /app-installs:
     get:
+      tags: [ App Installs ]
       summary: List all AppInstalls
       operationId: listAppInstalls
       responses:
@@ -276,11 +233,72 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AppInstall'
-        '400':
-          description: Invalid input
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /app-installs/{contractId}:create-license:
+    post:
+      tags: [App Installs]
+      summary: Create a License using the AppInstall
+      operationId: createLicense
+      parameters:
+        - $ref: '#/components/parameters/ContractId'
+        - $ref: '#/components/parameters/CommandId'
+      requestBody:
+        description: License creation parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppInstallCreateLicenseRequest'
+      responses:
+        '201':
+          description: License created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppInstallCreateLicenseResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /app-installs/{contractId}:cancel:
+    post:
+      tags: [App Installs]
+      summary: Cancel an AppInstall
+      operationId: cancelAppInstall
+      parameters:
+        - $ref: '#/components/parameters/ContractId'
+        - $ref: '#/components/parameters/CommandId'
+      requestBody:
+        description: Cancellation parameters
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppInstallCancel'
+      responses:
+        '204':
+          description: AppInstall canceled
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /licenses:
     get:
+      tags: [Licenses]
       summary: List all Licenses (including renewal requests)
       operationId: listLicenses
       responses:
@@ -292,26 +310,19 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/License'
-        '400':
-          description: Invalid input
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
-  /licenses/{contractId}/renew:
+  /licenses/{contractId}:renew:
     post:
+      tags: [Licenses]
       summary: Renew a License
       operationId: renewLicense
       parameters:
-        - name: contractId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The contract ID of the License to renew
-        - name: commandId
-          in: query
-          required: true
-          schema:
-            type: string
-          description: The command ID for the ledger transaction
+        - $ref: '#/components/parameters/ContractId'
+        - $ref: '#/components/parameters/CommandId'
       requestBody:
         description: License renewal parameters
         required: true
@@ -320,27 +331,25 @@ paths:
             schema:
               $ref: '#/components/schemas/LicenseRenewRequest'
       responses:
-        '200':
-          description: Renewal offer and payment request created
-        '400':
-          description: Invalid input
+        '201':
+          description: Renewal offer/payment request created
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
-  /licenses/{contractId}/complete-renewal:
+  /licenses/{contractId}:complete-renewal:
     post:
+      tags: [Licenses]
       summary: Complete the License Renewal
       operationId: completeLicenseRenewal
       parameters:
-        - name: contractId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: commandId
-          in: query
-          required: true
-          schema:
-            type: string
-          description: The command ID for the ledger transaction
+        - $ref: '#/components/parameters/ContractId'
+        - $ref: '#/components/parameters/CommandId'
       requestBody:
         description: Complete license renewal parameters
         required: true
@@ -355,28 +364,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LicenseRenewalResult'
-        '400':
-          description: Invalid input
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: No matching contract found
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
-  /licenses/{contractId}/expire:
+  /licenses/{contractId}:expire:
     post:
+      tags: [Licenses]
       summary: Expire a License
       operationId: expireLicense
       parameters:
-        - name: contractId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The contract ID of the License to expire
-        - name: commandId
-          in: query
-          required: true
-          schema:
-            type: string
-          description: The command ID for the ledger transaction
+        - $ref: '#/components/parameters/ContractId'
+        - $ref: '#/components/parameters/CommandId'
       requestBody:
         description: Expiration parameters
         required: true
@@ -392,52 +396,93 @@ paths:
               schema:
                 type: string
                 nullable: true
-        '400':
-          description: Invalid input
-          content:
-            text/plain:
-              schema:
-                type: string
-                nullable: true
-        '412':
-          description: License is not expirable
-          content:
-            text/plain:
-              schema:
-                type: string
-                nullable: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
-          description: An internal server error occurred
-          content:
-            text/plain:
-              schema:
-                type: string
-                nullable: true
+          $ref: '#/components/responses/InternalError'
 
-  /license-renewal-requests/{contractId}/withdraw:
+  /license-renewal-requests/{contractId}:withdraw:
     post:
+      tags: [licenses Renewal Requests]
       summary: Withdraw an LicenseRenewalRequest
       operationId: withdrawLicenseRenewalRequest
       parameters:
-        - name: contractId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The contract ID of the LicenseRenewalRequest to withdraw
-        - name: commandId
-          in: query
-          required: true
-          schema:
-            type: string
-          description: The command ID for the ledger transaction
+        - $ref: '#/components/parameters/ContractId'
+        - $ref: '#/components/parameters/CommandId'
       responses:
-        '200':
+        '204':
           description: LicenseRenewalRequest withdrawn
-        '400':
-          description: Invalid input
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
 components:
+  parameters:
+    ContractId:
+      name: contractId
+      in: path
+      required: true
+      description: Ledger contract ID
+      schema:
+        type: string
+    CommandId:
+      name: commandId
+      in: query
+      required: true
+      description: The command ID for the ledger transaction
+      schema:
+        type: string
+    TenantId:
+      name: tenantId
+      in: path
+      required: true
+      description: Tenant identifier
+      schema:
+        type: string
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Not authenticated
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Conflict with current state of the resource
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: An internal server error occurred
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
   schemas:
     TenantRegistrationRequest:
       type: object
@@ -454,10 +499,13 @@ components:
           type: string
         clientId:
           type: string
+          description: Required when authMode is oauth2
         issuerUrl:
           type: string
+          description: Required when authMode is oauth2
         users:
           type: array
+          description: Required (non-empty) when authMode is shared-secret
           items:
             type: string
 
@@ -785,4 +833,5 @@ components:
       properties:
         message:
           type: string
+          nullable: true
           example: "TenantId is required"

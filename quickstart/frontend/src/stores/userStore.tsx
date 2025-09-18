@@ -38,11 +38,11 @@ export const UserProvider = ({children}: { children: React.ReactNode }) => {
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, [setUser, setLoading, toast]);
 
     const clearUser = useCallback(() => {
         setUser(null);
-    }, []);
+    }, [setUser]);
 
     const getCsrfToken = (): string => {
         const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
@@ -67,7 +67,7 @@ export const UserProvider = ({children}: { children: React.ReactNode }) => {
         } catch (error) {
             toast.displayError('Error logging out');
         }
-    }, [clearUser, toast, navigate]);
+    }, [clearUser, toast, navigate, getCsrfToken]);
 
     return (
         <UserContext.Provider value={{user, loading, fetchUser, clearUser, logout}}>

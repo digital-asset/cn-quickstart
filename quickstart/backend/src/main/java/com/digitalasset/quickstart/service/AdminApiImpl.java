@@ -22,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -67,21 +68,21 @@ public class AdminApiImpl implements AdminApi {
     private void validateRequest(@NotNull TenantRegistrationRequest request) {
         Function<String, ResponseStatusException> badRequestExc = msg -> new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
         if (request.getTenantId() == null || request.getTenantId().isBlank()) {
-            throw badRequestExc.apply("tenantId is required");
+            throw badRequestExc.apply("Tenant Id is required");
         }
         if (request.getPartyId() == null || request.getPartyId().isBlank()) {
-            throw badRequestExc.apply("partyId is required");
+            throw badRequestExc.apply("Party Id is required");
         }
         if (auth.isOAuth2Enabled()) {
             if (request.getClientId() == null || request.getClientId().isBlank()) {
-                throw badRequestExc.apply("clientId is required in OAuth2 mode");
+                throw badRequestExc.apply("Client Id is required in OAuth2 mode");
             }
             if (request.getIssuerUrl() == null || request.getIssuerUrl().isBlank()) {
-                throw badRequestExc.apply("issuerUrl is required in OAuth2 mode");
+                throw badRequestExc.apply("Issuer Url is required in OAuth2 mode");
             }
         } else if (auth.isSharedSecretEnabled()) {
             if (request.getUsers() == null || request.getUsers().isEmpty()) {
-                throw badRequestExc.apply("at least one user is required in shared-secret mode");
+                throw badRequestExc.apply("At least one User is required in shared-secret mode");
             }
         }
     }
@@ -176,8 +177,7 @@ public class AdminApiImpl implements AdminApi {
             // Save extra properties in a separate repository
             persistTenantMetadata(request);
             // Build the response (OpenAPI model)
-            URI location = URI.create("/admin/tenant-registrations");
-            return ResponseEntity.created(location).body(buildResponse(request));
+            return ResponseEntity.status(HttpStatus.CREATED).body(buildResponse(request));
         }));
     }
 
@@ -186,14 +186,20 @@ public class AdminApiImpl implements AdminApi {
     public CompletableFuture<ResponseEntity<Void>> deleteTenantRegistration(String tenantId) {
         var ctx = tracingCtx(logger, "deleteTenantRegistration", "tenantId", tenantId);
         return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () -> CompletableFuture.supplyAsync(() -> {
-            if (auth.isOAuth2Enabled()) {
-                authClientRegistrationRepository.removeClientRegistrations(tenantId);
-            } else {
-                tenantPropertiesRepository.getTenant(tenantId).getUsers().forEach(userDetailsManager.get()::deleteUser);
-            }
+            try {
+                if (auth.isOAuth2Enabled()) {
+                    authClientRegistrationRepository.removeClientRegistrations(tenantId);
+                } else {
+                    tenantPropertiesRepository.getTenant(tenantId).getUsers().forEach(userDetailsManager.get()::deleteUser);
+                }
 
-            tenantPropertiesRepository.removeTenant(tenantId);
-            return ResponseEntity.ok().<Void>build();
+                tenantPropertiesRepository.removeTenant(tenantId);
+            } catch (NoSuchElementException e) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), e);
+            }
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).<Void>build();
         })));
     }
 

@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 class ServiceUtils {
 
     static <T> T ensurePresent(Optional<T> opt, String message, Object... args) {
-        return opt.orElseThrow(() -> new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, String.format(message, args)));
+        return opt.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format(message, args)));
     }
 
     /**

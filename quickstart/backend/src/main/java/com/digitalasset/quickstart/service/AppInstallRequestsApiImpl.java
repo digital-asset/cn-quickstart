@@ -3,6 +3,7 @@
 
 package com.digitalasset.quickstart.service;
 
+import static com.digitalasset.quickstart.service.ServiceUtils.ensurePresent;
 import static com.digitalasset.quickstart.service.ServiceUtils.traceServiceCallAsync;
 import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
 
@@ -12,6 +13,7 @@ import com.digitalasset.quickstart.repository.DamlRepository;
 import com.digitalasset.quickstart.security.AuthUtils;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -22,6 +24,7 @@ import org.openapitools.model.AppInstallRequestReject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -61,7 +64,8 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
                 "commandId", commandId
         );
         return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () ->
-                damlRepository.findAppInstallRequestById(contractId).thenCompose(contract -> {
+                damlRepository.findAppInstallRequestById(contractId).thenComposeAsync(optContract -> {
+                    var contract = ensurePresent(optContract, "AppInstallRequest not found for contract %s", contractId);
                     var choice = new quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Accept(
                             new splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata(
                                     appInstallRequestAccept.getInstallMeta().getData()),
@@ -75,7 +79,7 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
                                 appInstall.setUser(contract.payload.getUser.getParty);
                                 appInstall.setMeta(appInstallRequestAccept.getInstallMeta());
                                 appInstall.setNumLicensesCreated(0);
-                                return ResponseEntity.ok(appInstall);
+                                return ResponseEntity.status(HttpStatus.CREATED).body(appInstall);
                             });
                 })
         ));
@@ -86,7 +90,7 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
     public CompletableFuture<ResponseEntity<List<AppInstallRequest>>> listAppInstallRequests() {
         var ctx = tracingCtx(logger, "listAppInstallRequests");
         return auth.asAuthenticatedParty(party -> traceServiceCallAsync(ctx, () ->
-                damlRepository.findActiveAppInstallRequests().thenApply(contracts -> {
+                damlRepository.findActiveAppInstallRequests().thenApplyAsync(contracts -> {
                     List<AppInstallRequest> result = contracts.stream().filter(contract -> {
                         String user = contract.payload.getUser.getParty;
                         String provider = contract.payload.getProvider.getParty;
@@ -117,10 +121,12 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
                 "commandId", commandId
         );
         return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () ->
-                damlRepository.findAppInstallRequestById(contractId).thenCompose(contract -> {
-                    var choice = new AppInstallRequest_Reject(new Metadata(appInstallRequestReject.getMeta().getData()));
-                    return ledger.exerciseAndGetResult(contract.contractId, choice, commandId)
-                            .thenApply(result -> ResponseEntity.ok().<Void>build());
+                damlRepository.findAppInstallRequestById(contractId)
+                    .thenComposeAsync(optContract -> {
+                        var contract = ensurePresent(optContract, "AppInstallRequest not found for contract %s", contractId);
+                        var choice = new AppInstallRequest_Reject(new Metadata(appInstallRequestReject.getMeta().getData()));
+                        return ledger.exerciseAndGetResult(contract.contractId, choice, commandId)
+                                   .thenApply(result -> ResponseEntity.noContent().build());
                 })
         ));
     }

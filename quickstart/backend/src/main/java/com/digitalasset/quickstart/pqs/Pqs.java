@@ -13,19 +13,18 @@ import com.digitalasset.transcode.java.Utils;
 import com.digitalasset.transcode.schema.Dictionary;
 import com.digitalasset.transcode.schema.Identifier;
 import daml.Daml;
-import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.RowMapper;
@@ -83,45 +82,26 @@ public class Pqs {
     }
 
     /**
-     * Retrieves a single active contract of a specific template type matching a
-     * custom WHERE clause.
-     */
-    @WithSpan
-    public <T extends Template> CompletableFuture<Optional<Contract<T>>> singleActiveWhere(
-            Class<T> clazz,
-            String whereClause,
-            Object... params
-    ) {
-        Identifier identifier = Utils.getTemplateIdByClass(clazz);
-        var ctx = tracingCtx(logger, "PQS singleActiveWhere",
-                "templateId", identifier.qualifiedName(),
-                "whereClause", whereClause,
-                "params", params
-        );
-        return runAndTraceAsync(ctx, () -> {
-            String sql = "select contract_id, payload from active(?) where " + whereClause;
-            List<Contract<T>> results = jdbcTemplate.query(sql, new PqsContractRowMapper<>(identifier),
-                    combineParams(identifier.qualifiedName(), params));
-            return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
-        });
-    }
-
-    /**
      * Retrieves a contract by its contract ID from the underlying store.
      */
     @WithSpan
-    public <T extends Template> CompletableFuture<Contract<T>> byContractId(
+    public <T extends Template> CompletableFuture<Optional<Contract<T>>> contractByContractId(
             Class<T> clazz,
-            String id
+            Object... params
     ) {
         Identifier identifier = Utils.getTemplateIdByClass(clazz);
-        var ctx = tracingCtx(logger, "byContractId",
+        var ctx = tracingCtx(logger, "PQS contractByContractId",
                 "templateId", identifier.qualifiedName(),
-                "contractId", id
+                "params", params
         );
         return runAndTraceAsync(ctx, () -> {
-            String sql = "select contract_id, payload from lookup_contract(?, ?)";
-            return jdbcTemplate.queryForObject(sql, new PqsContractRowMapper<>(identifier), id, identifier.qualifiedName());
+            String sql = "select contract_id, payload from active(?) where contract_id = ?";
+            try {
+                return Optional.ofNullable(jdbcTemplate.queryForObject(sql, new PqsContractRowMapper<>(identifier),
+                    combineParams(identifier.qualifiedName(), params)));
+            } catch (EmptyResultDataAccessException e) {
+                return Optional.empty();
+            }
         });
     }
 

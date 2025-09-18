@@ -3,6 +3,7 @@
 
 package com.digitalasset.quickstart.service;
 
+import static com.digitalasset.quickstart.service.ServiceUtils.ensurePresent;
 import static com.digitalasset.quickstart.service.ServiceUtils.traceServiceCallAsync;
 import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
 
@@ -13,6 +14,7 @@ import com.digitalasset.quickstart.security.AuthUtils;
 import com.digitalasset.transcode.java.Party;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -55,7 +57,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
     public CompletableFuture<ResponseEntity<List<org.openapitools.model.AppInstall>>> listAppInstalls() {
         var ctx = tracingCtx(logger, "listAppInstalls");
         return auth.asAuthenticatedParty(party -> traceServiceCallAsync(ctx, () ->
-                damlRepository.findActiveAppInstalls().thenApply(contracts -> {
+                damlRepository.findActiveAppInstalls().thenApplyAsync(contracts -> {
                     List<org.openapitools.model.AppInstall> result = contracts.stream().filter(contract -> {
                         String provider = contract.payload.getProvider.getParty;
                         String user = contract.payload.getUser.getParty;
@@ -90,7 +92,8 @@ public class AppInstallsApiImpl implements AppInstallsApi {
                 "commandId", commandId
         );
         return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () ->
-                damlRepository.findAppInstallById(contractId).thenCompose(contract -> {
+                damlRepository.findAppInstallById(contractId).thenComposeAsync(optContract -> {
+                    var contract = ensurePresent(optContract, "AppInstall not found for contract %s", contractId);
                     String providerParty = contract.payload.getProvider.getParty;
                     if (!party.equals(providerParty)) {
                         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Insufficient permissions");
@@ -103,7 +106,7 @@ public class AppInstallsApiImpl implements AppInstallsApi {
                                 AppInstallCreateLicenseResult result = new AppInstallCreateLicenseResult();
                                 result.setInstallId(contractId);
                                 result.setLicenseId(licenseContractId.getLicenseId.getContractId);
-                                return ResponseEntity.ok(result);
+                                return ResponseEntity.status(HttpStatus.CREATED).body(result);
                             });
                 })
         ));
@@ -121,18 +124,20 @@ public class AppInstallsApiImpl implements AppInstallsApi {
                 "commandId", commandId
         );
         return auth.asAuthenticatedParty(party -> traceServiceCallAsync(ctx, () ->
-                damlRepository.findAppInstallById(contractId).thenCompose(contract -> {
-                    String userParty = contract.payload.getUser.getParty;
-                    if (!party.equals(userParty)
-                            && !party.equals(contract.payload.getProvider.getParty)) {
-                        throw new ResponseStatusException(HttpStatus.FORBIDDEN, String.format("party %s is not the user nor provider", party));
-                    }
-                    Metadata meta = new Metadata(appInstallCancel.getMeta().getData());
-                    // topologically we can only act as the provider
-                    Party provider = new Party(auth.getAppProviderPartyId());
-                    AppInstall_Cancel choice = new AppInstall_Cancel(provider, meta);
-                    return ledger.exerciseAndGetResult(contract.contractId, choice, commandId)
-                            .thenApply(result -> ResponseEntity.ok().build());
+                damlRepository.findAppInstallById(contractId)
+                    .thenComposeAsync(optContract -> {
+                        var contract = ensurePresent(optContract, "AppInstall not found for contract %s", contractId);
+                        String userParty = contract.payload.getUser.getParty;
+                        if (!party.equals(userParty)
+                                && !party.equals(contract.payload.getProvider.getParty)) {
+                            throw new ResponseStatusException(HttpStatus.FORBIDDEN, String.format("party %s is not the user nor provider", party));
+                        }
+                        Metadata meta = new Metadata(appInstallCancel.getMeta().getData());
+                        // topologically we can only act as the provider
+                        Party provider = new Party(auth.getAppProviderPartyId());
+                        AppInstall_Cancel choice = new AppInstall_Cancel(provider, meta);
+                        return ledger.exerciseAndGetResult(contract.contractId, choice, commandId)
+                                .thenApply(result -> ResponseEntity.noContent().build());
                 })
         ));
     }

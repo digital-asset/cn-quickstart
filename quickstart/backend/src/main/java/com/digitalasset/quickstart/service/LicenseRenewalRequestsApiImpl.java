@@ -58,7 +58,7 @@ public class LicenseRenewalRequestsApiImpl implements LicenseRenewalRequestsApi 
                             new ExtraArgs(new ChoiceContext(Map.of()), new Metadata(Map.of()))
                     );
                     return ledger.exerciseAndGetResult(allocationRequest.contractId, choice, commandId)
-                            .thenApply(result -> ResponseEntity.ok().build());
+                            .thenApply(result -> ResponseEntity.noContent().build());
                 })
         ));
     }
