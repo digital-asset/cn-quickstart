@@ -68,21 +68,21 @@ public class AdminApiImpl implements AdminApi {
     private void validateRequest(@NotNull TenantRegistrationRequest request) {
         Function<String, ResponseStatusException> badRequestExc = msg -> new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
         if (request.getTenantId() == null || request.getTenantId().isBlank()) {
-            throw badRequestExc.apply("tenantId is required");
+            throw badRequestExc.apply("Tenant Id is required");
         }
         if (request.getPartyId() == null || request.getPartyId().isBlank()) {
-            throw badRequestExc.apply("partyId is required");
+            throw badRequestExc.apply("Party Id is required");
         }
         if (auth.isOAuth2Enabled()) {
             if (request.getClientId() == null || request.getClientId().isBlank()) {
-                throw badRequestExc.apply("clientId is required in OAuth2 mode");
+                throw badRequestExc.apply("Client Id is required in OAuth2 mode");
             }
             if (request.getIssuerUrl() == null || request.getIssuerUrl().isBlank()) {
-                throw badRequestExc.apply("issuerUrl is required in OAuth2 mode");
+                throw badRequestExc.apply("Issuer Url is required in OAuth2 mode");
             }
         } else if (auth.isSharedSecretEnabled()) {
             if (request.getUsers() == null || request.getUsers().isEmpty()) {
-                throw badRequestExc.apply("at least one user is required in shared-secret mode");
+                throw badRequestExc.apply("At least one User is required in shared-secret mode");
             }
         }
     }

@@ -3,6 +3,7 @@
 
 package com.digitalasset.quickstart.service;
 
+import static com.digitalasset.quickstart.service.ServiceUtils.ensurePresent;
 import static com.digitalasset.quickstart.service.ServiceUtils.traceServiceCallAsync;
 import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
 
@@ -91,10 +92,9 @@ public class AppInstallsApiImpl implements AppInstallsApi {
                 "commandId", commandId
         );
         return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () ->
-                damlRepository.findAppInstallById(contractId).thenComposeAsync(contract -> {
+                damlRepository.findAppInstallById(contractId).thenComposeAsync(optContract -> {
+                    var contract = ensurePresent(optContract, "AppInstall not found for contract %s", contractId);
                     String providerParty = contract.payload.getProvider.getParty;
-                    // TODO Peter: Check with Peter if this provider party is not the same checked in asAdminParty
-                    //       and if we can skip this check
                     if (!party.equals(providerParty)) {
                         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Insufficient permissions");
                     }
@@ -125,7 +125,8 @@ public class AppInstallsApiImpl implements AppInstallsApi {
         );
         return auth.asAuthenticatedParty(party -> traceServiceCallAsync(ctx, () ->
                 damlRepository.findAppInstallById(contractId)
-                    .<ResponseEntity<Void>>thenComposeAsync(contract -> {
+                    .thenComposeAsync(optContract -> {
+                        var contract = ensurePresent(optContract, "AppInstall not found for contract %s", contractId);
                         String userParty = contract.payload.getUser.getParty;
                         if (!party.equals(userParty)
                                 && !party.equals(contract.payload.getProvider.getParty)) {

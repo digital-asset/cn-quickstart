@@ -3,6 +3,7 @@
 
 package com.digitalasset.quickstart.service;
 
+import static com.digitalasset.quickstart.service.ServiceUtils.ensurePresent;
 import static com.digitalasset.quickstart.service.ServiceUtils.traceServiceCallAsync;
 import static com.digitalasset.quickstart.utility.TracingUtils.tracingCtx;
 
@@ -63,7 +64,8 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
                 "commandId", commandId
         );
         return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () ->
-                damlRepository.findAppInstallRequestById(contractId).thenComposeAsync(contract -> {
+                damlRepository.findAppInstallRequestById(contractId).thenComposeAsync(optContract -> {
+                    var contract = ensurePresent(optContract, "AppInstallRequest not found for contract %s", contractId);
                     var choice = new quickstart_licensing.licensing.appinstall.AppInstallRequest.AppInstallRequest_Accept(
                             new splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata(
                                     appInstallRequestAccept.getInstallMeta().getData()),
@@ -120,7 +122,8 @@ public class AppInstallRequestsApiImpl implements AppInstallRequestsApi {
         );
         return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () ->
                 damlRepository.findAppInstallRequestById(contractId)
-                    .<ResponseEntity<Void>>thenComposeAsync(contract -> {
+                    .thenComposeAsync(optContract -> {
+                        var contract = ensurePresent(optContract, "AppInstallRequest not found for contract %s", contractId);
                         var choice = new AppInstallRequest_Reject(new Metadata(appInstallRequestReject.getMeta().getData()));
                         return ledger.exerciseAndGetResult(contract.contractId, choice, commandId)
                                    .thenApply(result -> ResponseEntity.noContent().build());

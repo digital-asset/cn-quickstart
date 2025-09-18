@@ -120,12 +120,12 @@ public class DamlRepository {
     /**
      * Fetches a License contract by contract ID.
      */
-    public CompletableFuture<Contract<License>> findLicenseById(String contractId) {
+    public CompletableFuture<Optional<Contract<License>>> findLicenseById(String contractId) {
         return pqs.byContractId(License.class, contractId);
     }
 
     public <T extends Template> CompletableFuture<Optional<Contract<T>>> findActive(Class<T> clazz, String contractId) {
-        return pqs.singleActiveWhere(clazz, "contract_id = ?", contractId);
+        return pqs.activeContractByContractId(clazz, contractId);
     }
 
     public CompletableFuture<Optional<Contract<LicenseRenewalRequest>>> findActiveLicenseRenewalRequestById(String contractId) {
@@ -146,7 +146,7 @@ public class DamlRepository {
     /**
      * Fetches an AppInstall contract by contract ID.
      */
-    public CompletableFuture<Contract<AppInstall>> findAppInstallById(String contractId) {
+    public CompletableFuture<Optional<Contract<AppInstall>>> findAppInstallById(String contractId) {
         return pqs.byContractId(AppInstall.class, contractId);
     }
 
@@ -160,7 +160,7 @@ public class DamlRepository {
     /**
      * Fetches an AppInstallRequest contract by contract ID.
      */
-    public CompletableFuture<Contract<AppInstallRequest>> findAppInstallRequestById(String contractId) {
+    public CompletableFuture<Optional<Contract<AppInstallRequest>>> findAppInstallRequestById(String contractId) {
         return pqs.byContractId(AppInstallRequest.class, contractId);
     }
 }

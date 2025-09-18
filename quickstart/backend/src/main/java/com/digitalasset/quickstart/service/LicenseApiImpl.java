@@ -38,6 +38,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 import quickstart_licensing.licensing.license.License.License_Expire;
 import quickstart_licensing.licensing.license.License.License_Renew;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest.LicenseRenewalRequest_CompleteRenewal;
@@ -102,7 +103,8 @@ public class LicenseApiImpl implements LicensesApi {
         return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () -> {
             var registryAdminIdFut = tokenStandardProxy.getRegistryAdminId();
             var licenseFut = damlRepository.findLicenseById(contractId);
-            return registryAdminIdFut.thenCombine(licenseFut, (adminId, license) -> {
+            return registryAdminIdFut.thenCombine(licenseFut, (adminId, optLicense) -> {
+                var license = ensurePresent(optLicense, "License not found for contract %s", contractId);
                 var now = Instant.now();
                 License_Renew choice = new License_Renew(
                         UUID.randomUUID().toString(),
@@ -136,7 +138,9 @@ public class LicenseApiImpl implements LicensesApi {
             var choiceContextFut = tokenStandardProxy.getAllocationTransferContext(request.getAllocationContractId());
             var renewalFut = damlRepository.findActiveLicenseRenewalRequestById(request.getRenewalRequestContractId());
             return choiceContextFut.thenCombine(renewalFut, (c, r) -> {
-                var choiceContext = ensurePresent(c, "Transfer context not found for allocation %s", request.getAllocationContractId());
+                var choiceContext = c.orElseThrow(
+                    () -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Transfer context not found for allocation %s", request.getAllocationContractId()))
+                );
                 var renewal = ensurePresent(r, "Active renewal request not found for contract %s", request.getRenewalRequestContractId());
                 TransferContext transferContext = prepareTransferContext(
                         choiceContext.getDisclosedContracts(),
@@ -173,8 +177,8 @@ public class LicenseApiImpl implements LicensesApi {
                 "commandId", commandId
         );
         return auth.asAuthenticatedParty(party -> traceServiceCallAsync(ctx, () ->
-                damlRepository.findLicenseById(contractId).thenCompose(contract -> {
-                    var license = ensurePresent(Optional.ofNullable(contract), "License not found for contract %s", contractId);
+                damlRepository.findLicenseById(contractId).thenCompose(optContract -> {
+                    var license = ensurePresent(optContract, "License not found for contract %s", contractId);
                     var meta = licenseExpireRequest.getMeta().getData();
                     if (!party.equals(auth.getAppProviderPartyId())) {
                         meta = new HashMap<>(meta);

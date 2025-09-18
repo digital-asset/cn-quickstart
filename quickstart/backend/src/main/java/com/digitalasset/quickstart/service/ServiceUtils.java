@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 class ServiceUtils {
 
     static <T> T ensurePresent(Optional<T> opt, String message, Object... args) {
-        return opt.orElseThrow(() -> new ResponseStatusException(HttpStatus.PRECONDITION_FAILED, String.format(message, args)));
+        return opt.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format(message, args)));
     }
 
     /**
@@ -26,19 +26,7 @@ class ServiceUtils {
     static <T> CompletableFuture<T> traceServiceCallAsync(
             TracingUtils.TracingContext ctx,
             Supplier<CompletableFuture<T>> body) {
-        return TracingUtils.traceWithStartEventAsync(ctx, body)
-                   .exceptionallyCompose(ex -> CompletableFuture.failedFuture(mapToHttp(ex)))
-            ;
-    }
-
-    private static Throwable mapToHttp(Throwable throwable) {
-        //  maintain the original exception if it is already a ResponseStatusException
-        if (throwable instanceof ResponseStatusException rse) return rse;
-        //  this error is from the findById lookup
-        if (throwable instanceof org.springframework.dao.EmptyResultDataAccessException)
-            return new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found", throwable);
-        //  Let handle Spring the other issues as 500 Internal Server Error
-        return throwable;
+        return TracingUtils.traceWithStartEventAsync(ctx, body);
     }
 }
 

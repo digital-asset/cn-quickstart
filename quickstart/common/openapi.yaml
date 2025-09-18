@@ -368,8 +368,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '412':
-          $ref: '#/components/responses/Precondition_failed'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -400,8 +400,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-        '412':
-          $ref: '#/components/responses/Precondition_failed'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -420,8 +418,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '412':
-          $ref: '#/components/responses/Precondition_failed'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -479,12 +477,6 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-    Precondition_failed:
-      description: Precondition failed
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
     InternalError:
       description: An internal server error occurred
       content:
@@ -511,9 +503,6 @@ components:
         issuerUrl:
           type: string
           description: Required when authMode is oauth2
-        internal:
-          type: boolean
-          default: false
         users:
           type: array
           description: Required (non-empty) when authMode is shared-secret
