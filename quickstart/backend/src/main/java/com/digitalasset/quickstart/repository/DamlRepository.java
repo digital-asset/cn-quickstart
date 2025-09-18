@@ -114,26 +114,33 @@ public class DamlRepository {
         ).thenApply(v -> new java.util.ArrayList<>(map.values()));
     }
 
-    // TODO https://github.com/digital-asset/cn-quickstart/issues/238
-    //  all find functions findById here should look for active contracts only
-    //  and return Optional<Contract<T>>
     /**
      * Fetches a License contract by contract ID.
      */
     public CompletableFuture<Optional<Contract<License>>> findLicenseById(String contractId) {
-        return pqs.byContractId(License.class, contractId);
-    }
-
-    public <T extends Template> CompletableFuture<Optional<Contract<T>>> findActive(Class<T> clazz, String contractId) {
-        return pqs.activeContractByContractId(clazz, contractId);
+        return pqs.contractByContractId(License.class, contractId);
     }
 
     public CompletableFuture<Optional<Contract<LicenseRenewalRequest>>> findActiveLicenseRenewalRequestById(String contractId) {
-       return findActive(LicenseRenewalRequest.class, contractId);
+       return pqs.contractByContractId(LicenseRenewalRequest.class, contractId);
     }
 
     public CompletableFuture<Optional<Contract<AllocationRequest>>> findActiveAllocationRequestById(String contractId) {
-        return findActive(AllocationRequest.class, contractId);
+        return pqs.contractByContractId(AllocationRequest.class, contractId);
+    }
+
+    /**
+     * Fetches an AppInstall contract by contract ID.
+     */
+    public CompletableFuture<Optional<Contract<AppInstall>>> findAppInstallById(String contractId) {
+        return pqs.contractByContractId(AppInstall.class, contractId);
+    }
+
+    /**
+     * Fetches an AppInstallRequest contract by contract ID.
+     */
+    public CompletableFuture<Optional<Contract<AppInstallRequest>>> findAppInstallRequestById(String contractId) {
+        return pqs.contractByContractId(AppInstallRequest.class, contractId);
     }
 
     /**
@@ -144,23 +151,9 @@ public class DamlRepository {
     }
 
     /**
-     * Fetches an AppInstall contract by contract ID.
-     */
-    public CompletableFuture<Optional<Contract<AppInstall>>> findAppInstallById(String contractId) {
-        return pqs.byContractId(AppInstall.class, contractId);
-    }
-
-    /**
      * Finds all active AppInstallRequest contracts.
      */
     public CompletableFuture<List<Contract<AppInstallRequest>>> findActiveAppInstallRequests() {
         return pqs.active(AppInstallRequest.class);
-    }
-
-    /**
-     * Fetches an AppInstallRequest contract by contract ID.
-     */
-    public CompletableFuture<Optional<Contract<AppInstallRequest>>> findAppInstallRequestById(String contractId) {
-        return pqs.byContractId(AppInstallRequest.class, contractId);
     }
 }

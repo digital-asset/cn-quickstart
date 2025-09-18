@@ -138,9 +138,7 @@ public class LicenseApiImpl implements LicensesApi {
             var choiceContextFut = tokenStandardProxy.getAllocationTransferContext(request.getAllocationContractId());
             var renewalFut = damlRepository.findActiveLicenseRenewalRequestById(request.getRenewalRequestContractId());
             return choiceContextFut.thenCombine(renewalFut, (c, r) -> {
-                var choiceContext = c.orElseThrow(
-                    () -> new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Transfer context not found for allocation %s", request.getAllocationContractId()))
-                );
+                var choiceContext = ensurePresent(c, "Transfer context not found for allocation %s", request.getAllocationContractId());
                 var renewal = ensurePresent(r, "Active renewal request not found for contract %s", request.getRenewalRequestContractId());
                 TransferContext transferContext = prepareTransferContext(
                         choiceContext.getDisclosedContracts(),

@@ -82,16 +82,15 @@ public class Pqs {
     }
 
     /**
-     * Retrieves a single active contract of a specific template type matching a
-     * custom WHERE clause.
+     * Retrieves a contract by its contract ID from the underlying store.
      */
     @WithSpan
-    public <T extends Template> CompletableFuture<Optional<Contract<T>>> activeContractByContractId(
+    public <T extends Template> CompletableFuture<Optional<Contract<T>>> contractByContractId(
             Class<T> clazz,
             Object... params
     ) {
         Identifier identifier = Utils.getTemplateIdByClass(clazz);
-        var ctx = tracingCtx(logger, "PQS activeContractByContractId",
+        var ctx = tracingCtx(logger, "PQS contractByContractId",
                 "templateId", identifier.qualifiedName(),
                 "params", params
         );
@@ -100,29 +99,6 @@ public class Pqs {
             try {
                 return Optional.ofNullable(jdbcTemplate.queryForObject(sql, new PqsContractRowMapper<>(identifier),
                     combineParams(identifier.qualifiedName(), params)));
-            } catch (EmptyResultDataAccessException e) {
-                return Optional.empty();
-            }
-        });
-    }
-
-    /**
-     * Retrieves a contract by its contract ID from the underlying store.
-     */
-    @WithSpan
-    public <T extends Template> CompletableFuture<Optional<Contract<T>>> byContractId(
-            Class<T> clazz,
-            String id
-    ) {
-        Identifier identifier = Utils.getTemplateIdByClass(clazz);
-        var ctx = tracingCtx(logger, "byContractId",
-                "templateId", identifier.qualifiedName(),
-                "contractId", id
-        );
-        return runAndTraceAsync(ctx, () -> {
-            String sql = "select contract_id, payload from lookup_contract(?, ?)";
-            try {
-                return Optional.ofNullable(jdbcTemplate.queryForObject(sql, new PqsContractRowMapper<>(identifier), id, identifier.qualifiedName()));
             } catch (EmptyResultDataAccessException e) {
                 return Optional.empty();
             }

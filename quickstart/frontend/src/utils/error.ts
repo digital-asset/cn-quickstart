@@ -52,6 +52,5 @@ export function withErrorHandling(action: string) {
             }
         };
     }
-
     return wrap;
 }

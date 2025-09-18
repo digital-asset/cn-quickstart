@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 
 import jakarta.validation.constraints.NotNull;
@@ -293,8 +294,9 @@ public final class TracingUtils {
         logInfo(ctx.logger(), ctx.message(), ctx.attrs());
         return body.get().whenComplete((res, ex) -> {
             if (ex != null) {
-                ctx.logger().error(ctx.message() + " failed", ex);
-                recordException(span, ex);
+                var e = ex instanceof CompletionException ce && ce.getCause() != null ? ce.getCause() : ex;
+                ctx.logger().error(ctx.message() + " failed", e);
+                recordException(span, e);
             } else if (res instanceof List<?> listRes) {
                 ctx.logger().info(ctx.message() + " succeeded with {} results", listRes.size());
             } else {

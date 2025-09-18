@@ -9,7 +9,7 @@ import type {
     TenantRegistration,
     TenantRegistrationRequest
 } from '../openapi.d.ts';
-import {withErrorHandling} from "../utils/error.tsx";
+import {withErrorHandling} from "../utils/error";
 
 
 interface TenantRegistrationState {

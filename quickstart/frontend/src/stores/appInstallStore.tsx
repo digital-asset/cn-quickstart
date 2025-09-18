@@ -16,8 +16,8 @@ import type {
     Client,
     Metadata,
 } from '../openapi.d.ts';
-import { AppInstallUnified } from '../types';
-import { withErrorHandling } from "../utils/error";
+import {AppInstallUnified} from '../types';
+import {withErrorHandling} from "../utils/error";
 
 interface AppInstallState {
     unifiedInstalls: AppInstallUnified[];
