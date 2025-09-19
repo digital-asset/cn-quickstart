@@ -55,7 +55,7 @@ For testing multiple users, use separate browsers or one browser in standard mod
 
 **Where can I install CN App Quickstart dependencies?**
 
-This repository uses `direnv`, `nix`, and `docker-compose` to provide development dependencies:
+This repository uses ``direnv``, ``nix``, and ``docker-compose`` to provide development dependencies:
 
 * how to `install direnv <https://direnv.net/docs/installation.html>`__
 * how to `install nix <https://nix.dev/install-nix.html>`__
@@ -82,8 +82,8 @@ For more information see the Installation Guide.
 
 **Do I need to install Nix?**
 
-You can use the project files in the `quickstart` directory as a standalone project without nix, but you will need to provide binary dependencies manually.
-We do not offer guidance on how to do this, but you can find the required binaries in the `quickstart/compose.yaml` file.
+You can use the project files in the ``quickstart`` directory as a standalone project without nix, but you will need to provide binary dependencies manually.
+We do not offer guidance on how to do this, but you can find the required binaries in the ``quickstart/compose.yaml`` file.
 
 **Why is Nix-shell unable to download my SSL certificate?**
 

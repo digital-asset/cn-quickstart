@@ -159,7 +159,7 @@ From ``/quickstart/`` run:
 
 ::
 
-  ``make create-app-install-request``
+  make create-app-install-request
 
 This command creates an App Installation Request on behalf of the Participant.
 
@@ -219,7 +219,7 @@ In the modal, set the number of days to renew the license, the fee, time to prep
 You must add a description to proceed.
 
 "Prepare in" is an indication for the sender (app-user) that they are expected to accept allocation before that time.
-"Settle in" is a time that the provider has to `completeRenewal`. 
+"Settle in" is a time that the provider has to ``completeRenewal``. 
 After that, the allocation will be expired.
 
 Click **Issue License Renewal Request**.

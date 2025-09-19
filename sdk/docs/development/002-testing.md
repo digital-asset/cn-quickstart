@@ -2,10 +2,10 @@
 
 This document outlines the end-to-end **integration tests** for ``Canton Network Quickstart``, covering:
 
-- Test workflow and architecture  
-- Core technologies and tooling  
-- Utilities to streamline testing  
-- Instructions for running and extending tests  
+- Test workflow and architecture
+- Core technologies and tooling
+- Utilities to streamline testing
+- Instructions for running and extending tests
 
 ---
 
@@ -14,11 +14,11 @@ This document outlines the end-to-end **integration tests** for ``Canton Network
 The integration test suite verifies that all components—frontend, backend, Daml models, and supporting services—operate seamlessly together. These tests encompass browser-driven UI interactions, API request verification, and workflow validation against live service endpoints.
 
 You can execute the integration tests against a locally deployed Canton Network Quickstart instance in test mode using either of the following approaches:
-1. Command Line Interface:  
+1. Command Line Interface:
    ```shell
    make integration-test
    ```
-2. VS Code Integration:  
+2. VS Code Integration:
    - Install the Playwright Test extension and run the tests directly from the editor.
 
 Both methods support parallel, repeatable end-to-end test runs without restarting the Quickstart instance.
@@ -31,16 +31,16 @@ Both methods support parallel, repeatable end-to-end test runs without restartin
    - Orchestrate the local environment and all dependent containers (e.g. Canton participant, Keycloak, Observability stack, NGINX, etc.).
    - The ``Makefile`` defines the primary commands for building images and controlling container life cycles.
 
-2. **Playwright**  
-   - Browser automation framework for end-to-end UI testing  
-   - Interacts with AppProvider, AppUser frontends, and the wallet UI  
+2. **Playwright**
+   - Browser automation framework for end-to-end UI testing
+   - Interacts with AppProvider, AppUser frontends, and the wallet UI
 
 3. **TypeScript Test Suite**
    - Located in [``integration-test/tests/``](../../quickstart/integration-test/tests/).
    - [``workflow.spec.ts``](../../quickstart/integration-test/tests/workflow.spec.ts) contains the main Licensing Workflow tests scenario, walking through login, wallet top-ups, AppInstallRequests, license creation and payments, etc.
 
-4. **Make Targets**  
-   - `show-integration-test-report`: Serves the Playwright HTML report on port 9323 (`http://0.0.0.0:9323`)  
+4. **Make Targets**
+   - ``show-integration-test-report``: Serves the Playwright HTML report on port 9323 (``http://0.0.0.0:9323``)
 
 ---
 
@@ -65,19 +65,19 @@ Both methods support parallel, repeatable end-to-end test runs without restartin
       - **``keycloak``**
          Facade over Keycloak REST admin API
          
-      - **``tagProvider``**  
+      - **``tagProvider``**
          Generates a unique tag for each test run to ensure isolated test data.
 
-      - **``appUserSetup``**  
+      - **``appUserSetup``**
          Automates creation of an AppUser, including Keycloak and Ledger user provisioning, ledger party assignment, and wallet onboarding.
 
-      - **``requestTag``**  
+      - **``requestTag``**
          Executes ``make create-app-install-request`` with the generated tag, establishing an AppInstallRequest for workflow tests.
 
-      - **``provider``**  
+      - **``provider``**
          A session-scoped AppProvider fixture. Authenticates in the Quickstart UI as an app-provider, exposes page object methods for interacting with UI components, and provides state assertions.
 
-      - **``user``**  
+      - **``user``**
          A session-scoped AppUser fixture. Authenticates a unique test app-user in the Quickstart UI, provides page object methods for user flows, and supports UI assertions.
 
 4. **``pages``**
@@ -107,13 +107,13 @@ Both methods support parallel, repeatable end-to-end test runs without restartin
 
 2. **Run Quickstart in the test mode**
    ``make setup`` 
-   Enable TEST_MODE and OAUTH2 when prompted, then run ``make start``.  
+   Enable TEST_MODE and OAUTH2 when prompted, then run ``make start``.
 
 3. **Run tests in VS Code**
    - Open ``quickstart/integration-test`` in VS Code
    - Install the [Playwright Test for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright) extension.
    - If run for the first time in VS Code invoke action ``Test: Install Playwright`` or ``npm install``
-   - Execute tests via the Playwright view  
+   - Execute tests via the Playwright view
 
 4. **Run tests via CLI**
    ``make integration-test``
