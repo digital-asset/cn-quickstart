@@ -103,12 +103,12 @@ The core business flow requires consensus between multiple parties (the app-prov
 so it lives entirely in the consensus layer through these Daml smart contracts:
 
 **AppInstall.daml** handles user onboarding through two templates:
-- `AppInstallRequest` - A user requests to install the app
-- `AppInstall` - The provider accepts, creating an active installation that can generate licenses
+- ``AppInstallRequest`` - A user requests to install the app
+- ``AppInstall`` - The provider accepts, creating an active installation that can generate licenses
 
 **License.daml** handles time-based access control with two templates:
-- `License` - Grants access for a specific time period  
-- `LicenseRenewalRequest` - Handles license extensions through payments
+- ``License`` - Grants access for a specific time period  
+- ``LicenseRenewalRequest`` - Handles license extensions through payments
 
 These operations require consensus because they involve agreements between multiple parties.
 
@@ -117,9 +117,9 @@ and the DSO to process the payment through its system.
 This multi-party coordination is why these operations belong in the consensus business logic layer, rather than the local backend services.
 
 In Quickstart, the workflow follows this sequence:
-1. User creates an `AppInstallRequest` (consensus - provider must see and respond to the request)
-2. Provider exercises `AppInstallRequest_Accept` to create an `AppInstall` (consensus - both parties must agree)
-3. Provider creates `License` contracts for specific features or time periods (consensus - user must accept terms)
+1. User creates an ``AppInstallRequest`` (consensus - provider must see and respond to the request)
+2. Provider exercises ``AppInstallRequest_Accept`` to create an ``AppInstall`` (consensus - both parties must agree)
+3. Provider creates ``License`` contracts for specific features or time periods (consensus - user must accept terms)
 4. License renewal involves payment validation across all three parties (consensus - user and provider require DSO's payment system)
 
 Each step requires multi-party agreement, 
@@ -160,7 +160,7 @@ Daml smart contracts are immutable. Incrementing the counter results in archivin
 License Contract
 ~~~~~~~~~~~~~~~~
 
-The `License` contract is the on-ledger record supporting the core business case for the application. 
+The ``License`` contract is the on-ledger record supporting the core business case for the application. 
 One critical field is the ``expiresAt`` field, which both determines the duration of the license’s validity, 
 and is used to ensure that neither actor can revoke (archive) the license contract before expiry. 
 The contract also has two choices:
@@ -172,7 +172,7 @@ The choice of amulet is made via the DSO party used in the ``AppInstall`` contra
 The current deployment configuration results in this being Canton Coin; however, 
 there is nothing in the Daml model, or the backend code, that prevents a different amulet from being used.
 
-The ``License_Expire`` choice allows either party to archive an expired `License` contract. 
+The ``License_Expire`` choice allows either party to archive an expired ``License`` contract. 
 
 Common OpenAPI definition
 -------------------------
@@ -188,7 +188,7 @@ This allows the backend to centralize authentication and access control code.
 
 As a result, an API must be defined between the back and front ends.
 For this example application, we have chosen to use `OpenAPI <https://www.openapis.org/>`__. 
-The API definition is in `common/openapi.yaml`. 
+The API definition is in ``common/openapi.yaml``.
 It uses GET to access the query services in the backend, and POST to execute choices on contracts identified by contract-id in the URL.
 
 **Note:** The HTTP method semantics align with Daml operation requirements. 
@@ -210,21 +210,21 @@ with API implementation classes in com.digitalasset.quickstart.service.
 Most of this code is standard Java SQL-backed JSON-encoded HTTP web services. 
 The code is divided into several modules under com.digitalasset.quickstart.*:
 
-`config`: Standard SpringBoot `@ConfigurationProperties` based components.
+``config``: Standard SpringBoot ``@ConfigurationProperties`` based components.
 
-`security`: Handles security related-demands including OAuth2, shared-secret auth support, roles, and access control.
+``security``: Handles security related-demands including OAuth2, shared-secret auth support, roles, and access control.
 
-`service`: Implements the openAPI endpoints, including read-only calls to PQS via the ``DamlRepository`` spring component and GRPC calls to the relevant validator via the ``LedgerApi`` spring component.
+``service``: Implements the openAPI endpoints, including read-only calls to PQS via the ``DamlRepository`` spring component and GRPC calls to the relevant validator via the ``LedgerApi`` spring component.
 
-`ledger`: The main class here is `LedgerApi` which handles the details of calling the relevant GRPC endpoints required to submit Daml commands and other requests to the Canton Validator.
+``ledger``: The main class here is ``LedgerApi`` which handles the details of calling the relevant GRPC endpoints required to submit Daml commands and other requests to the Canton Validator.
 
-`repository`: Includes \`DamlRepository`. 
-A `@Repository` component providing business-logic level query and retrieval facilities against the ledger via PQS (the Participant Query Store).
+``repository``: Includes \``DamlRepository``. 
+A ``@Repository`` component providing business-logic level query and retrieval facilities against the ledger via PQS (the Participant Query Store).
 
-`pqs`: The main class is `Pqs`, which provides data-model level query and retrieval. 
+``pqs``: The main class is ``Pqs``, which provides data-model level query and retrieval. 
 This encapsulates the necessary SQL generation and the JDBC queries against the PQS Postgres database.
 
-`utility`: Miscellaneous utility code including `JsonUtil` for JSON encoding and decoding, and `DamlCodeGen` which provides access to the Daml model-generated Java classes.
+``utility``: Miscellaneous utility code including ``JsonUtil`` for JSON encoding and decoding, and ``DamlCodeGen`` which provides access to the Daml model-generated Java classes.
 
 Ultimately, the main recommendation embedded in this code is to orient the web-service API around a combination of queries and choice invocations. 
 This is hopefully adequately demonstrated in the open API definition. 
@@ -246,7 +246,7 @@ This direct coupling from Daml to Frontend can significantly simplify the code r
 The mediated architecture is more suitable where the Frontend needs to incorporate sources of data additional to the Canton Ledger.
 
 The example application is a naive `React <https://react.dev/>`__ web frontend written in `Typescript <https://www.typescriptlang.org/>`__. 
-It accesses the backend web services using the generator-less Axios client to handle the lowest-level transport, configured in `src/api.ts`:
+It accesses the backend web services using the generator-less Axios client to handle the lowest-level transport, configured in ``src/api.ts``:
 
 .. code-block::
 
@@ -281,7 +281,7 @@ For testing and experimentation there is a make target to create the ``AppInstal
    docker compose -f docker/app-user-shell/compose.yaml \
    $(DOCKER_COMPOSE_ENVFILE) run --rm create-app-install-request || true
 
-This uses curl via a utility function curl_check to submit a Daml Create command to Org1’s participant node via its HTTP Ledger JSON API (`v2/commands/submit-and-wait`).
+This uses curl via a utility function curl_check to submit a Daml Create command to Org1’s participant node via its HTTP Ledger JSON API (``v2/commands/submit-and-wait``).
 
 .. code-block:: text
 

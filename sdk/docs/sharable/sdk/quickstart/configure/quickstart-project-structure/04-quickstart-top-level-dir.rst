@@ -36,7 +36,7 @@ Build configuration
 -------------------
 
 The primary build tool used by the example project is Gradle.  
-This is managed via the Gradle wrappers `gradlew` and `gradlew.bat`. 
+This is managed via the Gradle wrappers ``gradlew`` and ``gradlew.bat``. 
 Gradle is used for the Java-based web services in `backend/` and to build Daml smart contracts via a simple wrapper that calls the Daml Assistant.
 
 The backend takes advantage of classes generated from the Daml model to simplify interactions with the Ledger API. 
@@ -149,7 +149,7 @@ To name a few ports, the default setup exposes:
 - **JSON API ports** (2975, 3975, 4975): Daml ops and smart contract deployment
 
 **Health checks**
-You can find the health check endpoints for each validator in `quickstart/docker/modules/localnet/docker/splice/health-check.sh`.
+You can find the health check endpoints for each validator in ``quickstart/docker/modules/localnet/docker/splice/health-check.sh``.
 Empty responses indicate healthy services.
 
 .. code-block:: bash
@@ -159,7 +159,7 @@ Empty responses indicate healthy services.
    curl -f http://localhost:4903/api/validator/readyz  # Super Validator
 
 **Access admin ports**  
-Admin ports are defined in `quickstart/docker/modules/localnet/compose.yaml`
+Admin ports are defined in ``quickstart/docker/modules/localnet/compose.yaml``
 
 .. code-block:: bash
 
@@ -167,7 +167,7 @@ Admin ports are defined in `quickstart/docker/modules/localnet/compose.yaml`
    curl -v http://localhost:3902/admin    # Would access App Provider admin if exposed
 
 **Upload DAR via JSON API with Authentication token**  
-These endpoints are also defined in `compose.yaml`.
+These endpoints are also defined in ``compose.yaml``.
 
 .. code-block:: bash
 

@@ -28,9 +28,9 @@ CN Quickstart components
 
 Quickstart consists of three components: 
 
--  Development tools 
+-  Development tools
 -  ``LocalNet``, a simulated Global Synchronizer on your laptop
--  The license application. 
+-  The license application.
 
 Each component holds significance in the application development lifecycle.
 
@@ -45,19 +45,19 @@ Understanding these tools helps you determine which components to keep, modify, 
 The build system integrates Daml smart contract with the Java and TypeScript applications. 
 Running ``./gradlew`` build generates code from the Daml model, packages contracts into DAR files, and prepares deployment.
 
-To understand the project structure, dependencies, and root project configuration, examine ``quickstart/build.gradle.kts``. 
+To understand the project structure, dependencies, and root project configuration, examine ``quickstart/build.gradle.kts``.
 For Daml-specific build configurations, review ``quickstart/daml/build.gradle.kts``.
 
-To extend the build system for your application, create parallel project structures in ``quickstart/settings.gradle.kts``. 
+To extend the build system for your application, create parallel project structures in ``quickstart/settings.gradle.kts``.
 These settings allow you to maintain your code alongside the original CN Quickstart components while leveraging the same build infrastructure.
 
 Customize code generation by modifying the Gradle tasks in ``quickstart/buildSrc/src/main/kotlin/`` to target specific languages or adjust output formats.
 
-As your application evolves, you can fine-tune dependency management across language boundaries, 
-configure artifact publishing for CI/CD pipelines, and integrate with the Canton ledger APIs. 
+As your application evolves, you can fine-tune dependency management across language boundaries,
+configure artifact publishing for CI/CD pipelines, and integrate with the Canton ledger APIs.
 The build system serves as the foundation that connects your Daml models to client applications.
 
-When troubleshooting build issues, check the generated code in ``build/generated-daml-bindings/`` 
+When troubleshooting build issues, check the generated code in ``build/generated-daml-bindings/``
 to verify that your Daml models are correctly translated to your target languages.
 
 Understanding the build system can save extensive time in development efforts compared to creating custom build processes from scratch.
@@ -87,23 +87,23 @@ Run ``make setup`` to configure environment variables in ``.env`` files.
 
 ``make start`` applies the appropriate environment settings and orchestrates all services through Docker Compose.
 
-``Makefile`` integrates with Gradle to trigger builds and code generation with a single command to avoid mapping complex Gradle tasks, directly. 
-Examine ``Makefile`` to understand available commands to streamline development workflows. 
+``Makefile`` integrates with Gradle to trigger builds and code generation with a single command to avoid mapping complex Gradle tasks, directly.
+Examine ``Makefile`` to understand available commands to streamline development workflows.
 You can extend ``Makefile`` with your own custom commands as your application evolves.
 
 **Configuration files**
 
 Modify the configuration files to match your application's requirements.
-Start with the Canton console configuration in ``quickstart/config/canton-console/app.conf`` to adjust ledger access permissions and admin operations. 
+Start with the Canton console configuration in ``quickstart/config/canton-console/app.conf`` to adjust ledger access permissions and admin operations.
 When you need to change network routing or add SSL certificates, edit the NGINX configurations in ``quickstart/config/nginx/`` directory.
 
-Fine-tune your observability stack by modifying the configurations in ``quickstart/docker/modules/observability/conf/`` 
-to capture application-specific metrics and create custom dashboards for monitoring your services. 
+Fine-tune your observability stack by modifying the configurations in ``quickstart/docker/modules/observability/conf/``
+to capture application-specific metrics and create custom dashboards for monitoring your services.
 These files use standard formats (`HOCON <https://docs.tibco.com/pub/sfire-sfds/latest/doc/html/hocon/hocon-syntax-reference.html>`__
 for Canton, `YAML <https://yaml.org/spec/1.2.2/>`__ for Docker services, Grafana JSON for dashboards), making them easy to edit with standard tools.
 
-Override configuration values by setting environment variables in your ``.env`` files rather than editing the configuration files directly. 
-This approach makes it easier to incorporate upstream updates by keeping your customizations separate from the base configurations. 
+Override configuration values by setting environment variables in your ``.env`` files rather than editing the configuration files directly.
+This approach makes it easier to incorporate upstream updates by keeping your customizations separate from the base configurations.
 For example, set ``CANTON_ADMIN_PORT=3902`` in your ``.env`` file to change the Canton admin API port without modifying the ``app.conf`` file.
 
 When troubleshooting, examine these configuration files to understand how services are connected and what parameters control their behavior.
@@ -111,43 +111,43 @@ As your application grows, create additional configuration files for your custom
 
 **Utility tools**
 
-Leverage the CN Quickstart utility tools during development and testing workflows. 
-Use the build utilities in ``quickstart/buildSrc/`` to automate common development tasks. 
-The ``UnpackTarGzTask`` helps extract archive files while preserving permissions and symbolic links. 
+Leverage the CN Quickstart utility tools during development and testing workflows.
+Use the build utilities in ``quickstart/buildSrc/`` to automate common development tasks.
+The ``UnpackTarGzTask`` helps extract archive files while preserving permissions and symbolic links.
 The Java convention scripts standardize your application's build configuration across modules.
 
-Configure your deployment environment by selecting the appropriate Docker Compose files in ``quickstart/docker/modules/``. 
+Configure your deployment environment by selecting the appropriate Docker Compose files in ``quickstart/docker/modules/``.
 Quickstart's modular architecture includes ``LocanNet``, Keycloak, observability, and other services, each with their own ``compose.yaml`` files.
 Adjust resource allocations with the ``resource-constraints.yaml`` files with each module directory. 
-Start the observability stack with ``docker-compose -f quickstart/docker/modules/observability/compose.yaml`` up to monitor your application's performance. 
+Start the observability stack with ``docker-compose -f quickstart/docker/modules/observability/compose.yaml`` up to monitor your application's performance.
 The observability module integrates with Grafana dashboards defined in ``quickstart/docker/modules/observability/conf/grafana/dashboards/`` to provide real-time metrics visualization.
 
-You can extend these utilities to match your specific requirements to avoid building similar functionality from scratch. 
+You can extend these utilities to match your specific requirements to avoid building similar functionality from scratch.
 For example, you might add custom test cases to the existing test framework or create new deployment scripts based on the provided templates.
 
-We recommend keeping these utilities when you replace the sample application code. 
-They provide infrastructure that would require significant effort to recreate. 
+We recommend keeping these utilities when you replace the sample application code.
+They provide infrastructure that would require significant effort to recreate.
 During the separation phase copy utilities to your application's directory structure to maintain their functionality while decoupling from the original CN Quickstart code.
 
 LocalNet
 --------
 
-``LocalNet`` provides a self-contained Canton Network environment for development and testing. 
+``LocalNet`` provides a self-contained Canton Network environment for development and testing.
 It includes all necessary components to simulate a Global Synchronizer on a single laptop without external dependencies.
 
 Network components
 ~~~~~~~~~~~~~~~~~~
 
-The ``LocalNet`` environment consists of three core components that work together to simulate a Canton Network. 
-The Application Provider and User Validator nodes run Canton participant nodes to host your contracts and represent user participants. 
+The ``LocalNet`` environment consists of three core components that work together to simulate a Canton Network.
+The Application Provider and User Validator nodes run Canton participant nodes to host your contracts and represent user participants.
 Each validator operates within its own preconfigured synchronizer.
 
-The Global Synchronizer acts as the network coordinator through its Super Validator (SV). 
-It runs a Canton synchronizer node that handles transaction ordering and conflict resolution using sequencer and mediator services. 
+The Global Synchronizer acts as the network coordinator through its Super Validator (SV).
+It runs a Canton synchronizer node that handles transaction ordering and conflict resolution using sequencer and mediator services.
 It verifies that all network participants maintain a consistent view of the distributed ledger.
 
-A set of essential services supports these core components. 
-PostgreSQL stores the ledger data, while Keycloak handles authentication and authorization. 
+A set of essential services supports these core components.
+PostgreSQL stores the ledger data, while Keycloak handles authentication and authorization.
 The Wallet Service manages digital assets and payments, and NGINX provides routing and SSL termination for secure communication between services.
 
 **Technical implementation**
@@ -175,24 +175,24 @@ Key configuration files:
 -  quickstart/docker/modules/localnet/conf/splice/: Splice application configurations
 
 LocalNet persists data through Docker volumes. 
-Its network topology can be modified to meet specific business requirements. 
+Its network topology can be modified to meet specific business requirements.
 Canton console provides direct ledger access for debugging.
 
-Access service logs in terminal using
+Access service logs in terminal using:
 
 ``make logs``
 
-Access git logs in terminal with
+Access git logs in terminal with:
 
 ``git log``
 
-Most teams maintain LocalNet throughout development, even after replacing the sample application. 
+Most teams maintain LocalNet throughout development, even after replacing the sample application.
 ``LocalNet`` provides a consistent testing platform that mirrors a production CN.
 
 ScratchNet
 ----------
 
-ScratchNet is a term that refers to a LocalNet like deployment running on a single host that is accessible to more than one developer or automation. 
+ScratchNet is a term that refers to a LocalNet like deployment running on a single host that is accessible to more than one developer or automation.
 It is a middle ground between ``LocalNet`` and a decentralized DevNet. 
 It's designed for scenarios requiring longer-running instances, more resources, CI/CD or integration testing activities, or multi-developer collaboration.
 
@@ -212,22 +212,22 @@ A successful ScratchNet should include the following requirements:
 
 **Deployment architecture**
 
-ScratchNet also requires persistent storage directories that are accessible across a team. 
+ScratchNet also requires persistent storage directories that are accessible across a team.
 Deploying ScratchNet architecture may use the following pattern:
 
 ::
 
    # Clone CN Quickstart repository to server
 
-   ``git clone https://github.com/digital-asset/cn-quickstart.git``
+   git clone https://github.com/digital-asset/cn-quickstart.git
 
-   ``cd cn-quickstart``
+   cd cn-quickstart
 
    # Create persistent storage directories
 
-   ``mkdir -p /mnt/scratchnet/postgres-data``
+   mkdir -p /mnt/scratchnet/postgres-data
 
-   ``mkdir -p /mnt/scratchnet/canton-data``
+   mkdir -p /mnt/scratchnet/canton-data
 
 Configure external volume mounts in a custom compose override file:
 
@@ -293,10 +293,10 @@ Create a basic environment configuration.
 
    COMPOSE_FILE=quickstart/compose.yaml:scratchnet.yaml make start
 
-If your team is interested in setting up a ScratchNet environment, 
-be sure to implement a regular, and preferably automated, 
-backup strategy if you want to reuse or analyze generated data. 
-Verify that access control is properly in place. 
+If your team is interested in setting up a ScratchNet environment,
+be sure to implement a regular, and preferably automated,
+backup strategy if you want to reuse or analyze generated data.
+Verify that access control is properly in place.
 We also suggest establishing a reliable way to monitor resource consumption, especially for extended runs.
 Your team may want to take advantage of resource management tools available through CN’s Observability tools.
 
@@ -374,5 +374,5 @@ Application components
 **Technical implementation**
 
 The API Design is defined in quickstart/common/openapi.yaml.
-It contains the RESTful API definitions, establishes the JSON schema for request/response objects, 
+It contains the RESTful API definitions, establishes the JSON schema for request/response objects,
 provides error handling conventions, and creates authentication patterns.
