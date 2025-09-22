@@ -1,6 +1,8 @@
 # Canton Network Quickstart Infrastructure Overview
 
-This document provides an overview of the Canton Network infrastructure and the environment in which the Quickstart App operates. The diagrams below illustrate the relationships between Users, Providers, and the Super Validator, as well as the internal components that make up the system. The focus of ``Canton Network Quickstart`` is to provide a development environment for App Providers - the provision of Super Validator infrastructure is auxiliary.
+This document provides an overview of the Canton Network infrastructure and the environment in which the Quickstart App operates. 
+The diagrams below illustrate the relationships between Users, Providers, and the Super Validator, as well as the internal components that make up the system. 
+The focus of ``Canton Network Quickstart`` is to provide a development environment for App Providers - the provision of Super Validator infrastructure is auxiliary.
 
 ## High Level Structure
 
@@ -285,7 +287,8 @@ flowchart TD
 
 ### Description
 
-This diagram illustrates the components of the **Super Validator** node, that operates the **Global Synchronizer** and oversees network governance and consensus. While operating a **Super Validator** node is not the focus of ``Canton Network Quickstart``, a setup is provided to allow development against a local Super Validator.
+This diagram illustrates the components of the **Super Validator** node, that operates the **Global Synchronizer** and oversees network governance and consensus. 
+While operating a **Super Validator** node is not the focus of ``Canton Network Quickstart``, a setup is provided to allow development against a local Super Validator.
 
 - **Super Validator Components:**
   - **Browser:** Used by Super Validator operators to access administrative interfaces and management tools.

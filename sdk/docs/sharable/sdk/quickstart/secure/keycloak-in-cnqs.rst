@@ -45,7 +45,7 @@ Keycloak configuration
 ----------------------
 
 Predefined users each have their own environment file.
-`app-provider`'s `.env` file is `/env/app-provider-auth-on.env`,
+``app-provider``'s ``.env`` file is ``/env/app-provider-auth-on.env``,
 and 
 The default .env configuration includes predefined users in each realm:
 

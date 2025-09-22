@@ -10,8 +10,8 @@ Canton Network quickstart installation
 Introduction
 ============
 
-The Quickstart application helps you and your team become familiar with CN application development by providing **essential** scaffolding. 
-The Quickstart application provides a launchpad and is intended to be extended to meet your business needs. 
+The Quickstart application helps you and your team become familiar with CN application development by providing **essential** scaffolding.
+The Quickstart application provides a launchpad and is intended to be extended to meet your business needs.
 When you are familiar with the Quickstart, review the technology choices and application design to determine what changes are needed.
 Technology and design decisions are ultimately up to you.
 
@@ -38,8 +38,8 @@ and `digitalasset-docker.jfrog.io` JFrog Artifactory docker repository is needed
 
 `Contact us <https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog>`__ if you need access or additional support.
 
-The CN Quickstart is a Dockerized application and requires `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__. 
-We recommend allocating 8 GB of memory to Docker Desktop. 
+The CN Quickstart is a Dockerized application and requires `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__.
+We recommend allocating 8 GB of memory to Docker Desktop.
 Allocate additional resources if you witness unhealthy containers, if possible.
 Decline Observability if your machine does not have sufficient memory.
 
@@ -129,8 +129,7 @@ Artifactory
 Check the ~/.netrc file
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Necessary artifacts are located in
-`Digital Asset's JFrog Artifactory <https://digitalasset.jfrog.io/ui/native/docker>`__.
+Necessary artifacts are located in `Digital Asset's JFrog Artifactory <https://digitalasset.jfrog.io/ui/native/docker>`__.
 These files are accessed through the repository’s build system using a ``~/.netrc`` configuration file.
 
 Check if a ``~/.netrc`` file already exists.
@@ -196,8 +195,7 @@ Complete ~/.netrc
 
 The Identity Token is stored as the password in ``~/.netrc``. 
 
-Replace ``<identity_token>`` with the Identity Token (also referred to as the
-Reference Token) from your JFrog profile.
+Replace ``<identity_token>`` with the Identity Token (also referred to as the Reference Token) from your JFrog profile.
 
 When complete, the ``~/.netrc`` file will look similar to:
 
@@ -213,8 +211,7 @@ Manually set ``.netrc``’s permissions.
 
    chmod 600 ~/.netrc
 
-Check for Artifactory connectivity using ``.netrc`` credentials after populating
-the username and password.
+Check for Artifactory connectivity using ``.netrc`` credentials after populating the username and password.
 
 ::
 
@@ -228,8 +225,7 @@ A response of “OK” indicates a successful connection.
 
 Authentication problems often result in a ``401`` or ``403`` error. 
 
-If an error response occurs, double check ``~/.netrc`` to confirm that ``.netrc`` is
-a source file (in root) and not a local file.
+If an error response occurs, double check ``~/.netrc`` to confirm that ``.netrc`` is a source file (in root) and not a local file.
 
 Docker
 ------
@@ -243,27 +239,24 @@ Login to Docker repositories via the terminal.
    docker login digitalasset-docker.jfrog.io
    docker login
 
-The last command requires a `Docker Hub <https://app.docker.com/>`__ username
-and password or *Personal Access Token (PAT)*. 
+The last command requires a `Docker Hub <https://app.docker.com/>`__ username and password or *Personal Access Token (PAT)*.
 
 Commands should return ‘Login Succeeded’.
 
 Install Daml SDK
 ----------------
 
-**cd** into the ``quickstart`` subdirectory and install the Daml SDK from the
-quickstart subdirectory.
+**cd** into the ``quickstart`` subdirectory and install the Daml SDK from the quickstart subdirectory.
 
 ::
 
    cd quickstart
    make install-daml-sdk
 
-.. note:: The `Makefile` providing project choreography is in the `quickstart/`
-          directory. `make` only operates within `quickstart/`.
+.. note:: The ``Makefile`` providing project choreography is in the ``quickstart/``
+          directory. ``make`` only operates within ``quickstart/``.
    
-          If you see errors related to `make`, double check your present working
-          directory.
+          If you see errors related to ``make``, double check your present working directory.
 
 The Daml SDK is large and can take several minutes to complete.
 
@@ -275,8 +268,8 @@ Deploy a validator on LocalNet
 
 Configure the local development environment by running ``make setup``.
 
-Enable `Observability` and OAuth2. 
-Leave the party hint blank to use the default and disable ``TEST MODE``. 
+Enable ``Observability`` and OAuth2. 
+Leave the party hint blank to use the default and disable ``TEST MODE``.
 
   The party hint is used as a party node’s alias of their identification hash.
   The Party Hint is not part of the user’s identity. 
@@ -374,28 +367,24 @@ session to avoid conflict errors on subsequent application builds.
 Next steps
 ==========
 
-You have successfully installed the CN Quickstart. 
+You have successfully installed the CN Quickstart.
 
-The next section, “Exploring The Demo,” provides a demonstration of the
-example application.
+The next section, “Exploring The Demo,” provides a demonstration of the example application.
 
 Connecting your application to The Canton Network
 -------------------------------------------------
 
-The ``LocalNet`` deployment connects to a local validator which is in turn
-connected to a local super-validator (synchronizer). Staging and final
-production deployments require connecting to a validator that is in turn
-connected to the public Canton Network.
+The ``LocalNet`` deployment connects to a local validator which is in turn connected to a local super-validator (synchronizer).
+Staging and final production deployments require connecting to a validator that is in turn connected to the public Canton Network.
 
-The Canton Network provides three synchronizer pools. The production network
-is ``MainNet``; the production staging network is ``TestNet``. As a developer you
-will mostly be connecting to the development staging network ``DevNet``.
+The Canton Network provides three synchronizer pools.
+The production network is ``MainNet``; the production staging network is ``TestNet``.
+As a developer you will mostly be connecting to the development staging network ``DevNet``.
 
 Access to `a SV Node <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
-that is whitelisted on the CN is required to connect to DevNet. The GSF
-publishes a `list of SV nodes <https://sync.global/sv-network/>`__ who have the
-ability to sponsor a Validator node. To access ``DevNet``, contact your
-sponsoring SV agent for VPN connection information.
+that is whitelisted on the CN is required to connect to DevNet. The GSF publishes a `list of SV nodes <https://sync.global/sv-network/>`__
+who have the ability to sponsor a Validator node.
+To access ``DevNet``, contact your sponsoring SV agent for VPN connection information.
 
 Resources
 =========
