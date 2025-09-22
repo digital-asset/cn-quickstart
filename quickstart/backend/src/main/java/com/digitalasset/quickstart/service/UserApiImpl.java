@@ -35,14 +35,14 @@ public class UserApiImpl implements UserApi {
         return CompletableFuture.completedFuture(authenticatedUserProvider.getUser()).thenApply(maybeUser ->
                 maybeUser.map(user -> {
                             // Lookup wallet URL from tenant properties
-                            String walletUrl = Optional.ofNullable(tenantPropertiesRepository.getTenant(user.getTenantId()))
+                            String walletUrl = Optional.ofNullable(tenantPropertiesRepository.getTenant(user.tenantId()))
                                     .map(TenantProperties::getWalletUrl)
                                     .orElse(null);
                             // Create the AuthenticatedUser object
                             AuthenticatedUser out = new AuthenticatedUser(
-                                    user.getUsername(),
-                                    user.getPartyId(),
-                                    user.getRoles(),
+                                    user.username(),
+                                    user.partyId(),
+                                    user.roles(),
                                     user.isAdmin(),
                                     walletUrl
                             );

@@ -5,8 +5,8 @@ package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.AdminApi;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
-import com.digitalasset.quickstart.security.AuthClientRegistrationRepository;
-import com.digitalasset.quickstart.security.AuthClientRegistrationRepository.Client;
+import com.digitalasset.quickstart.security.oauth2.AuthClientRegistrationRepository;
+import com.digitalasset.quickstart.security.oauth2.AuthClientRegistrationRepository.Client;
 import com.digitalasset.quickstart.security.AuthUtils;
 
 import org.openapitools.model.TenantRegistration;
@@ -161,12 +161,7 @@ public class AdminApiImpl implements AdminApi {
             "clientId", request.getClientId(),
             "partyId", request.getPartyId()
         );
-        // TODO KV https://github.com/digital-asset/cn-quickstart/issues/237
-        //  consider storing partyId/tenantId as GrantedAuthority instead of using JWT claims
-        //  Problem: We cannot use auth.asAdminParty(party -> here. if this endpoint is accessed from CLI providing JWT token directly
-        //  The endpoint is still protected as SpringSecurityOAuth2Config -> HttpSecurity requires role ADMIN for it
-        //  but it is annoying that we cannot use the same pattern as in other endpoints
-        return traceServiceCallAsync(ctx, () -> CompletableFuture.supplyAsync(() -> {
+        return auth.asAdminParty(party -> traceServiceCallAsync(ctx, () -> CompletableFuture.supplyAsync(() -> {
             validateRequest(request);
             ensureTenantIsUnique(request);
             if (auth.isOAuth2Enabled()) {
@@ -178,7 +173,7 @@ public class AdminApiImpl implements AdminApi {
             persistTenantMetadata(request);
             // Build the response (OpenAPI model)
             return ResponseEntity.status(HttpStatus.CREATED).body(buildResponse(request));
-        }));
+        })));
     }
 
     @Override

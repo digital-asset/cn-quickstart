@@ -4,7 +4,7 @@
 package com.digitalasset.quickstart.service;
 
 import com.digitalasset.quickstart.api.LoginLinksApi;
-import com.digitalasset.quickstart.security.AuthClientRegistrationRepository;
+import com.digitalasset.quickstart.security.oauth2.AuthClientRegistrationRepository;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import org.openapitools.model.LoginLink;
 import org.springframework.context.annotation.Profile;

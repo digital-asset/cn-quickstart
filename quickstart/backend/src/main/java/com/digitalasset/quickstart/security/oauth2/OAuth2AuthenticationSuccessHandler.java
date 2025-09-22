@@ -1,10 +1,12 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-package com.digitalasset.quickstart.security;
+package com.digitalasset.quickstart.security.oauth2;
 
 import com.digitalasset.quickstart.config.SecurityConfig;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
+import com.digitalasset.quickstart.security.PartyAuthority;
+import com.digitalasset.quickstart.security.TenantAuthority;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -64,16 +66,16 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         }
 
         Map<String, Object> claimsWithParty = new HashMap<>(oidcUser.getClaims());
-        claimsWithParty.put(AuthService.VIRTUAL_TENANT_ID_CLAIM, clientReg.getClientName());
+        authorities.add(new TenantAuthority(clientReg.getClientName()));
 
         var testPartyId = claimsWithParty.get("party_id");
         if (env.acceptsProfiles(Profiles.of("test")) && testPartyId != null) {
             // CAUTION: Not intended for use in production environments.
             // In the test profile party ID resolution is derived from the JWT token's party_id claim, overriding the tenant registration's party ID.
             // This feature is designed for testing purposes to generate a unique AppUser party for each test run and ensure isolation.
-            claimsWithParty.put(AuthService.VIRTUAL_PARTY_ID_CLAIM, testPartyId);
+            authorities.add(new PartyAuthority(testPartyId.toString()));
         } else {
-            claimsWithParty.put(AuthService.VIRTUAL_PARTY_ID_CLAIM, tenantPropertiesRepository.getTenant(clientReg.getClientName()).getPartyId());
+            authorities.add(new PartyAuthority(tenantPropertiesRepository.getTenant(clientReg.getClientName()).getPartyId()));
         }
 
         OidcIdToken idTokenWithParty = new OidcIdToken(oidcUser.getIdToken().getTokenValue(), oidcUser.getIssuedAt(), oidcUser.getExpiresAt(), claimsWithParty);

@@ -1,11 +1,14 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-package com.digitalasset.quickstart.security;
+package com.digitalasset.quickstart.security.sharedsecret;
 
 import com.digitalasset.quickstart.config.SecurityConfig;
 import com.digitalasset.quickstart.repository.TenantPropertiesRepository;
-import com.digitalasset.quickstart.security.AuthenticatedUserProvider.AuthenticatedUser;
+import com.digitalasset.quickstart.security.Auth;
+import com.digitalasset.quickstart.security.AuthenticatedPartyProvider;
+import com.digitalasset.quickstart.security.AuthenticatedUserProvider;
+import com.digitalasset.quickstart.security.TokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,12 +31,12 @@ import java.util.Optional;
 @Configuration
 @EnableWebSecurity
 @Profile("shared-secret")
-public class SpringSecuritySharedSecretConfig {
+public class SharedSecretConfig {
 
     private final TenantPropertiesRepository tenantPropertiesRepository;
     private final SecurityConfig securityConfig;
 
-    public SpringSecuritySharedSecretConfig(TenantPropertiesRepository tenantPropertiesRepository, SecurityConfig securityConfig) {
+    public SharedSecretConfig(TenantPropertiesRepository tenantPropertiesRepository, SecurityConfig securityConfig) {
         this.tenantPropertiesRepository = tenantPropertiesRepository;
         this.securityConfig = securityConfig;
     }
@@ -96,22 +99,28 @@ public class SpringSecuritySharedSecretConfig {
                 return Optional.empty();
             } else {
                 var name = SecurityContextHolder.getContext().getAuthentication().getName();
-                AuthenticatedUser user = new AuthenticatedUser();
-                user.setUsername(name);
-                tenantPropertiesRepository.getAllTenants().values().stream().filter(tenant -> tenant.getUsers().contains(name)).findFirst()
-                        .ifPresent(tenant -> {
-                            user.setTenantId(tenant.getTenantId());
-                            user.setPartyId(tenant.getPartyId());
-                            if (tenant.isInternal()) {
-                                user.setRoles(List.of("ROLE_ADMIN"));
-                                user.setAdmin(true);
-                                user.setUsername(user.getUsername() + " the provider");
-                            } else {
-                                user.setRoles(List.of("ROLE_USER"));
-                                user.setUsername(user.getUsername() + " the user");
-                            }
-                        });
-                return Optional.of(user);
+
+                return tenantPropertiesRepository.getAllTenants().values().stream().filter(tenant -> tenant.getUsers().contains(name)).findFirst().map(tenant -> {
+                    List<String> roles;
+                    var admin = false;
+                    var userName = name;
+                    if (tenant.isInternal()) {
+                        roles = List.of("ROLE_ADMIN");
+                        admin = true;
+                        userName += " the provider";
+                    } else {
+                        roles = List.of("ROLE_USER");
+                        userName += " the user";
+                    }
+
+                    return new AuthenticatedUserProvider.DefaultAuthenticatedUser(
+                            userName,
+                            tenant.getTenantId(),
+                            tenant.getPartyId(),
+                            roles,
+                            admin
+                    );
+                });
             }
         };
     }
