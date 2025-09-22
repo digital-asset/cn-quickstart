@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AuthConfig {
-    private AuthenticatedPartyProvider authenticatedPartyProvider;
+    private final AuthenticatedPartyProvider authenticatedPartyProvider;
     private final Auth auth;
 
     public AuthConfig(AuthenticatedPartyProvider authenticatedPartyProvider, Auth auth) {

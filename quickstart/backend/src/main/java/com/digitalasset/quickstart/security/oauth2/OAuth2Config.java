@@ -1,9 +1,13 @@
 // Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-package com.digitalasset.quickstart.security;
+package com.digitalasset.quickstart.security.oauth2;
 
+import com.digitalasset.quickstart.security.Auth;
+import com.digitalasset.quickstart.security.PartyAuthority;
+import com.digitalasset.quickstart.security.TenantAuthority;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -33,13 +37,19 @@ import java.util.HashSet;
 @Configuration
 @EnableWebSecurity
 @Profile("oauth2")
-public class SpringSecurityOAuth2Config {
+public class OAuth2Config {
+
+    @Value("${application.tenants.AppProvider.partyId}")
+    private String partyId;
+
+    @Value("${application.tenants.AppProvider.tenantId}")
+    private String tenantId;
 
     private final OAuth2AuthenticationSuccessHandler authenticationSuccessHandler;
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final OAuth2AuthorizedClientService authorizedClientService;
 
-    public SpringSecurityOAuth2Config(OAuth2AuthenticationSuccessHandler authenticationSuccessHandler, ClientRegistrationRepository clientRegistrationRepository, OAuth2AuthorizedClientService authorizedClientService) {
+    public OAuth2Config(OAuth2AuthenticationSuccessHandler authenticationSuccessHandler, ClientRegistrationRepository clientRegistrationRepository, OAuth2AuthorizedClientService authorizedClientService) {
         this.authenticationSuccessHandler = authenticationSuccessHandler;
         this.clientRegistrationRepository = clientRegistrationRepository;
         this.authorizedClientService = authorizedClientService;
@@ -95,9 +105,9 @@ public class SpringSecurityOAuth2Config {
                 Collection<GrantedAuthority> authorities = new HashSet<>(defaultGrantedAuthoritiesConverter.convert(jwt));
                 // there is only one AppProvider issuer that can issue JWT to authenticate to ResourceServer
                 // we consider anybody with JWT from that issuer to be admin
-                // TODO KV https://github.com/digital-asset/cn-quickstart/issues/237
-                //  consider storing partyId/tenantId as GrantedAuthority instead of using JWT claims
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                authorities.add(new PartyAuthority(partyId));
+                authorities.add(new TenantAuthority(tenantId));
                 return authorities;
             }
         });
