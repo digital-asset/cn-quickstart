@@ -330,6 +330,8 @@ If you see errors on ``make build`` such as:
 
 Then verify that the ``.env`` file contains an accurate daml SDK value in ``DAML_RUNTIME_VERSION=``.
 
+Find the daml SDK version with ``make check-daml-sdk``.
+
 **Infrastructure & environment**
 --------------------------------
 
