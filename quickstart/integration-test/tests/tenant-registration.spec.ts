@@ -17,11 +17,10 @@ test.describe('Tenant Registrations (E2E)', () => {
 
     test('Create tenant (happy path) -> success toast & row appears', async ({ provider }) => {
         const tenantId = `e2e-tenant-${Date.now()}`;
-        const partyId = `party-${Math.floor(Math.random() * 1e6)}`;
         const walletUrl = WALLET_URL;
 
         await provider.tenants.goto();
-        await provider.tenants.fillCommon({ tenantId, partyId, walletUrl });
+        await provider.tenants.fillCommon({ tenantId, walletUrl });
         await provider.tenants.fillSecuritySection({});
         await provider.tenants.clickSubmit();
         await provider.waitForSuccessMessage('Tenant registration created');
@@ -33,13 +32,12 @@ test.describe('Tenant Registrations (E2E)', () => {
 
     test('409 conflict, ClientId-IssuerUrl combination should be unique -> shows reason', async ({ provider }) => {
         const tenantId = `e2e-tenant-400-${Date.now()}`;
-        const partyId = `party-${Math.floor(Math.random() * 1e6)}`;
         const walletUrl = 'http://wallet.localhost:2000/';
         const clientId = `client-${Date.now()}`;
 
         await provider.tenants.goto();
         // First creation (should succeed)
-        await provider.tenants.fillCommon({ tenantId, partyId, walletUrl });
+        await provider.tenants.fillCommon({ tenantId, walletUrl });
         await provider.tenants.fillSecuritySection({clientId: clientId});
         await provider.tenants.clickSubmit();
         await provider.waitForSuccessMessage('Tenant registration created');
@@ -48,9 +46,8 @@ test.describe('Tenant Registrations (E2E)', () => {
         });
         // Second creation with the same ClientId-IssuerUrl combination (should trigger 409)
         const tenantId2 = `e2e-tenant-400-2-${Date.now()}`;
-        const partyId2 = `party-2-${Math.floor(Math.random() * 1e6)}`;
 
-        await provider.tenants.fillCommon({ tenantId: tenantId2, partyId: partyId2, walletUrl });
+        await provider.tenants.fillCommon({ tenantId: tenantId2, walletUrl });
         await provider.tenants.fillSecuritySection({clientId: clientId});
         await provider.tenants.clickSubmit();
         await provider.tenants.assertErrorVisible(/ClientId-IssuerUrl combination already exists/i);
@@ -66,12 +63,11 @@ test.describe('Tenant Registrations (E2E)', () => {
     test('409 conflict on duplicate tenantId -> shows reason + delete confirmation flow', async ({ provider }) => {
         const mode = await provider.tenants.getAuthMode();
         const tenantId = `e2e-tenant-dup-${Date.now()}`;
-        const partyId = `party-${Math.floor(Math.random() * 1e6)}`;
         const walletUrl = WALLET_URL;
 
         await provider.tenants.goto();
         // First creation (should succeed)
-        await provider.tenants.fillCommon({ tenantId, partyId, walletUrl });
+        await provider.tenants.fillCommon({ tenantId, walletUrl });
         await provider.tenants.fillSecuritySection({});
         await provider.tenants.clickSubmit();
         await provider.waitForSuccessMessage('Tenant registration created');
@@ -79,7 +75,7 @@ test.describe('Tenant Registrations (E2E)', () => {
             await provider.tenants.assertMatchingRowCountIs(1);
         });
         // Second creation with the same tenantId (should trigger 409)
-        await provider.tenants.fillCommon({ tenantId, partyId: `party-${Math.floor(Math.random() * 1e6)}`, walletUrl });
+        await provider.tenants.fillCommon({ tenantId, walletUrl });
         await provider.tenants.fillSecuritySection({});
         await provider.tenants.clickSubmit();
         await provider.tenants.assertErrorVisible(/TenantId already exists/i);

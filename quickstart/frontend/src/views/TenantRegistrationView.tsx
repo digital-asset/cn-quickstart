@@ -41,8 +41,7 @@ const TenantRegistrationView: React.FC = () => {
     useEffect(() => {
         fetchFeatureFlags()
         fetchTenantRegistrations()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [fetchTenantRegistrations])
 
     // Prefill Party ID (unchangeable)
     useEffect(() => {
@@ -56,7 +55,7 @@ const TenantRegistrationView: React.FC = () => {
         const { name, value } = e.target
         setFormData(prev => ({
             ...prev,
-            [name]: name === 'users' ? value.split(',').map(u => u.trim()).filter(Boolean) : value,
+            [name]: name === 'users' ? value.split(',').map(u => u.trim()) : value,
         }))
     }
 
@@ -96,7 +95,7 @@ const TenantRegistrationView: React.FC = () => {
             clientId: '',
             issuerUrl: '',
             walletUrl: '',
-            users: [],
+            users: []
         }))
     }
 
@@ -217,23 +216,23 @@ const TenantRegistrationView: React.FC = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {registrations.map((r) => (
-                        <tr key={r.tenantId}>
-                            <td>{r.tenantId}</td>
-                            <td>{r.partyId}</td>
+                    {registrations.map((registration, index) => (
+                        <tr key={index}>
+                            <td>{registration.tenantId}</td>
+                            <td>{registration.partyId}</td>
                             {featureFlags?.authMode === 'oauth2' && (
                                 <>
-                                    <td>{r.clientId}</td>
-                                    <td>{r.issuerUrl}</td>
+                                    <td>{registration.clientId}</td>
+                                    <td>{registration.issuerUrl}</td>
                                 </>
                             )}
-                            <td>{r.walletUrl}</td>
-                            {featureFlags?.authMode === 'shared-secret' && <td>{Array.isArray(r.users) ? r.users.join(', ') : r.users}</td>}
+                            <td>{registration.walletUrl}</td>
+                            {featureFlags?.authMode === 'shared-secret' && <td>{Array.isArray(registration.users) ? registration.users.join(', ') : registration.users}</td>}
                             <td>
                                 <button
                                     className="btn btn-danger"
-                                    disabled={r.internal}
-                                    onClick={() => handleDelete(r.tenantId)}
+                                    disabled={registration.internal}
+                                    onClick={() => handleDelete(registration.tenantId)}
                                 >
                                     Delete
                                 </button>
