@@ -46,12 +46,15 @@ export default class Tenants extends RowOps {
     // Form filling
     async fillCommon({
                          tenantId,
+                         partyId,
                          walletUrl,
                      }: {
         tenantId: string;
+        partyId: string;
         walletUrl: string;
     }): Promise<void> {
         await this.page.getByLabel(/Tenant ID:/i).fill(tenantId);
+        await this.page.getByLabel(/Party Id:/i).fill(partyId);
         await this.page.getByLabel(/Wallet URL:/i).fill(walletUrl);
     }
 

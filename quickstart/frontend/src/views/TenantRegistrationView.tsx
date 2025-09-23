@@ -46,7 +46,9 @@ const TenantRegistrationView: React.FC = () => {
     // Prefill Party ID (unchangeable)
     useEffect(() => {
         const candidate = registrations[0]?.partyId?.trim()
-        if (candidate && formData.partyId !== candidate) {
+        if (!candidate) return
+        // only prefill if partyId is still empty
+        if (!formData.partyId?.trim()) {
             setFormData(prev => ({ ...prev, partyId: candidate }))
         }
     }, [registrations, formData.partyId])
@@ -89,14 +91,14 @@ const TenantRegistrationView: React.FC = () => {
         await createTenantRegistration(formData)
 
         // Reset the form but keep the prefilled (unchangeable) partyId
-        setFormData(prev => ({
+        setFormData({
             tenantId: '',
-            partyId: prev.partyId,
+            partyId: '',
             clientId: '',
             issuerUrl: '',
             walletUrl: '',
             users: []
-        }))
+        })
     }
 
     const handleDelete = async (tenantId: string) => {
@@ -131,8 +133,8 @@ const TenantRegistrationView: React.FC = () => {
                         name="partyId"
                         className="form-control"
                         value={formData.partyId}
-                        readOnly
-                        aria-readonly="true"
+                        onChange={handleChange}
+                        required
                     />
                 </div>
 
