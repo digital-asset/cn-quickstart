@@ -13,6 +13,7 @@ workflows:
     jobs:
       - path-filtering/filter:
           base-revision: main
+          name: check for updated files
           # mapping structure: <regex path-to-test> <parameter-to-set> <value-of-pipeline-parameter>
           mapping: |
             .* shared_enabled true .circleci/configs/workflow_shared.yml
