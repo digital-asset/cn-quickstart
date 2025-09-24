@@ -1,0 +1,59 @@
+# Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+version: 2.1
+
+# the default pipeline parameters, which will be updated according to the results of the path-filtering orb in setup:
+parameters:
+  run-docs-validation:
+    type: boolean
+    default: false
+
+commands:
+  docs:
+    parameters:
+      command:
+        type: string
+        description: command to run in docs directory
+        default: ''
+    steps:
+      - run:
+          name: docs/<< parameters.command >>
+          command: |
+            cd sdk \
+            && << parameters.command >>
+
+  docs-setup:
+    steps:
+      - restore_cache:
+          name: venv restore cache
+          keys:
+            - venv-qs-{{ checksum "./sdk/poetry.lock" }}-{{ checksum "./sdk/pyproject.toml"}}-{{ checksum "./sdk/Makefile" }}
+      - docs:
+          command: make poetry-install
+      - save_cache:
+          name: venv save cache
+          key: venv-qs-{{ checksum "./sdk/poetry.lock" }}-{{ checksum "./sdk/pyproject.toml"}}-{{ checksum "./sdk/Makefile" }}
+          paths:
+            - ./sdk/.venv/
+
+
+jobs:
+  validate-documentation:
+    resource_class: small
+    machine:
+      image: ubuntu-2404:2024.11.1
+    steps:
+      - checkout
+      - nix
+      - docs-setup
+      - docs:
+          command: make render-preview
+
+
+
+workflows:
+  documentation:
+    when: << pipeline.parameters.run-docs-validation >>
+    jobs:
+      - validate-documentation
