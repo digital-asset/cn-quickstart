@@ -5,10 +5,12 @@ module Splice.Scripts.TestComputeFees where
 
 import DA.Assert
 import DA.Time
+import DA.TextMap as TextMap
 import Daml.Script
 
 import Splice.Scripts.Util
 
+import Splice.Api.Token.MetadataV1
 import Splice.Amulet
 import Splice.AmuletRules
 import Splice.Expiry
@@ -17,6 +19,7 @@ import Splice.Fees
 
 template Test
   with
+    dso : Party
     sender : Party
   where
     signatory sender
@@ -25,7 +28,7 @@ template Test
         context : PaymentTransferContext
         outputs : [TransferOutput]
       controller sender
-      do exerciseComputeFees context sender outputs
+      do exerciseComputeFees dso context sender outputs
 
 
 test = script do
@@ -33,6 +36,7 @@ test = script do
     now <- getTime
     context <- getPaymentTransferContext app alice
     test <- submitUser alice.userId $ createCmd Test with
+      dso = app.dso
       sender = alice.primaryParty
     let outputs =
           [ TransferOutput with
@@ -95,14 +99,11 @@ testScaledHoldingFees = do
   Some (amuletRulesCid, amuletRules) <- queryAmuletRulesByKey app.dso
 
   -- Set holding fee and initial amulet price
-  now <- getTime
-  submitMulti [app.dso] [app.dso] $ exerciseCmd amuletRulesCid AmuletRules_AddFutureAmuletConfigSchedule with
-    newScheduleItem = (
-          addRelTime now (minutes 1),
-          amuletRules.configSchedule.initialValue with
-            transferConfig = amuletRules.configSchedule.initialValue.transferConfig with
-              holdingFee = RatePerRound holdingFee
-        )
+  submitMulti [app.dso] [app.dso] $ exerciseCmd amuletRulesCid AmuletRules_SetConfig with
+    newConfig = amuletRules.configSchedule.initialValue with
+                            transferConfig = amuletRules.configSchedule.initialValue.transferConfig with
+                              holdingFee = RatePerRound holdingFee
+    baseConfig = amuletRules.configSchedule.initialValue
 
   advanceToIssuanceWithPrice app initialAmuletPrice
   cid <- tap app alice 100.0
@@ -116,23 +117,26 @@ testScaledHoldingFees = do
   [(curAmuletCid, curAmulet)] <- queryFilter @Amulet alice.primaryParty (\c -> c.owner == alice.primaryParty)
   curAmulet.amount.ratePerRound.rate === scaledHoldingFee
 
-  -- Make a transfer, so that holding fees will be charged
-  context <- getPaymentTransferContext app alice
-  transferResult <- submitMulti [alice.primaryParty, bob.primaryParty] [app.dso] $
-    exerciseCmd context.amuletRules AmuletRules_Transfer with
-      transfer = Transfer with
-        sender = alice.primaryParty
-        provider = alice.primaryParty
-        inputs = [InputAmulet curAmuletCid]
-        outputs = [ TransferOutput with
-                      receiver = bob.primaryParty
-                      amount = 10.0
-                      lock = None
-                      receiverFeeRatio = 1.0]
-        beneficiaries = None
-      context = context.context
+  -- skip 202 rounds so that the amulet expires
+  skipNRounds app 202
 
-  -- Actual holding fee should be based on the amulet price when the amulet was created, not the current one
-  transferResult.summary.holdingFees === scaledHoldingFee
+  openRoundCid <- getLatestActiveOpenRound app
+  result <- submit app.dso $ exerciseCmd curAmuletCid Amulet_Expire with
+    roundCid = openRoundCid._1
+
+  -- Check the expire result. In particular, actual holding fee should be based
+  -- on the amulet price when the amulet was created, not the current one.
+  let expectedSummary= AmuletExpireSummary with
+        owner = alice.primaryParty
+        round = curAmulet.amount.createdAt
+        changeToInitialAmountAsOfRoundZero = negate (getValueAsOfRound0 curAmulet.amount)
+        changeToHoldingFeesRate = negate scaledHoldingFee
+      expectedMeta = Some $ Metadata $ TextMap.fromList
+        [ ("splice.lfdecentralizedtrust.org/burned", show curAmulet.amount.initialAmount)
+        , ("splice.lfdecentralizedtrust.org/tx-kind","expire-dust")
+        ]
+  expectedSummary === result.expireSum
+  expectedMeta === result.meta
 
   pure ()
+
