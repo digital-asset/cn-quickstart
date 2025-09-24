@@ -112,6 +112,8 @@ jobs:
       - quickstart:
           command: make build
       - quickstart:
+          command: make test-daml
+      - quickstart:
           command: make start
       - quickstart:
           command: make integration-test
