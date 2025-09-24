@@ -8,36 +8,8 @@ parameters:
   run-integration-test:
     type: boolean
     default: false
-  run-docs-validation:
-    type: boolean
-    default: false
 
 commands:
-  nix:
-    steps:
-      - run:
-          name: Nix preparation
-          command: .circleci/scripts/nix_prep.sh
-      - restore_cache:
-          name: Nix restore cache
-          keys:
-            - nix-qs-{{ checksum "/home/circleci/nix/cache-keys/orb-version" }}-{{ checksum "/home/circleci/nix/cache-keys/nix-checksums" }}
-            - nix-qs-{{ checksum "/home/circleci/nix/cache-keys/orb-version" }}
-      - run:
-          name: Nix Setup
-          command: .circleci/scripts/nix_setup.sh
-      - save_cache:
-          name: Nix save cache
-          key: nix-qs-{{ checksum "/home/circleci/nix/cache-keys/orb-version" }}-{{ checksum "/home/circleci/nix/cache-keys/nix-checksums" }}
-          paths:
-            - /home/circleci/.config/nix
-            - /home/circleci/.local/state
-            - /home/circleci/.nix-bashrc
-            - /home/circleci/.nix-channels
-            - /home/circleci/.nix-defexpr
-            - /home/circleci/.nix-profile
-            - /nix
-
   quickstart:
     parameters:
       command:
@@ -50,34 +22,6 @@ commands:
           command: |
             cd quickstart \
             && << parameters.command >>
-
-  docs:
-    parameters:
-      command:
-        type: string
-        description: command to run in docs directory
-        default: ''
-    steps:
-      - run:
-          name: docs/<< parameters.command >>
-          command: |
-            cd sdk \
-            && << parameters.command >>
-
-  docs-setup:
-    steps:
-      - restore_cache:
-          name: venv restore cache
-          keys:
-            - venv-qs-{{ checksum "./sdk/poetry.lock" }}-{{ checksum "./sdk/pyproject.toml"}}-{{ checksum "./sdk/Makefile" }}
-      - docs:
-          command: make poetry-install
-      - save_cache:
-          name: venv save cache
-          key: venv-qs-{{ checksum "./sdk/poetry.lock" }}-{{ checksum "./sdk/pyproject.toml"}}-{{ checksum "./sdk/Makefile" }}
-          paths:
-            - ./sdk/.venv/
-
 
 jobs:
   integration-test:
@@ -112,6 +56,8 @@ jobs:
       - quickstart:
           command: make build
       - quickstart:
+          command: make test-daml
+      - quickstart:
           command: make start
       - quickstart:
           command: make integration-test
@@ -126,19 +72,6 @@ jobs:
           path: quickstart/integration-test/test-results/
           destination: test-results
 
-  validate-documentation:
-    resource_class: small
-    machine:
-      image: ubuntu-2404:2024.11.1
-    steps:
-      - checkout
-      - nix
-      - docs-setup
-      - docs:
-          command: make render-preview
-
-
-
 workflows:
   integration-test:
     when: << pipeline.parameters.run-integration-test >>
@@ -146,7 +79,3 @@ workflows:
       - integration-test:
           context:
             - artifactory-readonly
-  documentation:
-    when: << pipeline.parameters.run-docs-validation >>
-    jobs:
-      - validate-documentation
