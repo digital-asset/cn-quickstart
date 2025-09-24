@@ -9,7 +9,7 @@ We assume that you have a Daml Enterprise license to leverage all of this projec
 However, an OSS developer can benefit from this project by understanding how a CN Global Synchronizer application is structured.
 
 To run the Quickstart, you need some binaries from Artifactory. 
-[Contact us](https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog) to request Artifactory access.
+[Contact us by filling out the form](https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog) to request Artifactory access.
 
 [Binaries terms and conditions](https://github.com/digital-asset/cn-quickstart/blob/main/terms.md).
 
