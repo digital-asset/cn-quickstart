@@ -13,11 +13,11 @@ workflows:
     jobs:
       - path-filtering/filter:
           base-revision: main
-          name: check for updated files
+          name: check-updated-files
           # mapping structure: <regex path-to-test> <parameter-to-set> <value-of-pipeline-parameter>
           mapping: |
             .* shared_enabled true .circleci/configs/workflow_shared.yml
             (quickstart/.*|.circleci/configs/workflow_test.yml) run-integration-test true .circleci/configs/workflow_test.yml
-            sdk/.* run-docs-validation true .circleci/configs/workflow_docs.yml
+            (sdk/.*|.circleci/configs/workflow_docs.yml) run-docs-validation true .circleci/configs/workflow_docs.yml
           # this is the path of the configuration we should trigger once path filtering complete.
           config-path: .circleci/continue_config.yml
