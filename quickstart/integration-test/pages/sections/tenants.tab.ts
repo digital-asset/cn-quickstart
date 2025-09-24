@@ -54,7 +54,7 @@ export default class Tenants extends RowOps {
         walletUrl: string;
     }): Promise<void> {
         await this.page.getByLabel(/Tenant ID:/i).fill(tenantId);
-        await this.page.getByLabel(/Party Id:/i).fill(partyId);
+        await this.page.getByLabel(/Party ID:/i).fill(partyId);
         await this.page.getByLabel(/Wallet URL:/i).fill(walletUrl);
     }
 
