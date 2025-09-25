@@ -115,6 +115,15 @@ Alternatively, in the terminal, from quickstart/ run:
 
   ``make open-app-ui``
 
+.. note:: Safari users may need to manually map the ``app-provider`` subdomain in ``/etc/hosts``.
+   Use the terminal command ``sudo nano /etc/hosts`` to add:
+   
+   ``127.0.0.1       app-provider.localhost``
+   
+   This tells your system to resolve ``app-provider.localhost`` to your local machine.
+   Then save and close the file. 
+   Restart Safari.
+
 Login
 -----
 
