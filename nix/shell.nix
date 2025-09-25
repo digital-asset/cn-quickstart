@@ -2,6 +2,7 @@
 let
   inherit (pkgs) stdenv;
   requiredPackages = with pkgs; ([ # these packages are required both in CI and for local development
+    coreutils # provides gdate command needed by Makefile for Docker log timestamp formatting on macOS
     jdk21
     nodejs_20
     typescript
