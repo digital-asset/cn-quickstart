@@ -129,32 +129,20 @@ open class ConfigureProfilesTask : DefaultTask() {
 
         // If a cleaned user exists, use "quickstart-$cleanedUser-1" as default
         // Otherwise, no default is provided (we'll force user input).
-        val defaultPartyHint = if (cleanedUser.isNotEmpty()) {
-            "quickstart-$cleanedUser-1"
-        } else {
-            ""
-        }
+        val defaultPartyHint = if (cleanedUser.isNotEmpty()) "quickstart-$cleanedUser-1" else ""
 
-        // If there's a valid default, show it in brackets; otherwise, show no brackets.
-        val fullPrompt = if (defaultPartyHint.isNotEmpty()) {
-            "$prompt [$defaultPartyHint]"
-        } else {
-            prompt
+        // If we have a default, just use it and inform the user, user—no prompt for input.
+        if (defaultPartyHint.isNotEmpty()) {
+            println("⚠ PARTY_HINT: using generated default '$defaultPartyHint'.")
+            return defaultPartyHint
         }
 
         while (true) {
-            print("$fullPrompt: ")
+            print("$prompt (format: <organization>-<function>-<number>)")
             System.out.flush()
 
             // Read user input
-            val input = readLine().orEmpty().trim()
-
-            // If no input was provided but a default exists, use the default.
-            val candidate = if (input.isEmpty() && defaultPartyHint.isNotEmpty()) {
-                defaultPartyHint
-            } else {
-                input
-            }
+            val candidate = readLine().orEmpty().trim()
 
             // If there's no default and the user provided nothing, force them to try again.
             if (candidate.isEmpty()) {
