@@ -7,6 +7,13 @@
 # Determine the operating system
 KERNEL_NAME := $(shell uname -s)
 
+# Set appropriate date command based on OS
+ifeq ($(KERNEL_NAME),Darwin)
+    DATE_CMD = gdate
+else
+    DATE_CMD = date
+endif
+
 ifneq (,$(wildcard .env))
     include .env
 endif
@@ -300,7 +307,7 @@ capture-logs: docker-available ## Monitor docker events and capture logs
 	    if [ -z "$$network_attached" ]; then \
 	        continue; \
 	    fi; \
-	    echo "$$(date -u -d "@$$time" +"%Y-%m-%dT%H:%M:%S") $$service_name $$status"; \
+	    echo "$$($(DATE_CMD) -u -d "@$$time" +"%Y-%m-%dT%H:%M:%S") $$service_name $$status"; \
 	    if [ "$$status" = "start" ]; then \
 	        echo ">> $$service_name"; \
 	        ext=".log"; \

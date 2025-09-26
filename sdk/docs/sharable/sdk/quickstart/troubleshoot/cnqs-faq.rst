@@ -310,6 +310,28 @@ Run ``make restart-backend`` to rebuild and restart the backend service with con
 
 Persistent storage is in our roadmap, but has not been implemented yet.
 
+**How can I resolve a backend build failure?**
+
+Build failures may occur if the Daml SDK is not installed or is corrupted.
+If you see errors on ``make build`` such as:
+
+::
+
+   > Task :backend:extractProto FAILED
+
+   FAILURE: Build failed with an exception.
+
+   * What went wrong:
+   Execution failed for task ':backend:extractProto'.
+   > Could not resolve all files for configuration ':backend:protobuf'.
+      > Could not find com.daml:ledger-api-proto:.
+      Required by:
+            project :backend
+
+Then verify that the ``.env`` file contains an accurate daml SDK value in ``DAML_RUNTIME_VERSION=``.
+
+Find the daml SDK version with ``make check-daml-sdk``.
+
 **Infrastructure & environment**
 --------------------------------
 
@@ -381,6 +403,11 @@ Keycloak credentials are set in ``oauth2.env`` with the following credentials:
 
 The Keycloak user must have the same ID as the ledger user’s ID.
 This should be reflected in the default behavior.
+
+**How can I begin using lnav with the Quickstart application on MacOS?**
+
+On MacOS, ``lnav`` can be installed with ``brew install lnav``.
+Running ``make capture-logs`` requires ``coreutils`` to be installed with ``brew install coreutils``.
 
 **Best practices & common pitfalls**
 ------------------------------------
