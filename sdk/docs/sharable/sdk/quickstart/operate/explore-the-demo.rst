@@ -361,11 +361,41 @@ Shows a list of all participant references.
 .. image:: images/canton-console-participants-all.png
    :alt: Participant synchronizer
 
+On ``LocalNet``, you can connect to any of the listed participants.
+Connect to the app user's validator with 
+
+::
+   
+   `app-user`
+
+.. image:: images/app-user.png
+   :alt: App User
+
+If you receive an error, double check that you used the backticks.
+
+The app provider can be connected with: 
+
+::
+
+   `app-provider`
+
+.. image:: images/app-provider.png
+   :alt: App Provider
+
+Connect to the Super Valdiator that is simulating the Global Synchronizer using:
+
+::
+
+   `sv`
+
+.. image:: images/sv.png
+   :alt: super validator
+
+Canton Console also provides a diagnostic tool that displays the health of Canton Network validators:
+
 ::
 
   health.status
-
-Is a diagnostic tool that displays the health of Canton Network participants.
 
 .. image:: images/health-status.png
    :alt: Ping yourself
