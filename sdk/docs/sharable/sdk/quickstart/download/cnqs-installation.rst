@@ -98,7 +98,7 @@ More detailed instructions are provided below.
 7. **cd** into the ``quickstart`` subdirectory: ``cd quickstart``
 8. `Install the Daml SDK <#install-daml-sdk>`__ from the quickstart subdirectory: ``make install-daml-sdk``
 9. `Configure the local development <#deploy-a-validator-on-localnet>`__ environment: ``make setup``
-10. When prompted, enable OAuth2, disable TEST MODE, disable Observability, and leave the party hint blank to use the default value.
+10. When prompted, enable OAuth2, disable Observability, disable TEST MODE, and leave the party hint blank to use the default value.
 11. Build the application from the ``quickstart`` subdirectory: ``make build``
 12. In a new terminal window, initiate log collection from the ``quickstart`` subdirectory: ``make capture-logs``
 13. Start the application, Canton services and Observability: ``make start``
