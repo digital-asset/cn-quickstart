@@ -101,7 +101,7 @@ More detailed instructions are provided below.
 10. When prompted, enable OAuth2, disable Observability, disable TEST MODE, and leave the party hint blank to use the default value.
 11. Build the application from the ``quickstart`` subdirectory: ``make build``
 12. In a new terminal window, initiate log collection from the ``quickstart`` subdirectory: ``make capture-logs``
-13. Start the application, Canton services and Observability: ``make start``
+13. Return to the previous terminal window to start the application and Canton services: ``make start``
 14. Optional - In a separate shell, from the ``quickstart`` subdirectory, run the `Canton Console <#connecting-to-the-local-canton-nodes>`__: ``make canton-console``
 15. Optional - In a third shell, from the quickstart subdirectory, begin the Daml Shell: ``make shell``
 16. When complete, `close the application <#closing-the-application>`__ and observability services with: ``make stop && make clean-all``
@@ -269,7 +269,8 @@ Deploy a validator on LocalNet
 
 Configure the local development environment by running ``make setup``.
 
-Enable ``Observability`` and OAuth2. 
+Disable ``Observability``.
+Enable OAuth2. 
 Leave the party hint blank to use the default and disable ``TEST MODE``.
 
   The party hint is used as a party node’s alias of their identification hash.
@@ -282,8 +283,8 @@ Leave the party hint blank to use the default and disable ``TEST MODE``.
   | % make setup
   |  Starting local environment setup tool...
   |  ./gradlew configureProfiles --no-daemon --console=plain --quiet
-  |  Enable Observability? (Y/n): y
-  |  OBSERVABILITY_ENABLED set to 'true'.
+  |  Enable Observability? (Y/n): n
+  |  OBSERVABILITY_ENABLED set to 'false'.
 
   | Enable OAUTH2? (Y/n): y
   | AUTH_MODE set to 'oauth2'.
@@ -310,7 +311,13 @@ Build the application.
 .. image:: images/07-build-success-1.png
    :alt: Build success
 
-Once complete, start the application, Canton services and Observability.
+In a new terminal window, initiate log collection from the ``quickstart`` subdirectory.
+
+::
+
+   make capture-logs
+
+Once complete, return to the previous terminal to start the application and Canton services.
 
 ::
 
