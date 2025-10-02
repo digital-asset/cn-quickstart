@@ -103,8 +103,8 @@ More detailed instructions are provided below.
 12. In a new terminal window, initiate log collection from the ``quickstart`` subdirectory: ``make capture-logs``
 13. Return to the previous terminal window to start the application and Canton services: ``make start``
 14. Optional - In a separate shell, from the ``quickstart`` subdirectory, run the `Canton Console <#connecting-to-the-local-canton-nodes>`__: ``make canton-console``
-15. Optional - In a third shell, from the quickstart subdirectory, begin the Daml Shell: ``make shell``
-16. When complete, `close the application <#closing-the-application>`__ and observability services with: ``make stop && make clean-all``
+15. Optional - In a fourth shell, from the ``quickstart`` subdirectory, begin the Daml Shell: ``make shell``
+16. When complete, `close the application <#closing-the-application>`__ and other services with: ``make stop && make clean-all``
 17. If applicable, close Canton Console with ``exit`` and close Daml Shell with ``quit``.
 
 Step-by-step instructions
@@ -335,7 +335,7 @@ In a separate shell, from the ``quickstart`` subdirectory, run the Canton Consol
 .. image:: images/11-canton-console.png
    :alt: Canton console
 
-In a third shell, from the quickstart subdirectory, begin the Daml Shell.
+In a fourth shell, from the quickstart subdirectory, begin the Daml Shell.
 
 ::
 
