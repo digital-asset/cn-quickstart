@@ -27,7 +27,7 @@ The app involves four parties:
 
 - The **Application Provider** who sells licenses.
 - The **Application User** who buys licenses.
-- The underlying **Amulet** token system that handles payments, using `Canton Coin <https://www.canton.network/blog/canton-coin-a-canton-network-native-payment-application>`__.
+- The underlying **Amulet** token system that handles payments, using `CC <https://www.canton.network/blog/canton-coin-a-canton-network-native-payment-application>`__.
 - The **DSO Party**, the Decentralized Synchronizer Operations Party who operates the Amulet payment system. In CN, this is the Super Validators.
 
 The application issues licenses using the following process:
@@ -257,13 +257,19 @@ You can find the wallet's location by:
 .. image:: images/app-user-licenses-menu.png
    :alt: AppUser Licenses menu
 
-If prompted, log in to the Canton Coin Wallet as ``app-user``.
+If prompted, log in to the CC Wallet as ``app-user``.
 
 .. image:: images/canton-coin-wallet-app-user-log-in.png
    :alt: Canton Coin Wallet login
    :width: 70%
 
-Verify you are in the "Allocations" menu and accept the "Allocation Request" before the "Allocate before" time expires.
+If your wallet does not have CC then enter an amount and click **TAP**.
+After a moment, the available balance will automatically update.
+
+.. image:: images/tap-canton-wallet.png
+   :alt: Tap for CC
+
+Once your CC wallet is loaded, navigate to the "Allocations" menu and accept the "Allocation Request" before the "Allocate before" time expires.
 
 .. image:: images/canton-coin-wallet-allocations-menu.png
    :alt: CC Wallet accept allocation
