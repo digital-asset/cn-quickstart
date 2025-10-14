@@ -1,8 +1,8 @@
 .. _quickstart-lnav-in-cn:
 
-====================================
-Operating lnav in the Canton Network
-====================================
+=======================================
+Debugging and troubleshooting with lnav
+=======================================
 
 .. contents:: Contents
    :depth: 2
@@ -13,13 +13,13 @@ Jumping In
 ==========
 
 ``lnav`` is a log file viewer and navigator that helps you view, search, filter, and analyze log files.
-This section gets you started quickly  with ``lnav`` in CN application development using LocalNet.
+This section gets you started quickly with ``lnav`` in CN application development using LocalNet.
 Screenshots and instructions are made with ``lnav`` version 0.13.1.
 
 lnav download & documentation
 -----------------------------
 
-Download lnav for your OS at the `lnav download page <https://lnav.org/downloads>`__.
+Download ``lnav`` for your OS at the `lnav download page <https://lnav.org/downloads>`__.
 
 You can check the location of ``lnav`` on your machine with ``which lnav``.
 Display the version of ``lnav`` with ``lnav --version``.
@@ -38,8 +38,9 @@ You can read the schema to understand available values and the construction of l
 
 .. image:: /images_lnav/hyperledger-labs.png
    :alt: Splice lnav format
+   :width: 60%
 
-splice/canton/canton-json.lnav.json
+``splice/canton/canton-json.lnav.json``
 
 Download the configuration and install it for ``lnav`` usage:
 
@@ -59,6 +60,7 @@ Then, in a separate terminal run ``make start`` to launch the containers.
 
 .. image:: /images_lnav/make-capture-logs.png
    :alt: Capture logs
+   :width: 30%
 
 Start ``make capture-logs`` in terminal 1
 
@@ -70,6 +72,7 @@ See the available logs by running ``ls logs``.
 
 .. image:: /images_lnav/lnav-ls-logs.png
    :alt: List logs
+   :width: 55%
 
 Canton logs
 ===========
@@ -143,7 +146,7 @@ Search by Trace ID
 
 The logs include an `OpenTelemetry trace <https://opentelemetry.io/docs/concepts/signals/traces/>`__ identifier (trace-id) for analysis purposes.
 A trace ID is very useful since they are recorded with logs in different containers.
-Trace IDs are useful to follow a single operation across all services.
+Trace IDs help you follow a single operation across all services.
 This is a key log analysis technique that you will use very frequently.
 
 Find a Trace ID
@@ -157,19 +160,19 @@ The Trace ID is the string of characters wrapped in the parentheses.
 
 Select and copy the Trace ID of any entry.
 
-For example, “835a02159672310b58c2b106b482654d” 
+For example, “835a02159672310b58c2b106b482654d”
 
-.. warning::
-
-   Your trace ID will be unique. Copying this example will result in 0 results.
+.. warning:: Your trace ID will be unique. Copying this example will result in 0 results.
 
 Filter by Trace ID
 ------------------
 
 Filter to see only logs related to this specific Trace ID:
 
-``reset-session``
-``:filter-in 835a02159672310b58c2b106b482654d``
+::
+
+   ``:reset-session``
+   ``:filter-in 835a02159672310b58c2b106b482654d``
 
 This shows all log entries across all the containers that handled this request.
 
@@ -178,8 +181,10 @@ This shows all log entries across all the containers that handled this request.
 
 Alternatively, you can search for the trace ID without filtering:
 
-``:reset-session``
-``/0f23f6d54af3176a6d4c904ed66e8702``
+::
+
+   ``:reset-session``
+   ``/0f23f6d54af3176a6d4c904ed66e8702``
 
 This highlights all occurrences without hiding other logs.
 
@@ -196,20 +201,9 @@ Trace operations across services using trace IDs when debugging and locate error
 
 Integrate ``lnav`` into your workflow:
 
-**Development**
-  * Monitor application behavior as you build features
-  * Verify that Daml contracts and workflows execute as expected
-  * Catch and diagnose issues early
-
-**Debugging**
-  * Trace the flow of operations across Canton, Splice, and backend services
-  * Use trace IDs to understand the complete lifecycle of failed operations
-  * Filter logs to isolate specific issues without noise from unrelated events
-
-**Troubleshooting**
-  * Quickly locate errors and warnings
-  * Search for specific operations, contract IDs, or party identifiers
-  * Analyze the sequence of events leading to unexpected behavior
+**Development**: Monitor application behavior as you build features, verify that Daml contracts and workflows execute as expected, and catch and diagnose issues early.
+**Debugging**: Trace the flow of operations across Canton, Splice, and backend services, use trace IDs to understand the complete lifecycle of failed operations, and filter logs to isolate specific issues without noise from unrelated events.
+**Troubleshooting**: Quickly locate errors and warnings, search for specific operations, contract IDs, or party identifiers, and analyze the sequence of events leading to unexpected behavior.
 
 The ability to effectively read and analyze logs is crucial for building robust Canton Network applications.
 As your applications grow in complexity, ``lnav`` becomes an invaluable tool for understanding system behavior, identifying bottlenecks, and resolving issues efficiently.
@@ -245,16 +239,16 @@ Use “x” to expand and collapse information within the square brackets after 
 Mark and copy lines
 ===================
 
-Use “m” to mark lines.
-Copy lines with “c” to mark and copy entries into clipboard. 
-“m” and “c” allow you to easily share log entries of interest.
-“Shift + J” copies subsequent lines.
-“Shift + K” unmarks subsequent lines.
-“u” and “Shift + U” allows you to jump between marked lines
-“Shift + C” clears all marked lines.
+* Use “m” to mark lines.
+* Copy lines with “c” to mark and copy entries into clipboard.
+* “m” and “c” allow you to easily share log entries of interest.
+* “Shift + J” copies subsequent lines.
+* “Shift + K” unmarks subsequent lines.
+* “u” and “Shift + U” allows you to jump between marked lines
+* “Shift + C” clears all marked lines.
 
-“e” and “Shift + E” jumps between errors
-“w” and “Shift + W” jumps between warning messages
+* “e” and “Shift + E” jumps between errors
+* “w” and “Shift + W” jumps between warning messages
 
 Time
 ====
@@ -263,7 +257,7 @@ Time
 The smaller the digit the closer to the event the log is and the larger the number, the further from the event.
 Time is demarcated in seconds.
 
-... image:: /images_lnav/lnav-time-toggle.png
+.. image:: /images_lnav/lnav-time-toggle.png
    :alt: lnav time toggle
 
 Command mode
@@ -278,26 +272,26 @@ Enter command mode with the colon key, “:” then type your desired command.
 
 To scroll through command history, press “:” followed by the up arrow.
 
-:hide-lines-before hides lines that come before the given date.
+``:hide-lines-before`` hides lines that come before the given date.
 
-:hide-lines-after hides lines that come after the given date.
+``:hide-lines-after`` hides lines that come after the given date.
 
-:hide-fields hides certain fields in each line.
+``:hide-fields`` hides certain fields in each line.
 
-For example, you can hide fields types including logger_name,
-thread_name, ipaddress, @timestamp, stack_trace, span-parent-id, trace-id, @version, and level.
+For example, you can hide fields types including ``logger_name``,
+``thread_name``, ``ipaddress``, ``@timestamp``, ``stack_trace``, ``span-parent-id``, ``trace-id``, ``@version``, and ``level``.
 You may hide more than one field type at a time.
 
 If you wanted to hide thread_name and level you’d use:
 
-:hide-fields thread_name level
+``:hide-fields thread_name level``
 
-Read the lnav documentation for a full list of `available commands <https://docs.lnav.org/en/latest/commands.html#commands>`__.
+Read the ``lnav`` documentation for a full list of `available commands <https://docs.lnav.org/en/latest/commands.html#commands>`__.
 
 Help
 ----
 
-For detailed documentation of any command use :help or “?”.
+For detailed documentation of any command use ``:help`` or “?”.
 Exit help with “q” or “?”
 
 Prune logs
@@ -306,7 +300,9 @@ Prune logs
 From time to time you may desire to prune logs.
 You can prune all logs and start with a fresh logs subdirectory with:
 
-``docker rm -f $(docker ps -qa); docker system prune -f; docker volume prune -f; rm -r logs; mkdir logs``
+::
+   
+   docker rm -f $(docker ps -qa); docker system prune -f; docker volume prune -f; rm -r logs; mkdir logs
 
 You need to run ``make start`` to resume operations after running this command.
 
@@ -330,17 +326,22 @@ Appendix
 Correlation mechanisms
 ----------------------
 
-Canton Network uses several correlation mechanisms:
-* trace-id: OpenTelemetry trace identifier
-* span-id: OpenTelemetry span identifier
-* span-parent-id: Links spans in trace hierarchy
-* span-name: Operation name
+Canton Network uses several correlation and filtering mechanisms that can be used to search, sort, and analyze log entries:
 
-Let’s look at an example from lnav to better understand each of these correlation mechanisms.
+* ``level`` - Log level (TRACE, DEBUG, INFO, WARN, ERROR)
+* ``logger_name`` - Component identifier
+* ``message`` - Log message content
+* ``trace-id``: OpenTelemetry trace identifier
+* ``span-id``: OpenTelemetry span identifier
+* ``span-parent-id``: Links spans in trace hierarchy
+* ``span-name``: Operation name
+* ``@timestamp`` - Timestamp
+
+Let’s look at examples to better understand each of these correlation mechanisms.
 
 ::
 
-   2025-10-09T22:03:41.702-0500 [⋮] DEBUG - ⋮ (---) - ⋮ 
+   2025-10-09T22:03:41.702-0500 [⋮] DEBUG - ⋮ (---) - ⋮
 
 * Timestamp: ``2025-10-09T22:03:41.702-0500``
 * Collapsed metadata including the thread_name: ``[⋮]``
@@ -351,7 +352,7 @@ Let’s look at an example from lnav to better understand each of these correlat
 
 ::
 
-   2025-10-09T22:22:08.976-0500 [⋮] DEBUG - ⋮ (846ff12a35f6e8b61171039527934709-SvOffboardingSequencerTrigger--6aaa9f37e9ae78c4) - ⋮ 
+   2025-10-09T22:22:08.976-0500 [⋮] DEBUG - ⋮ (846ff12a35f6e8b61171039527934709-SvOffboardingSequencerTrigger--6aaa9f37e9ae78c4) - ⋮
 
 * Trace ID: ``846ff12a35f6e8b61171039527934709``
 * Span name: ``SvOffboardingSequencerTrigger``
@@ -359,11 +360,11 @@ Let’s look at an example from lnav to better understand each of these correlat
 
 ::
 
-   2025-10-09T22:22:08.978-0500 [⋮] DEBUG - ⋮ (2a2f0baca0ce4452d713a30d9a5bcb7d---) - Request com.digitalasset.canton.topology.admin.v30.TopologyManagerReadService/ListSequencerSynchronizerState by /172.18.0.22:43954: received a message 
+   2025-10-09T22:22:08.978-0500 [⋮] DEBUG - ⋮ (2a2f0baca0ce4452d713a30d9a5bcb7d---) - Request com.digitalasset.canton.topology.admin.v30.TopologyManagerReadService/ListSequencerSynchronizerState by /172.18.0.22:43954: received a message
 
 * Trace ID: ``2a2f0baca0ce4452d713a30d9a5bcb7d``
 * Log message: ``Request com.digitalasset.canton.topology.admin.v30.TopologyManagerReadService/ListSequencerSynchronizerState by /172.18.0.22:43954: received a message``
-* The three hyphens ``---`` indicates that there is no span-name (it would be after the first of the three hyphens) and that there is no span-id (that would be after the final two hyphens).
+* The three hyphens ``---`` indicates that there is no span-name (it would be after the first of the three hyphens) and that there is no span-id (which would be after the final two hyphens).
 * See the previous example to review how the trace-id, span-name, and span-id are formatted.
 
 Advanced filtering
@@ -372,15 +373,7 @@ Advanced filtering
 Common Field Reference
 ~~~~~~~~~~~~~~~~~~~~~~
 
-NEED A SENTENCE EXPLAINING WHAT THIS IS
-
-* ``level`` - Log level (TRACE, DEBUG, INFO, WARN, ERROR)
-* ``logger_name`` - Component identifier
-* ``message`` - Log message content
-* ``trace-id`` - OpenTelemetry trace identifier
-* ``span-id`` - Span identifier
-* ``span-name`` - Operation name
-* ``@timestamp`` - Timestamp
+The following structured fields are present in Canton Network logs and can be used in ``lnav`` filter expressions to search, sort, and analyze log entries.
 
 Filter by Severity
 ~~~~~~~~~~~~~~~~~~
@@ -431,31 +424,35 @@ Hide lines that match specific patterns:
 Hide lines before
 ^^^^^^^^^^^^^^^^^
 
-​​# Hide logs before a specific time
-``:hide-lines-before 2025-10-10 14:30:00``
+:: 
 
-# Hide logs before the last hour
-``:hide-lines-before -1h``
+   ​​# Hide logs before a specific time
+   ``:hide-lines-before 2025-10-10 14:30:00``
 
-# Hide logs before a specific line number
-``:hide-lines-before 1000``
+   # Hide logs before the last hour
+   ``:hide-lines-before -1h``
+
+   # Hide logs before a specific line number
+   ``:hide-lines-before 1000``
 
 Hide lines after
 ^^^^^^^^^^^^^^^^
 
-# Hide logs after a specific time
-:hide-lines-after 2025-10-10 16:00:00
+::
 
-# Hide logs after a specific duration from start
-:hide-lines-after +2h
+   # Hide logs after a specific time
+   :hide-lines-after 2025-10-10 16:00:00
 
-# Hide logs after line 5000
-:hide-lines-after 5000
+   # Hide logs after a specific duration from start
+   :hide-lines-after +2h
+
+   # Hide logs after line 5000
+   :hide-lines-after 5000
 
 Gathering logs contents into a directory
 ----------------------------------------
 
-To gather the logs directory content into a folder use one of the following commands from ``quickstart/`` based on your operating system:
+Use one of the following commands from ``quickstart/``, based on your operating system, to gather the logs directory content into a single folder:
 
 ``tar -czf my-cn-logs.tar.gz logs/``
 
@@ -469,44 +466,44 @@ Common lnav shortcuts
 Navigation
 ~~~~~~~~~~
 
-j/k or ↓/↑ - Move down/up one line
-J/K - Select/deselect subsequent entries
-Space/b - Page down/up
-g/G - Go to top/bottom of file
-n/N - Next/previous search result
+* j/k or ↓/↑ - Move down/up one line
+* J/K - Select/deselect subsequent entries
+* Space/b - Page down/up
+* g/G - Go to top/bottom of file
+* n/N - Next/previous search result
 
 Search & Filter
 ~~~~~~~~~~~~~~~
 
-/ - Search forward
-? - Help menu
-f - Set filter expression
-F - Clear filters
-t - Display only errors/warnings
-T - Clear error filter
+* / - Search forward
+* ? - Help menu
+* f - Set filter expression
+* F - Clear filters
+* t - Display only errors/warnings
+* T - Clear error filter
 
 Time Navigation
 ~~~~~~~~~~~~~~~
 
-7/8 - Skip to top of hour
-Shift+T - Toggle time view
+* 7/8 - Skip to top of hour
+* Shift+T - Toggle time view
 
 Display
 ~~~~~~~
 
-v - Switch between log views
-Tab - Cycle through files and text filters menus
-i - Show/hide informational messages
-p - Toggle pretty-print mode
+* v - Switch between log views
+* Tab - Cycle through files and text filters menus
+* i - Show/hide informational messages
+* p - Toggle pretty-print mode
 
 Bookmarks
 ~~~~~~~~~
 
-m - Set bookmark
-u/U - Next/previous bookmark
+* m - Set bookmark
+* u/U - Next/previous bookmark
 
 Other
 ~~~~~
 
-q - Quit
-? - Help (shows all shortcuts)
+* q - Quit
+* ? - Help (shows all shortcuts)
