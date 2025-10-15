@@ -24,7 +24,7 @@ Download ``lnav`` for your OS at the `lnav download page <https://lnav.org/downl
 You can check the location of ``lnav`` on your machine with ``which lnav``.
 Display the version of ``lnav`` with ``lnav --version``.
 
-.. image:: /images/lnav-version.png
+.. image:: images/lnav-version.png
    :alt: lnav version
 
 If you’re unfamiliar with lnav, read `their docs <https://docs.lnav.org/en/v0.13.1/>`__.
@@ -36,7 +36,7 @@ The Canton Network has a custom ``lnav`` configuration to help you view and anal
 The configuration is defined in JSON and lives in the open source Hyperledger Labs Splice repository.
 You can read the schema to understand available values and the construction of logs when debugging with ``lnav`` in CN applications.
 
-.. image:: /images/lnav-hyperledger-labs.png
+.. image:: images/lnav-hyperledger-labs.png
    :alt: Splice lnav format
    :width: 60%
 
@@ -57,7 +57,7 @@ To capture logs for all the quickstart containers, from the ``quickstart/`` dire
 Allow the terminal running ``capture-logs`` to operate in the background.
 Then, in a separate terminal run ``make start`` to launch the containers.
 
-.. image:: /images/lnav-make-capture-logs.png
+.. image:: images/lnav-make-capture-logs.png
    :alt: Capture logs
    :width: 25%
 
@@ -69,7 +69,7 @@ Find the logs
 The containers create logs in the ``logs/`` directory while running, starting from initialization.
 See the available logs by running ``ls logs``.
 
-.. image:: /images/lnav-ls-logs.png
+.. image:: images/lnav-ls-logs.png
    :alt: List logs
    :width: 55%
 
@@ -97,7 +97,7 @@ Search for an event
 
 Create a search for “AppInstallRequest” by typing ``/AppInstallRequest``.
 
-.. image:: /images/lnav-app-install-request-event.png
+.. image:: images/lnav-app-install-request-event.png
    :alt: lnav app install request event
 
 Use “n” and “shift + N” to jump through entries containing “AppInstallRequest”.
@@ -113,7 +113,7 @@ To focus on events of interest, make a “filter-in” search with ``:filter-in 
 
 Unlike search, which highlights matches within the log stream, ``:filter-in`` shows only log entries that contain the requested information.
 
-.. image:: /images/lnav-filter-in-app-install-request.png
+.. image:: images/lnav-filter-in-app-install-request.png
    :alt: lnav filter-in app install request
 
 Clear filter-in results
@@ -154,7 +154,7 @@ Find a Trace ID
 Find a Trace ID by filtering with ``:filter-in listLicenses``
 The Trace ID is the string of characters wrapped in the parentheses.
 
-.. image:: /images/lnav-filter-in-listlicenses.png
+.. image:: images/lnav-filter-in-listlicenses.png
    :alt: trace id filtering
 
 Select and copy the Trace ID of any entry.
@@ -175,7 +175,7 @@ Filter to see only logs related to this specific Trace ID:
 
 Now, you can view all log entries across any containers that handled this request.
 
-.. image:: /images/lnav-trace-id.png
+.. image:: images/lnav-trace-id.png
    :alt: lnav trace id
 
 Alternatively, you can search for the trace ID without filtering:
@@ -218,19 +218,19 @@ Pause and unpause the stream with “=”.
 
 Use the left cursor key to view the log entry’s file origination point.
 
-.. image:: /images/lnav-view-log-origination.png
+.. image:: images/lnav-view-log-origination.png
    :alt: lnav file origin
 
 Use the right cursor key to view the log entry.
 
-.. image:: /images/lnav-view-log-entry.png
+.. image:: images/lnav-view-log-entry.png
    :alt: lnav log entry
 
 Using “shift + right” and “shift + left” moves the view in smaller increments.
 
 Use “x” to expand and collapse information within the square brackets after the date.
 
-.. image:: /images/lnav-collapse-expand-metadata.png
+.. image:: images/lnav-collapse-expand-metadata.png
    :alt: expand collapse lnav metadata
 
 Mark and copy lines
@@ -254,7 +254,7 @@ Time
 The smaller the digit the closer to the event the log is and the larger the number, the further from the event.
 Time is demarcated in seconds.
 
-.. image:: /images/lnav-time-toggle.png
+.. image:: images/lnav-time-toggle.png
    :alt: lnav time toggle
 
 Command mode
@@ -290,7 +290,7 @@ You can prune all logs and start with a fresh logs subdirectory with:
 
 You need to run ``make start`` to resume operations after running this command.
 
-.. image:: /images/lnav-prune-logs.png
+.. image:: images/lnav-prune-logs.png
    :alt: lnav prune logs
 
 Troubleshooting
@@ -298,7 +298,7 @@ Troubleshooting
 
 If ``lnav`` crashes it may also force quit the capture logs script and delete all of the files in the ``logs/`` directory.
 
-.. image:: /images/lnav-troubleshooting.png
+.. image:: images/lnav-troubleshooting.png
    :alt: lnav troubleshooting
 
 To rebuild ``logs/`` and its ``*.clogs`` files, 
