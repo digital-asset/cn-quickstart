@@ -1,5 +1,3 @@
-:orphan:
-
 .. _quickstart-debugging-and-troubleshooting-lnav:
 
 =======================================
