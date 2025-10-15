@@ -1,4 +1,4 @@
-.. _quickstart-lnav-in-cn:
+.. _quickstart-debugging-and-troubleshooting-lnav:
 
 =======================================
 Debugging and troubleshooting with lnav
@@ -14,7 +14,7 @@ Jumping In
 
 ``lnav`` is a log file viewer and navigator that helps you view, search, filter, and analyze log files.
 This section gets you started quickly with ``lnav`` in CN application development using LocalNet.
-Screenshots and instructions are made with ``lnav`` version 0.13.1.
+Screenshots and instructions are made with ``lnav version 0.13.1``.
 
 lnav download & documentation
 -----------------------------
@@ -55,7 +55,6 @@ Capture Quickstart logs
 
 To capture logs for all the quickstart containers, from the ``quickstart/`` directory, run ``make capture-logs``.
 Allow the terminal running ``capture-logs`` to operate in the background.
-
 Then, in a separate terminal run ``make start`` to launch the containers.
 
 .. image:: /images_lnav/make-capture-logs.png
@@ -67,7 +66,7 @@ Start ``make capture-logs`` in terminal 1
 Find the logs
 =============
 
-The containers create logs continuously in the ``logs/`` directory while running, starting from initialization.
+The containers create logs in the ``logs/`` directory while running, starting from initialization.
 See the available logs by running ``ls logs``.
 
 .. image:: /images_lnav/lnav-ls-logs.png
@@ -145,9 +144,9 @@ Search by Trace ID
 ==================
 
 The logs include an `OpenTelemetry trace <https://opentelemetry.io/docs/concepts/signals/traces/>`__ identifier (trace-id) for analysis purposes.
-A trace ID is very useful since they are recorded with logs in different containers.
+A trace ID is useful since they are recorded with logs in different containers.
 Trace IDs help you follow a single operation across all services.
-This is a key log analysis technique that you will use very frequently.
+This is a key log analysis technique that you will use frequently.
 
 Find a Trace ID
 ---------------
@@ -171,10 +170,10 @@ Filter to see only logs related to this specific Trace ID:
 
 ::
 
-   ``:reset-session``
-   ``:filter-in 835a02159672310b58c2b106b482654d``
+   :reset-session
+   :filter-in 835a02159672310b58c2b106b482654d
 
-This shows all log entries across all the containers that handled this request.
+Now, you can view all log entries across any containers that handled this request.
 
 .. image:: /images_lnav/lnav-trace-id.png
    :alt: lnav trace id
@@ -183,8 +182,8 @@ Alternatively, you can search for the trace ID without filtering:
 
 ::
 
-   ``:reset-session``
-   ``/0f23f6d54af3176a6d4c904ed66e8702``
+   :reset-session
+   /0f23f6d54af3176a6d4c904ed66e8702
 
 This highlights all occurrences without hiding other logs.
 
@@ -194,16 +193,14 @@ Search (``/``) - When you want context from surrounding logs.
 Power Use of lnav
 =================
 
-The Jumping In and Capture Quickstart logs sections introduced you to ``lnav``.
+The "Jumping In" and "Capture Quickstart logs" sections introduced you to ``lnav``.
 This section introduces you to more powerful features for monitoring your Canton Network applications during development.
-
-Trace operations across services using trace IDs when debugging and locate errors in production logs.
 
 Integrate ``lnav`` into your workflow:
 
-**Development**: Monitor application behavior as you build features, verify that Daml contracts and workflows execute as expected, and catch and diagnose issues early.
-**Debugging**: Trace the flow of operations across Canton, Splice, and backend services, use trace IDs to understand the complete lifecycle of failed operations, and filter logs to isolate specific issues without noise from unrelated events.
-**Troubleshooting**: Quickly locate errors and warnings, search for specific operations, contract IDs, or party identifiers, and analyze the sequence of events leading to unexpected behavior.
+* **Development**: Monitor application behavior as you build features, verify that Daml contracts and workflows execute as expected, and catch and diagnose issues early.
+* **Debugging**: Trace the flow of operations across Canton, Splice, and backend services, use trace IDs to understand the complete lifecycle of failed operations, and filter logs to isolate specific issues without noise from unrelated events.
+* **Troubleshooting**: Quickly locate errors and warnings, search for specific operations, contract IDs, or party identifiers, and analyze the sequence of events leading to unexpected behavior.
 
 The ability to effectively read and analyze logs is crucial for building robust Canton Network applications.
 As your applications grow in complexity, ``lnav`` becomes an invaluable tool for understanding system behavior, identifying bottlenecks, and resolving issues efficiently.
@@ -272,20 +269,7 @@ Enter command mode with the colon key, “:” then type your desired command.
 
 To scroll through command history, press “:” followed by the up arrow.
 
-``:hide-lines-before`` hides lines that come before the given date.
-
-``:hide-lines-after`` hides lines that come after the given date.
-
-``:hide-fields`` hides certain fields in each line.
-
-For example, you can hide fields types including ``logger_name``,
-``thread_name``, ``ipaddress``, ``@timestamp``, ``stack_trace``, ``span-parent-id``, ``trace-id``, ``@version``, and ``level``.
-You may hide more than one field type at a time.
-
-If you wanted to hide thread_name and level you’d use:
-
-``:hide-fields thread_name level``
-
+A small selection of available commands are showcased in the Appendix section below.
 Read the ``lnav`` documentation for a full list of `available commands <https://docs.lnav.org/en/latest/commands.html#commands>`__.
 
 Help
@@ -415,14 +399,25 @@ Filter by Content
    :filter-out message =~ 'health.*check'
    :filter-in message =~ 'license'
 
-Hide lines by time
-------------------
+Hide lines
+----------
 
-Hide lines that match specific patterns:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+You can hide lines that match specific patterns using the following commands:
+
+* ``:hide-lines-before`` hides lines that come before the given date.
+* ``:hide-lines-after`` hides lines that come after the given date.
+* ``:hide-fields`` hides certain fields in each line.
+
+You can hide fields types including ``logger_name``, ``thread_name``, 
+``ipaddress``, ``@timestamp``, ``stack_trace``, ``span-parent-id``, ``trace-id``, ``@version``, and ``level``.
+You can hide more than one field type at a time.
+
+For example, if you wanted to hide ``thread_name`` and ``level`` you’d use:
+
+``:hide-fields thread_name level``
 
 Hide lines before
-^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~
 
 :: 
 
@@ -436,7 +431,7 @@ Hide lines before
    ``:hide-lines-before 1000``
 
 Hide lines after
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~
 
 ::
 
