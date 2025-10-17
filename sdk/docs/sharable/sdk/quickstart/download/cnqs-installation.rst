@@ -33,6 +33,11 @@ Roadmap
 Prerequisites
 =============
 
+Access to the `CN-Quickstart GitHub repository <https://github.com/digital-asset/cn-quickstart>`__
+and `digitalasset-docker.jfrog.io` JFrog Artifactory docker repository is needed to successfully pull the Digital Asset artifacts.
+
+`Contact us <https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog>`__ if you need access or additional support.
+
 The CN Quickstart is a Dockerized application and requires `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__.
 We recommend allocating 8 GB of memory to Docker Desktop.
 Allocate additional resources if you witness unhealthy containers, if possible.
@@ -89,7 +94,7 @@ More detailed instructions are provided below.
 3. Manually set ``.netrc``’s permissions: ``chmod 600 ~/.netrc``
 4. Check for Artifactory connectivity using ``.netrc`` credentials: ``curl -v --netrc "https://digitalasset.jfrog.io/artifactory/api/system/ping"``
 5. Verify that the `Docker Desktop <#docker>`__ app is running on your computer: ``docker info``
-6. Login to Docker repositories via the terminal: ``docker login``
+6. Login to Docker repositories via the terminal: ``docker login digitalasset-docker.jfrog.io`` and ``docker login``
 7. **cd** into the ``quickstart`` subdirectory: ``cd quickstart``
 8. `Install the Daml SDK <#install-daml-sdk>`__ from the quickstart subdirectory: ``make install-daml-sdk``
 9. `Configure the local development <#deploy-a-validator-on-localnet>`__ environment: ``make setup``
@@ -232,6 +237,7 @@ Login to Docker repositories via the terminal.
 
 ::
 
+   docker login digitalasset-docker.jfrog.io
    docker login
 
 The last command requires a `Docker Hub <https://app.docker.com/>`__ username and password or *Personal Access Token (PAT)*.
