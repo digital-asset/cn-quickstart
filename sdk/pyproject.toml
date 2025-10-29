@@ -23,6 +23,7 @@ sphinx-togglebutton = "0.3.2"
 flit = "3.10.1"
 dacite = "1.8.1"
 beautifulsoup4 = "4.12.3"
+sphinxcontrib-youtube = "1.4.1"
 
 [build-system]
 requires = ["poetry-core"]

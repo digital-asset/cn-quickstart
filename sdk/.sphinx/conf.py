@@ -16,6 +16,7 @@ def setup(sphinx):
 
 extensions = [
     'sphinxcontrib.mermaid',
+    'sphinxcontrib.youtube',
     'wip'
 ]
 
