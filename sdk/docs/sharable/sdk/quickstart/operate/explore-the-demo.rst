@@ -97,6 +97,8 @@ You may enable Observability, but it is not required for this demo.
 Build Quickstart
 ----------------
 
+.. youtube:: xsuMDLED6gI
+
 Build and start App Quickstart:
 
 .. code-block:: bash
@@ -336,6 +338,8 @@ Congratulations. You’ve successfully created and activated a license with a pa
 Canton Console
 ==============
 
+.. youtube:: zADHja_8TSg
+
 The :externalref:`Canton Console <canton_console>` connects to the running application ledger.
 The console allows a developer to bypass the UI to interact with the CN in a more direct manner.
 For example, in Canton Console you can connect to the Participant to see the location of the Participant and their synchronizer domain.
@@ -408,6 +412,8 @@ Canton Console also provides a diagnostic tool that displays the health of Canto
 
 Daml Shell
 ==========
+
+.. youtube:: bwUyYEFCo5w
 
 The :externalref:`Daml Shell <build_daml_shell_component_howto>` connects to the running PQS database of the application provider’s Participant.
 In the Shell, the assets and their details are available in real time.
