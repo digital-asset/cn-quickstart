@@ -179,7 +179,7 @@ Leave the party hint blank to use the default and disable ``TEST MODE``.
     network) [quickstart-USERNAME-1]:
   | PARTY_HINT set to ‘quickstart-USERNAME-1’.
 
-  | Enable TEST_MODE? (y/N): n
+  | Enable TEST_MODE? (Y/n): n
   |   TEST_MODE set to 'off'.
 
   | ``.env.local`` updated successfully.

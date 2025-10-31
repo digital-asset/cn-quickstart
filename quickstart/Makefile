@@ -236,7 +236,7 @@ restart-service:
 .PHONY: start
 ifeq ($(OBSERVABILITY_ENABLED),true)
 ifneq ($(SKIP_DOWNLOADS),true) # treat “true” (or any non‑empty value) as “enabled”
-start: fetch-grafana-dashboards
+start:
 endif
 endif
 start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
