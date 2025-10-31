@@ -123,7 +123,6 @@ Login to Docker repositories via the terminal.
 
 ::
 
-   docker login europe-docker.pkg-dev
    docker login
 
 The last command requires a `Docker Hub <https://app.docker.com/>`__ username and password or *Personal Access Token (PAT)*.
