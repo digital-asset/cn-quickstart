@@ -411,10 +411,6 @@ install-daml-sdk: ## Install the Daml SDK
 check-daml-sdk: ## Install the Daml SDK
 	./gradlew :daml:verifyDamlSdkVersion
 
-.PHONY: fetch-grafana-dashboards
-fetch-grafana-dashboards: ## Download Grafana dashboards
-	./gradlew fetchGrafanaDashboards
-
 .PHONY: generate-NOTICES
 generate-NOTICES: ## Generate the NOTICES.txt file
 	./gradlew generateNotices
