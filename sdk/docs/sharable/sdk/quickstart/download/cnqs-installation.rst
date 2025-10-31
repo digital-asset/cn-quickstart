@@ -33,8 +33,7 @@ Roadmap
 Prerequisites
 =============
 
-Access to the `CN-Quickstart GitHub repository <https://github.com/digital-asset/cn-quickstart>`__
-and `digitalasset-docker.jfrog.io` JFrog Artifactory docker repository is needed to successfully pull the Digital Asset artifacts.
+Access to the `CN-Quickstart GitHub repository <https://github.com/digital-asset/cn-quickstart>`__ is needed to successfully pull the Digital Asset artifacts.
 
 `Contact us <https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog>`__ if you need access or additional support.
 
@@ -79,33 +78,23 @@ Nix download support
 Fast path installation
 ======================
 
-If you are familiar with the prerequisites and have access to JFrog Artifactory, use these abbreviated installation instructions.
+If you are familiar with the prerequisites, use these abbreviated installation instructions.
 More detailed instructions are provided below.
 
 1. `Clone from GitHub <#clone-from-github>`__ and cd into the ``cn-quickstart`` repository: ``git clone https://github.com/digital-asset/cn-quickstart.git``
-2. Paste your `jfrog login <#artifactory>`__ and identity token into a global ``~/.netrc`` file.
-
-::
-
-   machine digitalasset.jfrog.io
-   login <username>
-   password <identity_token>
-
-3. Manually set ``.netrc``’s permissions: ``chmod 600 ~/.netrc``
-4. Check for Artifactory connectivity using ``.netrc`` credentials: ``curl -v --netrc "https://digitalasset.jfrog.io/artifactory/api/system/ping"``
-5. Verify that the `Docker Desktop <#docker>`__ app is running on your computer: ``docker info``
-6. Login to Docker repositories via the terminal: ``docker login digitalasset-docker.jfrog.io`` and ``docker login``
-7. **cd** into the ``quickstart`` subdirectory: ``cd quickstart``
-8. `Install the Daml SDK <#install-daml-sdk>`__ from the quickstart subdirectory: ``make install-daml-sdk``
-9. `Configure the local development <#deploy-a-validator-on-localnet>`__ environment: ``make setup``
-10. When prompted, enable OAuth2, disable Observability, disable TEST MODE, and leave the party hint blank to use the default value.
-11. Build the application from the ``quickstart`` subdirectory: ``make build``
-12. In a new terminal window, initiate log collection from the ``quickstart`` subdirectory: ``make capture-logs``
-13. Return to the previous terminal window to start the application and Canton services: ``make start``
-14. Optional - In a separate shell, from the ``quickstart`` subdirectory, run the `Canton Console <#connecting-to-the-local-canton-nodes>`__: ``make canton-console``
-15. Optional - In a fourth shell, from the ``quickstart`` subdirectory, begin the Daml Shell: ``make shell``
-16. When complete, `close the application <#closing-the-application>`__ and other services with: ``make stop && make clean-all``
-17. If applicable, close Canton Console with ``exit`` and close Daml Shell with ``quit``.
+2. Verify that the `Docker Desktop <#docker>`__ app is running on your computer: ``docker info``
+3. Login to Docker repositories via the terminal: ``docker login``
+4. **cd** into the ``quickstart`` subdirectory: ``cd quickstart``
+5. `Install the Daml SDK <#install-daml-sdk>`__ from the quickstart subdirectory: ``make install-daml-sdk``
+6. `Configure the local development <#deploy-a-validator-on-localnet>`__ environment: ``make setup``
+7. When prompted, enable OAuth2, disable Observability, disable TEST MODE, and leave the party hint blank to use the default value.
+8. Build the application from the ``quickstart`` subdirectory: ``make build``
+9. In a new terminal window, initiate log collection from the ``quickstart`` subdirectory: ``make capture-logs``
+10. Return to the previous terminal window to start the application and Canton services: ``make start``
+11. Optional - In a separate shell, from the ``quickstart`` subdirectory, run the `Canton Console <#connecting-to-the-local-canton-nodes>`__: ``make canton-console``
+12. Optional - In a fourth shell, from the ``quickstart`` subdirectory, begin the Daml Shell: ``make shell``
+13. When complete, `close the application <#closing-the-application>`__ and other services with: ``make stop && make clean-all``
+14. If applicable, close Canton Console with ``exit`` and close Daml Shell with ``quit``.
 
 Step-by-step instructions
 =========================
@@ -124,109 +113,6 @@ Clone and **cd** into the ``cn-quickstart`` repository into your local machine.
 .. image:: images/01-allow-direnv.png
    :alt: allow direnv
 
-Artifactory
------------
-
-Check the ~/.netrc file
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Necessary artifacts are located in `Digital Asset's JFrog Artifactory <https://digitalasset.jfrog.io/ui/native/docker>`__.
-These files are accessed through the repository’s build system using a ``~/.netrc`` configuration file.
-
-Check if a ``~/.netrc`` file already exists.
-
-::
-
-   cat ~/.netrc
-
-Create or edit the ``~/.netrc`` file at root.
-
-::
-
-   vim ~/.netrc
-
-Paste the boiler plate content into ``~/.netrc``.
-
-::
-
-   machine digitalasset.jfrog.io
-   login <username>
-   password <identity_token>
-
-Locate login for ~/.netrc
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Log into JFrog. 
-
-Click the profile icon in the top right corner and then click **Edit Profile**.
-
-Your email address is the login username in ``~/.netrc``.
-Replace ``<username>`` with the JFrog Artifactory user profile email.
-
-.. image:: images/02-jfrog-user-profile.png
-   :alt: JFrog user profile
-   :width: 50%
-
-Create an Identity Token
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Toward the bottom of the same profile page, click "Generate an Identity Token."
-
-.. image:: images/03-generate-jfrog-token.png
-   :alt: JFrog generate identity token
-   :width: 30%
-
-Add an identity token description.
-
-.. image:: images/03b-gen-id-token.png
-   :alt: JFrog API Key
-   :width: 30%
-
-Copy the Identity Token as shown under "Reference Token." 
-
-The Identity Token is also referred to as the "Reference Token" and the "API
-key" in JFrog and is the password in ``~/.netrc``.
-
-.. image:: images/03c-copy-ref-token.png
-   :alt: New Reference Token
-   :width: 30%
-
-Complete ~/.netrc
-~~~~~~~~~~~~~~~~~
-
-The Identity Token is stored as the password in ``~/.netrc``. 
-
-Replace ``<identity_token>`` with the Identity Token (also referred to as the Reference Token) from your JFrog profile.
-
-When complete, the ``~/.netrc`` file will look similar to:
-
-::
-
-   machine digitalasset.jfrog.io
-   login email@domain.com
-   password cmVmdGtuOjAxOjE3Nzg5NTQzNjc6UmhYaFNaZWpUNGtFMzJyYXRyWEQya...
-
-Manually set ``.netrc``’s permissions.
-
-::
-
-   chmod 600 ~/.netrc
-
-Check for Artifactory connectivity using ``.netrc`` credentials after populating the username and password.
-
-::
-
-   curl -v --netrc
-   "https://digitalasset.jfrog.io/artifactory/api/system/ping"
-
-.. image:: images/04-jfrog-ping.png
-   :alt: JFrog connection ping
-
-A response of “OK” indicates a successful connection.
-
-Authentication problems often result in a ``401`` or ``403`` error. 
-
-If an error response occurs, double check ``~/.netrc`` to confirm that ``.netrc`` is a source file (in root) and not a local file.
 
 Docker
 ------
@@ -237,7 +123,7 @@ Login to Docker repositories via the terminal.
 
 ::
 
-   docker login digitalasset-docker.jfrog.io
+   docker login europe-docker.pkg-dev
    docker login
 
 The last command requires a `Docker Hub <https://app.docker.com/>`__ username and password or *Personal Access Token (PAT)*.
@@ -402,7 +288,7 @@ Resources
   * `Docker Desktop <https://www.docker.com/products/docker-desktop/>`__
   * `Docker Hub <https://app.docker.com/>`__
   * `GSF list of SV Nodes <https://sync.global/sv-network/>`__
-  * `JFrog Artifactory DA Docker <https://digitalasset.jfrog.io/ui/native/docker>`__
+  * `Digital Asset Docker <https://console.cloud.google.com/artifacts/docker/da-images/europe/public>`__
   * `Nix <https://nixos.org/download/>`__
   * `Quickstart GitHub repository <https://github.com/digital-asset/cn-quickstart>`__
   * `Validator onboarding documentation <https://docs.dev.sync.global/validator_operator/validator_onboarding.html>`__
