@@ -39,9 +39,6 @@ jobs:
     steps:
       - checkout
       - nix
-      - run:
-          name: Configuration authentication for JFrog
-          command: .circleci/scripts/project_auth.sh
       - quickstart:
           command: make help
       - quickstart:
