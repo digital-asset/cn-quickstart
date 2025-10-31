@@ -95,9 +95,6 @@ tasks.register<de.undercouch.gradle.tasks.download.Download>("fetchDamlSdk") {
 
     doFirst {
         sdkDir.mkdirs()
-        val (username, password) = Credentials.execFromNetRc("digitalasset.jfrog.io")
-        username(username)
-        password(password)
     }
 
     doLast {
