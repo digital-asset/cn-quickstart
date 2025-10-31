@@ -74,3 +74,5 @@ workflows:
     when: << pipeline.parameters.run-integration-test >>
     jobs:
       - integration-test:
+          context:
+            - artifactory-readonly
