@@ -236,7 +236,7 @@ restart-service:
 .PHONY: start
 ifeq ($(OBSERVABILITY_ENABLED),true)
 ifneq ($(SKIP_DOWNLOADS),true) # treat “true” (or any non‑empty value) as “enabled”
-start: fetch-grafana-dashboards
+start:
 endif
 endif
 start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
@@ -410,10 +410,6 @@ install-daml-sdk: ## Install the Daml SDK
 .PHONY: check-daml-sdk
 check-daml-sdk: ## Install the Daml SDK
 	./gradlew :daml:verifyDamlSdkVersion
-
-.PHONY: fetch-grafana-dashboards
-fetch-grafana-dashboards: ## Download Grafana dashboards
-	./gradlew fetchGrafanaDashboards
 
 .PHONY: generate-NOTICES
 generate-NOTICES: ## Generate the NOTICES.txt file

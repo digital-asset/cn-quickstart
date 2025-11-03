@@ -69,8 +69,6 @@ Prerequisites
 
 Install the `CN App Quickstart <../download/cnqs-installation.html>`__ before beginning this demonstration.
 
-`Contact us <https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog>`__ if you need support accessing JFrog Artifactory.
-
 Walkthrough
 ===========
 

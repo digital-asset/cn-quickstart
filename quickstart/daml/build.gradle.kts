@@ -61,9 +61,10 @@ fun computeSdkVariables(): Map<String, Any> {
     }
 
     val damlSdkRuntimeVersion = VersionFiles.dotenv["DAML_RUNTIME_VERSION"] as String
+    val sdkVersion = "3.3.0-snapshot.20250507.0"
     val damlSdkVersion = VersionFiles.damlYamlSdk
-    val sdkArchive = "daml-sdk-$damlSdkRuntimeVersion-$sdkOs-ee.tar.gz"
-    val sdkUrl = "https://digitalasset.jfrog.io/artifactory/sdk-ee/$damlSdkRuntimeVersion/$sdkArchive"
+    val sdkArchive = "daml-sdk-$damlSdkRuntimeVersion-$sdkOs.tar.gz"
+    val sdkUrl = "https://github.com/digital-asset/daml/releases/download/v${sdkVersion}/${sdkArchive}"
     val sdkDir = file("$projectDir/.sdk")
     val sdkArchiveFile = file("${sdkDir}/${sdkArchive}")
     val extractedDir = file("${sdkDir}/extracted")
@@ -94,9 +95,6 @@ tasks.register<de.undercouch.gradle.tasks.download.Download>("fetchDamlSdk") {
 
     doFirst {
         sdkDir.mkdirs()
-        val (username, password) = Credentials.execFromNetRc("digitalasset.jfrog.io")
-        username(username)
-        password(password)
     }
 
     doLast {
