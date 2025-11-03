@@ -8,9 +8,6 @@ We intend that you clone the repository and incrementally update the solution to
 We assume that you have a Daml Enterprise license to leverage all of this project's features at runtime.
 However, an OSS developer can benefit from this project by understanding how a CN Global Synchronizer application is structured.
 
-To run the Quickstart, you need some binaries from Artifactory. 
-[Contact us by filling out the form](https://www.digitalasset.com/contact-us?comments=I%27m%20requesting%20access%20to%20jFrog) to request Artifactory access.
-
 [Binaries terms and conditions](https://github.com/digital-asset/cn-quickstart/blob/main/terms.md).
 
 Licensed under the BSD Zero Clause License.
@@ -37,9 +34,9 @@ You can find Quickstart documentation in the Canton Network documentation portal
 
 This project is rapidly enhanced, so please check back often for updates.
 
-## Setup and Artifactory access
+## Setup
 
-See the [Quickstart Installation Guide](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation.html) for installation, setup, and Artifactory directions.
+See the [Quickstart Installation Guide](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation.html) for installation and setup directions.
 
 ## Quickstart
 
