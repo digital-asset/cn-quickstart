@@ -13,6 +13,7 @@ let
     python3
     (vale.withStyles (styles: [ styles.google ]))
   ] else [ # these packages are only installed on developer machines locally
+    google-cloud-sdk
   ]));
 in
 pkgs.mkShell {
