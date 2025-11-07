@@ -1,4 +1,6 @@
-:orphan:
+
+
+.. _quickstart-splice-in-cn:
 
 .. todo: https://github.com/digital-asset/cn-quickstart/issues/144 -- determine whether and what to keep
 

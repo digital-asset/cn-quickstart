@@ -1,3 +1,5 @@
+.. _quickstart-cnqs-installation:
+
 ======================================
 Canton Network quickstart installation
 ======================================

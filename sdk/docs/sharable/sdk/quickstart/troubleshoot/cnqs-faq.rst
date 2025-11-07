@@ -1,3 +1,5 @@
+.. _quickstart-faq:
+
 =================================
 Canton Network App Quickstart FAQ
 =================================
