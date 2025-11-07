@@ -1,5 +1,7 @@
-Extend LocalNet with JSON API
-=============================
+.. _quickstart-json-ledger-api:
+
+Using the JSON Ledger API
+=========================
 
 Overview
 --------
@@ -935,8 +937,8 @@ Congratulations! You've made a complete business operation in the Quickstart app
 Appendix
 --------
 
-Make your life easy and quickly store all user tokens and IDs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+User token and IDs cookbook
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
