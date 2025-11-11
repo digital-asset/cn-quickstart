@@ -1,3 +1,5 @@
+.. _keycloak-quickstart:
+
 Keycloak in the CN QS
 =====================
 

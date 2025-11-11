@@ -1,7 +1,7 @@
+.. _quickstart-development-lifecycle:
+
 Development lifecycle
 =====================
-
-.. wip::
 
 **Contents**
 
