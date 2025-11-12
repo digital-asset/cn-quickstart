@@ -103,9 +103,9 @@ to learn from the CN Quickstart while building their own application.
    │ └── frontend/    # Original frontend
    │
    └── myapp/         # Your application code
-   ├── daml/          # Your Daml models
-   ├── backend/       # Your backend services
-   └── frontend/      # Your frontend code
+     ├── daml/        # Your Daml models
+     ├── backend/     # Your backend services
+     └── frontend/    # Your frontend code
 
 Developers may generate new Daml packages, new client code in languages
 other than Java or TypeScript, UI elements, CI/CD integration, and unit
