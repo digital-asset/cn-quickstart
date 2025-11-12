@@ -22,6 +22,7 @@ dependencies {
     implementation(Deps.transcode.protoJson)
 
     protobuf(Deps.daml.proto)
+    protobuf(Deps.daml.scalapb)
     protobuf(Deps.grpc.commonsProto)
     implementation(Deps.grpc.stub)
     implementation(Deps.grpc.protobuf)
