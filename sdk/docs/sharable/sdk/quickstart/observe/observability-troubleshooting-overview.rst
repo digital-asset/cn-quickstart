@@ -251,7 +251,7 @@ A few of the key identifiers to be aware of are:
      -   ``Combined with a PackageId this provides a global identifier for a Daml smart contract.``
    * -   ``PartyId``
      -   ``Participant Node``
-     -   ``Global, potentially non-unique, identifier for a legal entity on the Canton ledger.`` [8]_
+     -   ``Identifier of the Party on the Canton ledger.`` [8]_
 
 
 The goal of the observability configuration is to make it easier to navigate through the provenance of any state or event in the wider system. 
