@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,27 +139,26 @@ public class LedgerApi {
                 commandsBuilder.addAllDisclosedContracts(disclosedContracts);
             }
 
-            CommandServiceOuterClass.SubmitAndWaitRequest request =
-                    CommandServiceOuterClass.SubmitAndWaitRequest.newBuilder()
+            CommandServiceOuterClass.SubmitAndWaitForTransactionRequest request =
+                    CommandServiceOuterClass.SubmitAndWaitForTransactionRequest.newBuilder()
                             .setCommands(commandsBuilder.build())
                             .build();
 
             addEventWithAttributes(Span.current(), "built ledger submit request", Map.of());
             logger.info("Submitting ledger command");
-            return toCompletableFuture(commands.submitAndWaitForTransactionTree(request))
+            return toCompletableFuture(commands.submitAndWaitForTransaction(request))
                     .thenApply(response -> {
-                        TransactionOuterClass.TransactionTree txTree = response.getTransaction();
+                        TransactionOuterClass.Transaction txTree = response.getTransaction();
                         long offset = txTree.getOffset();
                         String workflowId = txTree.getWorkflowId();
-                        Map<Integer, TransactionOuterClass.TreeEvent> eventsById = txTree.getEventsByIdMap();
-                        Integer eventId = eventsById.isEmpty() ? null : Collections.min(eventsById.keySet());
-                        TransactionOuterClass.TreeEvent event = eventId != null ? txTree.getEventsByIdMap().get(eventId) : null;
+                        int eventCount = txTree.getEventsCount();
+                        EventOuterClass.Event event = eventCount != 0 ? txTree.getEvents(0) : null;
 
                         Map<String, Object> completionAttrs = new HashMap<>();
                         completionAttrs.put("ledgerOffset", offset);
                         completionAttrs.put("workflowId", workflowId);
-                        if (eventId != null) {
-                            completionAttrs.put("eventId", eventId);
+                        if (eventCount != 0) {
+                            completionAttrs.put("eventId", 0);
                         }
 
                         setSpanAttributes(Span.current(), completionAttrs);
