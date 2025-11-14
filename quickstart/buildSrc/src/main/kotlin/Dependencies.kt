@@ -24,7 +24,7 @@ object Deps {
         val version get() = "0.1.1-main.20251112.144.829.v5cc568a"
         val plugin get() = "com.daml.codegen-java-daml3_4:com.daml.codegen-java-daml3_4.gradle.plugin:$version"
         val codegenJavaRuntime get() = "com.daml:transcode-codegen-java-runtime:$version"
-        val protoJava get() = "com.daml:transcode-codec-proto-java-daml3.3_3:$version"
+        val protoJava get() = "com.daml:transcode-codec-proto-java-daml3.4_3:$version"
         val protoJson get() = "com.daml:transcode-codec-json_3:$version"
     }
 
