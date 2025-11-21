@@ -43,7 +43,7 @@ export default class Wallet {
     await this.page.getByRole('button', {name: 'Tap'}).click();
     test.slow(); // CC processing can take a while
     await expect(
-      this.page.locator('[data-testid="AccountBalanceWalletIcon"]').first(),
+      this.page.locator('[class="MuiSvgIcon-root MuiSvgIcon-fontSizeSmall css-vh810p"]').first(),
       'Balance update should show in transaction history.'
     ).toBeVisible();
   }
