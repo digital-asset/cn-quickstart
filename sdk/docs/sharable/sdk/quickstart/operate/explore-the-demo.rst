@@ -533,4 +533,4 @@ Next steps
 
 You’ve completed a business operation in the CN App Quickstart and have been introduced to the basics of the Canton Console and Daml Shell.
 We encourage you to explore the CN App Quickstart codebase and modify it to meet your business needs.
-You might be interested in learning more about the App Quickstart :ref:`quickstart-project-structure-overview` or the :ref:`quickstart-development-journey-lifecycle`.
+You might be interested in learning more about the App Quickstart :ref:`quickstart-project-structure-guide` or the :ref:`quickstart-development-journey-lifecycle`.
