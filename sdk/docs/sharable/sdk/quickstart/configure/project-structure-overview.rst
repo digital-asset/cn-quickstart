@@ -384,4 +384,4 @@ See :ref:`quickstart-debugging-and-troubleshooting-lnav` for log analysis techni
 Next steps
 ==========
 
-Once you understand the project structure, visit the :ref:`tldr-for-new-canton-network-developers` for additional guides to explore.
+Once you understand the project structure, visit the `TL;DR for new Canton Network developers <https://docs.digitalasset.com/build/3.4/overview/tldr.html>`__ for additional guides to explore.
