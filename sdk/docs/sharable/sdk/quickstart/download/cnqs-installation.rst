@@ -29,7 +29,7 @@ Roadmap
 -------
 
  * After installation, :ref:`quickstart-explore-the-demo` to complete a business operation in the example application.
- * For an overview of how the Quickstart project is structured, read :ref:`quickstart-project-structure-overview`.
+ * For an overview of how the Quickstart project is structured, read :ref:`quickstart-project-structure-guide`.
  * Learn about debugging features in the :ref:`quickstart-observability-troubleshooting-overview`.
 
 Prerequisites
