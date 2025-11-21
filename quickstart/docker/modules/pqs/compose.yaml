@@ -29,7 +29,7 @@ services:
   pqs-app-provider:
     image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
     container_name: pqs-app-provider
-    working_dir: /daml3.3
+    working_dir: /daml3.4
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
       - ${MODULES_DIR}/pqs/env/pqs.env
@@ -53,7 +53,7 @@ services:
   pqs-app-user:
     image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
     container_name: pqs-app-user
-    working_dir: /daml3.3
+    working_dir: /daml3.4
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
       - ${MODULES_DIR}/pqs/env/pqs.env
@@ -77,7 +77,7 @@ services:
   pqs-sv:
     image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
     container_name: pqs-sv
-    working_dir: /daml3.3
+    working_dir: /daml3.4
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
       - ${MODULES_DIR}/pqs/env/pqs.env

@@ -8,6 +8,7 @@ object Deps {
     object daml {
         val version get() = VersionFiles.dotenv["DAML_RUNTIME_VERSION"]
         val proto get() = "com.daml:ledger-api-proto:$version"
+        val scalapb get() = "com.thesamet.scalapb:scalapb-runtime_2.13:0.11.14"
     }
 
     object grpc {
@@ -20,10 +21,10 @@ object Deps {
     }
 
     object transcode {
-        val version get() = "0.0.1-main.20250904.121.741.vbaf625f"
-        val plugin get() = "com.daml.codegen-java-daml3_3:com.daml.codegen-java-daml3_3.gradle.plugin:$version"
+        val version get() = "0.1.1-main.20251112.144.829.v5cc568a"
+        val plugin get() = "com.daml.codegen-java-daml3_4:com.daml.codegen-java-daml3_4.gradle.plugin:$version"
         val codegenJavaRuntime get() = "com.daml:transcode-codegen-java-runtime:$version"
-        val protoJava get() = "com.daml:transcode-codec-proto-java-daml3.3_3:$version"
+        val protoJava get() = "com.daml:transcode-codec-proto-java-daml3.4_3:$version"
         val protoJson get() = "com.daml:transcode-codec-json_3:$version"
     }
 
