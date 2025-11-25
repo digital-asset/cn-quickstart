@@ -233,6 +233,8 @@ Use “x” to expand and collapse information within the square brackets after 
 .. image:: images/lnav-collapse-expand-metadata.png
    :alt: expand collapse lnav metadata
 
+“CTRL + x” toggles cursor mode to move a cursor line.
+
 Mark and copy lines
 ===================
 
@@ -244,8 +246,12 @@ Mark and copy lines
 * “u” and “Shift + U” allows you to jump between marked lines
 * “Shift + C” clears all marked lines.
 
+Find errors, warnings, and trace IDs
+====================================
+
 * “e” and “Shift + E” jumps between errors
 * “w” and “Shift + W” jumps between warning messages
+* “o” and “Shift + O” jumps between traceIds (opId)
 
 Time
 ====
@@ -443,6 +449,12 @@ Hide lines after
 
    # Hide logs after line 5000
    :hide-lines-after 5000
+
+Show lines
+~~~~~~~~~~
+
+* ``:show-lines-before`` shows lines that were previously hidden before a specific time, duration, or line number.
+* ``:show-lines-after`` shows lines that were previously hidden after a specific time, duration, or line number.
 
 Gathering logs contents into a directory
 ----------------------------------------
