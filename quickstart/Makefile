@@ -293,7 +293,7 @@ capture-logs: docker-available ## Monitor docker events and capture logs
 	    -f event=destroy \
 	    -f event=health_status \
 	    -f event=oom \
-	    --format '{{.ID}} {{.Time}} {{.Actor.Attributes.name}} {{.Status}}' | \
+	    --format '{{.Actor.ID}} {{.Time}} {{.Actor.Attributes.name}} {{.Action}}' | \
 	while read -r cid time service_name status; do \
 	    network_attached=$$(docker inspect --format '{{json .NetworkSettings.Networks}}' "$$cid" 2>/dev/null | \
 	        jq -r 'keys[] | select(. | contains ("'"$$network_name"'"))'); \
