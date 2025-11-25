@@ -233,7 +233,7 @@ Use “x” to expand and collapse information within the square brackets after 
 .. image:: images/lnav-collapse-expand-metadata.png
    :alt: expand collapse lnav metadata
 
-“CTRL + X” toggles cursor mode to move a curson line.
+“CTRL + x” toggles cursor mode to move a cursor line.
 
 Mark and copy lines
 ===================
