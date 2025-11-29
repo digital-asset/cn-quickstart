@@ -8,7 +8,6 @@ object Deps {
     object daml {
         val version get() = VersionFiles.dotenv["DAML_RUNTIME_VERSION"]
         val proto get() = "com.daml:ledger-api-proto:$version"
-        val scalapb get() = "com.thesamet.scalapb:scalapb-runtime_2.13:0.11.14"
     }
 
     object grpc {
