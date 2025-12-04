@@ -248,12 +248,119 @@ Pre-configured users, clients and realms are used directly in Quickstart compone
 Only the end users from an organization registered using endpoint `http://backend-service:${BACKEND_PORT}/admin/tenant-registrations` can log into the Quickstart web UI. 
 The `AppUser` organization is registered on the Quickstart startup by calling the registration script in the `register-app-user-tenant` Docker container.
 
-### Port mappings
+# Port mappings
 
-You can find the port mappings scheme in the Splice LocalNet [documentation](https://docs.sync.global/app_dev/testing/localnet.html).
-See the [Project structure guide](https://docs.digitalasset.com/build/3.3/quickstart/configure/project-structure-overview) for more details.
+## Web UIs
 
-## Docker Compose-Based Development for LocalNet
+| Service | Port | URL Pattern | Description |
+|---------|------|-------------|-------------|
+| App User UI | 2000 | `*.localhost:2000` | App User wallet & ANS interfaces |
+| App Provider UI | 3000 | `*.localhost:3000` | App Provider & application frontend |
+| SV UI | 4000 | `*.localhost:4000` | Super Validator, Scan & SV web UIs |
+| Swagger UI: External | 9090 | `localhost:9090` | API documentation browser (host access) |
+| Swagger UI: Internal | 8080 | - | API documentation browser (container) |
+
+## Application services
+
+| Service | Port | Description |
+|---------|------|-------------|
+| Backend Service | 8080 | Spring Boot backend for Licensing workflow |
+| Backend Debug (JVM) | 5005 | Remote JVM debugging (when `DEBUG_ENABLED=true`) |
+
+## Canton Participant Ledger API
+
+| Role | Port | Description |
+|------|------|-------------|
+| SV Participant | 4901 | Super Validator Ledger API |
+| App Provider Participant | 3901 | App Provider Ledger API |
+| App User Participant | 2901 | App User Ledger API |
+
+## Canton Participant admin API
+
+| Role | Port | Description |
+|------|------|-------------|
+| SV Participant | 4902 | Super Validator Admin API |
+| App Provider Participant | 3902 | App Provider Admin API |
+| App User Participant | 2902 | App User Admin API |
+
+## Canton JSON API (HTTP Ledger API)
+
+| Role | Port | Description |
+|------|------|-------------|
+| SV Participant | 4975 | Super Validator JSON API |
+| App Provider Participant | 3975 | App Provider JSON API |
+| App User Participant | 2975 | App User JSON API |
+
+## Splice Validator admin API
+
+| Role | Port | Description |
+|------|------|-------------|
+| SV Validator | 4903 | Super Validator Admin API |
+| App Provider Validator | 3903 | App Provider Validator Admin API |
+| App User Validator | 2903 | App User Validator Admin API |
+
+## Database
+
+| Service | Port | Description |
+|---------|------|-------------|
+| PostgreSQL | 5432 | Multi-database PostgreSQL instance |
+
+## Authentication (When OAuth2 enabled)
+
+| Service | External port | Internal port | Description |
+|---------|--------------|---------------|-------------|
+| Keycloak (via nginx) | 8082 | 8082 | Identity Provider for OAuth2 |
+| Keycloak Health | - | 9000 | Internal health check endpoint |
+
+## Observability stack
+
+| Service | External port | Internal port | Description |
+|---------|--------------|---------------|-------------|
+| Grafana | 3030 | 3000 | Metrics & logs dashboard |
+| OTEL Collector (OTLP) | - | 14001 | OpenTelemetry OTLP receiver |
+| OTEL Collector (Fluentd) | 14002 | 14002 | Log collection endpoint |
+| Prometheus | - | 14011 | Metrics storage & query |
+| Loki | - | 14012 | Log aggregation |
+| Tempo (OTLP) | - | 14013 | Trace collection |
+| Tempo (HTTP) | - | 14014 | Trace query API |
+| Canton Metrics | - | 14021 | Canton metrics endpoint |
+| cAdvisor | - | 14022 | Container metrics |
+| Postgres Exporter | - | 14023 | PostgreSQL metrics |
+| Nginx Exporter | - | 14024 | Nginx metrics |
+
+## Port suffix scheme
+
+The project uses a port suffix scheme for participant/validator services:
+
+| Suffix | Service type |
+|--------|-------------|
+| 901 | Ledger API |
+| 902 | Admin API |
+| 903 | Validator Admin API |
+| 961 | gRPC Health Check |
+| 975 | JSON API |
+| 900 | HTTP Health Check |
+
+**Prefix convention:**
+- `4xxx` = Super Validator (SV)
+- `3xxx` = App Provider
+- `2xxx` = App User
+
+## Localhost domain mappings
+
+| URL | Port | Service |
+|-----|------|---------|
+| http://wallet.localhost:2000 | 2000 | App User Wallet UI |
+| http://ans.localhost:2000 | 2000 | App User ANS UI |
+| http://wallet.localhost:3000 | 3000 | App Provider Wallet UI |
+| http://ans.localhost:3000 | 3000 | App Provider ANS UI |
+| http://app-provider.localhost:3000 | 3000 | Application Frontend |
+| http://sv.localhost:4000 | 4000 | SV Web UI |
+| http://scan.localhost:4000 | 4000 | Scan Web UI |
+| http://keycloak.localhost:8082 | 8082 | Keycloak Admin Console |
+| http://app-provider.localhost:5173 | 5173 | Vite Dev Server (development) |
+
+# Docker Compose-based development for LocalNet
 The Quickstart leverages Docker Compose for modular development. 
 Instead of relying on a single extensive docker-compose.yaml file, this approach orchestrates multiple compose files and corresponding environment files for each Quickstart module. 
 Splice LocalNet is housed within the `docker/modules/localnet` directory. 
