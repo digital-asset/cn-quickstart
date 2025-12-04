@@ -361,7 +361,7 @@ Quickstart uses a port suffix scheme for participant/validator services:
 | http://app-provider.localhost:5173 | 5173 | Vite Dev Server (development) |
 
 # Docker Compose-based development for LocalNet
-The Quickstart leverages Docker Compose for modular development. 
+Quickstart leverages Docker Compose for modular development. 
 Instead of relying on a single extensive docker-compose.yaml file, this approach orchestrates multiple compose files and corresponding environment files for each Quickstart module. 
 Splice LocalNet is housed within the `docker/modules/localnet` directory. 
 In the `Makefile`, Docker Compose commands are dynamically assembled from Splice LocalNet, Quickstart modules, and Quickstart-specific compose and environment files, arranged in an order that respects the interdependencies of the various components.
@@ -385,7 +385,7 @@ splice-onboarding:
     - ./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
 ```
 
-Furthermore, developers may want to leverage the `splice-onboarding` module to execute custom onboarding scripts once all dependent services are operational (for instance, the `register-app-user-tenant` script) or to initialize specific workflows (such as scripts defined in `/docker/create-app-install-request/compose.yaml`).
+Developers may want to leverage the `splice-onboarding` module to execute custom onboarding scripts once all dependent services are operational (for instance, the `register-app-user-tenant` script) or to initialize specific workflows (such as scripts defined in `/docker/create-app-install-request/compose.yaml`).
 
 By integrating this approach, developers can leverage prepopulated environment variables, such as `APP_PROVIDER_PARTY` and other authentication-related settings, while also accessing a suite of tools bundled with the `splice-onboarding` container. 
 These tools, including utilities like curl, jq, and jwt-cli, together with an library of shell functions found in `docker/modules/splice-onboarding/docker/utils.sh` that demonstrate on how to utilize JSON Ledger API HTTP endpoints effectively. 
