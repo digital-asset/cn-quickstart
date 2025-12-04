@@ -330,7 +330,7 @@ The `AppUser` organization is registered on the Quickstart startup by calling th
 
 ## Port suffix scheme
 
-The project uses a port suffix scheme for participant/validator services:
+Quickstart uses a port suffix scheme for participant/validator services:
 
 | Suffix | Service type |
 |--------|-------------|
