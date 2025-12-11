@@ -15,7 +15,8 @@ Prerequisites
 -------------
 
 This guide requires the Digital Asset Package Manager.
-Follow installation instructions at :ref:`dpm`.
+Follow installation instructions at `DPM <https://docs.digitalasset.com/build/3.5/dpm/dpm.html>`__.
+(Exception: if you're running Daml 3.3, then use the `Daml Assistant <https://docs.digitalasset.com/build/3.3/component-howtos/smart-contracts/assistant.html>`__.)
 
 You should have also finished the Quickstart installation and Explore the demo tutorial.
 We also recommend reading the developer journey lifecycle to better understand how Quickstart bootstraps your Canton Network development by providing the tooling you will need for any CN app.
