@@ -6,17 +6,26 @@ Using the JSON Ledger API
 Overview
 --------
 
-You are ready to extend the CN Quickstart to interact directly with your LocalNet. You'll learn how to programmatically create parties, upload DARs, create contracts, and integrate with Canton Coin (Amulet) using OAuth2 authentication against your running LocalNet. By the end, you'll have the hands-on experience with critical API patterns needed to build your own Canton Network applications.
+You are ready to extend the CN Quickstart to interact directly with your LocalNet.
+You'll learn how to programmatically create parties, upload DARs, create contracts,
+and integrate with Canton Coin (Amulet) using OAuth2 authentication against your running LocalNet.
+By the end, you'll have the hands-on experience with critical API patterns needed to build your own Canton Network applications.
 
 Prerequisites
 -------------
 
-You should have finished the Quickstart installation and Explore the demo tutorial. We also recommend reading the developer journey lifecycle to better understand how Quickstart bootstraps your Canton Network development by providing the tooling you will need for any CN app.
+This guide requires the Digital Asset Package Manager (dpm).
+Follow installation instructions at :ref:`dpm`.
+
+You should have also finished the Quickstart installation and Explore the demo tutorial.
+We also recommend reading the developer journey lifecycle to better understand how Quickstart bootstraps your Canton Network development by providing the tooling you will need for any CN app.
 
 LocalNet interaction expectations vs Explore the demo (using app vs developer skills)
 -------------------------------------------------------------------------------------
 
-In the demo, you interacted with LocalNet through the web interface as a user. Now you'll take control of LocalNet directly through APIs, learning to programmatically manage the network infrastructure that will become your foundation for building on ScratchNet, TestNet, and beyond.
+In the demo, you interacted with LocalNet through the web interface as a user.
+Now you'll take control of LocalNet directly through APIs,
+learning to programmatically manage the network infrastructure that will become your foundation for building on ScratchNet, TestNet, and beyond.
 
 Project directory structure
 ---------------------------
@@ -53,8 +62,13 @@ Port mappings
 Security consideration
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The port mappings for ``LocalNet`` expose the ``AdminAPI`` port and the ``Postgres`` port, both of which would normally be a security risk. However, having direct access to these ports when running on a local developer's machine can be useful. These ports should not be exposed when preparing deployment configurations for non-local deployments.
-The port suffixes are defined as environment variables. For any port mappings you wish to disable, you can find and remove the relevant Docker ``port``: entry in the appropriate file.
+The port mappings for ``LocalNet`` expose the ``AdminAPI`` port and the ``Postgres`` port,
+both of which would normally be a security risk.
+However, having direct access to these ports when running on a local developer's machine can be useful.
+These ports should not be exposed when preparing deployment configurations for non-local deployments.
+The port suffixes are defined as environment variables.
+For any port mappings you wish to disable,
+you can find and remove the relevant Docker ``port``: entry in the appropriate file.
 
 JSON API ports
 ^^^^^^^^^^^^^^
@@ -82,7 +96,8 @@ Read ``ref:keycloak-in-cnqs`` To learn more about Keycloak.
 JSON API Tutorial
 -----------------
 
-In this tutorial, you're making API calls to simulate the steps taken in the Quickstart web app by requesting JWT tokens, then include them as Bearer tokens in API calls.
+In this tutorial, you're making API calls to simulate the steps taken in the Quickstart web app by requesting JWT tokens,
+then include them as Bearer tokens in API calls.
 Start the application and tools from the ``quickstart/`` directory.
 
 Begin capture logs
@@ -95,7 +110,9 @@ In a new terminal window, run the Quickstart application with ``make start``.
 Once complete, this can become your working terminal window.
 After ``make start`` completes, open a new terminal window to initiate lnav.
 Start lnav with ``lnav logs/*.clog`` to capture and analyze logs.
-If there are no clogs you might try running ``make stop && make clean-all`` then rerunning ``make start``. Alternatively, you can begin this guide to make transactions on the ledger. This should cause clogs to self-generate.
+If there are no clogs you might try running ``make stop && make clean-all`` then rerunning ``make start``.
+Alternatively, you can begin this guide to make transactions on the ledger.
+This should cause clogs to self-generate.
 This command launches lnav to trace transactions, debug issues, and monitor system behavior as you work.
 Keep lnav running in its terminal window.
 
@@ -120,9 +137,12 @@ Use the AppUser validator client to get a token.
 
 (client_secret is set in oauth2.env and AppUser-realm.json)
 
+An empty return indicates success.
+
+Verify the token
+
 .. code-block:: bash
 
-   # Verify you have a token
    echo $USER_ADMIN_TOKEN
 
 Use the token
@@ -133,7 +153,7 @@ List existing parties and include the token in API requests
 .. code-block:: bash
 
    curl -H "Authorization: Bearer $USER_ADMIN_TOKEN" \
-     http://localhost:2975/v1/parties
+     http://localhost:2975/v2/parties
 
 View Party and DSO activity in lnav
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,7 +162,7 @@ View Party activity in lnav with the ``filter-in`` command followed by the app p
 
 .. code-block:: text
 
-   filter-in APP_PROVIDER_ID
+   :filter-in APP_PROVIDER_ID
 
 You can also view DSO activity in lnav using the DSO ID.
 
@@ -150,15 +170,15 @@ You can also view DSO activity in lnav using the DSO ID.
 
    :filter-in DSO_ID
 
-Save the ``identifier`` values for ``app-provider`` as APP_PROVIDER_PARTY and ``app-user`` as APP_USER_PARTY.
+Save the ``party`` values for ``app-provider`` as APP_PROVIDER_PARTY and ``app-user`` as APP_USER_PARTY.
 
 .. code-block:: bash
 
-   APP_PROVIDER_PARTY=$(curl -s -H "Authorization: Bearer $USER_ADMIN_TOKEN" http://localhost:2975/v1/parties | \
-     jq -r '.result[] | select(.identifier | startswith("app_provider_quickstart-")) | .identifier')
+   APP_PROVIDER_PARTY=$(curl -s -H "Authorization: Bearer $USER_ADMIN_TOKEN" http://localhost:2975/v2/parties | \
+     jq -r '.partyDetails[] | select(.party | startswith("app_provider_quickstart-")) | .party')
    
-   APP_USER_PARTY=$(curl -s -H "Authorization: Bearer $USER_ADMIN_TOKEN" http://localhost:2975/v1/parties | \
-     jq -r '.result[] | select(.identifier | startswith("app_user_quickstart-")) | .identifier')
+   APP_USER_PARTY=$(curl -s -H "Authorization: Bearer $USER_ADMIN_TOKEN" http://localhost:2975/v2/parties | \
+     jq -r '.partyDetails[] | select(.party | startswith("app_user_quickstart-")) | .party')
    
    echo "APP_PROVIDER_PARTY: $APP_PROVIDER_PARTY"
    echo "APP_USER_PARTY: $APP_USER_PARTY"
@@ -168,9 +188,9 @@ Save the DSO Party
 
 .. code-block:: bash
 
-   DSO_PARTY=$(curl -s "http://localhost:2975/v1/parties" \
+   DSO_PARTY=$(curl -s "http://localhost:2975/v2/parties" \
      -H "Authorization: Bearer $USER_ADMIN_TOKEN" | \
-     jq -r '.result[] | select(.identifier | startswith("DSO::")) | .identifier')
+     jq -r '.partyDetails[] | select(.party | startswith("DSO::")) | .party')
    echo "DSO Party: $DSO_PARTY"
 
 You're now ready to make authenticated JSON API calls to your LocalNet.
@@ -178,7 +198,9 @@ You're now ready to make authenticated JSON API calls to your LocalNet.
 Token management troubleshooting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tokens expire after a period. If API calls return ``Cannot iterate over null`` or ``401 Unauthorized``, regenerate your token with the command above. For production patterns, see ``quickstart/docker/modules/splice-onboarding/docker/utils.sh`` for token management utilities.
+Tokens expire after a period. If API calls return ``Cannot iterate over null`` or ``401 Unauthorized``,
+regenerate your token with the command above. For production patterns,
+see ``quickstart/docker/modules/splice-onboarding/docker/utils.sh`` for token management utilities.
 
 Create a party
 --------------
@@ -187,31 +209,41 @@ Create a new party on the AppUser validator.
 
 .. code-block:: bash
 
-   # Use your existing token from earlier
-   curl -X POST http://localhost:2975/v1/parties/allocate \
+   curl -X POST http://localhost:2975/v2/parties \
      -H "Authorization: Bearer $USER_ADMIN_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{
-       "identifierHint": "Alice",
-       "displayName": "Alice"
+       "partyIdHint": "Alice"
      }'
 
-Success Response: HTTP 200 with package ID
+You can use any name as the ``partyIdHint`` value.
+Canton may append additional characters for uniqueness.
 
-You can use any name as the ``identifierHint`` value. Canton may append additional characters for uniqueness.
+Success Response:
+
+.. code-block:: json
+
+   {
+     "partyDetails": {
+       "party": "Alice::122091f5d8d174bc0d624616d4f366904f8d4c56d56e33508878db3156c3dd9b8ae9",
+       "isLocal": true,
+       "localMetadata": { "resourceVersion": "0", "annotations": {} },
+       "identityProviderId": ""
+     }
+   }
 
 See the new participant Alice in lnav
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
-   filter-in: Alice
+   :filter-in: Alice
 
 or
 
 .. code-block:: text
 
-   filter-in: ALICE_ID
+   :filter-in: ALICE_ID
 
 Troubleshoot common party creation issues
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -222,7 +254,7 @@ Troubleshoot common party creation issues
 
 .. code-block:: bash
 
-   curl -X GET http://localhost:2975/v1/parties \
+   curl -X GET http://localhost:2975/v2/parties \
      -H "Authorization: Bearer $USER_ADMIN_TOKEN"
 
 Upload a DAR
@@ -237,12 +269,19 @@ Upload the prebuilt licensing DAR to the validator.
      -H "Authorization: Bearer $USER_ADMIN_TOKEN" \
      --data-binary @./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar
 
+Success looks like:
+
+.. code-block:: json
+
+   {}
+
 DAR Upload issues
 ~~~~~~~~~~~~~~~~~
 
 404 Not Found: Verify DAR path is correct from your current directory
 413 Payload Too Large: DAR exceeds size limit
 409 Conflict: Package already uploaded
+curl: (52) Empty reply from server: Network issue - retry
 Check lnav for detailed upload logs and any processing errors.
 
 Create a contract on LocalNet
@@ -252,11 +291,13 @@ Inspect the DAR to find the package hash. Find and save the package ID, a 64-cha
 
 .. code-block:: bash
 
-   daml damlc inspect-dar daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar
+   dpm damlc inspect-dar daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar
 
-We suggest copying and pasting this command for your convenience. If you choose to type it out, you may need to type the full directory without the use of autocomplete.
+We suggest copying and pasting this command for your convenience.
+If you choose to type it out, you may need to type the full directory without the use of autocomplete.
 
-The desired value may vary between SDK versions. You can identify the main package by the project name in the package list.
+The desired value may vary between SDK versions.
+You can identify the main package by the project name in the package list.
 
 The format follows:
 
@@ -264,7 +305,17 @@ The format follows:
 
    <project-name>-<version>-<package-id>
 
-In this instance, the repeating string of ``636c3b0e895e1a8da70a79c8d276f9d7ffa879c7e4e2440831b5870b953d6518`` is the project ID that we seek.
+At the time of publication, the repeating string of ``b59ffbf847ac36fee1a4a743864274c5d8ab6f02ea8899f49fb5347e9978543f`` is the project ID that we seek.
+
+Alternatively, if you're querying the ``quickstart-licensing`` DAR, as we do in this tutorial, you can quickly grep and save the project ID with:
+
+.. code-block:: bash
+
+   PACKAGE_ID=$(dpm damlc inspect-dar daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar | grep "quickstart-licensing-0.0.1-" | grep -v "dalf" | tail -1 | awk '{print $2}' | tr -d '"')
+   
+   echo $PACKAGE_ID
+
+If you'd like to query a different DAR then change the file path.
 
 See the DAR activity in ``lnav`` by filtering the package ID
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -273,21 +324,13 @@ See the DAR activity in ``lnav`` by filtering the package ID
 
    :filter-in PACKAGE_ID
 
-If you're querying the quickstart-licensing DAR, as we do in this tutorial you can quickly grep and save the project Id with:
-
-.. code-block:: bash
-
-   # Extract just the main package ID
-   PACKAGE_ID=$(daml damlc inspect-dar daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar | grep "quickstart-licensing-0.0.1-" | grep -v "dalf" | tail -1 | awk '{print $2}' | tr -d '"')
-   
-   echo $PACKAGE_ID
-
 Create the Contract
 ~~~~~~~~~~~~~~~~~~~
 
+Renew your token to query the participant:
+
 .. code-block:: bash
 
-   # Renew your token to query the participant
    USER_ADMIN_TOKEN=$(curl -fsS "http://keycloak.localhost:8082/realms/AppUser/protocol/openid-connect/token" \
      -H 'Content-Type: application/x-www-form-urlencoded' \
      -d 'client_id=app-user-validator' \
@@ -307,9 +350,10 @@ Get PROVIDER_ADMIN_TOKEN
      -d 'grant_type=client_credentials' \
      -d 'scope=openid' | jq -r .access_token)
 
+Get the user token:
+
 .. code-block:: bash
 
-   # Get user token (with party claims)
    USER_TOKEN=$(curl -f -s -S "http://keycloak.localhost:8082/realms/AppUser/protocol/openid-connect/token" \
      -H 'Content-Type: application/x-www-form-urlencoded' \
      -d 'client_id=app-user-unsafe' \
@@ -318,9 +362,10 @@ Get PROVIDER_ADMIN_TOKEN
      -d 'grant_type=password' \
      -d 'scope=openid' | jq -r .access_token)
 
+Create the ``AppInstallRequest``:
+
 .. code-block:: bash
 
-   # Now create the AppInstallRequest 
    curl -X POST "http://localhost:2975/v2/commands/submit-and-wait" \
      -H "Authorization: Bearer $USER_TOKEN" \
      -H "Content-Type: application/json" \
@@ -359,9 +404,10 @@ The return looks something like:
    }
 
 updateId: A unique identifier for this ledger update/transaction. You can use this to track this specific operation in logs.
-completionOffset: The position in the ledger where this transaction was committed. For example, 1666 means this was the 1,666th transaction on this participant.
+completionOffset: The position in the ledger where this transaction was committed.
+For example, 1666 means this was the 1,666th transaction on this participant.
 
-See the contract creation in lnav by filtering for ``AppInstallRequest``
+See the contract creation in lnav by filtering for ``AppInstallRequest`` or filter by the ``updateId`` value.
 
 .. code-block:: text
 
@@ -377,7 +423,10 @@ In this screenshot, ``deb9fe66dfb7990e5268f3690dbe53e8`` and ``61af0b8172d45909f
 Access the contract in daml shell
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Open ``daml shell`` to query for the created contract. In a new terminal window, from the ``quickstart/`` directory run ``make shell``
+Open ``daml shell`` to query for the created contract.
+In a new terminal window, from the ``quickstart/`` directory run ``make shell``
+
+Query the ``AppInstallRequest`` contract:
 
 .. code-block:: text
 
@@ -386,7 +435,7 @@ Open ``daml shell`` to query for the created contract. In a new terminal window,
 .. image:: images/shell-appinstallrequest-active.png
    :alt: daml shell AppInstallRequest active
 
-You've queried the AppInstallRequest contract and showed that the contract exists. Now you can display the full contract ID to save it to a variable in cURL.
+Use the displayed portion of the contract ID to display the contract details.
 
 In ``daml shell`` run the command contract followed by your unique Contract ID.
 In this case: ``contract 0044e9b`` until there are no other contract options.
@@ -395,7 +444,7 @@ Press tab to complete the contract ID and enter to see the contract details.
 .. image:: images/shell-appinstallrequest-contract.png
    :alt: daml shell AppInstallRequest contract
 
-Then copy and save the contract ID to a new ``INSTALL_REQ_CID`` variable.
+Copy and save the contract ID to a new ``INSTALL_REQ_CID`` variable in the previous working terminal.
 
 .. code-block:: bash
 
@@ -404,9 +453,10 @@ Then copy and save the contract ID to a new ``INSTALL_REQ_CID`` variable.
 Find the AppInstallRequest contract
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Get the provider user token as a password grant for party rights.
+
 .. code-block:: bash
 
-   # Get provider user token as a password grant for party rights.
    PROVIDER_TOKEN=$(curl -f -s -S "http://keycloak.localhost:8082/realms/AppProvider/protocol/openid-connect/token" \
      -H 'Content-Type: application/x-www-form-urlencoded' \
      -d 'client_id=app-provider-unsafe' \
@@ -415,9 +465,10 @@ Find the AppInstallRequest contract
      -d 'grant_type=password' \
      -d 'scope=openid' | jq -r .access_token)
 
+Exercise the Accept choice on the first contract:
+
 .. code-block:: bash
 
-   # Exercise Accept choice on the first contract
    JSON_PAYLOAD=$(cat <<EOF
    {
      "commands": [{
@@ -458,7 +509,8 @@ See the contract in lnav
 
    :filter-in appinstallrequest
 
-You can exercise the accept choice exactly once. After that you will receive an error because the contract has been accepted.
+You can exercise the accept choice exactly once.
+After that you will receive an error because the contract has been accepted.
 
 Generate a token for the app provider
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -472,13 +524,14 @@ Generate a token for the app provider
      -d 'grant_type=client_credentials' \
      -d 'scope=openid' | jq -r .access_token)
 
+Check if ``app-provider`` user exists
+
 .. code-block:: bash
 
-   # Check if app-provider user exists
    curl -s "http://localhost:3975/v2/users" \
      -H "Authorization: Bearer $PROVIDER_ADMIN_TOKEN" | jq '.users[] | select(.metadata.annotations.username == "app-provider")'
 
-If the app-provider user exists, get the party and verify it's set (if it fails review the previous steps):
+If the ``app-provider`` user exists, get the party and verify it's set (if it fails review the previous steps):
 
 .. code-block:: bash
 
@@ -488,10 +541,10 @@ If the app-provider user exists, get the party and verify it's set (if it fails 
    
    echo "APP_PROVIDER_USER_ID: $APP_PROVIDER_USER_ID"
 
-The APP_PROVIDER_USER_ID should equal the "id" value.
+The ``APP_PROVIDER_USER_ID`` should equal the "id" value.
 
-Return to ``daml shell`` to query for the AppInstall contract ID
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Return to ``daml shell`` to query for the ``AppInstall`` contract ID
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
@@ -532,20 +585,8 @@ An invalid token may show "a security-sensitive error has been received"
 
 .. code-block:: text
 
-   (base) quickstart ~ % curl -s "http://localhost:3975/v2/users/$APP_PROVIDER_USER_ID" \
-     -H "Authorization: Bearer $PROVIDER_TOKEN" | jq  
-   {
-     "code": "NA",
-     "cause": "A security-sensitive error has been received",
-     "correlationId": "7fa7980ba9192f70df3e20b97693dd98",
-     "traceId": "7fa7980ba9192f70df3e20b97693dd98",
-     "context": {},
-     "resources": [],
-     "errorCategory": -1,
-     "grpcCodeValue": 16,
-     "retryInfo": null,
-     "definiteAnswer": null
-   }
+   curl -s "http://localhost:3975/v2/users/$APP_PROVIDER_USER_ID" \
+     -H "Authorization: Bearer $PROVIDER_TOKEN" | jq
 
 If needed, regenerate the session and then check that the token is valid, again.
 
@@ -611,18 +652,24 @@ Success returns a new updateId and completionOffset.
 See the AppInstall request in lnav
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: text
+.. code-block:: bash
 
    :filter-in appinstall
 
-Now we return to ``daml shell`` to get the License contract ID.
+Get the License contract ID in daml shell
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: text
+Return to ``daml shell`` to get the License contract ID.
+
+.. code-block:: bash
 
    active quickstart-licensing:Licensing.License:License
-   contract ###...
 
 Copy the complete contract ID and return to the previous working terminal.
+
+.. code-block:: bash
+
+   contract ###...
 
 Save the license contract ID in a variable
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -646,7 +693,6 @@ Set the license extension
 
 .. code-block:: bash
 
-   # License extension duration
    LICENSE_EXTENSION_DAYS=30
    LICENSE_EXTENSION_MICROSECONDS=$((LICENSE_EXTENSION_DAYS * 24 * 60 * 60 * 1000000))
 
@@ -668,7 +714,7 @@ As a sanity check you may preemptively renew the token.
      -d 'scope=openid' | jq -r .access_token)
 
 Set the COMMAND_ID variable
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -722,26 +768,37 @@ You have 15 minutes to allocate tokens and 30 minutes to complete the renewal re
 
 Success looks like: ``{"updateId":"122067883fdbb23d7395fabab7fc44703b3d588e44924fe1d33b45eebc116ecd94a5","completionOffset":220}%``
 
-Return to ``daml shell`` to get the LicenseRenewalRequest contract ID
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+LicenseRenewalRequest
+~~~~~~~~~~~~~~~~~~~~~
+
+Return to daml shell to get the ``LicenseRenewalRequest`` contract ID
 
 .. code-block:: bash
 
    active quickstart-licensing:Licensing.License:LicenseRenewalRequest
 
-Take note of the ``Payload`` field. You'll use the metadata values to send the payment allocation in a future step.
+Execute the contract command to see the ``LicenseRenewalRequest`` contract details.
+
+.. code-block:: bash
+
+   contract ###...
+
+.. image:: images/json-api-payload.png
+   :alt: LicenseRenewalRequest contract payload
+
+Take note of the ``Payload`` field.
+You'll use the metadata values to send the payment allocation in a future step.
 
 Go back to the terminal and create a new ``RENEWAL_REQ_CID`` variable
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
    RENEWAL_REQ_CID="###"
 
-Return the the ``daml shell``
+Return to the ``daml shell``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``LicenseRenewalRequest`` implements the ``AllocationRequest interface``.
+``LicenseRenewalRequest`` implements the ``AllocationRequest interface``.
 
 The user must allocate 100 CC tokens to satisfy the payment.
 
@@ -770,46 +827,49 @@ Navigate to the Canton Wallet UI at http://wallet.localhost:2000/allocations
 Log in as ``app-user`` with password ``abc123``
 
 In the demo, the allocation was completed for you via backend processes in the web app.
-But now we need to fill out the allocation request manually
+Now, we need to fill out the allocation request manually
 
 You need to manually create an allocation for the daml shell allocation contract even if the UI shows an allocation request.
 
-Fill in all the fields surrounded by red.
+.. image:: images/json-api-create-allocation.png
+   :alt: Create allocation manually
 
-* Transfer Leg ID: licenseFeePayment
-* Settlement Ref ID: settlementRef.id
-* Recipient: receiver
-* Executor: executor
-* Amount: 100
-* Requested At: requestedAt
-* Settle before: settleBefore
-* Allocate before: allocateBefore
+Use the ``Payload`` metadata mentioned above to fill in all the fields surrounded by red.
+
+* **Transfer Leg ID:** ``licenseFeePayment``
+* **Settlement Ref ID:** ``settlementRef.id``
+* **Recipient:** ``receiver``
+* **Executor:** ``executor``
+* **Amount:** ``100``
+* **Requested At:** ``requestedAt``
+* **Settle before:** ``settleBefore``
+* **Allocate before:** ``allocateBefore``
 
 Add two custom entries for the Settlement meta and Transfer leg meta, each.
 
-* Key: cn-quickstart.example.org/licenseNum
-* Value: 1
-* Key: splice.lfdecentralizedtrust.org/reason
-* Value: License renewal payment
+* **Key:** ``cn-quickstart.example.org/licenseNum``
+* **Value:** ``1``
+* **Key:** ``splice.lfdecentralizedtrust.org/reason``
+* **Value:** ``License renewal payment``
 
-Do NOT wrap values in quotes. Canton Wallet adds escaped quotes.
+Do NOT wrap values in quotes.
+Canton Wallet adds escaped quotes.
 
 Both key value pairs go in both meta options.
 
 To find the necessary information,
 look at the LicenseRenewalRequest contract ``payload`` field in daml shell.
 
-Find the necessary information in the payload row.
+For the times ``Requested At``, ``Settle before``, and ``Allocate before``,
+you will need to manually enter a "." before the "Z" followed by six (6) "0"s.
 
-For the times, you will need to manually enter a "." before the "Z" followed by six (6) "0"s.
-
-For example, requestedAt: 2025-10-29T20:38:16Z becomes
-2025-10-29T20:38:16.000000Z
+For example, ``requestedAt: 2025-10-29T20:38:16Z`` becomes
+``2025-10-29T20:38:16.000000Z``
 
 Send the request once all information is complete.
 
-Regenerate the provider token in case of "security-sensitive errors"
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Regenerate the provider token in case of security-sensitive errors
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tokens automatically expire over time.
 This is a security measure and no fault of your own if you experience such errors.
@@ -840,13 +900,13 @@ Return to the terminal and get a user token
 Look up the Allocation Contract ID
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Query for the allocation
+Query for the allocation in ``daml shell``
 
 .. code-block:: bash
 
    active splice-api-token-allocation-v1:Splice.Api.Token.AllocationV1:Allocation
 
-Save the allocation as ALLOCATION_CID="###"
+Save the allocation contract ID as ALLOCATION_CID="###"
 
 Double check that the license renewal request, allocation , and license contract IDs are different.
 You may verify contract ID variables with values in ``daml shell``.
@@ -928,11 +988,17 @@ Success ends in a ``licenseId``
      "licenseId": "###"
    }
 
-After successful execution, return to daml shell and run a contract command using the new ``licenseId``.
+After successful execution, return to daml shell and run a contract command using the new ``licenseId`` that was just returned to you.
 
+.. code-block:: bash
+
+   contract ###...
+   
 In the ``Payload`` field, notice that the ``expiresAt`` value is set for 30 days in the future.
 
-Congratulations! You've made a complete business operation in the Quickstart application using JSON API (with minimal help from the backend service to collect information not available in PQS for ``complete-renewal``.
+Congratulations!
+You've made a complete business operation in the Quickstart application using JSON API
+(with minimal help from the backend service to collect information not available in PQS for ``complete-renewal``).
 
 Appendix
 --------
@@ -1002,7 +1068,7 @@ User token and IDs cookbook
    
    
    # 4. Get Package ID
-   PACKAGE_ID=$(daml damlc inspect-dar daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar | \
+   PACKAGE_ID=$(dpm damlc inspect-dar daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar | \
      grep "quickstart-licensing-0.0.1-" | grep -v "dalf" | tail -1 | awk '{print $2}' | tr -d '"')
    
    
@@ -1062,57 +1128,6 @@ Show the Daml ledger API claims in your token
 
    echo $USER_TOKEN | cut -d. -f2 | base64 -d 2>/dev/null | jq '."https://daml.com/ledger-api"'
 
-Upload a DAR in production example
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**Upload DAR via JSON API with Authentication token**
-
-These endpoints are also defined in ``compose.yaml``.
-
-.. code-block:: bash
-
-   # Load environment variables (run from quickstart directory)
-   cd quickstart
-   set -a
-   source docker/modules/keycloak/env/app-user/on/oauth2.env
-   source docker/modules/keycloak/compose.env
-   set +a
-  
-   # Use the actual token URL from environment, but replace docker hostname with localhost
-   TOKEN_URL=$(echo "$AUTH_APP_USER_TOKEN_URL" | sed 's/nginx-keycloak/localhost/')
-   echo "Using token URL: $TOKEN_URL"
-  
-   # Get OAuth2 token using environment variables and URL
-   TOKEN=$(curl -fsS "$TOKEN_URL" \
-     -H "Content-Type: application/x-www-form-urlencoded" \
-     -d "client_id=$AUTH_APP_USER_VALIDATOR_CLIENT_ID" \
-     -d "client_secret=$AUTH_APP_USER_VALIDATOR_CLIENT_SECRET" \
-     -d "grant_type=client_credentials" \
-     -d "scope=openid" | jq -r .access_token)
-  
-   echo "Token obtained: ${TOKEN:0:20}..."
-  
-   # Upload DAR if token is valid
-   if [ -n "$TOKEN" ] && [ "$TOKEN" != "null" ]; then
-     curl -v -X POST http://localhost:2975/v2/packages \
-       -H "Content-Type: application/octet-stream" \
-       -H "Authorization: Bearer $TOKEN" \
-       --data-binary @./daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar
-   else
-     echo "Failed to get authentication token"
-   Fi
-
-Get the APP_USER_PARTY
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   # Query provider party ID
-   APP_USER_PARTY=$(curl -s "http://localhost:3975/v2/users/97bb6cef-a7a9-410b-ba8c-ada08451a5c9" \
-     -H "Authorization: Bearer $PROVIDER_ADMIN_TOKEN" | jq -r '.user.primaryParty')
-   
-   
-   echo "Current APP_USER_PARTY: $APP_USER_PARTY"
 
 How to discover the user and provider IDs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
