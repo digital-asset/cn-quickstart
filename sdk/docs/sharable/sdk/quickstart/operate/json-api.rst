@@ -14,7 +14,7 @@ By the end, you'll have the hands-on experience with critical API patterns neede
 Prerequisites
 -------------
 
-This guide requires the Digital Asset Package Manager (dpm).
+This guide requires the Digital Asset Package Manager.
 Follow installation instructions at :ref:`dpm`.
 
 You should have also finished the Quickstart installation and Explore the demo tutorial.
