@@ -1,10 +1,10 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-import {test} from '../fixtures/workflow';
+import { test } from '../fixtures/workflow';
 // @ts-ignore
-import {WALLET_URL} from './global.ts';
-import {Button as TenantButton} from "../pages/sections/tenants.tab";
+import { WALLET_URL } from './global.ts';
+import { Button as TenantButton } from "../pages/sections/tenants.tab";
 
 
 import { expect, BrowserContext, Page } from '@playwright/test';
@@ -40,7 +40,7 @@ test.describe('Tenant Registrations (E2E)', () => {
         await provider.tenants.goto();
         // First creation (should succeed)
         await provider.tenants.fillCommon({ tenantId, partyId, walletUrl });
-        await provider.tenants.fillSecuritySection({clientId: clientId});
+        await provider.tenants.fillSecuritySection({ clientId: clientId });
         await provider.tenants.clickSubmit();
         await provider.waitForSuccessMessage('Tenant registration created');
         await provider.tenants.withRowMatching(tenantId, async () => {
@@ -51,13 +51,13 @@ test.describe('Tenant Registrations (E2E)', () => {
         const partyId2 = `party-2-${Math.floor(Math.random() * 1e6)}`;
 
         await provider.tenants.fillCommon({ tenantId: tenantId2, partyId: partyId2, walletUrl });
-        await provider.tenants.fillSecuritySection({clientId: clientId});
+        await provider.tenants.fillSecuritySection({ clientId: clientId });
         await provider.tenants.clickSubmit();
         await provider.tenants.assertErrorVisible(/ClientId-IssuerUrl combination already exists/i);
         // Cleanup: delete the first-created
         // Find the row for tenantId and click its Delete button (disabled if internal)
         await provider.tenants.withRowMatching(tenantId, async () => {
-            await provider.tenants.clickButton( TenantButton.Delete );
+            await provider.tenants.clickButton(TenantButton.Delete);
             await provider.waitForSuccessMessage('Tenant registration deleted');
             await provider.tenants.assertNoMatchingRowExists();
         });
@@ -86,7 +86,7 @@ test.describe('Tenant Registrations (E2E)', () => {
         // Cleanup: delete the first-created
         // Find the row for tenantId and click its Delete button (disabled if internal)
         await provider.tenants.withRowMatching(tenantId, async () => {
-            await provider.tenants.clickButton( TenantButton.Delete );
+            await provider.tenants.clickButton(TenantButton.Delete);
             await provider.waitForSuccessMessage('Tenant registration deleted');
             await provider.tenants.assertNoMatchingRowExists();
         });
