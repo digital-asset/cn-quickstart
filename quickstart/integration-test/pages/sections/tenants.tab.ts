@@ -1,9 +1,9 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
 import { expect, type Page, type Locator } from '@playwright/test';
 // @ts-ignore
-import {TENANTS_URL } from '../../tests/global.ts';
+import { TENANTS_URL } from '../../tests/global.ts';
 
 
 import RowOps from "../../utils/rowOps";
@@ -45,10 +45,10 @@ export default class Tenants extends RowOps {
 
     // Form filling
     async fillCommon({
-                         tenantId,
-                         partyId,
-                         walletUrl,
-                     }: {
+        tenantId,
+        partyId,
+        walletUrl,
+    }: {
         tenantId: string;
         partyId: string;
         walletUrl: string;
@@ -59,9 +59,9 @@ export default class Tenants extends RowOps {
     }
 
     async fillOAuth2({
-                         clientId,
-                         issuerUrl = DEFAULT_OIDC_ISSUER,
-                     }: {
+        clientId,
+        issuerUrl = DEFAULT_OIDC_ISSUER,
+    }: {
         clientId: string;
         issuerUrl?: string;
     }): Promise<void> {
@@ -74,10 +74,10 @@ export default class Tenants extends RowOps {
     }
 
     async fillSecuritySection({
-                                  clientId = `client-${Date.now()}`,
-                                  issuerUrl = DEFAULT_OIDC_ISSUER,
-                                  users = 'alice, bob',
-                              }) : Promise<void> {
+        clientId = `client-${Date.now()}`,
+        issuerUrl = DEFAULT_OIDC_ISSUER,
+        users = 'alice, bob',
+    }): Promise<void> {
         const authMode = await this.getAuthMode();
         if (authMode === 'oauth2') {
             await this.fillOAuth2({ clientId, issuerUrl });
@@ -88,7 +88,7 @@ export default class Tenants extends RowOps {
 
     // Submission + state
     private button = (name: string, row: Locator = this.matchingRow): Locator => {
-        return row.getByRole('button', {name: name});
+        return row.getByRole('button', { name: name });
     }
 
     public async clickButton(button: Button, row: Locator = this.matchingRow): Promise<void> {

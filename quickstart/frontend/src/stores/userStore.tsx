@@ -1,11 +1,11 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-import React, {createContext, useContext, useState, useCallback} from 'react';
-import {useToast} from './toastStore';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useToast } from './toastStore';
 import api from '../api';
-import {useNavigate} from 'react-router-dom';
-import type {AuthenticatedUser, Client} from "../openapi.d.ts";
+import { useNavigate } from 'react-router-dom';
+import type { AuthenticatedUser, Client } from "../openapi.d.ts";
 
 interface UserContextType {
     user: AuthenticatedUser | null;
@@ -17,7 +17,7 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export const UserProvider = ({children}: { children: React.ReactNode }) => {
+export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<AuthenticatedUser | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const toast = useToast();
@@ -70,7 +70,7 @@ export const UserProvider = ({children}: { children: React.ReactNode }) => {
     }, [clearUser, toast, navigate, getCsrfToken]);
 
     return (
-        <UserContext.Provider value={{user, loading, fetchUser, clearUser, logout}}>
+        <UserContext.Provider value={{ user, loading, fetchUser, clearUser, logout }}>
             {children}
         </UserContext.Provider>
     );

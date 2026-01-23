@@ -1,24 +1,24 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
-import {Locator, test} from '../fixtures/workflow';
-import {Status as InstallStatus, Button as InstallButton} from "../pages/sections/appInstalls.tab";
-import {Button as LicenseButton} from "../pages/sections/licenses/licenses.tab";
-import {Button as ArchiveModalButton} from "../pages/sections/licenses/archive.modal";
-import {Button as RenewalsModalButton, Link as RenewalsModalLink, Status as RenewalsModalStatus} from "../pages/sections/licenses/renewals/renewals.modal";
-import {Button as IssueRenewalModalButton} from "../pages/sections/licenses/renewals/issueRenewal.modal";
+import { Locator, test } from '../fixtures/workflow';
+import { Status as InstallStatus, Button as InstallButton } from "../pages/sections/appInstalls.tab";
+import { Button as LicenseButton } from "../pages/sections/licenses/licenses.tab";
+import { Button as ArchiveModalButton } from "../pages/sections/licenses/archive.modal";
+import { Button as RenewalsModalButton, Link as RenewalsModalLink, Status as RenewalsModalStatus } from "../pages/sections/licenses/renewals/renewals.modal";
+import { Button as IssueRenewalModalButton } from "../pages/sections/licenses/renewals/issueRenewal.modal";
 
 
 test.describe('AppInstall and Licensing workflow', () => {
 
-  test('Users can see newly added AppInstallRequest', async ({requestTag, provider, user}) => {
+  test('Users can see newly added AppInstallRequest', async ({ requestTag, provider, user }) => {
     await provider.installs.goto();
     await provider.installs.assertMatchingRowCountIs(1, provider.installs.findRowBy(requestTag));
     await user.installs.goto();
     await user.installs.assertMatchingRowCountIs(1, user.installs.findRowBy(requestTag));
   });
 
-  test('AppProvider can accept an AppInstallRequest', async ({requestTag, provider}) => {
+  test('AppProvider can accept an AppInstallRequest', async ({ requestTag, provider }) => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
       await provider.installs.assertStatus(InstallStatus.AwaitingAcceptance);
@@ -27,7 +27,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     });
   });
 
-  test('AppProvider can reject an AppInstallRequest', async ({requestTag, provider}) => {
+  test('AppProvider can reject an AppInstallRequest', async ({ requestTag, provider }) => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
       await provider.installs.assertStatus(InstallStatus.AwaitingAcceptance);
@@ -36,7 +36,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     });
   });
 
-  test('AppProvider can cancel an AppInstall', async ({requestTag, provider}) => {
+  test('AppProvider can cancel an AppInstall', async ({ requestTag, provider }) => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
       await provider.installs.assertStatus(InstallStatus.AwaitingAcceptance);
@@ -47,7 +47,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     });
   });
 
-  test('AppUser can see accepted AppInstall', async ({requestTag, provider, user}) => {
+  test('AppUser can see accepted AppInstall', async ({ requestTag, provider, user }) => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
       await provider.installs.clickButton(InstallButton.Accept);
@@ -57,7 +57,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     await user.installs.assertMatchingRowCountIs(1, user.installs.findRowBy(requestTag));
   });
 
-  test('AppUser can cancel an AppInstall', async ({requestTag, provider, user}) => {
+  test('AppUser can cancel an AppInstall', async ({ requestTag, provider, user }) => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
       await provider.installs.clickButton(InstallButton.Accept);
@@ -71,7 +71,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     });
   });
 
-  test('AppProvider can create licenses', async ({requestTag, provider}) => {
+  test('AppProvider can create licenses', async ({ requestTag, provider }) => {
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
       await provider.installs.clickButton(InstallButton.Accept);
@@ -85,7 +85,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     });
   });
 
-  test('AppUser can see created licenses', async ({requestTag, provider, user}) => {
+  test('AppUser can see created licenses', async ({ requestTag, provider, user }) => {
     let licenseIds: string[] = [];
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
@@ -105,7 +105,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     }
   });
 
-  test('AppProvider can archive a license', async ({requestTag, provider}) => {
+  test('AppProvider can archive a license', async ({ requestTag, provider }) => {
     let licenseIds: string[] = [];
     await provider.installs.goto();
     await provider.installs.withRowMatching(requestTag, async () => {
@@ -129,7 +129,7 @@ test.describe('AppInstall and Licensing workflow', () => {
     });
   });
 
-  test('Full License Lifecycle should pass', async ({requestTag, keycloak, provider, user, appUserSetup}) => {
+  test('Full License Lifecycle should pass', async ({ requestTag, keycloak, provider, user, appUserSetup }) => {
     let licenseId!: string;
     await test.step('AppProvider can accept AppInstallRequest and create License', async () => {
       await provider.installs.goto();
