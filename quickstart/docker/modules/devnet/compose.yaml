@@ -1,0 +1,327 @@
+# Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# DevNet Module - Connects cn-quickstart to an external splice-node validator
+# This module provides: Keycloak (identity), PQS (contract streaming), splice-onboarding, and backend-service
+# The splice-node provides: Participant, Validator, Wallet-UI, ANS-UI
+#
+# Usage: docker compose --env-file docker/modules/devnet/compose.env -f docker/modules/devnet/compose.yaml --profile devnet up -d
+
+---
+volumes:
+  postgres-keycloak:
+  postgres-pqs:
+  onboarding:
+
+networks:
+  default:
+    name: ${DOCKER_NETWORK:-quickstart-devnet}
+    driver: bridge
+  # Connect to splice-node's network to access its nginx
+  # The network name is <project>_<network> = splice-validator_splice_validator
+  splice-validator:
+    name: splice-validator_splice_validator
+    external: true
+
+services:
+  ###############################################################################################################
+  ### Keycloak Services (Identity Provider for cn-quickstart)
+  ###############################################################################################################
+  postgres-keycloak:
+    image: "postgres:${POSTGRES_VERSION:-14}"
+    container_name: postgres-keycloak
+    volumes:
+      - postgres-keycloak:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${KEYCLOAK_DB_USER:-keycloak}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME:-keycloakdb}
+    ports:
+      - "${KEYCLOAK_DB_PORT:-5433}:5432"
+    healthcheck:
+      test: "pg_isready -U ${KEYCLOAK_DB_USER:-keycloak} -d ${KEYCLOAK_DB_NAME:-keycloakdb}"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    profiles:
+      - devnet
+
+  keycloak:
+    image: "${KEYCLOAK_IMAGE:-quay.io/keycloak/keycloak}:${KEYCLOAK_VERSION:-26.1.0}"
+    container_name: keycloak
+    volumes:
+      - ./conf/keycloak:/opt/keycloak/data/import
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER:-keycloak}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+      KC_DB_URL_HOST: postgres-keycloak
+      KC_DB_URL_PORT: 5432
+      KC_DB_URL_DATABASE: ${KEYCLOAK_DB_NAME:-keycloakdb}
+      KC_HEALTH_ENABLED: "true"
+    # --hostname sets the issuer URL that appears in tokens (must match what splice-node expects)
+    # splice-node validates tokens against http://host.docker.internal:8082/realms/AppProvider
+    # --proxy-headers=forwarded tells Keycloak to trust the X-Forwarded-* headers from nginx
+    command: ["start-dev", "--import-realm", "--http-port=8082", "--health-enabled=true", "--hostname=http://host.docker.internal:8082", "--proxy-headers=forwarded"]
+    # NOTE: No ports exposed - nginx-keycloak handles external access
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 30s
+      timeout: 10s
+      retries: 50
+      start_period: 60s
+    depends_on:
+      postgres-keycloak:
+        condition: service_healthy
+    profiles:
+      - devnet
+
+  # nginx-keycloak proxies external requests to keycloak and handles CORS
+  # This matches the localnet configuration pattern
+  nginx-keycloak:
+    image: "nginx:${NGINX_VERSION:-1.27.1}"
+    container_name: nginx-keycloak
+    volumes:
+      - ./conf/nginx/nginx-keycloak.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8082:8082"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    # Alias allows services to connect via keycloak.localhost
+    networks:
+      default:
+        aliases:
+          - keycloak.localhost
+    profiles:
+      - devnet
+
+  ###############################################################################################################
+  ### PQS Services (Contract Streaming from splice-node to PostgreSQL)
+  ###############################################################################################################
+  postgres-pqs:
+    image: "postgres:${POSTGRES_VERSION:-14}"
+    container_name: postgres-pqs
+    volumes:
+      - postgres-pqs:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${PQS_DB_USER:-cnadmin}
+      POSTGRES_PASSWORD: ${PQS_DB_PASSWORD:-supersafe}
+      POSTGRES_DB: ${PQS_DB_NAME:-pqs-app-provider}
+    ports:
+      - "${PQS_DB_PORT:-5434}:5432"
+    healthcheck:
+      test: "pg_isready -U ${PQS_DB_USER:-cnadmin} -d ${PQS_DB_NAME:-pqs-app-provider}"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    profiles:
+      - devnet
+
+  pqs-app-provider:
+    image: ${SCRIBE_IMAGE:-europe-docker.pkg.dev/da-images/public/docker/scribe}:${SCRIBE_VERSION:-0.6.12}
+    container_name: pqs-app-provider
+    environment:
+      # Connect directly to splice-node's participant gRPC API (bypassing nginx)
+      # Scribe uses gRPC which can't set custom Host headers required by nginx virtual hosts
+      SCRIBE_SOURCE_LEDGER_HOST: ${SCRIBE_LEDGER_HOST:-splice-validator-participant-1}
+      SCRIBE_SOURCE_LEDGER_PORT: ${SCRIBE_LEDGER_PORT:-5001}
+      SCRIBE_SOURCE_LEDGER_TLS_ENABLED: "false"
+      # Local PQS database
+      SCRIBE_TARGET_POSTGRES_HOST: postgres-pqs
+      SCRIBE_TARGET_POSTGRES_PORT: 5432
+      SCRIBE_TARGET_POSTGRES_DATABASE: ${PQS_DB_NAME:-pqs-app-provider}
+      SCRIBE_TARGET_POSTGRES_USERNAME: ${PQS_DB_USER:-cnadmin}
+      SCRIBE_TARGET_POSTGRES_PASSWORD: ${PQS_DB_PASSWORD:-supersafe}
+      # OAuth2 authentication for ledger API (matching LocalNet variable names)
+      SCRIBE_SOURCE_LEDGER_AUTH: OAuth
+      SCRIBE_PIPELINE_OAUTH_ENDPOINT: http://nginx-keycloak:8082/realms/AppProvider/protocol/openid-connect/token
+      SCRIBE_PIPELINE_OAUTH_CLIENTID: ${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID:-app-provider-validator}
+      SCRIBE_PIPELINE_OAUTH_CLIENTSECRET: ${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET:-AL8648b9SfdTFImq7FV56Vd0KHifHBuC}
+      SCRIBE_PIPELINE_OAUTH_SCOPE: openid
+      SCRIBE_PIPELINE_OAUTH_PARAMETERS_AUDIENCE: ${AUTH_APP_PROVIDER_AUDIENCE:-https://canton.network.global}
+    command:
+      - "pipeline"
+      - "ledger"
+      - "postgres-document"
+    # Connect to both networks: default for postgres/keycloak, splice-validator for ledger access
+    networks:
+      - default
+      - splice-validator
+    depends_on:
+      postgres-pqs:
+        condition: service_healthy
+      nginx-keycloak:
+        condition: service_started
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: on-failure:100
+    profiles:
+      - devnet
+
+  ###############################################################################################################
+  ### Splice Onboarding Service (Creates backend user, grants rights, uploads DARs)
+  ###############################################################################################################
+  splice-onboarding:
+    build: ./onboarding
+    container_name: splice-onboarding
+    environment:
+      AUTH_MODE: oauth2
+      APP_PROVIDER_PROFILE: "on"
+      # External participant connection via splice-validator network
+      PARTICIPANT_HOST: ${LEDGER_HOST:-splice-validator-nginx-1}
+      PARTICIPANT_PORT: ${LEDGER_PORT:-80}
+      # Keycloak configuration for token generation
+      AUTH_APP_PROVIDER_TOKEN_URL: http://nginx-keycloak:8082/realms/AppProvider/protocol/openid-connect/token
+      AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID: ${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_ID:-app-provider-validator}
+      AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET: ${AUTH_APP_PROVIDER_VALIDATOR_CLIENT_SECRET:-AL8648b9SfdTFImq7FV56Vd0KHifHBuC}
+      AUTH_APP_PROVIDER_VALIDATOR_USER_ID: ${AUTH_APP_PROVIDER_VALIDATOR_USER_ID:-app-provider-validator-user}
+      AUTH_APP_PROVIDER_AUDIENCE: ${AUTH_APP_PROVIDER_AUDIENCE:-https://canton.network.global}
+      # Backend user configuration
+      AUTH_APP_PROVIDER_BACKEND_USER_ID: ${AUTH_APP_PROVIDER_BACKEND_USER_ID:-quickstart-backend}
+      AUTH_APP_PROVIDER_BACKEND_USER_NAME: ${AUTH_APP_PROVIDER_BACKEND_USER_NAME:-quickstart-backend}
+    volumes:
+      - ./onboarding/entrypoint.sh:/entrypoint.sh
+      - ./onboarding/health-check.sh:/app/health-check.sh
+      - ./onboarding/utils.sh:/app/utils.sh
+      - ./onboarding/app-provider.sh:/app/app-provider-auth.sh
+      - ./onboarding/backend-onboarding.sh:/app/scripts/on/backend-service.sh
+      - ../../../daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar:/canton/dars/quickstart-licensing-0.0.1.dar
+      - onboarding:/onboarding
+    # Connect to both networks: default for keycloak, splice-validator for ledger access
+    networks:
+      - default
+      - splice-validator
+    healthcheck:
+      test: ["CMD", "bash", "/app/health-check.sh"]
+      interval: 10s
+      timeout: 120s
+      retries: 100
+      start_period: 60s
+    entrypoint: ["/entrypoint.sh", "--init"]
+    stdin_open: true
+    tty: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      nginx-keycloak:
+        condition: service_started
+    profiles:
+      - devnet
+
+  ###############################################################################################################
+  ### Backend Service (connects to splice-node validator and PQS database)
+  ###############################################################################################################
+  backend-service:
+    image: "eclipse-temurin:${JAVA_VERSION:-21-jdk}"
+    container_name: backend-service
+    working_dir: /app
+    environment:
+      # Connect to splice-node's ledger API via splice-validator network
+      LEDGER_HOST: ${LEDGER_HOST:-splice-validator-nginx-1}
+      LEDGER_PORT: ${LEDGER_PORT:-80}
+      LEDGER_PLAINTEXT: "true"
+      # Local PQS database
+      POSTGRES_HOST: postgres-pqs
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: ${PQS_DB_NAME:-pqs-app-provider}
+      POSTGRES_USERNAME: ${PQS_DB_USER:-cnadmin}
+      POSTGRES_PASSWORD: ${PQS_DB_PASSWORD:-supersafe}
+      # Connect to splice-node's validator via splice-validator network
+      REGISTRY_BASE_URI: http://${VALIDATOR_HOST:-splice-validator-nginx-1}:${VALIDATOR_PORT:-80}
+      # OAuth2 configuration
+      SPRING_PROFILES_ACTIVE: oauth2
+      AUTH_APP_PROVIDER_ISSUER_URL: http://host.docker.internal:8082/realms/AppProvider
+      AUTH_APP_PROVIDER_BACKEND_CLIENT_ID: ${AUTH_APP_PROVIDER_BACKEND_CLIENT_ID:-app-provider-backend}
+      AUTH_APP_PROVIDER_BACKEND_SECRET: ${AUTH_APP_PROVIDER_BACKEND_SECRET:-05dmL9DAUmDnIlfoZ5EQ7pKskWmhBlNz}
+      AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID: ${AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID:-app-provider-backend-oidc}
+      # Backend port
+      BACKEND_PORT: ${BACKEND_PORT:-8089}
+      # Required by start.sh (set -u fails if unset)
+      TEST_MODE: "off"
+    volumes:
+      - ../../../backend/build/distributions/backend.tar:/backend.tar
+      - ../../backend-service/start.sh:/app/start.sh
+      - onboarding:/onboarding
+    # Connect to both networks: default for postgres/keycloak, splice-validator for ledger/validator access
+    networks:
+      - default
+      - splice-validator
+    command: /app/start.sh
+    ports:
+      - "${BACKEND_PORT:-8089}:${BACKEND_PORT:-8089}"
+    depends_on:
+      pqs-app-provider:
+        condition: service_started
+      splice-onboarding:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    profiles:
+      - devnet
+
+  ###############################################################################################################
+  ### Nginx (serves frontend and proxies to backend - optional for dev mode)
+  ###############################################################################################################
+  nginx:
+    image: "nginx:${NGINX_VERSION:-1.27.1}"
+    container_name: nginx-devnet
+    volumes:
+      - ../../../frontend/dist/:/usr/share/nginx/html
+      - ../../../config/nginx/frontend.conf:/etc/nginx/templates/frontend.conf.template
+      - ../../../config/nginx/common-backend-proxy-settings.conf:/etc/nginx/templates/common-backend-proxy-settings.conf.template
+    environment:
+      - BACKEND_PORT=${BACKEND_PORT:-8089}
+    ports:
+      - "80:80"
+    depends_on:
+      backend-service:
+        condition: service_started
+    profiles:
+      - devnet
+
+  ###############################################################################################################
+  ### Stub Services (prevent Docker Compose from failing when root compose.yaml is auto-merged)
+  ### These are LocalNet services not used in DevNet - they are disabled via profiles
+  ###############################################################################################################
+  
+  # Stub for splice service (LocalNet only - the participant/validator)
+  splice:
+    image: "alpine:latest"
+    container_name: splice-stub
+    command: ["echo", "DevNet mode - splice not used (using external splice-node)"]
+    volumes:
+      - onboarding:/app/onboarding
+    profiles:
+      - localnet-only
+
+  # Stub for register-app-user-tenant service (LocalNet only)
+  register-app-user-tenant:
+    image: "alpine:latest"
+    container_name: register-app-user-tenant-stub
+    command: ["echo", "DevNet mode - register-app-user-tenant not used"]
+    depends_on:
+      splice:
+        condition: service_started
+    profiles:
+      - localnet-only
+
+  # Stub for pqs-app-user service (LocalNet only - separate PQS for app user)
+  pqs-app-user:
+    image: "alpine:latest"
+    container_name: pqs-app-user-stub
+    command: ["echo", "DevNet mode - pqs-app-user not used"]
+    profiles:
+      - localnet-only
+
+  # Stub for postgres-app-user service (LocalNet only)
+  postgres-app-user:
+    image: "alpine:latest"
+    container_name: postgres-app-user-stub
+    command: ["echo", "DevNet mode - postgres-app-user not used"]
+    profiles:
+      - localnet-only
