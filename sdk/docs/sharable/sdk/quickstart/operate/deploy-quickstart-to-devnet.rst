@@ -150,7 +150,7 @@ Clone the Splice-Node Validator repository
 In ``DevNet``, your Splice node validator runs locally and connects to the ``DevNet`` synchronizer.
 
 Clone the correct version of the Splice-node repository and navigate to the validator Docker Compose directory.
-As of the writing of this document, the most up to date version is 0.5.6.
+As of the writing of this document, the most up to date version is 0.5.8.
 
 .. note::
 
@@ -160,18 +160,18 @@ As of the writing of this document, the most up to date version is 0.5.6.
 .. image:: images/devnet-decentralized-canton-sync-release-line-056.png
    :alt: Release selection
 
-The following link downloads the ``0.5.6 splice-node`` release.
+The following link downloads the ``0.5.8 splice-node`` release.
 Move the downloaded file to the location of your choice.
 (To download a different release, simply edit the version numbers in the URL).
 
 Click the link to download the splice node release:
-https://github.com/digital-asset/decentralized-canton-sync/releases/download/v0.5.6/0.5.6_splice-node.tar.gz
+https://github.com/digital-asset/decentralized-canton-sync/releases/download/v0.5.8/0.5.8_splice-node.tar.gz
 
 Move the ``splice-node`` tarball to your desired location and then unzip it.
 
 .. code-block:: bash
 
-   tar xzvf 0.5.6_splice-node.tar.gz
+   tar xzvf 0.5.8_splice-node.tar.gz
 
 The new ``splice-node`` repo and ``cn-quickstart`` should be siblings to one another.
 
@@ -251,7 +251,7 @@ In terminal, from the ``/validator`` directory run:
 
 Verify that the Splice version matches the splice-node version that you recently downloaded and unzipped.
 Minor Splice versions change on a regular basis.
-You may elect to hard code ``SPLICE_VERSION`` rather than saving the most recent version. e.g. ``SPLICE_VERSION=0.5.6``
+You may elect to hard code ``SPLICE_VERSION`` rather than saving the most recent version. e.g. ``SPLICE_VERSION=0.5.8``
 
 Get the onboarding secret
 ^^^^^^^^^^^^^^^^^^^^^^^^^
