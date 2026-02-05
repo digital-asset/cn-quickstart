@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
 import React from 'react';
@@ -14,8 +14,8 @@ import ToastNotification from './components/ToastNotification';
 import AppInstallsView from "./views/AppInstallsView.tsx";
 import LicensesView from './views/LicensesView';
 import { LicenseProvider } from './stores/licenseStore';
-import {AppInstallProvider} from "./stores/appInstallStore.tsx";
-import {TenantRegistrationProvider} from "./stores/tenantRegistrationStore.tsx";
+import { AppInstallProvider } from "./stores/appInstallStore.tsx";
+import { TenantRegistrationProvider } from "./stores/tenantRegistrationStore.tsx";
 
 const App: React.FC = () => {
     const AppProviders = composeProviders(

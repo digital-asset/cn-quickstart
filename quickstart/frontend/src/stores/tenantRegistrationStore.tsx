@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates.
+// Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates.
 // SPDX-License-Identifier: 0BSD
 
 import React, { createContext, useContext, useState, useCallback } from 'react'
@@ -9,7 +9,7 @@ import type {
     TenantRegistration,
     TenantRegistrationRequest
 } from '../openapi.d.ts';
-import {withErrorHandling} from "../utils/error";
+import { withErrorHandling } from "../utils/error";
 
 
 interface TenantRegistrationState {
@@ -32,8 +32,8 @@ const TenantRegistrationContext = createContext<TenantRegistrationContextType | 
 )
 
 export const TenantRegistrationProvider = ({
-                                               children,
-                                           }: TenantRegistrationProviderProps) => {
+    children,
+}: TenantRegistrationProviderProps) => {
     const [registrations, setRegistrations] = useState<TenantRegistration[]>([])
     const toast = useToast()
 
@@ -56,7 +56,7 @@ export const TenantRegistrationProvider = ({
                 setRegistrations(prev => {
                     if (prev.some(reg =>
                         reg.tenantId === created.tenantId ||
-                        reg.clientId === created.clientId )) return prev;
+                        reg.clientId === created.clientId)) return prev;
                     return [...prev, created];
                 });
             } else {

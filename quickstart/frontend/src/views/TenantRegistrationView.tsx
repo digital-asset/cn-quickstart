@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates.
+// Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates.
 // SPDX-License-Identifier: 0BSD
 
 import React, { useEffect, useState } from 'react'
@@ -6,9 +6,9 @@ import {
     useTenantRegistrationStore
 } from '../stores/tenantRegistrationStore'
 import type { TenantRegistrationRequest } from "../openapi.d.ts"
-import {useToast} from '../stores/toastStore';
+import { useToast } from '../stores/toastStore';
 import api from '../api';
-import {Client, FeatureFlags} from "../openapi";
+import { Client, FeatureFlags } from "../openapi";
 
 
 const TenantRegistrationView: React.FC = () => {
@@ -175,19 +175,19 @@ const TenantRegistrationView: React.FC = () => {
                     />
                 </div>
                 {featureFlags?.authMode === 'shared-secret' && (
-                  <div className="mb-3">
-                      <label htmlFor="users" className="form-label">
-                          Users (comma-separated):
-                      </label>
-                      <input
-                          type="text"
-                          id="users"
-                          name="users"
-                          className="form-control"
-                          value={Array.isArray(formData.users) ? formData.users.join(', ') : (formData.users ?? '')}
-                          onChange={handleChange}
-                      />
-                  </div>
+                    <div className="mb-3">
+                        <label htmlFor="users" className="form-label">
+                            Users (comma-separated):
+                        </label>
+                        <input
+                            type="text"
+                            id="users"
+                            name="users"
+                            className="form-control"
+                            value={Array.isArray(formData.users) ? formData.users.join(', ') : (formData.users ?? '')}
+                            onChange={handleChange}
+                        />
+                    </div>
                 )}
                 <button type="submit" className="btn btn-primary">
                     Submit
@@ -198,44 +198,44 @@ const TenantRegistrationView: React.FC = () => {
                 <h3>Existing Tenant Registrations</h3>
                 <table className="table nowrap">
                     <thead>
-                    <tr>
-                        <th>Tenant ID</th>
-                        <th>Party ID</th>
-                        {featureFlags?.authMode === 'oauth2' && (
-                          <>
-                            <th>Client ID</th>
-                            <th>Issuer URL</th>
-                          </>
-                        )}
-                        <th>Wallet URL</th>
-                        {featureFlags?.authMode === 'shared-secret' && <th>Users</th>}
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {registrations.map((registration, index) => (
-                        <tr key={index}>
-                            <td>{registration.tenantId}</td>
-                            <td>{registration.partyId}</td>
+                        <tr>
+                            <th>Tenant ID</th>
+                            <th>Party ID</th>
                             {featureFlags?.authMode === 'oauth2' && (
                                 <>
-                                    <td>{registration.clientId}</td>
-                                    <td>{registration.issuerUrl}</td>
+                                    <th>Client ID</th>
+                                    <th>Issuer URL</th>
                                 </>
                             )}
-                            <td>{registration.walletUrl}</td>
-                            {featureFlags?.authMode === 'shared-secret' && <td>{registration.users}</td>}
-                            <td>
-                                <button
-                                    className="btn btn-danger"
-                                    disabled={registration.internal}
-                                    onClick={() => handleDelete(registration.tenantId)}
-                                >
-                                    Delete
-                                </button>
-                            </td>
+                            <th>Wallet URL</th>
+                            {featureFlags?.authMode === 'shared-secret' && <th>Users</th>}
+                            <th>Actions</th>
                         </tr>
-                    ))}
+                    </thead>
+                    <tbody>
+                        {registrations.map((registration, index) => (
+                            <tr key={index}>
+                                <td>{registration.tenantId}</td>
+                                <td>{registration.partyId}</td>
+                                {featureFlags?.authMode === 'oauth2' && (
+                                    <>
+                                        <td>{registration.clientId}</td>
+                                        <td>{registration.issuerUrl}</td>
+                                    </>
+                                )}
+                                <td>{registration.walletUrl}</td>
+                                {featureFlags?.authMode === 'shared-secret' && <td>{registration.users}</td>}
+                                <td>
+                                    <button
+                                        className="btn btn-danger"
+                                        disabled={registration.internal}
+                                        onClick={() => handleDelete(registration.tenantId)}
+                                    >
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>

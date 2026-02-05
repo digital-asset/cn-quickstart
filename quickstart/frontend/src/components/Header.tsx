@@ -1,9 +1,9 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
 import React from 'react';
-import {Link} from 'react-router-dom';
-import {useUserStore} from '../stores/userStore';
+import { Link } from 'react-router-dom';
+import { useUserStore } from '../stores/userStore';
 
 const Header: React.FC = () => {
     return (
@@ -27,7 +27,7 @@ const Header: React.FC = () => {
                         </button>
                     </div>
                     <div className="collapse navbar-collapse" id="navbarNav">
-                        <AuthenticatedLinks/>
+                        <AuthenticatedLinks />
                     </div>
                 </div>
                 <div>
@@ -39,7 +39,7 @@ const Header: React.FC = () => {
 };
 
 const AuthenticatedLinks: React.FC = () => {
-    const {user, loading, fetchUser} = useUserStore();
+    const { user, loading, fetchUser } = useUserStore();
 
     React.useEffect(() => {
         fetchUser();
@@ -70,7 +70,7 @@ const AuthenticatedLinks: React.FC = () => {
 };
 
 const UserSection: React.FC = () => {
-    const {user, loading, fetchUser, logout} = useUserStore();
+    const { user, loading, fetchUser, logout } = useUserStore();
 
     React.useEffect(() => {
         fetchUser();

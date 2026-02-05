@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 # SPDX-License-Identifier: 0BSD
 
 # This script is executed by the `splice-onboarding` container. It leverages provided functions from `/app/utils`

@@ -536,7 +536,7 @@ Open the logs directory with lnav to filter and analyze logs efficiently.
 
 **You may use the contents of this repository in parts or in whole according to the `0BSD` license.**
 
-Copyright &copy; 2025 Digital Asset (Switzerland) GmbH and/or its affiliates
+Copyright &copy; 2026 Digital Asset (Switzerland) GmbH and/or its affiliates
 
 > Permission to use, copy, modify, and/or distribute this software for
 > any purpose with or without fee is hereby granted.

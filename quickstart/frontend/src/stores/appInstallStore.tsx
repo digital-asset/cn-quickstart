@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
@@ -16,8 +16,8 @@ import type {
     Client,
     Metadata,
 } from '../openapi.d.ts';
-import {AppInstallUnified} from '../types';
-import {withErrorHandling} from "../utils/error";
+import { AppInstallUnified } from '../types';
+import { withErrorHandling } from "../utils/error";
 
 interface AppInstallState {
     unifiedInstalls: AppInstallUnified[];
@@ -54,7 +54,7 @@ export const AppInstallProvider = ({ children }: { children: React.ReactNode }) 
                 numLicensesCreated: 0,
             }));
             const unifiedInstallRecords: AppInstallUnified[] = installs.map((i) => ({
-                status: 'INSTALL', 
+                status: 'INSTALL',
                 contractId: i.contractId,
                 provider: i.provider,
                 user: i.user,
@@ -63,7 +63,7 @@ export const AppInstallProvider = ({ children }: { children: React.ReactNode }) 
             }));
 
             setUnifiedInstalls([...unifiedRequests, ...unifiedInstallRecords]);
-    }), [withErrorHandling, setUnifiedInstalls, toast]);
+        }), [withErrorHandling, setUnifiedInstalls, toast]);
 
     const accept = useCallback(
         withErrorHandling(`Accepting AppInstallRequest`)(async (contractId: string, installMeta: Metadata, meta: Metadata) => {

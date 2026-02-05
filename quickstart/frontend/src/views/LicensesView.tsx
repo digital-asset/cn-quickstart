@@ -1,4 +1,4 @@
-// Copyright (c) 2025, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: 0BSD
 
 import React, { useEffect, useState } from 'react';
@@ -103,35 +103,35 @@ const LicensesView: React.FC = () => {
       <h2>Licenses</h2>
       <table className="table table-fixed" id="licenses-table">
         <thead>
-        <tr>
-          <th style={{ width: '220px' }}>License Contract ID</th>
-          {user?.isAdmin && (
-            <th style={{ width: '150px' }}>User</th>
-          )}
-          <th style={{ width: '200px' }}>Expires At</th>
-          <th style={{ width: '110px' }}>License #</th>
-          <th style={{ width: '100px' }}>Pending Renewals</th>
-          <th style={{ width: '100px' }}>Accepted Renewals</th>
-          <th style={{ width: '130px' }}>Status</th>          
-          <th style={{ width: '300px' }}>Actions</th>
-        </tr>
+          <tr>
+            <th style={{ width: '220px' }}>License Contract ID</th>
+            {user?.isAdmin && (
+              <th style={{ width: '150px' }}>User</th>
+            )}
+            <th style={{ width: '200px' }}>Expires At</th>
+            <th style={{ width: '110px' }}>License #</th>
+            <th style={{ width: '100px' }}>Pending Renewals</th>
+            <th style={{ width: '100px' }}>Accepted Renewals</th>
+            <th style={{ width: '130px' }}>Status</th>
+            <th style={{ width: '300px' }}>Actions</th>
+          </tr>
         </thead>
         <tbody>
-        {licenses.map((license) => {
-          return (
-            <tr key={license.contractId} className="license-row">
-              <td className="ellipsis-cell license-contract-id">{license.contractId}</td>
-              {user?.isAdmin && (
-                <td className="ellipsis-cell license-user">{license.user}</td>
-              )}
-              <td className={`ellipsis-cell license-expires-at ${license.isExpired && 'deadline-passed'}`}>
-                {formatDateTime(license.expiresAt)}
-              </td>
-              <td className="ellipsis-cell license-number">{license.licenseNum}</td>
-              <td className="ellipsis-cell">{license.renewalRequests?.filter(r => !r.allocationCid).length || 0}</td>
-              <td className="ellipsis-cell">{license.renewalRequests?.filter(r => r.allocationCid).length || 0}</td>
-              <td className="ellipsis-cell license-status">{license.isExpired ? 'EXPIRED' : 'ACTIVE'}</td>
-              <td className="license-actions">
+          {licenses.map((license) => {
+            return (
+              <tr key={license.contractId} className="license-row">
+                <td className="ellipsis-cell license-contract-id">{license.contractId}</td>
+                {user?.isAdmin && (
+                  <td className="ellipsis-cell license-user">{license.user}</td>
+                )}
+                <td className={`ellipsis-cell license-expires-at ${license.isExpired && 'deadline-passed'}`}>
+                  {formatDateTime(license.expiresAt)}
+                </td>
+                <td className="ellipsis-cell license-number">{license.licenseNum}</td>
+                <td className="ellipsis-cell">{license.renewalRequests?.filter(r => !r.allocationCid).length || 0}</td>
+                <td className="ellipsis-cell">{license.renewalRequests?.filter(r => r.allocationCid).length || 0}</td>
+                <td className="ellipsis-cell license-status">{license.isExpired ? 'EXPIRED' : 'ACTIVE'}</td>
+                <td className="license-actions">
                   {(isAdmin || (license.renewalRequests?.length ?? 0) > 0) && (
                     <button
                       className="btn btn-primary btn-actions-license"
@@ -139,7 +139,7 @@ const LicensesView: React.FC = () => {
                     >
                       Renewals
                     </button>
-                    )
+                  )
                   }
                   {license.expiresAt && license.isExpired && (
                     <button
@@ -149,10 +149,10 @@ const LicensesView: React.FC = () => {
                       Archive
                     </button>
                   )}
-              </td>
-            </tr>
-          );
-        })}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
