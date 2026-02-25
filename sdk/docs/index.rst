@@ -14,6 +14,7 @@
   ./sharable/sdk/quickstart/observe/observability-troubleshooting-overview
   ./sharable/sdk/quickstart/operate/explore-the-demo
   ./sharable/sdk/quickstart/operate/json-api
+  ./sharable/sdk/quickstart/operate/deploy-quickstart-to-devnet
   ./sharable/sdk/quickstart/operate/introduction-to-splice-in-cn
   ./sharable/sdk/quickstart/operate/lnav-in-cn
   ./sharable/sdk/quickstart/download/cnqs-installation
