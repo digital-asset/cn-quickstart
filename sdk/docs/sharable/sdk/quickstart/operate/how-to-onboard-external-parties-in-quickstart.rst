@@ -19,9 +19,6 @@ External parties provide full control over transaction signing,
 ensure regulatory compliance for transaction authorization,
 and are independent of participant node operators.
 
-For detailed background on external vs internal parties, see
-:externalref:`<overview_canton_external_parties>`.
-
 Prerequisites
 -------------
 
@@ -290,8 +287,6 @@ This typically returns a value like ``global-domain::12209d604bfb...``.
   The party may take a few seconds to appear in the topology state after successful submission.
   Implement a retry loop with a short delay if immediate verification is required.
 
-For more details on the onboarding process, see :subsiteref:`the external party onboarding tutorial <tutorial_onboard_external_party_lapi>` for the complete Ledger API workflow.
-
 Submit Transactions as the External Party
 -----------------------------------------
 
@@ -304,9 +299,6 @@ external parties use a 3-step interactive submission process:
 1. **Prepare** - Request transaction preparation from a participant node
 2. **Sign** - Sign the transaction hash with external key
 3. **Execute** - Submit the signed transaction
-
-For detailed explanation of the interactive submission service, see
-:subsiteref:`<tutorial_externally_signed_transactions>`.
 
 Step 1: Prepare the Transaction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -404,8 +396,7 @@ Sign the ``$TRANSACTION_HASH`` returned by ``PrepareSubmission`` with your Ed255
 .. note::
 
   For production deployments, you may want to recompute the transaction hash client-side rather than trusting the pre-computed hash.
-  The hashing algorithm is documented in :subsiteref:`<external_signing_hashing_algo>`,
-  and a Python implementation is available in the Canton release artifact at
+  A Python implementation is available in the Canton release artifact at
   ``examples/08-interactive-submission/daml_transaction_hashing_v2.py``.
 
 **Sign the hash with your private key:**
@@ -532,16 +523,3 @@ Extract the ``offset`` from the completion and use ``GetUpdates`` to retrieve fu
   External parties authenticate via cryptographic signatures rather than ledger user rights.
   This means ``GetUpdateById`` (which requires ``can_read_as`` rights) won't work for external party transactions.
   Use ``GetUpdates`` with the offset range instead.
-
-For detailed information about the interactive submission service, see :subsiteref:`<tutorial_externally_signed_transactions>`.
-
-Further reading
----------------
-
-- :externalref:`<overview_canton_external_parties>`
-- :subsiteref:`<external_signing_overview>`
-- :subsiteref:`<sdk_external_signing_overview>`
-- :subsiteref:`<tutorial_onboard_external_party>`
-- :subsiteref:`<tutorial_externally_signed_transactions>`
-- :subsiteref:`<external_signing_hashing_algo>`
-- :subsiteref:`<tutorial_onboard_external_multi_hosted>`
