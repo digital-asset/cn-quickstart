@@ -1,10 +1,12 @@
 ​​..
   Copyright (c) 2026 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+
 ..
   SPDX-License-Identifier: Apache-2.0
 
 .. _quickstart-external-parties-howto:
 
+=====================================================
 How to Onboard and Use External Parties in Quickstart
 =====================================================
 
@@ -18,7 +20,7 @@ ensure regulatory compliance for transaction authorization,
 and are independent of participant node operators.
 
 For detailed background on external vs internal parties, see
-:ref:`external-party-explanation`.
+:externalref:`<overview_canton_external_parties>`.
 
 Prerequisites
 -------------
@@ -288,7 +290,7 @@ This typically returns a value like ``global-domain::12209d604bfb...``.
   The party may take a few seconds to appear in the topology state after successful submission.
   Implement a retry loop with a short delay if immediate verification is required.
 
-For more details on the onboarding process, see :ref:`tutorial_onboard_external_party_lapi` for the complete Ledger API workflow.
+For more details on the onboarding process, see :externalref:`the external party onboarding tutorial <tutorial_onboard_external_party_lapi>` for the complete Ledger API workflow.
 
 Submit Transactions as the External Party
 -----------------------------------------
@@ -304,7 +306,7 @@ external parties use a 3-step interactive submission process:
 3. **Execute** - Submit the signed transaction
 
 For detailed explanation of the interactive submission service, see
-:ref:`external-signing-submission`.
+:externalref:`<tutorial_externally_signed_transactions>`.
 
 Step 1: Prepare the Transaction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -402,7 +404,7 @@ Sign the ``$TRANSACTION_HASH`` returned by ``PrepareSubmission`` with your Ed255
 .. note::
 
   For production deployments, you may want to recompute the transaction hash client-side rather than trusting the pre-computed hash.
-  The hashing algorithm is documented in :ref:`external_signing_hashing_algo`,
+  The hashing algorithm is documented in :externalref:`<external_signing_hashing_algo>`,
   and a Python implementation is available in the Canton release artifact at
   ``examples/08-interactive-submission/daml_transaction_hashing_v2.py``.
 
@@ -531,14 +533,15 @@ Extract the ``offset`` from the completion and use ``GetUpdates`` to retrieve fu
   This means ``GetUpdateById`` (which requires ``can_read_as`` rights) won't work for external party transactions.
   Use ``GetUpdates`` with the offset range instead.
 
-For detailed information about the interactive submission service, see :ref:`external-signing-submission`.
+For detailed information about the interactive submission service, see :externalref:`<tutorial_externally_signed_transactions>`.
 
 Further reading
 ---------------
 
-- :ref:`external-party-explanation` - Understanding external vs internal parties
-- :ref:`external-signing-overview` - External signing concepts
-- :ref:`external-signing-onboarding` - Detailed onboarding tutorial
-- :ref:`external-signing-submission` - Transaction submission details
-- :ref:`external-signing-hashing` - Hash computation algorithm
-- :ref:`tutorial_onboard_external_multi_hosted` - Multi-hosted external party setup
+- :externalref:`<overview_canton_external_parties>`
+- :externalref:`<external_signing_overview>`
+- :externalref:`<sdk_external_signing_overview>`
+- :externalref:`<tutorial_onboard_external_party>`
+- :externalref:`<tutorial_externally_signed_transactions>`
+- :externalref:`<external_signing_hashing_algo>`
+- :externalref:`<tutorial_onboard_external_multi_hosted>`
