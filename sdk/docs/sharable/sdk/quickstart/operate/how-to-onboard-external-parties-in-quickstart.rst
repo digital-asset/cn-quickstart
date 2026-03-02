@@ -29,7 +29,8 @@ Prerequisites
 Quickstart LocalNet Setup
 -------------------------
 
-If you haven't installed the Canton Network Quickstart application, refer to :ref:`quickstart-cnqs-installation`.
+If you haven't installed the Canton Network Quickstart application,
+refer to :ref:`quickstart-cnqs-installation`.
 
 .. code-block:: bash
 
@@ -58,7 +59,8 @@ Your ``.env.local`` file should look like:
 **Obtain Admin Token**
 
 The external party topology APIs require authentication.
-In shared-secret mode, you generate a JWT token using the ``splice-onboarding`` container with ``app-user`` as the subject:
+In shared-secret mode, you generate a JWT token using the
+``splice-onboarding`` container with ``app-user`` as the subject:
 
 .. code-block:: bash
 
