@@ -282,7 +282,7 @@ tail: docker-available ## Tail logs of Docker containers
 .PHONY: capture-logs
 capture-logs: docker-available ## Monitor docker events and capture logs
 	@network_name="quickstart"; \
-	canton_services="canton splice backend-service"; \
+	canton_services=("canton" "splice" "backend-service"); \
 	mkdir -p ./logs; rm -rf ./logs/*; \
 	docker events -f type=container \
 	    -f event=start \
@@ -304,7 +304,7 @@ capture-logs: docker-available ## Monitor docker events and capture logs
 	    if [ "$$status" = "start" ]; then \
 	        echo ">> $$service_name"; \
 	        ext=".log"; \
-	        for svc in $$canton_services; do \
+	        for svc in "$${canton_services[@]}"; do \
 	            if [ "$$service_name" = "$$svc" ]; then \
 	                ext=".clog"; \
 	                break; \
