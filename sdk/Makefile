@@ -4,7 +4,7 @@
 # Set default goal to 'help' if no target is specified:
 .DEFAULT_GOAL := help
 
-# Set path to render HTML preview:
+# Set path to render an HTML preview:
 PREVIEW_DIR   ?= .preview
 
 # custom CLI args for vale:
