@@ -280,7 +280,7 @@ tail: docker-available ## Tail logs of Docker containers
 	$(call docker-compose, logs -f)
 
 .PHONY: capture-logs
-capture-logs: docker-available
+capture-logs: docker-available ## Monitor docker events and capture logs
 	@network_name="quickstart"; \
 	canton_services="canton splice backend-service"; \
 	mkdir -p ./logs; rm -rf ./logs/*; \
@@ -297,17 +297,22 @@ capture-logs: docker-available
 	while read -r cid time service_name status; do \
 	    network_attached=$$(docker inspect --format '{{json .NetworkSettings.Networks}}' "$$cid" 2>/dev/null | \
 	        jq -r 'keys[] | select(. | contains ("'"$$network_name"'"))'); \
-	    [ -n "$$network_attached" ] || continue; \
+	    if [ -z "$$network_attached" ]; then \
+	        continue; \
+	    fi; \
 	    echo "$$(date -u -d "@$$time" +"%Y-%m-%dT%H:%M:%S") $$service_name $$status"; \
 	    if [ "$$status" = "start" ]; then \
 	        echo ">> $$service_name"; \
 	        ext=".log"; \
 	        for svc in $$canton_services; do \
-	            if [ "$$service_name" = "$$svc" ]; then ext=".clog"; break; fi; \
+	            if [ "$$service_name" = "$$svc" ]; then \
+	                ext=".clog"; \
+	                break; \
+	            fi; \
 	        done; \
 	        docker logs -f "$$cid" >> "./logs/$$service_name$$ext" 2>&1 & \
 	    fi; \
-	done | tee -a "logs/compose.log" 2>&1
+done | tee -a "logs/compose.log" 2>&1
 
 # Development environment
 .PHONY: setup
