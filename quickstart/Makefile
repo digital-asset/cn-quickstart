@@ -1,9 +1,6 @@
 # Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 # SPDX-License-Identifier: 0BSD
 
-# Force bash as a shell
-SHELL := /usr/bin/env bash
-
 # Set default goal to 'help' if no target is specified
 .DEFAULT_GOAL := help
 
@@ -283,9 +280,9 @@ tail: docker-available ## Tail logs of Docker containers
 	$(call docker-compose, logs -f)
 
 .PHONY: capture-logs
-capture-logs: docker-available ## Monitor docker events and capture logs
+capture-logs: docker-available
 	@network_name="quickstart"; \
-	canton_services=("canton" "splice" "backend-service"); \
+	canton_services="canton splice backend-service"; \
 	mkdir -p ./logs; rm -rf ./logs/*; \
 	docker events -f type=container \
 	    -f event=start \
@@ -300,22 +297,17 @@ capture-logs: docker-available ## Monitor docker events and capture logs
 	while read -r cid time service_name status; do \
 	    network_attached=$$(docker inspect --format '{{json .NetworkSettings.Networks}}' "$$cid" 2>/dev/null | \
 	        jq -r 'keys[] | select(. | contains ("'"$$network_name"'"))'); \
-	    if [ -z "$$network_attached" ]; then \
-	        continue; \
-	    fi; \
+	    [ -n "$$network_attached" ] || continue; \
 	    echo "$$(date -u -d "@$$time" +"%Y-%m-%dT%H:%M:%S") $$service_name $$status"; \
 	    if [ "$$status" = "start" ]; then \
 	        echo ">> $$service_name"; \
 	        ext=".log"; \
-	        for svc in "$${canton_services[@]}"; do \
-	            if [ "$$service_name" = "$$svc" ]; then \
-	                ext=".clog"; \
-	                break; \
-	            fi; \
+	        for svc in $$canton_services; do \
+	            if [ "$$service_name" = "$$svc" ]; then ext=".clog"; break; fi; \
 	        done; \
 	        docker logs -f "$$cid" >> "./logs/$$service_name$$ext" 2>&1 & \
 	    fi; \
-done | tee -a "logs/compose.log" 2>&1
+	done | tee -a "logs/compose.log" 2>&1
 
 # Development environment
 .PHONY: setup
