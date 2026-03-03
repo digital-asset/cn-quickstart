@@ -223,7 +223,6 @@ This step can also be performed manually through the web UI if you log in to Qui
 
 Once you run `make create-app-install-request`, the `docker/create-app-install-request` service executes a script that initiates the Licensing workflow on behalf of the `app-user`. This script leverages the capabilities of the `splice-onboarding` module to streamline the process. In a production environment, the initial Licensing workflow step would be executed by submitting a command to the AppUser Participant Node, potentially supported by a dedicated web UI within the AppUser infrastructure.
 
-
 ### Authorization
 
 Quickstart support to different authorization modes:

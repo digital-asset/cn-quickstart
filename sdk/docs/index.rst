@@ -19,3 +19,4 @@
   ./sharable/sdk/quickstart/operate/lnav-in-cn
   ./sharable/sdk/quickstart/download/cnqs-installation
   ./sharable/sdk/quickstart/secure/keycloak-in-cnqs
+  ./sharable/sdk/quickstart/operate/how-to-onboard-external-parties-in-quickstart
