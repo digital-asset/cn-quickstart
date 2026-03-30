@@ -51,21 +51,24 @@ fun computeSdkVariables(): Map<String, Any> {
     val isUnix = osName.contains("nix") || osName.contains("nux") || osName.contains("aix")
 
     val sdkOs = when {
-        isWindows -> "windows-x86_64"
-        isMac -> "macos-x86_64"
+        isWindows -> "windows-amd64"
+        isMac -> when {
+            osArch.contains("arm") || osArch.contains("aarch64") -> "darwin-arm64"
+            else -> "darwin-amd64"
+        }
         isUnix -> when {
-            osArch.contains("arm") || osArch.contains("aarch64") -> "linux-aarch64"
-            else -> "linux-x86_64"
+            osArch.contains("arm") || osArch.contains("aarch64") -> "linux-arm64"
+            else -> "linux-amd64"
         }
         else -> throw Exception("Unsupported OS: $osName")
     }
 
     val damlSdkRuntimeVersion = VersionFiles.dotenv["DAML_RUNTIME_VERSION"] as String
-    val sdkVersion = "3.4.10"
+    val sdkVersion = "3.4.11"
     val damlSdkVersion = VersionFiles.damlYamlSdk
-    val sdkArchive = "daml-sdk-$damlSdkRuntimeVersion-$sdkOs.tar.gz"
-    val sdkUrl = "https://github.com/digital-asset/daml/releases/download/v${sdkVersion}/${sdkArchive}"
-    val sdkDir = file("$projectDir/.sdk")
+    val sdkArchive = "dpm-$sdkVersion-$sdkOs.tar.gz"
+    val sdkUrl = "https://get.digitalasset.com/install/dpm-sdk/${sdkArchive}"
+    val sdkDir = file("$projectDir/.dpm")
     val sdkArchiveFile = file("${sdkDir}/${sdkArchive}")
     val extractedDir = file("${sdkDir}/extracted")
 
@@ -128,9 +131,8 @@ tasks.register<Exec>("installDamlSdk") {
         workingDir = topLevelDirs.first()
     }
     commandLine(
-        if (sdkOs == "windows-x86_64") "./install.bat" else "./install.sh",
-        "--install-with-custom-version",
-        damlSdkVersion
+        if (sdkOs == "windows-amd64") "./install.bat"
+        else "${extractedDir}/${sdkOs}/bin/dpm", "bootstrap", "${extractedDir}/${sdkOs}/"
     )
     doLast {
         println("Installed Daml SDK runtime $damlSdkRuntimeVersion as $damlSdkVersion")
@@ -147,7 +149,7 @@ tasks.register("verifyDamlSdkVersion") {
     doLast {
         val output = java.io.ByteArrayOutputStream()
         exec {
-            commandLine = listOf("daml", "version")
+            commandLine = listOf("dpm", "version")
             standardOutput = output
             isIgnoreExitValue = true
         }
