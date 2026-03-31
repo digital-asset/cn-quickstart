@@ -20,16 +20,16 @@ tasks.register<Exec>("compileDaml") {
     dependsOn("verifyDamlSdkVersion")
     val sdkVars = computeSdkVariables()
     val requiredVersion = sdkVars["damlSdkVersion"] as String
-    commandLine("daml", "damlc", "build", "--all")
-      .setEnvironment(mapOf("DAML_SDK_VERSION" to requiredVersion))
+    commandLine("dpm", "damlc", "build", "--all")
+      .setEnvironment(mapOf("DPM_SDK_VERSION" to requiredVersion))
 }
 
 tasks.register<Exec>("testDaml") {
     dependsOn("verifyDamlSdkVersion")
     val sdkVars = computeSdkVariables()
     val requiredVersion = sdkVars["damlSdkVersion"] as String
-    commandLine("daml", "test", "--project-root", "licensing-tests")
-      .setEnvironment(mapOf("DAML_SDK_VERSION" to requiredVersion))
+    commandLine("dpm", "test", "--project-root", "licensing-tests")
+      .setEnvironment(mapOf("DPM_SDK_VERSION" to requiredVersion))
 }
 
 tasks.register<com.digitalasset.transcode.codegen.java.gradle.JavaCodegenTask>("codeGen") {

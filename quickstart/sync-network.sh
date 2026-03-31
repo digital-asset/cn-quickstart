@@ -71,25 +71,25 @@ echo "  MIGRATION_ID=$MIGRATION_ID"
 
 # Fetch and validate DAML SDK version
 GITHUB_URL="https://raw.githubusercontent.com/hyperledger-labs/splice/refs/heads/release-line-${SPLICE_VERSION}/daml.yaml"
-DAML_SDK_VERSION=$(curl -s "$GITHUB_URL" | grep "sdk-version" | awk '{print $2}')
+DPM_SDK_VERSION=$(curl -s "$GITHUB_URL" | grep "sdk-version" | awk '{print $2}')
 
-if [ -z "$DAML_SDK_VERSION" ]; then
-    echo "❌ Error: Could not fetch DAML_SDK_VERSION for splice version '$SPLICE_VERSION'." >&2
+if [ -z "$DPM_SDK_VERSION" ]; then
+    echo "❌ Error: Could not fetch DPM_SDK_VERSION for splice version '$SPLICE_VERSION'." >&2
     exit 1
 fi
-echo "  DAML_SDK_VERSION=$DAML_SDK_VERSION"
+echo "  DPM_SDK_VERSION=$DPM_SDK_VERSION"
 
 # Update daml.yaml files
 echo "Updating project files..."
 find . -type f -name "daml.yaml" -print0 | while IFS= read -r -d $'\0' file; do
-  sed -i -E "s/^(sdk-version: ).*$/\1$DAML_SDK_VERSION/" "$file"
+  sed -i -E "s/^(sdk-version: ).*$/\1$DPM_SDK_VERSION/" "$file"
   echo "  $file"
 done
 
 # Update .env file
 ENV_FILE="./.env"
 if [ -f "$ENV_FILE" ]; then
-  sed -i -E "s/^(DAML_RUNTIME_VERSION=).*$/\1$DAML_SDK_VERSION/" "$ENV_FILE"
+  sed -i -E "s/^(DAML_RUNTIME_VERSION=).*$/\1$DPM_SDK_VERSION/" "$ENV_FILE"
   sed -i -E "s/^(IMAGE_TAG=).*$/\1$SPLICE_VERSION/" "$ENV_FILE"
   echo "  $ENV_FILE"
 fi
