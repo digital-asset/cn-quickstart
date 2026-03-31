@@ -20,7 +20,7 @@ tasks.register<Exec>("compileDaml") {
     dependsOn("verifyDamlSdkVersion")
     val sdkVars = computeSdkVariables()
     val requiredVersion = sdkVars["damlSdkVersion"] as String
-    commandLine("dpm", "damlc", "build", "--all")
+    commandLine("dpm", "build", "--all")
       .setEnvironment(mapOf("DPM_SDK_VERSION" to requiredVersion))
 }
 
@@ -28,18 +28,18 @@ tasks.register<Exec>("testDaml") {
     dependsOn("verifyDamlSdkVersion")
     val sdkVars = computeSdkVariables()
     val requiredVersion = sdkVars["damlSdkVersion"] as String
-    commandLine("dpm", "test", "--project-root", "licensing-tests")
+    commandLine("cd", "licensing-tests", "&&", "dpm", "test")
       .setEnvironment(mapOf("DPM_SDK_VERSION" to requiredVersion))
 }
 
-tasks.register<com.digitalasset.transcode.codegen.java.gradle.JavaCodegenTask>("codeGen") {
-    dar.from("$projectDir/licensing/.daml/dist/quickstart-licensing-0.0.1.dar")
-    destination = file("$rootDir/backend/build/generated-daml-bindings")
-    dependsOn("compileDaml")
-}
+//tasks.register<com.digitalasset.transcode.codegen.java.gradle.JavaCodegenTask>("codeGen") {
+//    dar.from("$projectDir/licensing/.daml/dist/quickstart-licensing-0.0.1.dar")
+//    destination = file("$rootDir/backend/build/generated-daml-bindings")
+//    dependsOn("compileDaml")
+//}
 
 tasks.named("build") {
-    dependsOn("codeGen")
+//    dependsOn("codeGen")
 }
 
 // Helper function to compute SDK variables
