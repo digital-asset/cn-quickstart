@@ -406,14 +406,6 @@ clean-all-docker: docker-available ## Stop and remove all Docker containers netw
 	@vids="$$(docker volume ls -q --filter "name=^$(DOCKER_NETWORK)")"; \
 	if [ -n "$$vids" ]; then docker volume rm $$vids; else echo "  (none)";fi
 
-.PHONY: install-daml-sdk
-install-daml-sdk: ## Install the Daml SDK
-	./gradlew :daml:installDamlSdk
-
-.PHONY: check-daml-sdk
-check-daml-sdk: ## Install the Daml SDK
-	./gradlew :daml:verifyDamlSdkVersion
-
 .PHONY: generate-NOTICES
 generate-NOTICES: ## Generate the NOTICES.txt file
 	./gradlew generateNotices

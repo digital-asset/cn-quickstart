@@ -73,17 +73,15 @@ If a container fails to start, there are a few things to try:
 
 - Ensure Docker Compose is configured to allocate enough memory. The recommended minimum total memory is 8 GB.
 - Start fresh with `make clean-all` and then manually delete all Docker images and volumes.
-- You may need to upgrade to a more recent version of the Daml SDK. Run `make install-daml-sdk` to assess your version and upgrade if you're not on the latest version.
 
 **Note**: The CN Quickstart uses Java SDK version `Eclipse Temurin JDK version 21` which runs within the Docker container.  This information is specified in `quickstart/compose.yaml` and `.env`.
 
 If you need assistance, please follow these directions to gather the log information needed for debugging:
-1. `make install-daml-sdk`  # make sure you have the latest sdk
-2. `make setup`             # optional
-3. `make clean-all`         # remove data from prior runs
-4. `make capture-logs`      # this needs to be done in a separate terminal because it will block and keep running.  Use `<ctrl-c>` to stop
-5. `make start`             # start the system with logging enabled
-6. `tar -czvf <your file name with .tar.gz>` logs  # gather the content of the `logs` directory into a file
+1. `make setup`             # optional
+2. `make clean-all`         # remove data from prior runs
+3. `make capture-logs`      # this needs to be done in a separate terminal because it will block and keep running.  Use `<ctrl-c>` to stop
+4. `make start`             # start the system with logging enabled
+5. `tar -czvf <your file name with .tar.gz>` logs  # gather the content of the `logs` directory into a file
 
 
 ## Available make targets
