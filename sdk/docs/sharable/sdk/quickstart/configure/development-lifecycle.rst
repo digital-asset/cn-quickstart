@@ -152,7 +152,7 @@ Use ``.envrc.private`` for local overrides.
 
    export PARTY_HINT="your-company"
 
-   export DPM_SDK_VERSION="your-version"
+   export DAML_SDK_VERSION="your-version"
 
    # Add your application-specific variables
 
