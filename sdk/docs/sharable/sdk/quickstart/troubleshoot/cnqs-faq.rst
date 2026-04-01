@@ -124,7 +124,7 @@ Splice documentation for guidance regarding version information.
 
 The Daml SDK version is set in ``.env`` as ``DAML_RUNTIME_VERSION``.
 
-You can run ``make install-daml-sdk SDK_VERSION`` at any time to download and install another version of the daml sdk.
+You can run ``make install-daml-sdk`` at any time to download and install the Daml SDK version specified in ``daml.yaml``.
 
 **How do I obtain Splice contract DAR files?**
 
@@ -153,43 +153,9 @@ This information is specified in ``quickstart/compose.yaml`` and ``.env``, respe
 
 **How do I resolve a “build failed with an exception failure”?**
 
-If ``make install-daml-sdk`` results in:
-
-::
-
-   Task :daml:unpackDamlSdk FAILED
-   FAILURE: Build failed with an exception
-
-Then you may have a corrupted ``daml-sdk snapshot``.
-In most cases, deleting the identified tarball snapshot will resolve the issue in subsequent installation attempts.
-
-This error may occur if ``make install-daml-sdk`` is interrupted.
-
-A failure of this kind will end in:
-
-::
-
-   https://github.com/digital-asset/daml/releases/download/v3.3.0-snapshot.20241031.13398.0.vf95d2607/daml-sdk-3.2.0-snapshot.20241031.13398.0.vf95d2607-macos-x86_64-ee.tar.gz to /Users/USER/Code/cn-quickstart/quickstart/daml/.sdk/daml-sdk-3.2.0-snapshot.20241031.13398.0.vf95d2607-macos-x86_64-ee.tar.gz
-
-   > Task :daml:unpackDamlSdk FAILED
-
-   FAILURE: Build failed with an exception.
-
-   \* What went wrong:
-
-   Execution failed for task ':daml:unpackDamlSdk'.
-
-   > java.io.EOFException
-
-To resolve this error, copy the faulty ``.tar.gz`` file with directory path as shown in *your* terminal and ``rm`` it:
-
-::
-
-   rm /Users/USER/Code/cn-quickstart/quickstart/daml/.sdk/daml-sdk-3.2.0-snapshot.20241031.13398.0.vf95d2607-macos-x86_64-ee.tar.gz
-
-.. note:: ``USER`` in ``/Users/USER/`` will display your username. Copy and paste from your terminal. NOT this FAQ.
-
-Reattempt make ``install-daml-sdk``.
+If ``make install-daml-sdk`` fails, the DPM-based installation may have encountered a network or registry issue.
+Retry the command.
+If you encounter persistent errors, verify your network connectivity and DPM configuration.
 
 **How do I resolve Docker containers that fail unexpectedly?**
 
@@ -466,7 +432,7 @@ The Participant Query Store (PQS) is recommended for querying ledger data.
 +---------------------+------------------------------------------------+
 | generate-NOTICES    | Generate the NOTICES.txt file.                 |
 +---------------------+------------------------------------------------+
-| install-daml-sdk    | Install the Daml SDK.                          |
+| install-sdk         | Install the Daml SDK.                          |
 +---------------------+------------------------------------------------+
 | logs                | Show logs of Docker containers.                |
 +---------------------+------------------------------------------------+

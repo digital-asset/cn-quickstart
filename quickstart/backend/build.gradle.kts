@@ -158,7 +158,7 @@ sourceSets {
 }
 
 tasks.getByName("compileJava").dependsOn(
-    ":daml:build",
+    ":dpm:build",
     "openApiGenerate",
     "openApiGenerateMetadata",
     "openApiGenerateAllocation"

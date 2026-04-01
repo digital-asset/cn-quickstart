@@ -46,8 +46,9 @@ jobs:
       - quickstart:
           command: make install-daml-sdk
       - run:
-          name: add /home/circleci/.daml/bin to $PATH
-          command: echo 'export PATH=/home/circleci/.daml/bin:${PATH}' >> $BASH_ENV
+          # NOTE: DPM installs to ~/.dpm/bin by default — verify this path if DPM installation conventions change
+          name: add dpm to $PATH
+          command: echo 'export PATH=/home/circleci/.dpm/bin:${PATH}' >> $BASH_ENV
       - quickstart:
           command: make ci-install-playwright
       - quickstart:

@@ -16,4 +16,5 @@ plugins {
 }
 
 rootProject.name = "quickstart"
-include("backend", "daml")
+include("backend", "dpm")
+project(":dpm").projectDir = file("daml")
