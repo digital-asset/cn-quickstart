@@ -18,18 +18,16 @@ plugins {
 
 tasks.register<Exec>("compileDaml") {
     dependsOn("verifyDamlSdkVersion")
-    val sdkVars = computeSdkVariables()
-    val requiredVersion = sdkVars["damlSdkVersion"] as String
-    commandLine("daml", "damlc", "build", "--all")
-      .setEnvironment(mapOf("DAML_SDK_VERSION" to requiredVersion))
+    val requiredVersion = VersionFiles.damlYamlSdk
+    commandLine("dpm", "build", "--all")
+    environment("DPM_SDK_VERSION", requiredVersion)
 }
 
 tasks.register<Exec>("testDaml") {
     dependsOn("verifyDamlSdkVersion")
-    val sdkVars = computeSdkVariables()
-    val requiredVersion = sdkVars["damlSdkVersion"] as String
-    commandLine("daml", "test", "--project-root", "licensing-tests")
-      .setEnvironment(mapOf("DAML_SDK_VERSION" to requiredVersion))
+    val requiredVersion = VersionFiles.damlYamlSdk
+    commandLine("dpm", "test", "--package-root", "licensing-tests")
+    environment("DPM_SDK_VERSION", requiredVersion)
 }
 
 tasks.register<com.digitalasset.transcode.codegen.java.gradle.JavaCodegenTask>("codeGen") {
@@ -61,7 +59,7 @@ fun computeSdkVariables(): Map<String, Any> {
     }
 
     val damlSdkRuntimeVersion = VersionFiles.dotenv["DAML_RUNTIME_VERSION"] as String
-    val sdkVersion = "3.4.10"
+    val sdkVersion = "3.4.11"
     val damlSdkVersion = VersionFiles.damlYamlSdk
     val sdkArchive = "daml-sdk-$damlSdkRuntimeVersion-$sdkOs.tar.gz"
     val sdkUrl = "https://github.com/digital-asset/daml/releases/download/v${sdkVersion}/${sdkArchive}"
@@ -147,7 +145,7 @@ tasks.register("verifyDamlSdkVersion") {
     doLast {
         val output = java.io.ByteArrayOutputStream()
         exec {
-            commandLine = listOf("daml", "version")
+            commandLine = listOf("dpm", "version")
             standardOutput = output
             isIgnoreExitValue = true
         }
