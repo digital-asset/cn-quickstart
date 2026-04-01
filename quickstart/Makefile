@@ -1,9 +1,6 @@
 # Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 # SPDX-License-Identifier: 0BSD
 
-# Force bash as a shell
-SHELL := /usr/bin/env bash
-
 # Set default goal to 'help' if no target is specified
 .DEFAULT_GOAL := help
 
@@ -160,7 +157,7 @@ build-backend: ## Build the backend service
 
 .PHONY: build-daml
 build-daml: ## Build the Daml model
-	./gradlew :daml:build distTar
+	./gradlew :dpm:build distTar
 
 .PHONY: docker-available
 docker-available: ## Check if Docker CLI exists and is running
@@ -205,7 +202,7 @@ test: test-daml ## Run unit tests
 .PHONY: test-daml
 test-daml: ## Run daml tests
 test-daml: build-daml
-	./gradlew :daml:testDaml
+	./gradlew :dpm:testDaml
 
 .PHONY: build-docker-images
 build-docker-images: docker-available
@@ -238,8 +235,8 @@ restart-service:
 # Run targets
 .PHONY: start
 ifeq ($(OBSERVABILITY_ENABLED),true)
-ifneq ($(SKIP_DOWNLOADS),true) # treat “true” (or any non‑empty value) as “enabled”
-start:
+ifneq ($(SKIP_DOWNLOADS),true) # treat "true" (or any non‑empty value) as "enabled"
+start: fetch-grafana-dashboards
 endif
 endif
 start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
@@ -296,7 +293,7 @@ capture-logs: docker-available ## Monitor docker events and capture logs
 	    -f event=destroy \
 	    -f event=health_status \
 	    -f event=oom \
-	    --format '{{.Actor.ID}} {{.Time}} {{.Actor.Attributes.name}} {{.Action}}' | \
+	    --format '{{.ID}} {{.Time}} {{.Actor.Attributes.name}} {{.Status}}' | \
 	while read -r cid time service_name status; do \
 	    network_attached=$$(docker inspect --format '{{json .NetworkSettings.Networks}}' "$$cid" 2>/dev/null | \
 	        jq -r 'keys[] | select(. | contains ("'"$$network_name"'"))'); \
@@ -408,11 +405,15 @@ clean-all-docker: docker-available ## Stop and remove all Docker containers netw
 
 .PHONY: install-daml-sdk
 install-daml-sdk: ## Install the Daml SDK
-	./gradlew :daml:installDamlSdk
+	./gradlew :dpm:installDamlSdk
 
 .PHONY: check-daml-sdk
 check-daml-sdk: ## Install the Daml SDK
-	./gradlew :daml:verifyDamlSdkVersion
+	./gradlew :dpm:verifyDamlSdkVersion
+
+.PHONY: fetch-grafana-dashboards
+fetch-grafana-dashboards: ## Download Grafana dashboards
+	./gradlew fetchGrafanaDashboards
 
 .PHONY: generate-NOTICES
 generate-NOTICES: ## Generate the NOTICES.txt file
