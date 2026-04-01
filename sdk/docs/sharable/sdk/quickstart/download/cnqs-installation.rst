@@ -87,16 +87,15 @@ More detailed instructions are provided below.
 2. Verify that the `Docker Desktop <#docker>`__ app is running on your computer: ``docker info``
 3. Login to Docker repositories via the terminal: ``docker login``
 4. **cd** into the ``quickstart`` subdirectory: ``cd quickstart``
-5. `Install the Daml SDK <#install-daml-sdk>`__ from the quickstart subdirectory: ``make install-daml-sdk``
-6. `Configure the local development <#deploy-a-validator-on-localnet>`__ environment: ``make setup``
-7. When prompted, enable OAuth2, disable Observability, disable TEST MODE, and leave the party hint blank to use the default value.
-8. Build the application from the ``quickstart`` subdirectory: ``make build``
-9. In a new terminal window, initiate log collection from the ``quickstart`` subdirectory: ``make capture-logs``
-10. Return to the previous terminal window to start the application and Canton services: ``make start``
-11. Optional - In a separate shell, from the ``quickstart`` subdirectory, run the `Canton Console <#connecting-to-the-local-canton-nodes>`__: ``make canton-console``
-12. Optional - In a fourth shell, from the ``quickstart`` subdirectory, begin the Daml Shell: ``make shell``
-13. When complete, `close the application <#closing-the-application>`__ and other services with: ``make stop && make clean-all``
-14. If applicable, close Canton Console with ``exit`` and close Daml Shell with ``quit``.
+5. `Configure the local development <#deploy-a-validator-on-localnet>`__ environment: ``make setup``
+6. When prompted, enable OAuth2, disable Observability, disable TEST MODE, and leave the party hint blank to use the default value.
+7. Build the application from the ``quickstart`` subdirectory: ``make build``
+8. In a new terminal window, initiate log collection from the ``quickstart`` subdirectory: ``make capture-logs``
+9. Return to the previous terminal window to start the application and Canton services: ``make start``
+10. Optional - In a separate shell, from the ``quickstart`` subdirectory, run the `Canton Console <#connecting-to-the-local-canton-nodes>`__: ``make canton-console``
+11. Optional - In a fourth shell, from the ``quickstart`` subdirectory, begin the Daml Shell: ``make shell``
+12. When complete, `close the application <#closing-the-application>`__ and other services with: ``make stop && make clean-all``
+13. If applicable, close Canton Console with ``exit`` and close Daml Shell with ``quit``.
 
 Step-by-step instructions
 =========================
@@ -130,26 +129,6 @@ Login to Docker repositories via the terminal.
 The last command requires a `Docker Hub <https://app.docker.com/>`__ username and password or *Personal Access Token (PAT)*.
 
 Commands should return ‘Login Succeeded’.
-
-Install Daml SDK
-----------------
-
-**cd** into the ``quickstart`` subdirectory and install the Daml SDK from the quickstart subdirectory.
-
-::
-
-   cd quickstart
-   make install-daml-sdk
-
-.. note:: The ``Makefile`` providing project choreography is in the ``quickstart/``
-          directory. ``make`` only operates within ``quickstart/``.
-   
-          If you see errors related to ``make``, double check your present working directory.
-
-The Daml SDK is large and can take several minutes to complete.
-
-.. image:: images/06-unpack-sdk.png
-   :alt: Daml SDK unpacking
 
 Deploy a validator on LocalNet
 ------------------------------

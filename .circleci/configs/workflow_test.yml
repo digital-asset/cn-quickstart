@@ -43,8 +43,6 @@ jobs:
           command: make help
       - quickstart:
           command: make ci-create-env-local
-      - quickstart:
-          command: make install-daml-sdk
       - run:
           name: add /home/circleci/.daml/bin to $PATH
           command: echo 'export PATH=/home/circleci/.daml/bin:${PATH}' >> $BASH_ENV
