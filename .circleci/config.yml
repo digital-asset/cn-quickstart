@@ -17,7 +17,7 @@ workflows:
           # mapping structure: <regex path-to-test> <parameter-to-set> <value-of-pipeline-parameter>
           mapping: |
             .* shared_enabled true .circleci/configs/workflow_shared.yml
-            (quickstart/.*|.circleci/configs/workflow_test.yml) run-integration-test true .circleci/configs/workflow_test.yml
-            (sdk/.*|.circleci/configs/workflow_docs.yml) run-docs-validation true .circleci/configs/workflow_docs.yml
+            .* run-integration-test true .circleci/configs/workflow_test.yml
+            .* run-docs-validation true .circleci/configs/workflow_docs.yml
           # this is the path of the configuration we should trigger once path filtering complete.
           config-path: .circleci/continue_config.yml
