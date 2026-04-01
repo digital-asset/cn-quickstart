@@ -21,13 +21,6 @@ ifneq (,$(wildcard .env.local))
     include .env.local
 endif
 
-# Determine if the local environment has been configured, if not inject the first-run-setup target
-ifneq ($(strip $(PARTY_HINT)),)
-FIRST_RUN_DEPENDENCY :=
-else
-FIRST_RUN_DEPENDENCY := first-run-setup
-endif
-
 ifndef MODULES_DIR
   export MODULES_DIR=$(shell pwd)/docker/modules
 endif
@@ -148,7 +141,17 @@ SETUP_COMMAND := ./gradlew configureProfiles --no-daemon --console=plain --quiet
 
 # Build targets
 .PHONY: build
-build: $(FIRST_RUN_DEPENDENCY) build-frontend build-backend build-daml build-docker-images ## Build frontend, backend, Daml model and docker images
+ifeq ($(strip $(PARTY_HINT)),)
+build:
+	@echo "... setting up .env.local ..."
+	$(SETUP_COMMAND)
+	@if ! grep -qE '^PARTY_HINT=.+' .env.local 2>/dev/null; then \
+	  echo "✗ ERROR: Setup did not produce a valid .env.local. Please try again."; exit 1; \
+	fi
+	@$(MAKE) --no-print-directory build
+else
+build: build-frontend build-backend build-daml build-docker-images ## Build frontend, backend, Daml model and docker images
+endif
 
 .PHONY: build-frontend
 build-frontend: ## Build the frontend application
@@ -242,7 +245,7 @@ ifneq ($(SKIP_DOWNLOADS),true) # treat “true” (or any non‑empty value) as 
 start:
 endif
 endif
-start: $(FIRST_RUN_DEPENDENCY) build ## Start the application, and observability services if enabled
+start: build ## Start the application, and observability services if enabled
 	$(call docker-compose, ${DOCKER_COMPOSE_OBSERVABILITY_FILES} $(RESOURCE_CONSTRAINT_CONFIG) up -d --no-recreate)
 
 .PHONY: start-vite-dev
@@ -322,18 +325,6 @@ done | tee -a "logs/compose.log" 2>&1
 setup: ## Configure the local development environment (enable DevNet/LocalNet, Observability)
 	@echo "Starting local environment setup tool..."
 	$(SETUP_COMMAND)
-
-.PHONY: first-run-setup
-first-run-setup:
-	@echo "#########################################################################"
-	@echo "Looks like your local configuration is missing or stale."
-	@echo "Let's configure the local development environment before proceeding."
-	@echo "You can always change your configuration later by running 'make setup'."
-	@echo "#########################################################################"
-	@echo ""
-	$(SETUP_COMMAND)
-	@echo "Environment file generated, Please re-run your previous command to continue."
-	@exit 2
 
 .PHONY: integration-test
 integration-test: docker-available ## Run integration tests
