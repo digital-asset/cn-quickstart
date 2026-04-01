@@ -157,7 +157,7 @@ build-backend: ## Build the backend service
 
 .PHONY: build-daml
 build-daml: ## Build the Daml model
-	./gradlew :dpm:build distTar
+	./gradlew :dpm:build distTar --info
 
 .PHONY: docker-available
 docker-available: ## Check if Docker CLI exists and is running
@@ -202,7 +202,7 @@ test: test-daml ## Run unit tests
 .PHONY: test-daml
 test-daml: ## Run daml tests
 test-daml: build-daml
-	./gradlew :dpm:testDaml
+	./gradlew :dpm:testDaml --info
 
 .PHONY: build-docker-images
 build-docker-images: docker-available
@@ -405,11 +405,11 @@ clean-all-docker: docker-available ## Stop and remove all Docker containers netw
 
 .PHONY: install-daml-sdk
 install-daml-sdk: ## Install the Daml SDK
-	./gradlew :dpm:installDamlSdk
+	./gradlew :dpm:installDamlSdk --info
 
 .PHONY: check-daml-sdk
 check-daml-sdk: ## Install the Daml SDK
-	./gradlew :dpm:verifyDamlSdkVersion
+	./gradlew :dpm:verifyDamlSdkVersion --info
 
 .PHONY: fetch-grafana-dashboards
 fetch-grafana-dashboards: ## Download Grafana dashboards
