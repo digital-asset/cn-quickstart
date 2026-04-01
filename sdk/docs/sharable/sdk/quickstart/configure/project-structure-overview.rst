@@ -94,8 +94,6 @@ The backend uses Transcode-generated classes from DAR files to interact with the
      - Interactive generation of ``.env.local``
    * - ``Dependencies.kt``
      - Propagates ``.env`` versions to Gradle
-   * - ``UnpackTarGzTask.kt``
-     - Unpacks ``.tgz`` with symlink support
    * - ``VersionFiles.kt``
      - Reads ``.env`` and ``daml.yaml`` files
 

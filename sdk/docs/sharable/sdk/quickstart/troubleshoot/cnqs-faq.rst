@@ -250,7 +250,7 @@ Persistent storage is in our roadmap, but has not been implemented yet.
 
 **How can I resolve a backend build failure?**
 
-Build failures may occur if the Daml SDK is not installed or is corrupted.
+Build failures may occur if the Daml SDK is not installed, corrupted, or if ``.env`` is misconfigured.
 If you see errors on ``make build`` such as:
 
 ::
@@ -267,8 +267,6 @@ If you see errors on ``make build`` such as:
             project :backend
 
 Then verify that the ``.env`` file contains an accurate daml SDK value in ``DAML_RUNTIME_VERSION=``.
-
-Find the daml SDK version with ``make check-daml-sdk``.
 
 **Infrastructure & environment**
 --------------------------------

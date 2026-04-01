@@ -7,7 +7,6 @@ buildscript {
     }
     dependencies {
         classpath(Deps.transcode.plugin)
-        classpath("org.apache.commons:commons-compress:1.27.1")
     }
 }
 

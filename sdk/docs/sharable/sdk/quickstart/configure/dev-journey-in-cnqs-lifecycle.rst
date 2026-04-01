@@ -113,7 +113,6 @@ As your application grows, create additional configuration files for your custom
 
 Leverage the CN Quickstart utility tools during development and testing workflows.
 Use the build utilities in ``quickstart/buildSrc/`` to automate common development tasks.
-The ``UnpackTarGzTask`` helps extract archive files while preserving permissions and symbolic links.
 The Java convention scripts standardize your application's build configuration across modules.
 
 Configure your deployment environment by selecting the appropriate Docker Compose files in ``quickstart/docker/modules/``.
