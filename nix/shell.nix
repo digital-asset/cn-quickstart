@@ -1,8 +1,10 @@
-{ pkgs, ci }:
+{ pkgs, ci, nixpkgs }:
 let
   inherit (pkgs) stdenv;
-  requiredPackages = with pkgs; ([ # these packages are required both in CI and for local development
+  requiredPackages = with pkgs; ([
+    # these packages are required both in CI and for local development
     coreutils # provides gdate command needed by Makefile for Docker log timestamp formatting on macOS
+    dpm
     jdk21
     nodejs_20
     typescript
@@ -16,20 +18,8 @@ let
     google-cloud-sdk
   ]));
 in
-pkgs.mkShell {
+pkgs.mkShellNoCC {
   packages = requiredPackages;
   LC_ALL = if stdenv.isDarwin then "" else "C.UTF-8";
-  env = {
-  };
-
-  shellHook = ''
-    export JAVA_HOME="$(readlink -e $(type -p javac) | sed  -e 's/\/bin\/javac//g')"
-
-    # there is a nix bug that the directory deleted by _nix_shell_clean_tmpdir can be the same as the general $TEMPDIR
-    eval "$(declare -f _nix_shell_clean_tmpdir | sed 's/_nix_shell_clean_tmpdir/orig__nix_shell_clean_tmpdir/')"
-    _nix_shell_clean_tmpdir() {
-        orig__nix_shell_clean_tmpdir "$@"
-        mkdir -p "$TEMPDIR" # ensure system TEMPDIR still exists
-    }
-    '';
+  JAVA_HOME="${pkgs.jdk21.home}";
 }
