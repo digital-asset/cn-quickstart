@@ -94,13 +94,16 @@ export const registerAdmin = async (app: FastifyInstance, cfg: BackendConfig, re
   app.delete<{ Params: { tenantId: string } }>('/admin/tenant-registrations/:tenantId', async (req, reply) => {
     if (!await checkAdmin(cfg, req, reply)) return
 
+    if (!repo.has(req.params.tenantId)) {
+      reply.code(404); return { message: 'Not found' }
+    }
     try {
       if (cfg.authMode === 'oauth2') {
         oauth2Registry.removeByTenantId(req.params.tenantId)
       }
       repo.delete(req.params.tenantId)
-    } catch {
-      reply.code(404); return { message: 'Not found' }
+    } catch (err) {
+      reply.code(500); return { message: (err as Error).message }
     }
     reply.code(204).send()
   })
