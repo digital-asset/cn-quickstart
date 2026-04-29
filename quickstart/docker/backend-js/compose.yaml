@@ -1,0 +1,35 @@
+services:
+  backend-service:
+    image: !reset null
+    build:
+      context: .
+      dockerfile: docker/backend-js/Dockerfile
+    container_name: backend-service
+    labels:
+      - "description=Node.js backend service for the Quickstart Licensing workflow.
+       APP_PROVIDER_PARTY is resolved at runtime via the onboarding volume."
+    working_dir: /app
+    env_file:
+      - ./docker/backend-service/env/app.env
+      - ./docker/backend-service/onboarding/env/${AUTH_MODE}.env
+    environment:
+      NODE_ENV: production
+      BACKEND: js
+      # The JS backend talks to Canton over the JSON Ledger API, not gRPC.
+      LEDGER_PORT: "3${PARTICIPANT_JSON_API_PORT_SUFFIX}"
+    volumes: !override
+      - onboarding:/onboarding
+    command: /app/start.sh
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    depends_on:
+      pqs-app-provider:
+        condition: service_started
+      splice-onboarding:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:${BACKEND_PORT}/livez"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 10s
