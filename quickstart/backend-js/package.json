@@ -1,0 +1,36 @@
+{
+  "name": "backend-js",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "generated/*"
+  ],
+  "scripts": {
+    "prebuild": "openapi-typescript ${VENDORED_DIR:-../backend/src/main/resources/vendored}/token-metadata-v1.yaml -o src/token-standard/metadata.types.ts && openapi-typescript ${VENDORED_DIR:-../backend/src/main/resources/vendored}/allocation-v1.yaml -o src/token-standard/allocation.types.ts",
+    "build": "tsc -p .",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts"
+  },
+  "dependencies": {
+    "@daml.js/quickstart-licensing-0.0.1": "*",
+    "@daml/types": "3.4.11",
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/formbody": "^8.0.2",
+    "@fastify/session": "^11.1.1",
+    "fastify": "^5.8.5",
+    "jose": "^6.2.3",
+    "openid-client": "^6.8.4",
+    "pg": "^8.20.0",
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/pg": "^8.20.0",
+    "openapi-typescript": "^7.13.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
