@@ -104,6 +104,13 @@ endif
 ############################################################################
 ####  backend-service
 ############################################################################
+# Backend implementation selector. Set via `make setup`; java (default) or js.
+# Override per-invocation with `make <target> BACKEND=js` if needed.
+BACKEND ?= java
+ifeq ($(BACKEND),js)
+  DOCKER_COMPOSE_FILES += -f ./docker/backend-js/compose.yaml
+endif
+
 ifeq ($(RESOURCE_CONSTRAINTS_ENABLED),true)
   RESOURCE_CONSTRAINT_CONFIG += -f ./docker/backend-service/resource-constraints.yaml
 endif
@@ -158,12 +165,27 @@ build-frontend: ## Build the frontend application
 	cd frontend && npm install && npm run build
 
 .PHONY: build-backend
-build-backend: ## Build the backend service
-	./gradlew :backend:build
+build-backend: ## Build the backend service (Java by default; Node when BACKEND=js)
+ifeq ($(BACKEND),js)
+	$(MAKE) build-backend-js
+else
+	./gradlew :backend:build -x :daml:tsCodegen
+endif
 
+.PHONY: build-backend-js
+build-backend-js: docker-available build-daml ## Build the JS backend Docker image
+	$(call docker-compose, build backend-service)
+
+# Skip the codegen the active backend doesn't consume. distTar produces backend.tar for the
+# Java image; the JS image doesn't consume it, and including it in the JS path would
+# transitively re-pull :daml:codeGen via :backend:compileJava.
 .PHONY: build-daml
 build-daml: ## Build the Daml model
-	./gradlew :daml:build distTar
+ifeq ($(BACKEND),js)
+	./gradlew :daml:build -x :daml:codeGen
+else
+	./gradlew :daml:build distTar -x :daml:tsCodegen
+endif
 
 .PHONY: docker-available
 docker-available: ## Check if Docker CLI exists and is running
