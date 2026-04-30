@@ -1,0 +1,28 @@
+{
+  "name": "@cn-quickstart/example-node-happy-path",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Minimal Node.js happy-path against Canton JSON Ledger v2 + PQS, using dpm-codegen TypeScript bindings.",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "codegen:daml": "./scripts/codegen-daml.sh",
+    "start": "node --enable-source-maps --import=tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@canton-network/core-ledger-client": "^1.1.1",
+    "@canton-network/core-wallet-auth": "^1.1.1",
+    "@daml.js/quickstart-licensing-0.0.1": "workspace:*",
+    "@daml/types": "3.4.11",
+    "jose": "^5.9.6",
+    "pg": "^8.13.1",
+    "pino": "^9.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.0"
+  }
+}

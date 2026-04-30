@@ -67,6 +67,14 @@ An assistant helps set up deployment when running `make start` for the first tim
 You can choose to run the application in standard mode or test mode and with or without OAUTH2. 
 You may change this later by running `make setup`.
 
+### Node.js example (TypeScript bindings + JSON Ledger v2)
+
+A minimal worked example using `@canton-network/core-ledger-client` (JSON
+Ledger API v2) and `dpm codegen-js` typed bindings lives at
+[`quickstart/examples/node-happy-path/`](quickstart/examples/node-happy-path/).
+Useful as a starting point for Node-shop teams building against Canton.
+See its README for run instructions.
+
 ## Debugging TL;DR
 
 If a container fails to start, there are a few things to try:
