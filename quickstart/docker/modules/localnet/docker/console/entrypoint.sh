@@ -1,8 +1,16 @@
 #!/bin/bash
-# Copyright (c) 2026 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# Copyright (c) 2024 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
 set -eou pipefail
+
+CONSOLE_OP=""
+CONSOLE_SCRIPT=""
+if [[ $MULTI_SYNC == true ]]; then
+  echo "Running in multi synchronizer mode"
+  CONSOLE_OP="run"
+  CONSOLE_SCRIPT="/app/app-synchronizer.sc"
+fi
 
 generate_jwt() {
   local sub="$1"
@@ -22,4 +30,4 @@ for script in /app/pre-startup/on/*.sh; do
 # shellcheck disable=SC1090
   [ -f "$script" ] && source "$script"
 done
-/app/bin/canton --no-tty -c /app/app.conf
+/app/bin/canton ${CONSOLE_OP} --no-tty -c /app/app.conf ${CONSOLE_SCRIPT}
