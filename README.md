@@ -64,8 +64,32 @@ $ make shell
 ```
 
 An assistant helps set up deployment when running `make start` for the first time. 
-You can choose to run the application in standard mode or test mode and with or without OAUTH2. 
+You can choose to run the application in standard mode or test mode, with or without OAUTH2, and which backend implementation to run (`java` or `js`).
 You may change this later by running `make setup`.
+
+## Backend implementations
+
+Quickstart ships two interchangeable backend implementations behind the same HTTP API ([quickstart/common/openapi.yaml](quickstart/common/openapi.yaml)). Both listen on `BACKEND_PORT` (default `8080`), share the same env files under [quickstart/docker/backend-service/](quickstart/docker/backend-service/), the same `onboarding` volume, and the same cookie + CSRF auth surface (oauth2 and shared-secret).
+
+| Backend | Stack | Ledger transport | Source |
+|---------|-------|------------------|--------|
+| `java` (default) | JDK 21, Spring Boot 3.4 | gRPC (`canton:3901`) | [quickstart/backend/](quickstart/backend/) |
+| `js` | Node 22, TypeScript, Fastify | JSON Ledger API (`canton:3975`) | [quickstart/backend-js/](quickstart/backend-js/) |
+
+Selection is persisted in `quickstart/.env.local` by `make setup` (which prompts for `BACKEND`). You can also override it per invocation:
+
+```bash
+make build BACKEND=js   # build only the JS backend image
+make start BACKEND=js   # bring up the stack with the JS backend in place of the Java service
+```
+
+Switching backends requires a clean restart so Postgres state and onboarding volumes are recreated:
+
+```bash
+make clean-all && make start BACKEND=js
+```
+
+`make build-daml` runs only the codegen the active backend consumes — `:daml:tsCodegen` (TypeScript bindings under [quickstart/backend-js/generated/](quickstart/backend-js/generated/)) for `BACKEND=js`, and `:daml:codeGen` + `distTar` (Java bindings) otherwise. The JS Compose override at [quickstart/docker/backend-js/compose.yaml](quickstart/docker/backend-js/compose.yaml) uses Docker Compose `!reset` / `!override` directives, so **Docker Compose v2.24 or newer is required** when running with `BACKEND=js`.
 
 ## Debugging TL;DR
 
@@ -74,7 +98,7 @@ If a container fails to start, there are a few things to try:
 - Ensure Docker Compose is configured to allocate enough memory. The recommended minimum total memory is 8 GB.
 - Start fresh with `make clean-all` and then manually delete all Docker images and volumes.
 
-**Note**: The CN Quickstart uses Java SDK version `Eclipse Temurin JDK version 21` which runs within the Docker container.  This information is specified in `quickstart/compose.yaml` and `.env`.
+**Note**: When running the default Java backend (`BACKEND=java`), the CN Quickstart uses Java SDK version `Eclipse Temurin JDK version 21` inside the Docker container. This information is specified in `quickstart/compose.yaml` and `.env`. The Node.js backend (`BACKEND=js`) uses the Node 22 image defined in [quickstart/docker/backend-js/Dockerfile](quickstart/docker/backend-js/Dockerfile).
 
 If you need assistance, please follow these directions to gather the log information needed for debugging:
 1. `make setup`             # optional
@@ -215,6 +239,8 @@ working_dir: /app
 
 This configuration demonstrates how the `backend-service` relies on the Quickstart-provided infrastructure. Quickstart automates much of the local environment setup for LocalNet, allowing you to prioritize application development. As you progress toward deployment and explore cloud orchestration, a deeper grasp of service configuration is invaluable. For now, consider these services a ready-to-use infrastructure foundation.
 
+> **Note**: the YAML above is the resolved configuration for the default Java backend. When running with `BACKEND=js`, the same `make compose-config` command produces a Node.js variant: the `image` is the `backend-js` Node 22 image, `LEDGER_PORT` is `3975` (the JSON Ledger API port instead of the gRPC port `3901`), and the bind mount sources from [quickstart/backend-js/](quickstart/backend-js/) instead of `backend/build/distributions/backend.tar`. All other fields (env files, onboarding volume, `BACKEND_PORT`, dependencies on `pqs-app-provider` and `splice-onboarding`) are identical.
+
 Then explore `register-app-user-tenant`, the service that registers AppUser tenants to the `backend-service`. This allows end users from the AppUser organization to log in and quickly start the web UI. That, in turn, ties the AppUser Identity Provider to the AppUser primary party ID. If the end user is logged in through this Identity Provider, the user can then act as the AppUser primary party. The `register-app-user-tenant` service utilizes functionality provided by the `splice-onboarding` module to make the task as simple as possible.
 
 This step can also be performed manually through the web UI if you log in to Quickstart as `app-provider` and navigate to the tenants tab. At that tab, you can also see a list of registered tenants and verify that the `AppUser` tenant was automatically pre-registered for you by `register-app-user-tenant`.
@@ -261,8 +287,8 @@ The `AppUser` organization is registered on the Quickstart startup by calling th
 
 | Service | Port | Description |
 |---------|------|-------------|
-| Backend Service | 8080 | Spring Boot backend for Licensing workflow |
-| Backend Debug (JVM) | 5005 | Remote JVM debugging (when `DEBUG_ENABLED=true`) |
+| Backend Service | 8080 | Spring Boot (Java) **or** Fastify (Node.js, `BACKEND=js`) backend for the Licensing workflow |
+| Backend Debug (JVM) | 5005 | Remote JVM debugging — Java backend only, when `DEBUG_ENABLED=true` |
 
 ## Canton Participant Ledger API
 
@@ -503,10 +529,10 @@ Run:
 ```bash
 make restart-backend
 ```
-This target restarts the backend, handles dependent services (e.g., register-app-user-tenant), and rebuilds the service if needed.
+This target restarts the backend, handles dependent services (e.g., register-app-user-tenant), and rebuilds the service if needed. It works for both backends — it rebuilds and recreates whichever implementation the active `BACKEND` value (set in `.env.local` by `make setup`, or overridden per command) selects.
 
 #### Debug backend service
-Enable remote JVM debugging by setting:
+Remote debugging via `DEBUG_ENABLED=true` is **Java-backend only**. Enable remote JVM debugging by setting:
 ```bash
 export DEBUG_ENABLED=true
 make restart-backend
@@ -519,6 +545,8 @@ Configure your IDE (IntelliJ, VS Code) to attach to port 5005 for step-through d
 
 Example in IntelliJ Idea
 ![remote-debug-settings](sdk/docs/images/remote-debug-settings.png)
+
+The Node.js backend (`BACKEND=js`) does not expose a Node inspector by default; `DEBUG_ENABLED=true` is a no-op in JS mode. To attach a Node debugger, run the JS backend locally outside Docker (`cd quickstart/backend-js && npm install && node --inspect=0.0.0.0:9229 ...`) or extend [quickstart/docker/backend-js/start.sh](quickstart/docker/backend-js/start.sh) to pass `--inspect` and publish port 9229 from [quickstart/docker/backend-js/compose.yaml](quickstart/docker/backend-js/compose.yaml).
 
 ### Viewing logs
 For interactive local log inspection we recommend lnav (https://lnav.org/). Install the Canton log format and use it to view ``*.clog`` files. Example Canton lnav format definition:
