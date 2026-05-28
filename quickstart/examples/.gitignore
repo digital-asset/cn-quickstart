@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.cache/
+*.log
+.DS_Store
+# `pnpm codegen:daml` (in node-happy-path) generates a workspace.
+# Regenerated from the DARs on every build — do not commit.
+node-happy-path/daml-bindings/
