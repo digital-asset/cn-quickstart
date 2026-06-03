@@ -24,12 +24,12 @@ import com.digitalasset.transcode.java.Party;
 import com.google.protobuf.ByteString;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 import org.openapitools.model.*;
 import org.slf4j.Logger;
@@ -142,10 +142,7 @@ public class LicenseApiImpl implements LicensesApi {
                 var renewal = ensurePresent(r, "Active renewal request not found for contract %s", request.getRenewalRequestContractId());
                 TransferContext transferContext = prepareTransferContext(
                         choiceContext.getDisclosedContracts(),
-                        Map.of(
-                                "AmuletRules", "amulet-rules",
-                                "OpenMiningRound", "open-round"
-                        )
+                        choiceContext.getChoiceContextData()
                 );
                 LicenseRenewalRequest_CompleteRenewal choice = new LicenseRenewalRequest_CompleteRenewal(
                         new ContractId<>(request.getAllocationContractId()),
@@ -238,27 +235,72 @@ public class LicenseApiImpl implements LicensesApi {
 
     private TransferContext prepareTransferContext(
             List<DisclosedContract> disclosedContracts,
-            Map<String, String> metaMap) {
+            Object choiceContextData) {
         var disclosures = disclosedContracts
                 .stream()
                 .map(this::toLedgerApiDisclosedContract)
                 .toList();
-        Map<String, AnyValue> choiceContextMap = disclosures
-                .stream()
-                .map(dc -> {
-                    var metaKey = metaMap.get(dc.getTemplateId().getEntityName());
-                    if (metaKey != null) {
-                        return Map.entry(metaKey, toAnyValueContractId(dc.getContractId()));
-                    } else {
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         return new TransferContext(
-                new ExtraArgs(new ChoiceContext(choiceContextMap), toTokenStandarMetadata(Map.of())),
+                new ExtraArgs(toChoiceContext(choiceContextData), toTokenStandarMetadata(Map.of())),
                 disclosures
         );
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ChoiceContext toChoiceContext(Object choiceContextData) {
+        if (choiceContextData == null) {
+            return new ChoiceContext(Map.of());
+        }
+        if (!(choiceContextData instanceof Map)) {
+            throw new IllegalArgumentException("Unexpected choiceContextData encoding: " + choiceContextData);
+        }
+        Object values = ((Map<String, Object>) choiceContextData).get("values");
+        if (values == null) {
+            return new ChoiceContext(Map.of());
+        }
+        if (!(values instanceof Map)) {
+            throw new IllegalArgumentException("Unexpected choiceContextData.values encoding: " + values);
+        }
+        Map<String, AnyValue> context = new LinkedHashMap<>();
+        ((Map<String, Object>) values).forEach((key, raw) -> context.put(key, toAnyValue(raw)));
+        return new ChoiceContext(context);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static AnyValue toAnyValue(Object raw) {
+        if (!(raw instanceof Map)) {
+            throw new IllegalArgumentException("Unexpected AnyValue encoding: " + raw);
+        }
+        Map<String, Object> tagged = (Map<String, Object>) raw;
+        String tag = (String) tagged.get("tag");
+        Object value = tagged.get("value");
+        if (tag == null) {
+            throw new IllegalArgumentException("AnyValue is missing its tag: " + raw);
+        }
+        switch (tag) {
+            case "AV_Text":
+                return new AnyValue.AnyValue_AV_Text((String) value);
+            case "AV_Int":
+                return new AnyValue.AnyValue_AV_Int(Long.parseLong(value.toString()));
+            case "AV_Decimal":
+                return new AnyValue.AnyValue_AV_Decimal(new BigDecimal(value.toString()));
+            case "AV_Bool":
+                return new AnyValue.AnyValue_AV_Bool((Boolean) value);
+            case "AV_ContractId":
+                return toAnyValueContractId((String) value);
+            case "AV_Party":
+                return new AnyValue.AnyValue_AV_Party(new Party((String) value));
+            case "AV_List":
+                return new AnyValue.AnyValue_AV_List(
+                        ((List<Object>) value).stream().map(LicenseApiImpl::toAnyValue).toList());
+            case "AV_Map": {
+                Map<String, AnyValue> entries = new LinkedHashMap<>();
+                ((Map<String, Object>) value).forEach((k, v) -> entries.put(k, toAnyValue(v)));
+                return new AnyValue.AnyValue_AV_Map(entries);
+            }
+            default:
+                throw new IllegalArgumentException("Unsupported AnyValue tag: " + tag);
+        }
     }
 
     private CommandsOuterClass.DisclosedContract toLedgerApiDisclosedContract(DisclosedContract dc) {
