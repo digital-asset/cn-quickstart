@@ -43,9 +43,11 @@ import quickstart_licensing.licensing.license.License.License_Expire;
 import quickstart_licensing.licensing.license.License.License_Renew;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest.LicenseRenewalRequest_CompleteRenewal;
 import splice_api_token_holding_v1.splice.api.token.holdingv1.InstrumentId;
-import splice_api_token_metadata_v1.splice.api.token.metadatav1.AnyValue;
-import splice_api_token_metadata_v1.splice.api.token.metadatav1.ChoiceContext;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.ExtraArgs;
+
+import static com.digitalasset.quickstart.utility.ChoiceContextUtils.toChoiceContext;
+import static com.digitalasset.quickstart.utility.TokenStandardUtils.toTokenStandardMetadata;
+
 
 /**
  * Management service for handling contract-based operations on Licenses.
@@ -179,7 +181,7 @@ public class LicenseApiImpl implements LicensesApi {
                         meta = new HashMap<>(meta);
                         meta.put("Note", "Triggered by user request");
                     }
-                    License_Expire choice = new License_Expire(new Party(auth.getAppProviderPartyId()), toTokenStandarMetadata(meta));
+                    License_Expire choice = new License_Expire(new Party(auth.getAppProviderPartyId()), toTokenStandardMetadata(meta));
                     return ledger.exerciseAndGetResult(license.contractId, choice, commandId)
                             .thenApply(result -> ResponseEntity.ok("License expired successfully"));
                 })
@@ -241,66 +243,9 @@ public class LicenseApiImpl implements LicensesApi {
                 .map(this::toLedgerApiDisclosedContract)
                 .toList();
         return new TransferContext(
-                new ExtraArgs(toChoiceContext(choiceContextData), toTokenStandarMetadata(Map.of())),
+                new ExtraArgs(toChoiceContext(choiceContextData), toTokenStandardMetadata(Map.of())),
                 disclosures
         );
-    }
-
-    @SuppressWarnings("unchecked")
-    private static ChoiceContext toChoiceContext(Object choiceContextData) {
-        if (choiceContextData == null) {
-            return new ChoiceContext(Map.of());
-        }
-        if (!(choiceContextData instanceof Map)) {
-            throw new IllegalArgumentException("Unexpected choiceContextData encoding: " + choiceContextData);
-        }
-        Object values = ((Map<String, Object>) choiceContextData).get("values");
-        if (values == null) {
-            return new ChoiceContext(Map.of());
-        }
-        if (!(values instanceof Map)) {
-            throw new IllegalArgumentException("Unexpected choiceContextData.values encoding: " + values);
-        }
-        Map<String, AnyValue> context = new LinkedHashMap<>();
-        ((Map<String, Object>) values).forEach((key, raw) -> context.put(key, toAnyValue(raw)));
-        return new ChoiceContext(context);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static AnyValue toAnyValue(Object raw) {
-        if (!(raw instanceof Map)) {
-            throw new IllegalArgumentException("Unexpected AnyValue encoding: " + raw);
-        }
-        Map<String, Object> tagged = (Map<String, Object>) raw;
-        String tag = (String) tagged.get("tag");
-        Object value = tagged.get("value");
-        if (tag == null) {
-            throw new IllegalArgumentException("AnyValue is missing its tag: " + raw);
-        }
-        switch (tag) {
-            case "AV_Text":
-                return new AnyValue.AnyValue_AV_Text((String) value);
-            case "AV_Int":
-                return new AnyValue.AnyValue_AV_Int(Long.parseLong(value.toString()));
-            case "AV_Decimal":
-                return new AnyValue.AnyValue_AV_Decimal(new BigDecimal(value.toString()));
-            case "AV_Bool":
-                return new AnyValue.AnyValue_AV_Bool((Boolean) value);
-            case "AV_ContractId":
-                return toAnyValueContractId((String) value);
-            case "AV_Party":
-                return new AnyValue.AnyValue_AV_Party(new Party((String) value));
-            case "AV_List":
-                return new AnyValue.AnyValue_AV_List(
-                        ((List<Object>) value).stream().map(LicenseApiImpl::toAnyValue).toList());
-            case "AV_Map": {
-                Map<String, AnyValue> entries = new LinkedHashMap<>();
-                ((Map<String, Object>) value).forEach((k, v) -> entries.put(k, toAnyValue(v)));
-                return new AnyValue.AnyValue_AV_Map(entries);
-            }
-            default:
-                throw new IllegalArgumentException("Unsupported AnyValue tag: " + tag);
-        }
     }
 
     private CommandsOuterClass.DisclosedContract toLedgerApiDisclosedContract(DisclosedContract dc) {
@@ -329,13 +274,5 @@ public class LicenseApiImpl implements LicensesApi {
 
         return ValueOuterClass.Identifier.newBuilder().setPackageId(packageId).setModuleName(moduleName)
                 .setEntityName(entityName).build();
-    }
-
-    private static AnyValue toAnyValueContractId(String contractId) {
-        return new AnyValue.AnyValue_AV_ContractId(new ContractId<>(contractId));
-    }
-
-    private static splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata toTokenStandarMetadata(Map<String, String> meta) {
-        return new splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata(meta);
     }
 }
