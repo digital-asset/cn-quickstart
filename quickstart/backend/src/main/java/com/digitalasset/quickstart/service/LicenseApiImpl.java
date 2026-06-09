@@ -47,7 +47,6 @@ import splice_api_token_metadata_v1.splice.api.token.metadatav1.AnyValue;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.ChoiceContext;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.ExtraArgs;
 
-
 /**
  * Management service for handling contract-based operations on Licenses.
  */
