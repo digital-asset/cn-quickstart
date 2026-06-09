@@ -257,6 +257,7 @@ public class LicenseApiImpl implements LicensesApi {
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            // Choice might contain additional information in context becaause of the fields enfored by Token Standard API 
         Map<String, AnyValue> mergedChoiceContext = mergeChoiceContexts(contextData, choiceContextMap);
         return new TransferContext(
                 new ExtraArgs(new ChoiceContext(mergedChoiceContext), toTokenStandardMetadata(metaMap)),
