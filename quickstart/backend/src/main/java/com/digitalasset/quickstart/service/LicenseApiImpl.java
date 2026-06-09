@@ -144,8 +144,8 @@ public class LicenseApiImpl implements LicensesApi {
                 TransferContext transferContext = prepareTransferContext(
                         choiceContext.getDisclosedContracts(),
                         Map.of(
-                            "AmuletRules", "amulet-rules",
-                            "OpenMiningRound", "open-round"
+                                "AmuletRules", "amulet-rules",
+                                "OpenMiningRound", "open-round"
                         ),
                         choiceContext.getChoiceContextData()
                 );
