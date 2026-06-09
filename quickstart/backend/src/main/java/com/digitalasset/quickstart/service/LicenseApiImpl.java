@@ -24,12 +24,12 @@ import com.digitalasset.transcode.java.Party;
 import com.google.protobuf.ByteString;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
-import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import org.openapitools.model.*;
 import org.slf4j.Logger;
@@ -43,10 +43,9 @@ import quickstart_licensing.licensing.license.License.License_Expire;
 import quickstart_licensing.licensing.license.License.License_Renew;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest.LicenseRenewalRequest_CompleteRenewal;
 import splice_api_token_holding_v1.splice.api.token.holdingv1.InstrumentId;
+import splice_api_token_metadata_v1.splice.api.token.metadatav1.AnyValue;
+import splice_api_token_metadata_v1.splice.api.token.metadatav1.ChoiceContext;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.ExtraArgs;
-
-import static com.digitalasset.quickstart.utility.ChoiceContextUtils.toChoiceContext;
-import static com.digitalasset.quickstart.utility.TokenStandardUtils.toTokenStandardMetadata;
 
 
 /**
@@ -144,6 +143,10 @@ public class LicenseApiImpl implements LicensesApi {
                 var renewal = ensurePresent(r, "Active renewal request not found for contract %s", request.getRenewalRequestContractId());
                 TransferContext transferContext = prepareTransferContext(
                         choiceContext.getDisclosedContracts(),
+                        Map.of(
+                            "AmuletRules", "amulet-rules",
+                            "OpenMiningRound", "open-round"
+                        ),
                         choiceContext.getChoiceContextData()
                 );
                 LicenseRenewalRequest_CompleteRenewal choice = new LicenseRenewalRequest_CompleteRenewal(
@@ -237,13 +240,27 @@ public class LicenseApiImpl implements LicensesApi {
 
     private TransferContext prepareTransferContext(
             List<DisclosedContract> disclosedContracts,
-            Object choiceContextData) {
+            Map<String, String> metaMap,
+            Object contextData) {
         var disclosures = disclosedContracts
                 .stream()
                 .map(this::toLedgerApiDisclosedContract)
                 .toList();
+        Map<String, AnyValue> choiceContextMap = disclosures
+                .stream()
+                .map(dc -> {
+                    var metaKey = metaMap.get(dc.getTemplateId().getEntityName());
+                    if (metaKey != null) {
+                        return Map.entry(metaKey, toAnyValueContractId(dc.getContractId()));
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<String, AnyValue> mergedChoiceContext = mergeChoiceContexts(contextData, choiceContextMap);
         return new TransferContext(
-                new ExtraArgs(toChoiceContext(choiceContextData), toTokenStandardMetadata(Map.of())),
+                new ExtraArgs(new ChoiceContext(mergedChoiceContext), toTokenStandardMetadata(metaMap)),
                 disclosures
         );
     }
@@ -274,5 +291,22 @@ public class LicenseApiImpl implements LicensesApi {
 
         return ValueOuterClass.Identifier.newBuilder().setPackageId(packageId).setModuleName(moduleName)
                 .setEntityName(entityName).build();
+    }
+
+    private Map<String, AnyValue> mergeChoiceContexts(Object originalContextData, Map<String, AnyValue> addtionalContextData) {
+        if (!(originalContextData instanceof Map) && originalContextData != null) {
+            throw new IllegalArgumentException("Unexpected choiceContextData encoding: " + originalContextData);
+        }
+        Map<String, AnyValue> mergedContextData = originalContextData == null ? new HashMap<>() : new HashMap<>((Map<String, AnyValue>) originalContextData);
+        addtionalContextData.forEach(mergedContextData::put);
+        return mergedContextData;
+    }
+
+    private static AnyValue toAnyValueContractId(String contractId) {
+        return new AnyValue.AnyValue_AV_ContractId(new ContractId<>(contractId));
+    }
+
+    private static splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata toTokenStandardMetadata(Map<String, String> meta) {
+        return new splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata(meta);
     }
 }
