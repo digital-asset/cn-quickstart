@@ -51,36 +51,24 @@ public class ChoiceContextUtils {
         if (tag == null) {
             throw new IllegalArgumentException("AnyValue is missing its tag: " + raw);
         }
-        switch (tag) {
-            case "AV_Text":
-                return new AnyValue.AnyValue_AV_Text((String) value);
-            case "AV_Int":
-                return new AnyValue.AnyValue_AV_Int(Long.parseLong(value.toString()));
-            case "AV_Decimal":
-                return new AnyValue.AnyValue_AV_Decimal(new BigDecimal(value.toString()));
-            case "AV_Bool":
-                return new AnyValue.AnyValue_AV_Bool((Boolean) value);
-            case "AV_ContractId":
-                return new AnyValue.AnyValue_AV_ContractId(new ContractId<>((String) value));
-            case "AV_Party":
-                return new AnyValue.AnyValue_AV_Party(new Party((String) value));
-            case "AV_Date":
-                return new AnyValue.AnyValue_AV_Date(LocalDate.parse(value.toString()));
-            case "AV_Time":
-                return new AnyValue.AnyValue_AV_Time(Instant.parse(value.toString()));
-            case "AV_RelTime":
-                return new AnyValue.AnyValue_AV_RelTime(new RelTime(toRelTimeMicros(value)));
-            case "AV_List":
-                return new AnyValue.AnyValue_AV_List(
-                        ((List<Object>) value).stream().map(ChoiceContextUtils::toAnyValue).toList());
-            case "AV_Map": {
+        return switch (AnyValueTag.fromString(tag)) {
+            case AV_Text -> new AnyValue.AnyValue_AV_Text((String) value);
+            case AV_Int -> new AnyValue.AnyValue_AV_Int((Long)value);
+            case AV_Decimal -> new AnyValue.AnyValue_AV_Decimal(new BigDecimal((Double)value));
+            case AV_Bool -> new AnyValue.AnyValue_AV_Bool((Boolean) value);
+            case AV_ContractId -> new AnyValue.AnyValue_AV_ContractId(new ContractId<>((String) value));
+            case AV_Party -> new AnyValue.AnyValue_AV_Party(new Party((String) value));
+            case AV_Date -> new AnyValue.AnyValue_AV_Date(LocalDate.parse((String) value));
+            case AV_Time -> new AnyValue.AnyValue_AV_Time(Instant.parse((String) value));
+            case AV_RelTime -> new AnyValue.AnyValue_AV_RelTime(new RelTime(toRelTimeMicros(value)));
+            case AV_List -> new AnyValue.AnyValue_AV_List(
+                    ((List<Object>) value).stream().map(ChoiceContextUtils::toAnyValue).toList());
+            case AV_Map -> {
                 Map<String, AnyValue> entries = new LinkedHashMap<>();
                 ((Map<String, Object>) value).forEach((k, v) -> entries.put(k, toAnyValue(v)));
-                return new AnyValue.AnyValue_AV_Map(entries);
+                yield new AnyValue.AnyValue_AV_Map(entries);
             }
-            default:
-                throw new IllegalArgumentException("Unsupported AnyValue tag: " + tag);
-        }
+        };
     }
 
     @SuppressWarnings("unchecked")
@@ -92,5 +80,18 @@ public class ChoiceContextUtils {
             throw new IllegalArgumentException("AV_RelTime is missing its microseconds: " + value);
         }
         return Long.parseLong(micros.toString());
+    }
+
+    private enum AnyValueTag {
+        AV_Text, AV_Int, AV_Decimal, AV_Bool, AV_ContractId,
+        AV_Party, AV_Date, AV_Time, AV_RelTime, AV_List, AV_Map;
+
+        static AnyValueTag fromString(String tag) {
+            try {
+                return valueOf(tag);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Unsupported AnyValue tag: " + tag, e);
+            }
+        }
     }
 }
