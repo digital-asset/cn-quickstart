@@ -36,7 +36,7 @@ This project is rapidly enhanced, so please check back often for updates.
 
 ## Setup
 
-See the [Quickstart Installation Guide](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation.html) for installation and setup directions.
+See the [Quickstart Installation Guide](https://docs.canton.network/appdev/quickstart/index) for installation and setup directions.
 
 ## Quickstart
 
