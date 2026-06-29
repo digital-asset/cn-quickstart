@@ -53,7 +53,7 @@ $ make setup
 # Build the application
 $ make build
 
-# Start the application, Canton services, and Observability (if enabled)
+# Start application, Canton services, and Observability (if enabled)
 $ make start
 
 # In a separate shell - run a Canton Console for the App Provider
