@@ -24,6 +24,7 @@ import com.digitalasset.transcode.java.Party;
 import com.google.protobuf.ByteString;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
@@ -43,9 +44,11 @@ import quickstart_licensing.licensing.license.License.License_Expire;
 import quickstart_licensing.licensing.license.License.License_Renew;
 import quickstart_licensing.licensing.license.LicenseRenewalRequest.LicenseRenewalRequest_CompleteRenewal;
 import splice_api_token_holding_v1.splice.api.token.holdingv1.InstrumentId;
-import splice_api_token_metadata_v1.splice.api.token.metadatav1.AnyValue;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.ChoiceContext;
+import splice_api_token_metadata_v1.splice.api.token.metadatav1.AnyValue;
 import splice_api_token_metadata_v1.splice.api.token.metadatav1.ExtraArgs;
+
+import static com.digitalasset.quickstart.utility.ChoiceContextUtils.convertChoiceContextData;
 
 /**
  * Management service for handling contract-based operations on Licenses.
@@ -145,7 +148,8 @@ public class LicenseApiImpl implements LicensesApi {
                         Map.of(
                                 "AmuletRules", "amulet-rules",
                                 "OpenMiningRound", "open-round"
-                        )
+                        ),
+                        choiceContext.getChoiceContextData()
                 );
                 LicenseRenewalRequest_CompleteRenewal choice = new LicenseRenewalRequest_CompleteRenewal(
                         new ContractId<>(request.getAllocationContractId()),
@@ -182,7 +186,7 @@ public class LicenseApiImpl implements LicensesApi {
                         meta = new HashMap<>(meta);
                         meta.put("Note", "Triggered by user request");
                     }
-                    License_Expire choice = new License_Expire(new Party(auth.getAppProviderPartyId()), toTokenStandarMetadata(meta));
+                    License_Expire choice = new License_Expire(new Party(auth.getAppProviderPartyId()), toTokenStandardMetadata(meta));
                     return ledger.exerciseAndGetResult(license.contractId, choice, commandId)
                             .thenApply(result -> ResponseEntity.ok("License expired successfully"));
                 })
@@ -238,7 +242,8 @@ public class LicenseApiImpl implements LicensesApi {
 
     private TransferContext prepareTransferContext(
             List<DisclosedContract> disclosedContracts,
-            Map<String, String> metaMap) {
+            Map<String, String> metaMap,
+            Object contextData) {
         var disclosures = disclosedContracts
                 .stream()
                 .map(this::toLedgerApiDisclosedContract)
@@ -255,8 +260,10 @@ public class LicenseApiImpl implements LicensesApi {
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            // Choice might contain additional information in context because of the fields enfored by Token Standard API 
+        Map<String, AnyValue> mergedChoiceContext = mergeChoiceContexts(contextData, choiceContextMap);
         return new TransferContext(
-                new ExtraArgs(new ChoiceContext(choiceContextMap), toTokenStandarMetadata(Map.of())),
+                new ExtraArgs(new ChoiceContext(mergedChoiceContext), toTokenStandardMetadata(metaMap)),
                 disclosures
         );
     }
@@ -289,11 +296,17 @@ public class LicenseApiImpl implements LicensesApi {
                 .setEntityName(entityName).build();
     }
 
+    private Map<String, AnyValue> mergeChoiceContexts(Object originalContextData, Map<String, AnyValue> additionalContextData) {
+        Map<String, AnyValue> mergedContextData = new HashMap<>(convertChoiceContextData(originalContextData));
+        additionalContextData.forEach(mergedContextData::put);
+        return mergedContextData;
+    }
+
     private static AnyValue toAnyValueContractId(String contractId) {
         return new AnyValue.AnyValue_AV_ContractId(new ContractId<>(contractId));
     }
 
-    private static splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata toTokenStandarMetadata(Map<String, String> meta) {
+    private static splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata toTokenStandardMetadata(Map<String, String> meta) {
         return new splice_api_token_metadata_v1.splice.api.token.metadatav1.Metadata(meta);
     }
 }

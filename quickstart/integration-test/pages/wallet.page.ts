@@ -2,6 +2,7 @@ import {expect, test, type Page, type Locator} from '@playwright/test';
 import {WALLET_URL, DEFAULT_PASSWORD} from '../tests/global';
 import {Keycloak} from '../utils/keycloak';
 import {onboardWalletUser} from '../utils/wallet';
+import * as process from 'process';
 
 export default class Wallet {
   page: Page;
@@ -20,12 +21,11 @@ export default class Wallet {
 
   public async onboardWalletUser(keycloak: Keycloak, userId: string, partyId: string): Promise<void> {
     const validator = 'localhost:2' + process.env.VALIDATOR_ADMIN_API_PORT_SUFFIX!;
-    const walletAdminToken = await keycloak.getUserToken(
-      process.env.AUTH_APP_USER_WALLET_ADMIN_USER_NAME!, 
-      process.env.AUTH_APP_USER_WALLET_ADMIN_USER_PASSWORD!, 
-      process.env.AUTH_APP_USER_AUTO_CONFIG_CLIENT_ID!
+    const validatorOperatorToken = await keycloak.getAdminToken(
+      process.env.AUTH_APP_USER_VALIDATOR_CLIENT_SECRET!,
+      process.env.AUTH_APP_USER_VALIDATOR_CLIENT_ID!
     );
-    await onboardWalletUser(this.page.request, walletAdminToken, userId, partyId, validator);
+    await onboardWalletUser(this.page.request, validatorOperatorToken, userId, partyId, validator);
   }
 
   public async login(): Promise<void> {
