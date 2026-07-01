@@ -24,7 +24,7 @@ You can find Quickstart documentation in the Canton Network documentation portal
 
 - [Quickstart Installation](https://docs.canton.network/appdev/quickstart/prerequisites)
 - [Exploring The Demo](https://docs.canton.network/appdev/quickstart/running-the-demo)
-- [FAQ](https://docs.canton.network/appdev/faq#the-splice-container-keeps-crashing-what-should-i-do)
+- [FAQ](https://docs.canton.network/appdev/faq)
 - [Observability and Troubleshooting Overview](https://docs.canton.network/appdev/quickstart/observability-and-tracing#observability-and-tracing)
 - [Quickstart Reference](https://docs.canton.network/sdks-tools/reference-projects/cn-quickstart#cn-quickstart)
 
