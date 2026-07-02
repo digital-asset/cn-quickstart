@@ -33,6 +33,23 @@ tasks.register<com.digitalasset.transcode.codegen.java.gradle.JavaCodegenTask>("
     dependsOn("compileDaml")
 }
 
+tasks.register<Exec>("tsCodegen") {
+    val requiredVersion = VersionFiles.damlYamlSdk
+    val dar = file("$projectDir/licensing/.daml/dist/quickstart-licensing-0.0.1.dar")
+    val outputDir = file("$rootDir/backend-js/generated")
+
+    inputs.file(dar)
+    outputs.dir(outputDir)
+
+    doFirst {
+        outputDir.deleteRecursively()
+        outputDir.mkdirs()
+    }
+    commandLine("dpm", "codegen-js", dar.absolutePath, "-o", outputDir.absolutePath)
+    environment("DPM_SDK_VERSION", requiredVersion)
+    dependsOn("compileDaml")
+}
+
 tasks.named("build") {
-    dependsOn("codeGen")
+    dependsOn("codeGen", "tsCodegen")
 }
