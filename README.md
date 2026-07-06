@@ -21,11 +21,12 @@ The CN Quickstart is a rapidly evolving work in progress.
 ## Docs and guides
 
 You can find Quickstart documentation in the Canton Network documentation portal.
-- [Quickstart Installation](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation.html)
-- [Exploring The Demo](https://docs.digitalasset.com/build/3.3/quickstart/operate/explore-the-demo.html)
-- [Project Structure](https://docs.digitalasset.com/build/3.3/quickstart/configure/project-structure-overview.html)
-- [FAQ](https://docs.digitalasset.com/build/3.3/quickstart/troubleshoot/cnqs-faq.html)
-- [Observability and Troubleshooting Overview](https://docs.digitalasset.com/build/3.3/quickstart/observe/observability-troubleshooting-overview.html)
+
+- [Quickstart Installation](https://docs.canton.network/appdev/quickstart/prerequisites)
+- [Exploring The Demo](https://docs.canton.network/appdev/quickstart/running-the-demo)
+- [FAQ](https://docs.canton.network/appdev/faq)
+- [Observability and Troubleshooting Overview](https://docs.canton.network/appdev/quickstart/observability-and-tracing#observability-and-tracing)
+- [Quickstart Reference](https://docs.canton.network/sdks-tools/reference-projects/cn-quickstart#cn-quickstart)
 
 ### Technical documentation
 
@@ -36,7 +37,7 @@ This project is rapidly enhanced, so please check back often for updates.
 
 ## Setup
 
-See the [Quickstart Installation Guide](https://docs.digitalasset.com/build/3.3/quickstart/download/cnqs-installation.html) for installation and setup directions.
+See the [Quickstart Installation Guide](https://docs.canton.network/appdev/quickstart/index) for installation and setup directions.
 
 ## Quickstart
 
@@ -111,7 +112,7 @@ If you need assistance, please follow these directions to gather the log informa
 ## Available make targets
 
 Run `make help` to see a list of all available targets.
-Read the [FAQ Make target reference](9https://docs.digitalasset.com/build/3.3/quickstart/troubleshoot/cnqs-faq.html#cn-app-quickstart-make-target-reference) for a detailed list of make targets and their descriptions.
+Read the [FAQ Make target reference](https://docs.canton.network/appdev/quickstart/project-structure#make) for a detailed list of make targets and their descriptions.
 
 ## Topology
 
