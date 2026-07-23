@@ -20,11 +20,24 @@ object Deps {
     }
 
     object transcode {
-        val version get() = "0.1.1-main.20251112.144.829.v5cc568a"
-        val plugin get() = "com.daml.codegen-java-daml3_4:com.daml.codegen-java-daml3_4.gradle.plugin:$version"
-        val codegenJavaRuntime get() = "com.daml:transcode-codegen-java-runtime:$version"
-        val protoJava get() = "com.daml:transcode-codec-proto-java-daml3.4_3:$version"
+        val version get() = "3.5.8"
+
+        // The codegen plugin and its runtime have no stable 3.5.x release; only snapshots.
+        // Their POMs pin Daml LF snapshots that were never published to Maven Central, so
+        // :daml forces those transitives to $version. Keep both on the same snapshot.
+        val codegenVersion get() = "3.5.0-snapshot.20260428.170.1007.v02f2a2a"
+
+        val plugin get() = "com.daml.codegen-java-daml3:com.daml.codegen-java-daml3.gradle.plugin:$codegenVersion"
+        val codegenJavaRuntime get() = "com.daml:transcode-codegen-java-runtime_3:$codegenVersion"
+        val protoJava get() = "com.daml:transcode-codec-proto-java_3:$version"
         val protoJson get() = "com.daml:transcode-codec-json_3:$version"
+
+        // Transitives the codegen snapshots pin to unpublished LF snapshots.
+        val forcedLf get() = listOf(
+            "com.daml:daml-lf-archive_2.13:$version",
+            "com.daml:transcode-daml-lf_3:$version",
+            "com.daml:transcode-schema_3:$version",
+        )
     }
 
     object springBoot {
