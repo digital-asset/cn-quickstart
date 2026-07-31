@@ -1,6 +1,6 @@
 # VM configuration
 cpus   = 4 # Cores
-memory = 8 # GiB
+memory = 12 # GiB
 ipaddr = "192.168.56.10"
 
 # List of ports to forward from the VM to localhost
@@ -8,15 +8,15 @@ ports_to_forward = [
   8082, # Keycloak
 ]
 
-nix_cache_size = 10 # GiB
-nix_cache_image_path = "/vagrant/vagrant-nix-cache/nix-cache.img"
-nix_cache_mount_path = "/nix-cache"
+external_volume_size = 20 # GiB
+external_volume_image_path = "/vagrant/.vagrant.volume.img"
+external_volume_mount_path = "/external-volume"
 
 shell_variables = <<~"SHELL"
   ROOT_DIR="/vagrant"
-  NIX_CACHE_SIZE="#{nix_cache_size}"
-  NIX_CACHE_IMAGE_PATH="#{nix_cache_image_path}"
-  NIX_CACHE_MOUNT_PATH="#{nix_cache_mount_path}"
+  EXTERNAL_VOLUME_SIZE="#{external_volume_size}"
+  EXTERNAL_VOLUME_IMAGE_PATH="#{external_volume_image_path}"
+  EXTERNAL_VOLUME_MOUNT_PATH="#{external_volume_mount_path}"
 SHELL
 
 shell_common = <<~'SHELL'
@@ -40,7 +40,7 @@ shell_helpers = <<~'SHELL'
 SHELL
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "bento/ubuntu-24.04"
+  config.vm.box = "bento/ubuntu-26.04"
 
   config.vm.network "private_network", ip: ipaddr
 
@@ -51,7 +51,7 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |vb|
     vb.cpus = cpus
     vb.memory = memory * 1024
-    vb.customize ["storagectl", :id, "--name", "SATA Controller", "--hostiocache", "on"]
+    vb.customize ["storagectl", :id, "--name", "VirtIO Controller", "--hostiocache", "on"]
   end
 
   config.vm.provision "shell", name: "system", upload_path: "/tmp/vagrant-shell-system", reset: true do |s|
@@ -69,27 +69,37 @@ Vagrant.configure("2") do |config|
       adduser vagrant nix-users
       adduser vagrant docker
 
-      # Create a file to be mounted and used as a back store for the Nix cache
-      # The image is used to give Nix freedom to set ownership and permissions which is not possible with synced folders directly
-      [[ -d "$NIX_CACHE_MOUNT_PATH" ]] || mkdir -p "$NIX_CACHE_MOUNT_PATH"
-      [[ -d "$(dirname "$NIX_CACHE_IMAGE_PATH")" ]] || mkdir -p "$(dirname "$NIX_CACHE_IMAGE_PATH")"
-      [[ -f "$NIX_CACHE_IMAGE_PATH" ]] || { truncate -s "${NIX_CACHE_SIZE}G" "$NIX_CACHE_IMAGE_PATH"; mkfs.btrfs "$NIX_CACHE_IMAGE_PATH"; }
-      nix_cache_image_fstab="$NIX_CACHE_IMAGE_PATH $NIX_CACHE_MOUNT_PATH btrfs loop,compress=zstd 0 0"
-      append_line_to_file "$nix_cache_image_fstab" /etc/fstab
-      nix_daemon_needs_restart=false
-      mountpoint "$NIX_CACHE_MOUNT_PATH" || { mount "$NIX_CACHE_MOUNT_PATH" && nix_daemon_needs_restart=true; }
+      # Create a file to be mounted and used as a back store
+      # This works more reliably than using a synced folder (vboxsf) directly
+      [[ -d "$EXTERNAL_VOLUME_MOUNT_PATH" ]] || mkdir -p "$EXTERNAL_VOLUME_MOUNT_PATH"
+      [[ -f "$EXTERNAL_VOLUME_IMAGE_PATH" ]] || { truncate -s "${EXTERNAL_VOLUME_SIZE}G" "$EXTERNAL_VOLUME_IMAGE_PATH"; mkfs.btrfs "$EXTERNAL_VOLUME_IMAGE_PATH"; }
 
-      # Bind mounts for /nix/store and /nix/var/nix/db
-      mkdir -p "$NIX_CACHE_MOUNT_PATH/store" "$NIX_CACHE_MOUNT_PATH/var/nix/db"
-      mkdir -p /nix/store /nix/var/nix/db
-      nix_store_fstab="$NIX_CACHE_MOUNT_PATH/store /nix/store none bind 0 0"
-      nix_db_fstab="$NIX_CACHE_MOUNT_PATH/var/nix/db /nix/var/nix/db none bind 0 0"
-      append_line_to_file "$nix_store_fstab" /etc/fstab
-      append_line_to_file "$nix_db_fstab" /etc/fstab
+      external_volume_data_image_fstab="$EXTERNAL_VOLUME_IMAGE_PATH $EXTERNAL_VOLUME_MOUNT_PATH btrfs loop,compress=zstd 0 0"
+      append_line_to_file "$external_volume_data_image_fstab" /etc/fstab
+
+      daemons_need_restart=false
+
+      # Mount the external volume if not already mounted
+      mountpoint -q "$EXTERNAL_VOLUME_MOUNT_PATH" || {
+        mount "$EXTERNAL_VOLUME_MOUNT_PATH" || exit 1
+        daemons_need_restart=true
+      }
+
+      # Bind mounts
+      for path in /nix/store /nix/var/nix/db /var/lib/containerd; do
+        mkdir -p "$EXTERNAL_VOLUME_MOUNT_PATH$path" "$path"
+        fstab_entry="$EXTERNAL_VOLUME_MOUNT_PATH$path $path none bind 0 0"
+        append_line_to_file "$fstab_entry" /etc/fstab
+      done
+
+      systemctl daemon-reload
       mount -a
 
-      # Restart the Nix Daemon if needed
-      if "$nix_daemon_needs_restart"; then systemctl restart nix-daemon.service; fi
+      # Restart Daemons if needed
+      if "$daemons_need_restart"; then
+        systemctl restart nix-daemon.service
+        systemctl restart containerd.service
+      fi
     SHELL
   end
 
