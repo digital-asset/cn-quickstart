@@ -110,11 +110,6 @@ Vagrant.configure("2") do |config|
 
       # Execute direnv export to set up the environment
       eval "$(direnv export bash)"
-
-      # Install the Daml SDK
-      cd quickstart
-      make install-daml-sdk
-      append_line_to_file 'PATH="$HOME/.daml/bin:$PATH"' ~/.profile
     SHELL
   end
 end
