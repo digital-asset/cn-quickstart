@@ -16,13 +16,14 @@ flowchart TD
   subgraph user [App User]
     user-browser(Browser)
     user-auth(Auth)
-    user-participant(Participant)
 
     subgraph user-host ["Self Hosted Option"]
+      user-participant(Participant)
       user-ui(UI):::customNode
       user-backend("Backend"):::customNode
     end
     class user-host optional
+    class user-participant optional
     class user-ui optional
     class user-backend optional
 
