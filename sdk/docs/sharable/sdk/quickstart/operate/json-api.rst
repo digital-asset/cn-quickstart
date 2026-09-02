@@ -501,7 +501,11 @@ Exercise the Accept choice on the first contract:
      -H "Content-Type: application/json" \
      -d "$JSON_PAYLOAD"
 
-SUCCESS looks like ``{"updateId":"1220064a62356625ab7338564daedd21487749a7fcd21ad1d3a659b9131e9aadc246","completionOffset":109}%``
+SUCCESS looks like
+
+.. code-block:: json
+
+   {"updateId":"1220064a62356625ab7338564daedd21487749a7fcd21ad1d3a659b9131e9aadc246","completionOffset":109}
 
 See the contract in lnav
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -648,7 +652,7 @@ Success returns a new updateId and completionOffset.
 
 .. code-block::
 
-   {"updateId":"12209864eb06a5407b006e1ded12dbfa495bfedef74463a314000bbbd9e2e412d27e","completionOffset":2559}%
+   {"updateId":"12209864eb06a5407b006e1ded12dbfa495bfedef74463a314000bbbd9e2e412d27e","completionOffset":2559}
 
 See the AppInstall request in lnav
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -767,7 +771,11 @@ You have 15 minutes to allocate tokens and 30 minutes to complete the renewal re
      -H "Content-Type: application/json" \
      -d "$JSON_PAYLOAD"
 
-Success looks like: ``{"updateId":"122067883fdbb23d7395fabab7fc44703b3d588e44924fe1d33b45eebc116ecd94a5","completionOffset":220}%``
+Success looks like:
+
+.. code-block:: json
+
+   {"updateId":"122067883fdbb23d7395fabab7fc44703b3d588e44924fe1d33b45eebc116ecd94a5","completionOffset":220}
 
 LicenseRenewalRequest
 ~~~~~~~~~~~~~~~~~~~~~
