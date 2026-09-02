@@ -4,6 +4,7 @@ This document provides an overview of the Canton Network infrastructure and the 
 The diagrams below illustrate the relationships between Users, Providers, and the Super Validator, as well as the internal components that make up the system. 
 The focus of ``Canton Network Quickstart`` is to provide a development environment for App Providers - the provision of Super Validator infrastructure is auxiliary.
 
+
 ## High Level Structure
 
 This diagram summarizes the interaction between App Providers and App Users (organizations) through services and synchronization domains.
@@ -16,13 +17,14 @@ flowchart TD
   subgraph user [App User]
     user-browser(Browser)
     user-auth(Auth)
-    user-participant(Participant)
 
     subgraph user-host ["Self Hosted Option"]
+      user-participant(Participant)
       user-ui(UI):::customNode
       user-backend("Backend"):::customNode
     end
     class user-host optional
+    class user-participant optional
     class user-ui optional
     class user-backend optional
 
