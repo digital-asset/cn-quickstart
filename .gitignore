@@ -42,3 +42,8 @@ gradle-app.setting
 .direnv/
 
 logs
+
+# Prevent accidental npm installs at the repo root
+/node_modules/
+/package.json
+/package-lock.json
