@@ -44,6 +44,15 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'retain-on-failure',
+
+    // Force *.localhost → 127.0.0.1 inside Chromium, bypassing the host
+    // resolver. macOS/Linux happily return ::1 for *.localhost via the
+    // myhostname/RFC6761 path; if any other process on the host is bound to
+    // ::1:3000 (e.g. an unrelated Next.js dev server), it hijacks the test.
+    // Docker's nginx publishes 127.0.0.1:3000 only — pinning to v4 fixes it.
+    launchOptions: {
+      args: ['--host-resolver-rules=MAP *.localhost 127.0.0.1'],
+    },
   },
 
   projects: [
