@@ -14,9 +14,8 @@ By the end, you'll have the hands-on experience with critical API patterns neede
 Prerequisites
 -------------
 
-This guide requires the Digital Asset Package Manager.
-Follow installation instructions at `DPM <https://docs.digitalasset.com/build/3.5/dpm/dpm.html>`__.
-(Exception: if you're running Daml 3.3, then use the `Daml Assistant <https://docs.digitalasset.com/build/3.3/component-howtos/smart-contracts/assistant.html>`__.)
+This guide requires the Daml Package Manager (DPM).
+Follow installation instructions at `DPM <https://docs.canton.network/sdks-tools/cli-tools/dpm>`__.
 
 You should have also finished the Quickstart installation and Explore the demo tutorial.
 We also recommend reading the developer journey lifecycle to better understand how Quickstart bootstraps your Canton Network development by providing the tooling you will need for any CN app.
