@@ -7,7 +7,7 @@ import java.io.File
 
 open class ConfigureProfilesTask : DefaultTask() {
 
-    enum class OptionType { BOOLEAN, PARTY_HINT, AUTH_MODE, TEST_MODE }
+    enum class OptionType { BOOLEAN, PARTY_HINT, AUTH_MODE, TEST_MODE, BACKEND }
 
     data class Option(
         val promptText: String,
@@ -32,6 +32,7 @@ open class ConfigureProfilesTask : DefaultTask() {
                 OptionType.PARTY_HINT
             ),
             Option("Enable TEST_MODE", "TEST_MODE", OptionType.TEST_MODE),
+            Option("Use Node.js backend (instead of Java)", "BACKEND", OptionType.BACKEND),
         )
 
         options.forEach { option ->
@@ -72,9 +73,19 @@ open class ConfigureProfilesTask : DefaultTask() {
                             CAUTION: Not intended for use in production environments.
                             Activates the test profile in the backend service.
                             When enabled, party ID resolution is derived from the JWT token's party_id claim, overriding the tenant registration's party ID.
-                            This feature is designed for testing purposes to generate a unique AppUser party for each test run and ensure isolation.                            
+                            This feature is designed for testing purposes to generate a unique AppUser party for each test run and ensure isolation.
                             """.trimIndent()
                         )
+                }
+
+                OptionType.BACKEND -> {
+                    val boolValue = promptForBoolean(option.promptText, default = false)
+                    option.value = if (boolValue) {
+                        "js"
+                    } else {
+                        "java"
+                    }
+                    println("  ${option.envVarName} set to '${option.value}'.\n")
                 }
             }
             System.out.flush()
