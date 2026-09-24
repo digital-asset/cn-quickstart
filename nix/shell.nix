@@ -6,7 +6,8 @@ let
     coreutils # provides gdate command needed by Makefile for Docker log timestamp formatting on macOS
     dpm
     jdk21
-    nodejs_20
+    nodejs_22
+    nodePackages.pnpm
     typescript
   ] ++ (if ci then [ # these packages should only be installed on CI
     circleci-cli
