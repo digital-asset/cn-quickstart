@@ -27,7 +27,7 @@ volumes:
 
 services:
   pqs-app-provider:
-    image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
+    image: ${PQS_IMAGE}:${PQS_VERSION}
     container_name: pqs-app-provider
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
@@ -50,7 +50,7 @@ services:
       - pqs-app-provider
 
   pqs-app-user:
-    image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
+    image: ${PQS_IMAGE}:${PQS_VERSION}
     container_name: pqs-app-user
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
@@ -73,7 +73,7 @@ services:
       - pqs-app-user
 
   pqs-sv:
-    image: ${SCRIBE_IMAGE}:${SCRIBE_VERSION}
+    image: ${PQS_IMAGE}:${PQS_VERSION}
     container_name: pqs-sv
     env_file:
       - ${LOCALNET_ENV_DIR}/common.env
