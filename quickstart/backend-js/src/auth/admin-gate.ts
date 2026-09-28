@@ -1,21 +1,32 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import type { BackendConfig } from '../config.js'
-import { verifyAdminJwt } from './jwt-admin.js'
+import { checkAdminBearer } from './jwt-admin.js'
 
-const hasBearerToken = (authHeader: string | undefined): boolean =>
-  typeof authHeader === 'string' && /^Bearer\s+\S+/i.test(authHeader)
-
-// Accepts either a valid Bearer JWT or an admin session cookie.
-// On failure, replies with 401 (no auth) or 403 (authenticated but not admin) and returns false.
+// In oauth2 mode a Bearer token decides on its own: valid passes, anything else is 401.
+// Otherwise the session decides: admin passes, non-admin is 403, no session is 401.
+// On failure, replies and returns false.
 export const checkAdmin = async (cfg: BackendConfig, req: FastifyRequest, reply: FastifyReply): Promise<boolean> => {
+  const bearer = await checkAdminBearer(cfg, req.headers['authorization'])
+  if (bearer === 'valid') {
+    return true
+  }
+
+  if (bearer === 'invalid') {
+    reply.code(401).send({ message: 'unauthorized' })
+    return false
+  }
+
   const sessionIsAdmin = req.session.user?.isAdmin
-  if (sessionIsAdmin === true) return true
 
-  const authHeader = req.headers['authorization']
-  const authenticatedButNotAdmin = sessionIsAdmin === false || hasBearerToken(authHeader)
+  if (sessionIsAdmin === true) {
+    return true
+  }
 
-  if (cfg.authMode === 'oauth2' && await verifyAdminJwt(cfg, authHeader)) return true
+  if (sessionIsAdmin === false) {
+    reply.code(403).send({ message: 'forbidden' })
+    return false
+  }
 
-  reply.code(authenticatedButNotAdmin ? 403 : 401).send({ message: authenticatedButNotAdmin ? 'forbidden' : 'unauthorized' })
+  reply.code(401).send({ message: 'unauthorized' })
   return false
 }
