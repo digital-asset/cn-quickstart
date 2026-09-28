@@ -35,7 +35,8 @@ const optional = (name: string): string | undefined => {
 export const loadConfig = (): BackendConfig => {
   const ledgerHost = required('LEDGER_HOST')
   const ledgerPort = Number(required('LEDGER_PORT'))
-  const authMode: 'oauth2' | 'shared-secret' = required('SPRING_PROFILES_ACTIVE').includes('oauth2')
+  const activeProfile = required('SPRING_PROFILES_ACTIVE').toLowerCase()
+  const authMode: 'oauth2' | 'shared-secret' = activeProfile.includes('oauth2')
     ? 'oauth2'
     : 'shared-secret'
 
