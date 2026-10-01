@@ -5,9 +5,9 @@ import { AppInstall, AppInstallRequest } from '@daml.js/quickstart-licensing-0.0
 import { License, LicenseRenewalRequest } from '@daml.js/quickstart-licensing-0.0.1/lib/Licensing/License/module.js'
 import { AllocationRequest } from '@daml.js/splice-api-token-allocation-request-v1-1.0.0/lib/Splice/Api/Token/AllocationRequestV1/module.js'
 import type { Allocation } from '@daml.js/splice-api-token-allocation-v1-1.0.0/lib/Splice/Api/Token/AllocationV1/module.js'
-import type { AnyContract, AnyValue } from '@daml.js/splice-api-token-metadata-v1-1.0.0/lib/Splice/Api/Token/MetadataV1/module.js'
+import type { AnyContract, ChoiceContext } from '@daml.js/splice-api-token-metadata-v1-1.0.0/lib/Splice/Api/Token/MetadataV1/module.js'
 import type { BackendConfig } from '../../config.js'
-import type { LedgerApi } from '../../canton/ledger.js'
+import type { DisclosedContract, LedgerApi } from '../../canton/ledger.js'
 import { exerciseChoice, submitContextFromSession } from '../../canton/commands.js'
 import type { TokenStandardClient } from '../../token-standard/client.js'
 import type { TenantRepository } from '../../tenants/repository.js'
@@ -24,6 +24,12 @@ import {
 import { mapAppInstallRequest, mapAppInstall, mapLicense } from './mappers.js'
 
 const cidOf = <T>(s: string): damlTypes.ContractId<T> => s as damlTypes.ContractId<T>
+
+// Response of the token registry's choice-context endpoints.
+type RegistryChoiceContext = {
+  choiceContextData?: ChoiceContext
+  disclosedContracts?: DisclosedContract[]
+}
 
 export class LicensingService {
   constructor(
@@ -194,14 +200,16 @@ export class LicensingService {
     if (renewal === undefined) {
       return { status: 404 as const, message: `Active renewal request not found for contract ${body.renewalRequestContractId}` }
     }
-    const ctx = (choiceCtx as { disclosedContracts?: Array<{ templateId: string; contractId: string; createdEventBlob: string; synchronizerId: string }> })
+    const ctx = choiceCtx as RegistryChoiceContext
     const disclosed = ctx.disclosedContracts ?? []
 
     const metaMap: Record<string, string> = {
       AmuletRules: 'amulet-rules',
       OpenMiningRound: 'open-round'
     }
-    const extraArgsValues: Record<string, AnyValue> = {}
+    // Start from the registry's context: the transfer can require entries beyond the ones mapped below
+    // (e.g. `external-party-config-state`).
+    const extraArgsValues: ChoiceContext['values'] = { ...(ctx.choiceContextData?.values ?? {}) }
     for (const dc of disclosed) {
       const parts = dc.templateId.split(':')
       const entityName = parts[parts.length - 1] ?? ''
