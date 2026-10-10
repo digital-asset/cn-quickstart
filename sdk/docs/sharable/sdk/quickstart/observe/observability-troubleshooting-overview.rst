@@ -164,7 +164,7 @@ You can use the postgres configuration in ``.env`` to connect directly to these 
    $ docker exec -it <postgres container> psql -v --username <.env username> --dbname <.env dbname> --password
 
 For example: if you connect to the ``postgres-splice-app-provider``
-container (default username ``cnadmin``, dbname ``scribe``, and password
+container (default username ``cnadmin``, dbname ``pqs``, and password
 ``supersafe``; then you can use the SQL interface to PQS to examine the
 app-provider’s participant’s local ledger. The SQL API to PQS is
 documented in the `daml documentation <https://docs.daml.com/query/pqs-user-guide.html>`__.
@@ -355,14 +355,14 @@ associated ledger transaction:
 
    $ make shell
     docker compose -f docker/daml-shell/compose.yaml --env-file .env run --rm daml-shell || true
-    Connecting to jdbc:postgresql://postgres-splice-app-provider:5432/scribe...
-    Connected to jdbc:postgresql://postgres-splice-app-provider:5432/scribe
-    postgres-splice-app-provider:5432/scribe> transaction 1220e48d6d59af99a1b61eca414fe25766c342bb4e7d8d485e049a11a7f2267ed5c0
+    Connecting to jdbc:postgresql://postgres-splice-app-provider:5432/pqs...
+    Connected to jdbc:postgresql://postgres-splice-app-provider:5432/pqs
+    postgres-splice-app-provider:5432/pqs> transaction 1220e48d6d59af99a1b61eca414fe25766c342bb4e7d8d485e049a11a7f2267ed5c0
     transactionId: 1220e48d6d59af99a1b61eca414fe25766c342bb4e7d8d485e049a11a7f2267ed5c0, offset: 48, workflowId: create-app-install-request - Feb 17, 2025, 5:26:09 AM
     + #1220e48d6d59af99a1b61eca414fe25766c342bb4e7d8d485e049a11a7f2267ed5c0:0
     quickstart-licensing:Licensing.AppInstall:AppInstallRequest (005c17f89b7fd1d5fde9c548740c32924edeeddacc6320256892636b4e3b7d66aaca1)
     {"dso": "DSO::1220015e721c8ec5c1a5868b418442f064530e367c2587a9b43bd66f58c7bfddfec4", "meta": {"values": []}, "user": "Org1::122072b20a515d939910f9412f915cff8c1a7a427ddde76c6d0b7646d0022d4d4551", "provider": "AppProvider::12202fe7b2bf950dca3858b880d9ee0dd58249af8821ff2330ea1b80420852e816ff"}
-    postgres-splice-app-provider:5432/scribe 3f → 48>
+    postgres-splice-app-provider:5432/pqs 3f → 48>
 
 From here we can get more identifiers:
 
@@ -384,7 +384,7 @@ immediately display the contract in Daml Shell:
 
 .. code-block::
 
-   postgres-splice-app-provider:5432/scribe 3f → 48> contract 005c17f89b7fd1d5fde9c548740c32924edeeddacc6320256892636b4e3b7d66aaca101220777c5420863adb012c4f38847049346014c44eba7cd54bf58950dd6a18679053
+   postgres-splice-app-provider:5432/pqs 3f → 48> contract 005c17f89b7fd1d5fde9c548740c32924edeeddacc6320256892636b4e3b7d66aaca101220777c5420863adb012c4f38847049346014c44eba7cd54bf58950dd6a18679053
    ╓───────────────────────────────────────────────────────────────────────────╖
    | identifier: quickstart-licensing:Licensing.AppInstall:AppInstallRequest   |
    | Type: Template                                                            |
@@ -399,7 +399,7 @@ immediately display the contract in Daml Shell:
    | user: Org1:122072b20a515d939910f9412f915cff8c1a7a427ddde76c6d0b7646d00... |
    | provider: AppProvider:12202fe7b2bf950dca3858b880d9ee0dd58249af8821ff23... |
    ╙───────────────────────────────────────────────────────────────────────────╜
-   postgres-splice-app-provider:5432/scribe 3f → 48>
+   postgres-splice-app-provider:5432/pqs 3f → 48>
 
 If the problem is a bug in your smart contract, then exploring
 the transaction and related provenance within Daml Shell and using
