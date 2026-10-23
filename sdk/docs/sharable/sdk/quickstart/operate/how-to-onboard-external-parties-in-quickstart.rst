@@ -33,6 +33,7 @@ If you haven't installed the Canton Network Quickstart application,
 refer to :ref:`quickstart-cnqs-installation`.
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-localnet-setup-start
 
   # Navigate to Quickstart directory and run setup
   cd cn-quickstart
@@ -47,14 +48,19 @@ refer to :ref:`quickstart-cnqs-installation`.
   # Start LocalNet
   make start
 
+.. cf-docs-snippet-cn-quickstart-external-parties-localnet-setup-end
+
 Your ``.env.local`` file should look like:
 
 .. code-block:: text
+  :name: cf-docs-snippet-cn-quickstart-external-parties-env-local-example-start
 
   OBSERVABILITY_ENABLED=false
   AUTH_MODE=shared-secret
   PARTY_HINT=quickstart-USERNAME-1
   TEST_MODE=off
+
+.. cf-docs-snippet-cn-quickstart-external-parties-env-local-example-end
 
 **Obtain Admin Token**
 
@@ -63,11 +69,14 @@ In shared-secret mode, you generate a JWT token using the
 ``splice-onboarding`` container with ``app-user`` as the subject:
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-admin-token-start
 
   ADMIN_TOKEN=$(docker exec splice-onboarding \
     jwt-cli encode hs256 --s unsafe --p '{"sub": "app-user", "aud": "https://canton.network.global"}')
  
   echo $ADMIN_TOKEN
+
+.. cf-docs-snippet-cn-quickstart-external-parties-admin-token-end
 
 Generate Cryptographic Keys
 ---------------------------
@@ -75,6 +84,7 @@ Generate Cryptographic Keys
 Create an Ed25519 key pair for the external party.
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-generate-ed25519-keys-start
 
   # Generate Ed25519 private key in PEM format
   openssl genpkey -algorithm ed25519 -out external_party_private.pem
@@ -82,6 +92,8 @@ Create an Ed25519 key pair for the external party.
   # Extract raw public key (32 bytes) and convert to hex for API calls
   HEX_PUBLIC_KEY=$(openssl pkey -in external_party_private.pem -pubout -outform DER | tail -c 32 | xxd -p -c 32)
   echo "Hex public key: $HEX_PUBLIC_KEY"
+
+.. cf-docs-snippet-cn-quickstart-external-parties-generate-ed25519-keys-end
 
 Onboard an External Party
 -------------------------
@@ -92,13 +104,17 @@ Generate Topology Transactions
 Update the ``party_hint`` value below to match your ``.env.local`` configuration.
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-party-hint-from-env-start
 
   # Extract party hint from .env.local
   PARTY_HINT=$(grep '^PARTY_HINT=' .env.local | cut -d= -f2)
 
+.. cf-docs-snippet-cn-quickstart-external-parties-party-hint-from-env-end
+
 Use the validator API to generate the three required topology transactions:
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-generate-topology-request-start
 
   GENERATE_RESPONSE=$(curl -sS -X POST http://localhost:2903/api/validator/v0/admin/external-party/topology/generate \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -110,9 +126,12 @@ Use the validator API to generate the three required topology transactions:
 
   echo "$GENERATE_RESPONSE" | jq .
 
+.. cf-docs-snippet-cn-quickstart-external-parties-generate-topology-request-end
+
 **Example response:**
 
 .. code-block:: json
+  :name: cf-docs-snippet-cn-quickstart-external-parties-generate-topology-response-start
 
   {
     "party_id": "quickstart-USERNAME-1::1220abc123...",
@@ -131,6 +150,8 @@ Use the validator API to generate the three required topology transactions:
       }
     ]
   }
+
+.. cf-docs-snippet-cn-quickstart-external-parties-generate-topology-response-end
 
 The response contains:
 
@@ -152,6 +173,7 @@ The ``GENERATE_RESPONSE`` variable was set by the curl command above.
 Now extract the party ID, topology transactions, and hashes:
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-extract-topology-fields-start
 
   # Extract party_id for later use
   PARTY_ID=$(echo "$GENERATE_RESPONSE" | jq -r '.party_id')
@@ -176,11 +198,14 @@ Now extract the party ID, topology transactions, and hashes:
   echo "Hash 2: $HASH_2"
   echo "Hash 3: $HASH_3"
 
+.. cf-docs-snippet-cn-quickstart-external-parties-extract-topology-fields-end
+
 **Sign each hash with Ed25519 private key:**
 
 The signing commands use temporary files for cross-platform compatibility:
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-sign-topology-hashes-start
 
   # Sign hash 1
   printf '%s' "$HASH_1" | xxd -r -p > /tmp/hash1.bin
@@ -197,6 +222,8 @@ The signing commands use temporary files for cross-platform compatibility:
   SIG_3=$(openssl pkeyutl -sign -inkey external_party_private.pem -rawin -in /tmp/hash3.bin | xxd -p | tr -d '\n')
   echo "Signature 3: $SIG_3"
 
+.. cf-docs-snippet-cn-quickstart-external-parties-sign-topology-hashes-end
+
 .. note::
 
   The hashes and signatures are hex-encoded strings. The submit API expects:
@@ -208,6 +235,7 @@ Submit Signed Topology Transactions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-submit-topology-request-start
 
   curl -X POST http://localhost:2903/api/validator/v0/admin/external-party/topology/submit \
     -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -230,13 +258,18 @@ Submit Signed Topology Transactions
       ]
     }'
 
+.. cf-docs-snippet-cn-quickstart-external-parties-submit-topology-request-end
+
 **Successful response:**
 
 .. code-block:: json
+  :name: cf-docs-snippet-cn-quickstart-external-parties-submit-topology-response-start
 
   {
     "party_id": "quickstart-USERNAME-1::1220abc123..."
   }
+
+.. cf-docs-snippet-cn-quickstart-external-parties-submit-topology-response-end
 
 Validate Party Creation
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -246,21 +279,28 @@ After submitting the signed topology transactions, verify the external party was
 Generate a Ledger API token for the ``ledger-api-user``.
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-ledger-api-token-start
 
   LEDGER_TOKEN=$(docker exec splice-onboarding \
     jwt-cli encode hs256 --s unsafe --p '{"sub": "ledger-api-user", "aud": "https://canton.network.global"}')
 
+.. cf-docs-snippet-cn-quickstart-external-parties-ledger-api-token-end
+
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-query-parties-start
 
   # Query parties endpoint to verify party exists
   curl -f -sS "http://localhost:2975/v2/parties?parties=$PARTY_ID" \
     -H "Authorization: Bearer $LEDGER_TOKEN"
+
+.. cf-docs-snippet-cn-quickstart-external-parties-query-parties-end
 
 **Discover Synchronizer ID**
 
 The synchronizer ID identifies the network your participant is connected to and is required for topology validation and transaction submission.
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-get-synchronizer-id-start
 
   # Get the synchronizer ID from connected synchronizers
   SYNCHRONIZER_ID=$(curl -f -sS -L http://localhost:2975/v2/state/connected-synchronizers \
@@ -268,9 +308,12 @@ The synchronizer ID identifies the network your participant is connected to and 
  
   echo "Synchronizer ID: $SYNCHRONIZER_ID"
 
+.. cf-docs-snippet-cn-quickstart-external-parties-get-synchronizer-id-end
+
 This typically returns a value like ``global-domain::12209d604bfb...``.
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-list-party-to-participant-mappings-start
 
   # List party-to-participant mappings to verify party is in topology
   grpcurl -plaintext -d '{
@@ -282,6 +325,8 @@ This typically returns a value like ``global-domain::12209d604bfb...``.
     },
     "filter_party": "'"$PARTY_ID"'"
   }' localhost:2902 com.digitalasset.canton.topology.admin.v30.TopologyManagerReadService/ListPartyToParticipant
+
+.. cf-docs-snippet-cn-quickstart-external-parties-list-party-to-participant-mappings-end
 
 .. note::
 
@@ -313,6 +358,7 @@ The Ping template requires an ``initiator`` (your external party) and a ``respon
 Retrieve the ``app_user`` party from your Quickstart LocalNet to use as responder:
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-get-responder-party-start
 
   RESPONDER_PARTY=$(grpcurl -plaintext -H "Authorization: Bearer $LEDGER_TOKEN" localhost:2901 \
     com.daml.ledger.api.v2.admin.PartyManagementService/ListKnownParties | \
@@ -320,9 +366,12 @@ Retrieve the ``app_user`` party from your Quickstart LocalNet to use as responde
 
   echo "Responder party: $RESPONDER_PARTY"
 
+.. cf-docs-snippet-cn-quickstart-external-parties-get-responder-party-end
+
 Submit the ``Ping`` contract:
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-prepare-ping-submission-start
 
   grpcurl -emit-defaults -plaintext \
     -H "Authorization: Bearer $LEDGER_TOKEN" \
@@ -353,6 +402,8 @@ Submit the ``Ping`` contract:
     com.daml.ledger.api.v2.interactive.InteractiveSubmissionService/PrepareSubmission \
     > prepare_response.json
 
+.. cf-docs-snippet-cn-quickstart-external-parties-prepare-ping-submission-end
+
 .. note::
 
   The ``user_id`` must be ``ledger-api-user`` to match the JWT subject used for the ``LEDGER_TOKEN``.
@@ -363,9 +414,12 @@ Submit the ``Ping`` contract:
   module name, and template name. Discover deployed packages using:
  
   .. code-block:: bash
+     :name: cf-docs-snippet-cn-quickstart-external-parties-list-deployed-packages-start
  
      grpcurl -plaintext -H "Authorization: Bearer $LEDGER_TOKEN" localhost:2901 \
        com.daml.ledger.api.v2.PackageService/ListPackages
+
+  .. cf-docs-snippet-cn-quickstart-external-parties-list-deployed-packages-end
 
 **Response fields:**
 
@@ -376,9 +430,12 @@ Submit the ``Ping`` contract:
 Extract the prepared transaction and hash for signing:
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-extract-prepared-transaction-start
 
   PREPARED_TRANSACTION=$(cat prepare_response.json | jq .prepared_transaction)
   TRANSACTION_HASH=$(cat prepare_response.json | jq -r .prepared_transaction_hash)
+
+.. cf-docs-snippet-cn-quickstart-external-parties-extract-prepared-transaction-end
 
 Step 2: Validate and Sign
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -388,8 +445,11 @@ Step 2: Validate and Sign
 Before signing, inspect the prepared transaction to verify it matches your intent:
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-inspect-prepared-transaction-start
 
   cat prepare_response.json | jq .prepared_transaction
+
+.. cf-docs-snippet-cn-quickstart-external-parties-inspect-prepared-transaction-end
 
 **2. Sign the Hash**
 
@@ -404,12 +464,15 @@ Sign the ``$TRANSACTION_HASH`` returned by ``PrepareSubmission`` with your Ed255
 **Sign the hash with your private key:**
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-sign-prepared-transaction-hash-start
 
   # Decode base64 hash to temp file
   printf '%s' "$TRANSACTION_HASH" | base64 --decode > /tmp/tx_hash.bin
  
   # Sign and encode to base64
   SIGNATURE=$(openssl pkeyutl -sign -inkey external_party_private.pem -rawin -in /tmp/tx_hash.bin | base64 | tr -d '\n')
+
+.. cf-docs-snippet-cn-quickstart-external-parties-sign-prepared-transaction-hash-end
 
 Store the signature for the execute step.
 
@@ -419,6 +482,7 @@ Step 3: Execute Submission
 Submit the signed transaction using ``InteractiveSubmissionService/ExecuteSubmission``:
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-execute-submission-start
 
   SUBMISSION_ID=$(uuidgen)
  
@@ -447,6 +511,8 @@ Submit the signed transaction using ``InteractiveSubmissionService/ExecuteSubmis
     }' localhost:2901 \
     com.daml.ledger.api.v2.interactive.InteractiveSubmissionService/ExecuteSubmission
 
+.. cf-docs-snippet-cn-quickstart-external-parties-execute-submission-end
+
 **Key fields:**
 
 - ``submission_id``: A new UUID for this submission attempt (can retry with a new ID without re-signing)
@@ -466,6 +532,7 @@ Verify the transaction was processed using the ``CompletionStream`` endpoint.
 In your second terminal:
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-stream-completions-start
 
   grpcurl -emit-defaults -plaintext -H "Authorization: Bearer $LEDGER_TOKEN" -d '{
     "user_id": "ledger-api-user",
@@ -474,16 +541,22 @@ In your second terminal:
     com.daml.ledger.api.v2.CommandCompletionService/CompletionStream \
     > completion_response.json
 
+.. cf-docs-snippet-cn-quickstart-external-parties-stream-completions-end
+
 The stream captures the completion after executing Step 3 in your original terminal.
 Stop the stream, then inspect the result:
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-inspect-completion-start
 
   cat completion_response.json | jq .
 
-  A ``status.code`` of ``0`` indicates success:
+.. cf-docs-snippet-cn-quickstart-external-parties-inspect-completion-end
+
+A ``status.code`` of ``0`` indicates success:
 
 .. code-block:: json
+  :name: cf-docs-snippet-cn-quickstart-external-parties-completion-success-response-start
 
   {
     "completion": {
@@ -494,11 +567,14 @@ Stop the stream, then inspect the result:
     }
   }
 
+.. cf-docs-snippet-cn-quickstart-external-parties-completion-success-response-end
+
 **Query Transaction Details (Optional)**
 
 Extract the ``offset`` from the completion and use ``GetUpdates`` to retrieve full transaction details:
 
 .. code-block:: bash
+  :name: cf-docs-snippet-cn-quickstart-external-parties-get-transaction-updates-start
 
   COMPLETION_OFFSET=$(cat completion_response.json | jq -r '.completion.offset')
 
@@ -519,6 +595,8 @@ Extract the ``offset`` from the completion and use ``GetUpdates`` to retrieve fu
     }
   }' localhost:2901 \
     com.daml.ledger.api.v2.UpdateService/GetUpdates
+
+.. cf-docs-snippet-cn-quickstart-external-parties-get-transaction-updates-end
 
 .. note::
 
