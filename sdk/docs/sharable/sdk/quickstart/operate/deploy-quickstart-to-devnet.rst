@@ -92,6 +92,7 @@ Add explicit host entires for reliable routing.
 Add these entries to ``/etc/hosts``:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-configure-etc-hosts-start
 
    sudo vim /etc/hosts
 
@@ -104,6 +105,8 @@ Add these entries to ``/etc/hosts``:
    127.0.0.1 ans.localhost
    127.0.0.1 keycloak.localhost
    127.0.0.1 host.docker.internal
+
+.. cf-docs-snippet-cn-quickstart-devnet-configure-etc-hosts-end
 
 You only need to complete this step one time.
 
@@ -170,8 +173,11 @@ https://github.com/digital-asset/decentralized-canton-sync/releases/download/v0.
 Move the ``splice-node`` tarball to your desired location and then unzip it.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-untar-splice-node-start
 
    tar xzvf 0.5.8_splice-node.tar.gz
+
+.. cf-docs-snippet-cn-quickstart-devnet-untar-splice-node-end
 
 The new ``splice-node`` repo and ``cn-quickstart`` should be siblings to one another.
 
@@ -229,8 +235,11 @@ Clean Docker
 Clear Docker If this is not your first time connecting to ``DevNet`` so that stale containers do not interfere.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-docker-compose-down-volumes-start
 
    docker compose down -v
+
+.. cf-docs-snippet-cn-quickstart-devnet-docker-compose-down-volumes-end
 
 Get network information
 -----------------------
@@ -241,6 +250,7 @@ Retrieve DevNet migration ID and Splice version
 In terminal, from the ``/validator`` directory run:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-retrieve-migration-id-and-version-start
 
    INFO_URL="https://docs.dev.global.canton.network.sync.global/info"
    SPLICE_VERSION=$(curl -s "$INFO_URL" | jq -r '.synchronizer?.active?.version')
@@ -248,6 +258,8 @@ In terminal, from the ``/validator`` directory run:
 
    echo "Splice Version: $SPLICE_VERSION"
    echo "Migration ID: $MIGRATION_ID"
+
+.. cf-docs-snippet-cn-quickstart-devnet-retrieve-migration-id-and-version-end
 
 Verify that the Splice version matches the splice-node version that you recently downloaded and unzipped.
 Minor Splice versions change on a regular basis.
@@ -261,6 +273,7 @@ If not, your sponsoring SV will provide the appropriate URL.
 In this case, you must replace the provided ``SPONSOR_SV_URL`` with your provided URL.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-get-onboarding-secret-start
 
    # GSF Sponsor SV URL for DevNet
    SPONSOR_SV_URL="https://sv.sv-1.dev.global.canton.network.sync.global"
@@ -268,6 +281,8 @@ In this case, you must replace the provided ``SPONSOR_SV_URL`` with your provide
    # Request and store the onboarding secret
    ONBOARDING_SECRET=$(curl -s -X POST "$SPONSOR_SV_URL/api/sv/v0/devnet/onboard/validator/prepare")
    echo $ONBOARDING_SECRET
+
+.. cf-docs-snippet-cn-quickstart-devnet-get-onboarding-secret-end
 
 .. tip::
 
@@ -287,8 +302,11 @@ The default party hint is ``quickstart-USERNAME-1``
 Return to the terminal in the ``validator`` directory. Set ``PARTY_HINT``.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-set-party-hint-start
 
    PARTY_HINT="quickstart-USERNAME-1"
+
+.. cf-docs-snippet-cn-quickstart-devnet-set-party-hint-end
 
 This value must match the expected party hint.
 
@@ -306,6 +324,7 @@ Files include ``quickstart/quickstart/docker/modules/keycloak/compose.env``, ``A
 ``splice-node/docker-compose/validator/.env``
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-validator-env-authentication-start
 
    # Authentication
 
@@ -331,6 +350,8 @@ Files include ``quickstart/quickstart/docker/modules/keycloak/compose.env``, ``A
    WALLET_UI_CLIENT_ID="app-provider-wallet"
    ANS_UI_CLIENT_ID="app-provider-ans"
 
+.. cf-docs-snippet-cn-quickstart-devnet-validator-env-authentication-end
+
 .. note::
 
    These are development secrets and should be changed for production.
@@ -341,6 +362,7 @@ Start the validator with the start.sh script.
 Verify that you are in the ``validator`` directory, then run this command to connect to ``DevNet``:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-start-validator-script-start
 
    ./start.sh \
     -s "https://sv.sv-1.dev.global.canton.network.sync.global" \
@@ -349,6 +371,8 @@ Verify that you are in the ``validator`` directory, then run this command to con
     -m $MIGRATION_ID \
     -w \
     -a
+
+.. cf-docs-snippet-cn-quickstart-devnet-start-validator-script-end
 
 Flag descriptions
 ^^^^^^^^^^^^^^^^^
@@ -386,12 +410,16 @@ Spin up the Quickstart DevNet
 In a second terminal, navigate to the Quickstart ``DevNet`` Docker Compose directory.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-cd-devnet-compose-dir-start
 
    cd cn-quickstart/quickstart/docker/modules/devnet
 
    docker compose --env-file compose.env --profile devnet up -d postgres-keycloak keycloak nginx-keycloak postgres-pqs pqs-app-provider backend-service
 
+.. cf-docs-snippet-cn-quickstart-devnet-cd-devnet-compose-dir-end
+
 .. code-block:: text
+   :name: cf-docs-snippet-cn-quickstart-devnet-devnet-compose-up-output-start
 
    devnet ~ % docker compose --env-file compose.env --profile devnet up -d postgres-keycloak keycloak nginx-keycloak postgres-pqs pqs-app-provider backend-service
    [+] Running 7/7
@@ -402,6 +430,8 @@ In a second terminal, navigate to the Quickstart ``DevNet`` Docker Compose direc
     ✔ Container splice-onboarding     Healthy                  41.3s 
     ✔ Container pqs-app-provider      Started                  27.3s 
     ✔ Container backend-service       Started                  41.4s 
+
+.. cf-docs-snippet-cn-quickstart-devnet-devnet-compose-up-output-end
 
 ``DevNet`` connects shortly after spinning up the docker containers.
 A successful connection shows healthy containers.
@@ -420,26 +450,38 @@ Build and upload the DAR
 Return to the ``/quickstart`` directory.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-return-to-quickstart-dir-start
 
    cd ../../../
+
+.. cf-docs-snippet-cn-quickstart-devnet-return-to-quickstart-dir-end
 
 Then build the Daml code.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-make-build-daml-start
 
    make build-daml
+
+.. cf-docs-snippet-cn-quickstart-devnet-make-build-daml-end
 
 Verify that the ``DAR`` was created.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-verify-dar-exists-start
 
    ls -la daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar
+
+.. cf-docs-snippet-cn-quickstart-devnet-verify-dar-exists-end
 
 If successful, this command returns the ``DAR`` file.
 
 .. code-block:: text
+   :name: cf-docs-snippet-cn-quickstart-devnet-verify-dar-exists-output-start
 
    -rw-r--r--  1 username  staff  685582 Nov 25 09:00 daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar
+
+.. cf-docs-snippet-cn-quickstart-devnet-verify-dar-exists-output-end
 
 Upload the DAR to your DevNet validator
 ---------------------------------------
@@ -447,11 +489,14 @@ Upload the DAR to your DevNet validator
 Get a token from Keycloak to make an authenticated request:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-dar-upload-get-token-start
 
    TOKEN=$(curl -s -X POST "http://keycloak.localhost:8082/realms/AppProvider/protocol/openid-connect/token" \
      -d "grant_type=client_credentials" \
      -d "client_id=app-provider-validator" \
      -d "client_secret=AL8648b9SfdTFImq7FV56Vd0KHifHBuC" | jq -r .access_token)
+
+.. cf-docs-snippet-cn-quickstart-devnet-dar-upload-get-token-end
 
 (Note that the ``client_secret`` matches the ``app-provider-validator``'s ``secret`` in Keycloak's ``AppProvider-realm.json``).
 
@@ -461,21 +506,27 @@ MacOS
 ^^^^^
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-dar-upload-macos-start
 
    curl -X POST "http://json-ledger-api.localhost:8080/v2/dars?vetAllPackages=true" \
      -H "Authorization: Bearer $TOKEN" \
      -H 'Content-Type: application/octet-stream' \
      --data-binary @daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar
 
+.. cf-docs-snippet-cn-quickstart-devnet-dar-upload-macos-end
+
 Linux
 ^^^^^
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-dar-upload-linux-start
 
    curl -X POST "http://json-ledger-api.localhost:${LEDGER_PORT}/v2/dars?vetAllPackages=true" \
      -H "Authorization: Bearer $TOKEN" \
      -H 'Content-Type: application/octet-stream' \
      --data-binary @daml/licensing/.daml/dist/quickstart-licensing-0.0.1.dar
+
+.. cf-docs-snippet-cn-quickstart-devnet-dar-upload-linux-end
 
 An empty response of ``{}`` indicates a successful upload.
 
@@ -485,8 +536,11 @@ Build the Backend
 Build the backend from the ``/quickstart`` directory:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-make-build-backend-start
 
    make build-backend
+
+.. cf-docs-snippet-cn-quickstart-devnet-make-build-backend-end
 
 Configure Quickstart frontend for DevNet
 ----------------------------------------
@@ -499,14 +553,20 @@ Review ``vite.config.ts`` for details.
 Build the frontend from the ``/quickstart`` directory:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-make-build-frontend-start
 
    make build-frontend
+
+.. cf-docs-snippet-cn-quickstart-devnet-make-build-frontend-end
 
 Start the Vite development server.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-make-vite-dev-start
 
    make vite-dev
+
+.. cf-docs-snippet-cn-quickstart-devnet-make-vite-dev-end
 
 The frontend runs on ``port 5173``.
 Open your browser to:
@@ -565,25 +625,34 @@ You can check that Docker services are connected by checking ``docker ps``.
 To check a specific service use grep. e.g. ``docker ps | grep backend-service``.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-health-check-docker-ps-start
 
    docker ps --format "table {{.Names}}\t{{.Status}}"
+
+.. cf-docs-snippet-cn-quickstart-devnet-health-check-docker-ps-end
 
 Via, CURL, get a token and then ping the service.
 
 Get an auth token:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-health-check-get-token-start
 
    TOKEN=$(curl -s -X POST "http://keycloak.localhost:8082/realms/AppProvider/protocol/openid-connect/token" \
      -d "grant_type=client_credentials" \
      -d "client_id=app-provider-backend" \
      -d "client_secret=05dmL9DAUmDnIlfoZ5EQ7pKskWmhBlNz" | jq -r .access_token)
 
+.. cf-docs-snippet-cn-quickstart-devnet-health-check-get-token-end
+
 Call the service of your choice:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-health-check-call-service-start
 
    Backend health check: curl -H "Authorization: Bearer $TOKEN" http://localhost:8089/actuator/health
+
+.. cf-docs-snippet-cn-quickstart-devnet-health-check-call-service-end
 
 Super validator connectivity check
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -591,8 +660,11 @@ Super validator connectivity check
 You may make a connectivity check to the ``DevNet`` super validator at anytime:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-super-validator-connectivity-check-start
 
    curl -s "https://scan.sv-1.dev.global.canton.network.sync.global/api/scan/v0/splice-instance-names"
+
+.. cf-docs-snippet-cn-quickstart-devnet-super-validator-connectivity-check-end
 
 .. image:: images/devnet-canton-network-devnet-connectivity-check.png
    :alt: Super validator connectivity check
@@ -603,6 +675,7 @@ View tables
 You can explore the container schema by querying the list of tables.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-view-validator-tables-start
 
    docker exec -it splice-validator-postgres-splice-1 psql -U cnadmin -d validator -c "
      SELECT schemaname, tablename 
@@ -610,19 +683,27 @@ You can explore the container schema by querying the list of tables.
      WHERE schemaname = 'validator' 
      ORDER BY tablename;"
 
+.. cf-docs-snippet-cn-quickstart-devnet-view-validator-tables-end
+
 Confirm current migration ID
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-confirm-migration-id-start
 
    curl -s "https://docs.dev.global.canton.network.sync.global/info" | jq '.synchronizer?.active?.migration_id'
+
+.. cf-docs-snippet-cn-quickstart-devnet-confirm-migration-id-end
 
 Find DSO fingerprint
 ^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-find-dso-fingerprint-start
 
    curl -s "https://scan.sv-1.dev.global.canton.network.sync.global/api/scan/v0/dso-party-id"
+
+.. cf-docs-snippet-cn-quickstart-devnet-find-dso-fingerprint-end
 
 Docker
 ------
@@ -631,22 +712,31 @@ Read docker logs
 ^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-read-docker-logs-start
 
    docker logs FAILING_VALIDATOR --tail 100
+
+.. cf-docs-snippet-cn-quickstart-devnet-read-docker-logs-end
 
 Kill running containers
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-docker-kill-all-start
 
    docker kill $(docker ps -q)
+
+.. cf-docs-snippet-cn-quickstart-devnet-docker-kill-all-end
 
 Stop gracefully
 ^^^^^^^^^^^^^^^
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-docker-stop-all-start
 
    docker stop $(docker ps -q)
+
+.. cf-docs-snippet-cn-quickstart-devnet-docker-stop-all-end
 
 ``docker ps -q`` lists the container IDs of running containers
 ``$()`` passes those IDs to the kill or stop command
@@ -655,15 +745,21 @@ Remove containers after stopping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-docker-rm-all-start
 
    docker rm $(docker ps -aq)
+
+.. cf-docs-snippet-cn-quickstart-devnet-docker-rm-all-end
 
 One command
 ^^^^^^^^^^^
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-docker-stop-and-rm-all-start
 
    docker stop $(docker ps -q) && docker rm $(docker ps -aq)
+
+.. cf-docs-snippet-cn-quickstart-devnet-docker-stop-and-rm-all-end
 
 Troubleshooting
 ---------------
@@ -685,6 +781,7 @@ Change port ``80:80`` in ``"${HOST_BIND_IP:-127.0.0.1}:80:80"`` to ``8080:80``.
 ``splice-node/docker-compose/validator/compose.yaml``
 
 .. code-block:: yaml
+   :name: cf-docs-snippet-cn-quickstart-devnet-vmnetd-nginx-compose-start
 
    nginx:
       image: "nginx:${NGINX_VERSION}"
@@ -707,6 +804,8 @@ Change port ``80:80`` in ``"${HOST_BIND_IP:-127.0.0.1}:80:80"`` to ``8080:80``.
         retries: 3
         start_period: 60s
 
+.. cf-docs-snippet-cn-quickstart-devnet-vmnetd-nginx-compose-end
+
 Troubleshoot frontend JavaScript mapping errors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -724,8 +823,11 @@ Ping app-provider.localhost
 """""""""""""""""""""""""""
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-ping-app-provider-start
 
    ping -c 1 app-provider.localhost
+
+.. cf-docs-snippet-cn-quickstart-devnet-ping-app-provider-end
 
 If successful, navigate to the app at http://app-provider.localhost:5173 and login.
 
@@ -733,15 +835,21 @@ Check backend-service logs for errors
 """""""""""""""""""""""""""""""""""""
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-backend-service-logs-start
 
    docker logs backend-service --tail 30
+
+.. cf-docs-snippet-cn-quickstart-devnet-backend-service-logs-end
 
 Find the login options
 """"""""""""""""""""""
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-find-login-links-start
 
    curl -s http://localhost:8089/login-links | jq
+
+.. cf-docs-snippet-cn-quickstart-devnet-find-login-links-end
 
 Get token for backend API access
 """"""""""""""""""""""""""""""""
@@ -757,8 +865,11 @@ Verify token was retrieved
 """"""""""""""""""""""""""
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-verify-token-length-start
 
    echo "Token length: ${#TOKEN}"
+
+.. cf-docs-snippet-cn-quickstart-devnet-verify-token-length-end
 
 Query data from PQS
 """""""""""""""""""
@@ -766,14 +877,20 @@ Query data from PQS
 Query app install requests
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-pqs-query-app-install-requests-start
 
    curl -H "Authorization: Bearer $TOKEN" http://localhost:8089/app-install-requests | head -10
+
+.. cf-docs-snippet-cn-quickstart-devnet-pqs-query-app-install-requests-end
 
 Query license data
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-pqs-query-licenses-start
 
    curl -H "Authorization: Bearer $TOKEN" http://localhost:5173/api/licenses
+
+.. cf-docs-snippet-cn-quickstart-devnet-pqs-query-licenses-end
 
 Error port is already in use
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -781,17 +898,26 @@ Error port is already in use
 If terminal shows ``Error: Port 5173 is already in use`` identify and kill the associated node process, then run your command again.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-port-in-use-lsof-start
 
    lsof -i :5173
 
+.. cf-docs-snippet-cn-quickstart-devnet-port-in-use-lsof-end
+
 .. code-block:: text
+   :name: cf-docs-snippet-cn-quickstart-devnet-port-in-use-lsof-output-start
 
    COMMAND   PID     USER       FD   TYPE  DEVICE  SIZE/OFF  NODE  NAME
    node      12345   USERNAME   34u  IPv6  DEVICE  0t0       TCP   localhost:5173 (LISTEN)
 
+.. cf-docs-snippet-cn-quickstart-devnet-port-in-use-lsof-output-end
+
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-port-in-use-kill-start
 
    kill -9 12345
+
+.. cf-docs-snippet-cn-quickstart-devnet-port-in-use-kill-end
 
 Restart unhealthy Docker containers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -801,20 +927,29 @@ If you have trouble connecting to healthy containers, restart the Docker contain
 Stop the container
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-unhealthy-validator-down-start
 
    docker compose -f splice-node/docker-compose/validator/compose.yaml down
+
+.. cf-docs-snippet-cn-quickstart-devnet-unhealthy-validator-down-end
 
 Start fresh and capture the logs
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-unhealthy-validator-up-capture-logs-start
 
    docker compose -f splice-node/docker-compose/validator/compose.yaml up validator 2>&1 | tee validator-startup.log
+
+.. cf-docs-snippet-cn-quickstart-devnet-unhealthy-validator-up-capture-logs-end
 
 Read logs in terminal:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-unhealthy-validator-read-logs-start
 
    docker logs splice-validator-validator-1 2>&1 | head -300
+
+.. cf-docs-snippet-cn-quickstart-devnet-unhealthy-validator-read-logs-end
 
 Replace ``splice-validator-validator-1`` with the desired container.
 
@@ -833,24 +968,34 @@ Keycloak
 Check Keycloak logs:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-keycloak-logs-start
 
    docker logs keycloak
+
+.. cf-docs-snippet-cn-quickstart-devnet-keycloak-logs-end
 
 Check PostgreSQL:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-keycloak-postgres-logs-start
 
    docker logs postgres-keycloak
+
+.. cf-docs-snippet-cn-quickstart-devnet-keycloak-postgres-logs-end
 
 Check the OIDC discovery endpoint:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-keycloak-oidc-discovery-start
 
    curl -s http://keycloak.localhost:8082/realms/AppProvider/.well-known/openid-configuration | jq .
+
+.. cf-docs-snippet-cn-quickstart-devnet-keycloak-oidc-discovery-end
 
 Get an OAuth2 ``AppProvider realm`` token:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-keycloak-app-provider-token-start
 
    curl -s -X POST http://keycloak.localhost:8082/realms/AppProvider/protocol/openid-connect/token \
     -H "Content-Type: application/x-www-form-urlencoded" \
@@ -859,9 +1004,12 @@ Get an OAuth2 ``AppProvider realm`` token:
     -d "username=app-provider" \
     -d "password=app-provider" | jq .access_token
 
+.. cf-docs-snippet-cn-quickstart-devnet-keycloak-app-provider-token-end
+
 Get an OAuth2 ``AppUser realm`` token:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-keycloak-app-user-token-start
 
    curl -s -X POST http://keycloak.localhost:8082/realms/AppUser/protocol/openid-connect/token \
     -H "Content-Type: application/x-www-form-urlencoded" \
@@ -870,11 +1018,16 @@ Get an OAuth2 ``AppUser realm`` token:
     -d "username=app-user" \
     -d "password=app-user" | jq .access_token
 
+.. cf-docs-snippet-cn-quickstart-devnet-keycloak-app-user-token-end
+
 Check Keycloak's public key location:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-keycloak-public-key-location-start
 
    curl -s http://keycloak.localhost:8082/realms/AppProvider/.well-known/openid-configuration | jq .issuer
+
+.. cf-docs-snippet-cn-quickstart-devnet-keycloak-public-key-location-end
 
 Expected response is ``"http://host.docker.internal:8082/realms/AppProvider"``
 
@@ -882,12 +1035,16 @@ Unable to login to Keycloak as admin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-keycloak-admin-ssl-logs-start
 
    docker logs keycloak 2>&1 | grep -i "ssl\|https\|require" | tail -20
+
+.. cf-docs-snippet-cn-quickstart-devnet-keycloak-admin-ssl-logs-end
 
 The following command disables the SSL requirements for the master realm and allows you to login as admin at ``localhost:8082``.
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-keycloak-admin-disable-ssl-start
 
    docker exec -it keycloak /opt/keycloak/bin/kcadm.sh config credentials \
      --server http://localhost:8082 --realm master --user admin --password admin
@@ -895,54 +1052,77 @@ The following command disables the SSL requirements for the master realm and all
    docker exec -it keycloak /opt/keycloak/bin/kcadm.sh update realms/master \
      -s sslRequired=NONE
 
+.. cf-docs-snippet-cn-quickstart-devnet-keycloak-admin-disable-ssl-end
+
 Splice-onboarding troubleshooting
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Find specific env values:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-splice-onboarding-env-start
 
    docker exec splice-onboarding env | grep -E "PARTICIPANT|LEDGER"
+
+.. cf-docs-snippet-cn-quickstart-devnet-splice-onboarding-env-end
 
 Restart the ``splice-onboarding`` container:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-splice-onboarding-restart-start
 
    cd cn-quickstart/quickstart/docker/modules/devnet
    docker compose --env-file compose.env -f compose.yaml --profile devnet down -v
    docker compose --env-file compose.env -f compose.yaml --profile devnet build --no-cache splice-onboarding
    docker compose --env-file compose.env -f compose.yaml --profile devnet up -d
 
+.. cf-docs-snippet-cn-quickstart-devnet-splice-onboarding-restart-end
+
 Watch the logs:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-splice-onboarding-logs-start
 
    docker logs -f splice-onboarding
+
+.. cf-docs-snippet-cn-quickstart-devnet-splice-onboarding-logs-end
 
 Query ``splice-onboarding`` networks:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-splice-onboarding-networks-start
 
    docker inspect splice-onboarding --format '{{json .NetworkSettings.Networks}}' | jq
+
+.. cf-docs-snippet-cn-quickstart-devnet-splice-onboarding-networks-end
 
 Check which network the ``splice-validator-nginx`` is on:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-validator-nginx-container-names-start
 
    docker ps --format "{{.Names}}" | grep -E "nginx|validator|participant"
+
+.. cf-docs-snippet-cn-quickstart-devnet-validator-nginx-container-names-end
 
 Then inspect that container to see its network:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-validator-nginx-networks-start
 
    docker inspect splice-validator-nginx-1 --format '{{json .NetworkSettings.Networks}}' 2>/dev/null | jq || \
    docker network inspect splice-validator_splice_validator --format '{{range .Containers}}{{.Name}} {{end}}'
 
+.. cf-docs-snippet-cn-quickstart-devnet-validator-nginx-networks-end
+
 Check if ``splice-onboarding`` is initialized:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-devnet-splice-onboarding-initialized-start
 
    docker exec splice-onboarding cat /tmp/all-done && echo "SUCCESS"
+
+.. cf-docs-snippet-cn-quickstart-devnet-splice-onboarding-initialized-end
 
 Splice-onboarding connection issue
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -950,6 +1130,7 @@ Splice-onboarding connection issue
 If you run ``splice-onboarding`` logs and see:
 
 .. code-block:: text
+   :name: cf-docs-snippet-cn-quickstart-devnet-splice-onboarding-connection-error-output-start
 
    (base) devnet ~ % docker logs -f splice-onboarding
    Start with mode --init
@@ -960,6 +1141,8 @@ If you run ``splice-onboarding`` logs and see:
    Waiting for participant... attempt 3/60
    Waiting for participant... attempt 4/60
    Waiting for participant... attempt 5/60
+
+.. cf-docs-snippet-cn-quickstart-devnet-splice-onboarding-connection-error-output-end
 
 Then there is likely an error in ``LEDGER_HOST`` or ``LEDGER_PORT``.
 Unset the variables or quit and restart terminal.

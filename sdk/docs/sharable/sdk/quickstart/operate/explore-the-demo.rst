@@ -100,8 +100,11 @@ Build Quickstart
 Build and start App Quickstart:
 
 .. code-block:: bash
+   :name: cf-docs-snippet-cn-quickstart-explore-demo-make-build-and-start-start
    
    make build; make start
+
+.. cf-docs-snippet-cn-quickstart-explore-demo-make-build-and-start-end
 
 Open an incognito browser and navigate to:
 

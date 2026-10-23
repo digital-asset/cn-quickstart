@@ -178,9 +178,12 @@ Empty responses indicate healthy services.
 Admin ports are defined in ``quickstart/docker/modules/localnet/compose.yaml``
 
 .. code-block:: bash
+    :name: cf-docs-snippet-cn-quickstart-project-structure-health-check-admin-ports-start
 
     curl -v http://localhost:2902/admin    # Accesses App User admin if exposed
     curl -v http://localhost:3902/admin    # Accesses App Provider admin if exposed
+
+.. cf-docs-snippet-cn-quickstart-project-structure-health-check-admin-ports-end
 
 See :ref:`quickstart-json-ledger-api` for detailed port usage and authentication patterns.
 
@@ -352,6 +355,7 @@ Quick Start
 -----------
 
 .. code-block:: bash
+    :name: cf-docs-snippet-cn-quickstart-project-structure-quick-start-commands-start
 
     cd quickstart/
     make setup          # Configure deployment
@@ -359,23 +363,31 @@ Quick Start
     make start          # Start LocalNet
     make status         # Verify containers running
 
+.. cf-docs-snippet-cn-quickstart-project-structure-quick-start-commands-end
+
 Iterative development
 ---------------------
 
 .. code-block:: bash
+    :name: cf-docs-snippet-cn-quickstart-project-structure-iterative-development-commands-start
 
     make build-daml      # Rebuild Daml contracts
     make build-backend   # Rebuild Java services
     make build-frontend  # Rebuild React app
     make restart         # Restart services with new code
 
+.. cf-docs-snippet-cn-quickstart-project-structure-iterative-development-commands-end
+
 Debugging and logs
 ------------------
 
 .. code-block:: bash
+    :name: cf-docs-snippet-cn-quickstart-project-structure-debugging-log-commands-start
 
     make capture-logs    # Start log capture (separate terminal)
     make shell           # Open Daml Shell for ledger queries
+
+.. cf-docs-snippet-cn-quickstart-project-structure-debugging-log-commands-end
 
 See :ref:`quickstart-debugging-and-troubleshooting-lnav` for log analysis techniques.
 

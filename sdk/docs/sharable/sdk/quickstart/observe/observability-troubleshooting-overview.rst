@@ -160,8 +160,11 @@ All persistent state in the example application is stored in one or more postgre
 You can use the postgres configuration in ``.env`` to connect directly to these instances.
 
 .. code-block::
+   :name: cf-docs-snippet-cn-quickstart-observability-postgres-direct-psql-start
 
    $ docker exec -it <postgres container> psql -v --username <.env username> --dbname <.env dbname> --password
+
+.. cf-docs-snippet-cn-quickstart-observability-postgres-direct-psql-end
 
 For example: if you connect to the ``postgres-splice-app-provider``
 container (default username ``cnadmin``, dbname ``scribe``, and password
@@ -267,10 +270,14 @@ Direct Ledger inspection using correlation identifiers
 Starting from ``$ make stop clean-all && make build start``, we proceed with initiating the example application app-user onboarding:
 
 .. code-block::
+   :name: cf-docs-snippet-cn-quickstart-observability-create-app-install-request-command-start
 
    $ make create-app-install-request | cat -n
 
+.. cf-docs-snippet-cn-quickstart-observability-create-app-install-request-command-end
+
 .. code-block::
+   :name: cf-docs-snippet-cn-quickstart-observability-create-app-install-request-output-start
 
    docker compose -f docker/app-user-shell/compose.yaml --env-file .env run --rm create-app-install-request || true
    get_token ledger-api-user AppProvider
@@ -317,6 +324,8 @@ Starting from ``$ make stop clean-all && make build start``, we proceed with ini
    "1220e48d6d59af99a1b61eca414fe25766c342bb4e7d8d485e049a11a7f2267ed5c0",
     "completion_offset":73}
 
+.. cf-docs-snippet-cn-quickstart-observability-create-app-install-request-output-end
+
 This is the output of a script submitting a create command to the
 app-user’s participant node, it already contains number of the
 correlation ids mentioned above:
@@ -352,6 +361,7 @@ We can immediately use the transaction id in Daml Shell to view the
 associated ledger transaction:
 
 .. code-block::
+   :name: cf-docs-snippet-cn-quickstart-observability-daml-shell-transaction-lookup-start
 
    $ make shell
     docker compose -f docker/daml-shell/compose.yaml --env-file .env run --rm daml-shell || true
@@ -363,6 +373,8 @@ associated ledger transaction:
     quickstart-licensing:Licensing.AppInstall:AppInstallRequest (005c17f89b7fd1d5fde9c548740c32924edeeddacc6320256892636b4e3b7d66aaca1)
     {"dso": "DSO::1220015e721c8ec5c1a5868b418442f064530e367c2587a9b43bd66f58c7bfddfec4", "meta": {"values": []}, "user": "Org1::122072b20a515d939910f9412f915cff8c1a7a427ddde76c6d0b7646d0022d4d4551", "provider": "AppProvider::12202fe7b2bf950dca3858b880d9ee0dd58249af8821ff2330ea1b80420852e816ff"}
     postgres-splice-app-provider:5432/scribe 3f → 48>
+
+.. cf-docs-snippet-cn-quickstart-observability-daml-shell-transaction-lookup-end
 
 From here we can get more identifiers:
 
@@ -383,6 +395,7 @@ Ledger API directly for more information. The Contract Id can be used to
 immediately display the contract in Daml Shell:
 
 .. code-block::
+   :name: cf-docs-snippet-cn-quickstart-observability-daml-shell-contract-lookup-start
 
    postgres-splice-app-provider:5432/scribe 3f → 48> contract 005c17f89b7fd1d5fde9c548740c32924edeeddacc6320256892636b4e3b7d66aaca101220777c5420863adb012c4f38847049346014c44eba7cd54bf58950dd6a18679053
    ╓───────────────────────────────────────────────────────────────────────────╖
@@ -400,6 +413,8 @@ immediately display the contract in Daml Shell:
    | provider: AppProvider:12202fe7b2bf950dca3858b880d9ee0dd58249af8821ff23... |
    ╙───────────────────────────────────────────────────────────────────────────╜
    postgres-splice-app-provider:5432/scribe 3f → 48>
+
+.. cf-docs-snippet-cn-quickstart-observability-daml-shell-contract-lookup-end
 
 If the problem is a bug in your smart contract, then exploring
 the transaction and related provenance within Daml Shell and using
