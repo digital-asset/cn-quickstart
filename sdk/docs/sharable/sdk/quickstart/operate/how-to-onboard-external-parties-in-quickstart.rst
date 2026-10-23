@@ -551,9 +551,9 @@ Stop the stream, then inspect the result:
 
   cat completion_response.json | jq .
 
-  A ``status.code`` of ``0`` indicates success:
-
 .. cf-docs-snippet-cn-quickstart-external-parties-inspect-completion-end
+
+A ``status.code`` of ``0`` indicates success:
 
 .. code-block:: json
   :name: cf-docs-snippet-cn-quickstart-external-parties-completion-success-response-start
