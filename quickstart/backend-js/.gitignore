@@ -1,0 +1,5 @@
+node_modules
+dist
+generated
+src/token-standard/metadata.types.ts
+src/token-standard/allocation.types.ts
