@@ -8,6 +8,15 @@ import { tenantRegistrationRoutes } from './tenant-registration';
 export function sharedSecretRoutes(tenants: Tenant[]) {
   const sessions = new Sessions<string>();
 
+  /** Matches login names case-insensitively and preserves the registered spelling in the session. */
+  function registeredUsername(input: string) {
+    const normalized = input.trim().toLowerCase();
+    for (const tenant of tenants) {
+      const match = tenant.users.find((name) => name.toLowerCase() === normalized);
+      if (match !== undefined) return match;
+    }
+  }
+
   /** Ends every session belonging to a user of the removed tenant. */
   function revokeTenantSessions(tenant: Tenant) {
     sessions.revokeWhere((username) => tenant.users.includes(username));
@@ -24,8 +33,9 @@ export function sharedSecretRoutes(tenants: Tenant[]) {
       '/login',
       ({ body, cookie: { JSESSIONID }, redirect, request }) => {
         const form = body as Record<string, unknown> | undefined;
-        const username = typeof form?.username === 'string' ? form.username.trim() : '';
-        if (form?.password || !resolveSharedSecretUser(username, tenants)) {
+        const username =
+          typeof form?.username === 'string' ? registeredUsername(form.username) : undefined;
+        if (form?.password || !username) {
           return redirect('/login?error', 302);
         }
         const id = sessions.open(username, JSESSIONID.value);

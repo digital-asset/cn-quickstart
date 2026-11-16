@@ -121,11 +121,12 @@ test('Deleting an external tenant revokes every session even after re-registrati
     );
   const user = (cookie: string) =>
     app.handle(new Request('http://localhost/user', { headers: { cookie } }));
-  const tenant = { tenantId: 'AppUser', partyId: 'customer::123', users: ['alice', 'bob'] };
+  const tenant = { tenantId: 'AppUser', partyId: 'customer::123', users: ['Alice', 'bob'] };
   const admin = await login('app-provider');
   expect((await register(admin, tenant)).status).toBe(201);
-  const sessions = [await login('alice'), await login('alice'), await login('bob')];
+  const sessions = [await login('ALICE'), await login('alice'), await login('bob')];
   expect(new Set(sessions).size).toBe(3);
+  expect(await (await user(sessions[0])).json()).toMatchObject({ name: 'Alice the user' });
 
   // Rejected deletes must leave both the provider and the external users active.
   expect((await remove('', 'AppUser')).status).toBe(401);
