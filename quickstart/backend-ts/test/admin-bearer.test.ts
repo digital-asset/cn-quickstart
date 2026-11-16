@@ -158,3 +158,79 @@ test('An administrative bearer must be signed by the configured issuer and valid
     server.stop(true);
   }
 });
+
+test('Administrative bearer during JWKS rotation verifies tokens without kid', async () => {
+  const [previous, current, unrelated] = await Promise.all([
+    generateKeyPair('RS256'),
+    generateKeyPair('RS256'),
+    generateKeyPair('RS256'),
+  ]);
+  const keys = [
+    { ...(await exportJWK(previous.publicKey)), alg: 'RS256', kid: 'previous' },
+    { ...(await exportJWK(current.publicKey)), alg: 'RS256', kid: 'current' },
+  ];
+  const server = Bun.serve({
+    hostname: '127.0.0.1',
+    port: 0,
+    /** Publishes both signing keys during the issuer's rotation window. */
+    fetch(request) {
+      const url = new URL(request.url);
+      if (url.pathname === '/issuer/.well-known/openid-configuration')
+        return Response.json({ issuer: `${url.origin}/issuer`, jwks_uri: `${url.origin}/keys` });
+      if (url.pathname === '/keys') return Response.json({ keys });
+      return new Response(null, { status: 404 });
+    },
+  });
+  try {
+    const issuer = `${server.url.origin}/issuer`;
+    const application = readApplicationConfig({
+      AUTH_MODE: 'oauth2',
+      APP_PROVIDER_PARTY: 'provider::test',
+      AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID: 'web',
+      AUTH_APP_PROVIDER_ISSUER_URL: issuer,
+      LEDGER_OAUTH_ALLOW_HTTP: 'true',
+    });
+    const app = createApp({ ...appDependencies, application });
+    const now = Math.floor(Date.now() / 1000);
+
+    /** Lists tenants with a signed bearer and no browser session. */
+    async function list(
+      key: CryptoKey,
+      kid?: string,
+      claims: { iss?: string; exp?: number; nbf?: number } = {},
+    ) {
+      const token = await new SignJWT({ iss: issuer, exp: now + 300, ...claims })
+        .setProtectedHeader(kid === undefined ? { alg: 'RS256' } : { alg: 'RS256', kid })
+        .sign(key);
+      const response = await app.handle(
+        new Request('http://localhost/admin/tenant-registrations', {
+          headers: { authorization: `Bearer ${token}` },
+        }),
+      );
+      return response.status;
+    }
+
+    // Explicit key IDs still select only their matching key.
+    expect(await list(current.privateKey, 'current')).toBe(200);
+    expect(await list(previous.privateKey, 'current')).toBe(401);
+
+    // Collect every outcome so an early failure cannot hide a skipped signature or claim check.
+    expect({
+      previous: await list(previous.privateKey),
+      current: await list(current.privateKey),
+      unrelated: await list(unrelated.privateKey),
+      wrongIssuer: await list(current.privateKey, undefined, { iss: `${issuer}/other` }),
+      expired: await list(current.privateKey, undefined, { exp: now - 300 }),
+      notYetValid: await list(current.privateKey, undefined, { nbf: now + 300 }),
+    }).toEqual({
+      previous: 200,
+      current: 200,
+      unrelated: 401,
+      wrongIssuer: 401,
+      expired: 401,
+      notYetValid: 401,
+    });
+  } finally {
+    server.stop(true);
+  }
+});
