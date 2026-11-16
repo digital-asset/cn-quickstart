@@ -85,6 +85,7 @@ test('Only admins can list the configured provider and registered tenants', asyn
   // Only the configured provider exists before onboarding.
   const initial = await list(admin);
   expect(initial.status).toBe(200);
+  expect(initial.headers.get('cache-control')).toBe('no-store');
   expect(await initial.json()).toEqual([provider]);
 
   const tenant = {

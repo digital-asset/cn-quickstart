@@ -29,6 +29,9 @@ export function sharedSecretRoutes(tenants: Tenant[]) {
   }
 
   return new Elysia({ name: 'shared-secret' })
+    .onTransform(({ set }) => {
+      set.headers['cache-control'] = 'no-store';
+    })
     .post(
       '/login',
       ({ body, cookie: { JSESSIONID }, redirect, request }) => {

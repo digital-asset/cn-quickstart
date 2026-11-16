@@ -15,7 +15,8 @@ export function tenantRegistrationRoutes(
 ) {
   return new Elysia({ name: 'shared-secret-tenant-registration' })
     .guard({
-      transform: ({ cookie: { JSESSIONID } }) => {
+      transform: ({ cookie: { JSESSIONID }, set }) => {
+        set.headers['cache-control'] = 'no-store';
         const user = sessionUser(JSESSIONID.value);
         if (!user) throw problem(401, 'Unauthorized');
         if (!user.isAdmin) throw problem(403, 'Forbidden');

@@ -19,6 +19,7 @@ test('Login opens a session and logout revokes the original cookie', async () =>
   const user = () => app.handle(new Request('http://localhost/user', { headers }));
   const response = await user();
   expect(response.status).toBe(200);
+  expect(response.headers.get('cache-control')).toBe('no-store');
   expect(await response.json()).toEqual({
     name: 'app-provider the provider',
     party: 'test-provider',

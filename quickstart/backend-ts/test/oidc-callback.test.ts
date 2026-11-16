@@ -134,6 +134,7 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
         const party = scenario === 'profile' ? 'test-party' : 'configured-party';
         const user = await get('/user', session);
         expect(user.status).toBe(200);
+        expect(user.headers.get('cache-control')).toBe('no-store');
         expect(await user.json()).toEqual({
           name: 'Alice',
           party,
@@ -146,6 +147,7 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
         const path = '/admin/tenant-registrations';
         const listed = await get(path, session);
         expect(listed.status).toBe(200);
+        expect(listed.headers.get('cache-control')).toBe('no-store');
         expect(await listed.json()).toEqual([
           {
             tenantId: 'AppProvider',

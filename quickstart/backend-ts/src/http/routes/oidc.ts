@@ -95,6 +95,9 @@ export function oidcRoutes(
   }
 
   return new Elysia({ name: 'oidc' })
+    .onTransform(({ set }) => {
+      set.headers['cache-control'] = 'no-store';
+    })
     .use(
       oidcTenantRoutes(
         registrations,
@@ -142,7 +145,7 @@ export function oidcRoutes(
     )
     .get(
       '/oauth2/authorization/:registrationId',
-      async ({ params: { registrationId }, cookie: { OIDC_LOGIN }, redirect, set, status }) => {
+      async ({ params: { registrationId }, cookie: { OIDC_LOGIN }, redirect, status }) => {
         try {
           const registration = registrations.get(registrationId);
           if (!registration) return status(404, null);
@@ -184,7 +187,6 @@ export function oidcRoutes(
             path: '/login/oauth2/code',
             maxAge: loginLifetimeSeconds,
           });
-          set.headers['cache-control'] = 'no-store';
           return redirect(url.href, 302);
         } catch (error) {
           console.error(
