@@ -10,12 +10,22 @@ test('An administrative bearer must be signed by the configured issuer and valid
   const other = await generateKeyPair('RS256');
   const jwk = { ...(await exportJWK(trusted.publicKey)), kid: 'active', alg: 'RS256' };
   let requests = 0;
+  let tenantAvailable = false;
   const server = Bun.serve({
     hostname: '127.0.0.1',
     port: 0,
     /** Publishes only the trusted signing key at the discovered JWKS endpoint. */
     fetch(request) {
       const url = new URL(request.url);
+      if (url.pathname === '/app-user/.well-known/openid-configuration') {
+        if (!tenantAvailable) return new Response(null, { status: 503 });
+        return Response.json({
+          issuer: `${url.origin}/app-user`,
+          authorization_endpoint: `${url.origin}/authorize`,
+          token_endpoint: `${url.origin}/token`,
+          jwks_uri: `${url.origin}/keys`,
+        });
+      }
       if (url.pathname === '/issuer/.well-known/openid-configuration')
         return Response.json({ issuer: `${url.origin}/issuer`, jwks_uri: `${url.origin}/keys` });
       if (url.pathname !== '/keys') return new Response(null, { status: 404 });
@@ -79,6 +89,43 @@ test('An administrative bearer must be signed by the configured issuer and valid
         issuerUrl: issuer,
       },
     ]);
+    const authorization = await bearer();
+    const tenant = {
+      tenantId: 'AppUser',
+      partyId: 'customer::123',
+      clientId: 'browser',
+      issuerUrl: `${server.url.origin}/app-user`,
+      walletUrl: 'http://wallet.localhost:2000',
+      internal: true,
+    };
+    /** Sends the onboarding JSON with a service token and no browser cookies. */
+    const register = (payload: object, credential = authorization) =>
+      app.handle(
+        new Request('http://localhost/admin/tenant-registrations', {
+          method: 'POST',
+          headers: { authorization: credential, 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        }),
+      );
+    expect((await register(tenant, 'Bearer invalid')).status).toBe(401);
+    expect((await register({ ...tenant, clientId: '' })).status).toBe(400);
+    expect((await register(tenant)).status).toBe(500);
+    expect(await (await list({ authorization })).json()).toHaveLength(1);
+
+    // Retrying the same registration concurrently must publish it exactly once.
+    tenantAvailable = true;
+    const retries = await Promise.all([register(tenant), register(tenant)]);
+    expect(retries.map((response) => response.status).sort()).toEqual([201, 409]);
+    const expected = { ...tenant, internal: false, users: null };
+    expect(await retries.find((response) => response.status === 201)?.json()).toEqual(expected);
+    const duplicate = await register({ ...tenant, tenantId: 'Another' });
+    expect(duplicate.status).toBe(409);
+    expect(await duplicate.json()).toEqual({
+      message: 'ClientId-IssuerUrl combination already exists',
+    });
+    const entries = await (await list({ authorization })).json();
+    expect(entries).toHaveLength(2);
+    expect(entries).toContainEqual(expected);
   } finally {
     server.stop(true);
   }

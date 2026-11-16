@@ -171,6 +171,27 @@ test('Only a verified, single-use AppProvider callback opens an admin session', 
             }),
           );
         const cookies = `${session}; ${csrfCookie}`;
+        /** Registers a tenant using the browser cookies and optional CSRF header. */
+        const register = (csrf?: string) =>
+          app.handle(
+            new Request('http://internal/admin/tenant-registrations', {
+              method: 'POST',
+              headers: {
+                cookie: cookies,
+                'content-type': 'application/json',
+                ...(csrf ? { 'X-XSRF-TOKEN': csrf } : {}),
+              },
+              body: JSON.stringify({
+                tenantId: 'AppUser',
+                partyId: 'customer',
+                clientId: 'another-client',
+                issuerUrl: server.url.origin,
+              }),
+            }),
+          );
+        expect((await register()).status).toBe(403);
+        expect((await register('wrong')).status).toBe(403);
+        expect((await register(token)).status).toBe(201);
         for (const denied of [
           await logout(cookies),
           await logout(cookies, 'incorrect'),

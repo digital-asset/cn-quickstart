@@ -4,6 +4,8 @@ import { createAdminBearerVerifier } from '../../auth/admin-bearer';
 import { Sessions } from '../../auth/sessions';
 import type { ApplicationConfig } from '../../config/application';
 
+import { oidcTenantRoutes } from './oidc-tenants';
+
 const loginLifetimeSeconds = 300;
 
 /** Registers the AppProvider login, callback, and session-backed user endpoints. */
@@ -34,65 +36,49 @@ export function oidcRoutes(
 
   let verifyBearer: ReturnType<typeof createAdminBearerVerifier> | undefined;
 
+  /** Loads provider metadata for a public OIDC client. HTTP requires explicit opt-in. */
+  function discoverClient(issuer: URL, clientId: string) {
+    return oidc.discovery(issuer, clientId, { token_endpoint_auth_method: 'none' }, oidc.None(), {
+      timeout: 10,
+      execute: [
+        oidc.enableNonRepudiationChecks,
+        ...(issuer.protocol === 'http:' && options.allowHttp ? [oidc.allowInsecureRequests] : []),
+      ],
+    });
+  }
+
   /** Shares discovery between browser login and bearer requests, retrying after failures. */
   function discover() {
-    configuration ??= oidc
-      .discovery(
-        options.issuer,
-        options.clientId,
-        { token_endpoint_auth_method: 'none' },
-        oidc.None(),
-        {
-          timeout: 10,
-          execute: [
-            oidc.enableNonRepudiationChecks,
-            ...(options.issuer.protocol === 'http:' ? [oidc.allowInsecureRequests] : []),
-          ],
-        },
-      )
-      .catch((error) => {
-        configuration = undefined;
-        throw error;
-      });
+    configuration ??= discoverClient(options.issuer, options.clientId).catch((error) => {
+      configuration = undefined;
+      throw error;
+    });
     return configuration;
   }
 
   return new Elysia({ name: 'oidc' })
-    .get(
-      '/admin/tenant-registrations',
-      async ({ request, cookie: { JSESSIONID }, set, status }) => {
-        const authorization = request.headers.get('authorization');
-        set.headers['cache-control'] = 'no-store';
-        if (authorization !== null) {
-          // An explicit bearer must authenticate on its own, even if a session cookie is present.
-          try {
+    .use(
+      oidcTenantRoutes(
+        provider,
+        options,
+        discoverClient,
+        async (request, sessionId, csrfCookie) => {
+          const authorization = request.headers.get('authorization');
+          if (authorization !== null) {
             const config = await discover();
             verifyBearer ??= createAdminBearerVerifier(config.serverMetadata(), provider);
-            if (!(await verifyBearer(authorization)))
-              return status(401, { message: 'Unauthorized' });
-          } catch (error) {
-            console.error(
-              'OIDC admin bearer verification failed',
-              error instanceof Error ? error.name : 'unknown error',
-            );
-            return status(500, { message: 'Internal Server Error' });
+            return (await verifyBearer(authorization)) ? 200 : 401;
           }
-        } else if (!sessions.read(JSESSIONID.value)) {
-          return status(401, { message: 'Unauthorized' });
-        }
-        return [
-          {
-            tenantId: registrationId,
-            partyId: provider.partyId,
-            internal: provider.internal,
-            walletUrl: null,
-            users: null,
-            clientId: options.clientId,
-            issuerUrl: options.issuer.href,
-          },
-        ];
-      },
-      { detail: { operationId: 'listTenantRegistrations', tags: ['Admin'] } },
+          const session = sessions.read(sessionId);
+          if (!session) return 401;
+          if (
+            request.method === 'POST' &&
+            (session.csrf !== csrfCookie || session.csrf !== request.headers.get('x-xsrf-token'))
+          )
+            return 403;
+          return 200;
+        },
+      ),
     )
     .get('/login-links', () => [{ name: registrationId, url: loginPath }], {
       response: t.Array(t.Object({ name: t.String(), url: t.String() })),

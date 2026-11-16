@@ -21,7 +21,7 @@ export function readApplicationConfig(
     return { appProvider: { ...appProvider, users: ['app-provider'] }, authMode };
   }
 
-  const { issuer } = readProviderIssuer(env);
+  const { issuer, allowHttp } = readProviderIssuer(env);
   const clientId = env.AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID?.trim();
   if (!clientId)
     throw new Error('AUTH_APP_PROVIDER_BACKEND_OIDC_CLIENT_ID is required for web login');
@@ -46,6 +46,7 @@ export function readApplicationConfig(
         env.TEST_MODE === 'on' ||
         env.SPRING_PROFILES_ACTIVE?.split(',').some((profile) => profile.trim() === 'test') ===
           true,
+      allowHttp,
       publicOrigin: publicOrigin.origin,
     },
   };
