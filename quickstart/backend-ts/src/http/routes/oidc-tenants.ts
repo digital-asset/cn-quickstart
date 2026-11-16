@@ -126,12 +126,15 @@ export function oidcTenantRoutes(
         const duplicate = conflict(tenantId, clientId, issuer.href, registrationId);
         if (duplicate) return duplicate;
         const config = await discover(issuer, clientId);
-        if (
-          !config.serverMetadata().authorization_endpoint ||
-          !config.serverMetadata().token_endpoint ||
-          !config.serverMetadata().jwks_uri
-        )
-          throw new Error('Incomplete OIDC discovery metadata');
+        const { authorization_endpoint, token_endpoint, jwks_uri } = config.serverMetadata();
+        for (const value of [authorization_endpoint, token_endpoint, jwks_uri]) {
+          const endpoint = typeof value === 'string' ? URL.parse(value) : null;
+          if (
+            endpoint?.protocol !== 'https:' &&
+            !(allowHttp && issuer.protocol === 'http:' && endpoint?.protocol === 'http:')
+          )
+            throw new Error('Invalid endpoint in OIDC discovery metadata');
+        }
         // Another request may have registered the same tenant while discovery was in flight.
         const raced = conflict(tenantId, clientId, issuer.href, registrationId);
         if (raced) return raced;

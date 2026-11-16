@@ -8,10 +8,11 @@ const endpoint = 'http://localhost/admin/tenant-registrations';
 function setup(allowHttp: boolean) {
   let requests = 0;
   let publishKeys = false;
+  const metadata = { authorizationEndpoint: '' };
   const server = Bun.serve({
     hostname: '127.0.0.1',
     port: 0,
-    /** Serves valid discovery metadata except for the initially missing JWKS URI. */
+    /** Serves the discovery metadata configured for this scenario. */
     fetch(request) {
       requests++;
       const url = new URL(request.url);
@@ -19,7 +20,7 @@ function setup(allowHttp: boolean) {
         return new Response(null, { status: 404 });
       return Response.json({
         issuer: `${url.origin}/tenant`,
-        authorization_endpoint: `${url.origin}/authorize`,
+        authorization_endpoint: metadata.authorizationEndpoint || `${url.origin}/authorize`,
         token_endpoint: `${url.origin}/token`,
         ...(publishKeys ? { jwks_uri: `${url.origin}/keys` } : {}),
       });
@@ -54,6 +55,7 @@ function setup(allowHttp: boolean) {
   };
   return {
     server,
+    metadata,
     get requests() {
       return requests;
     },
@@ -109,6 +111,29 @@ test('Discovery without jwks_uri leaves the tenant available for an identical re
     expect(tenants).toContainEqual(
       expect.objectContaining({ tenantId: 'AppUser', clientId: 'user-client' }),
     );
+  } finally {
+    fixture.server.stop(true);
+  }
+});
+
+test('A relative authorization_endpoint rejects registration and allows a corrected retry', async () => {
+  const fixture = setup(true);
+  try {
+    fixture.publishKeys();
+    fixture.metadata.authorizationEndpoint = '/authorize';
+    const before = await fixture.list();
+    const first = await fixture.register();
+    const afterFirst = await fixture.list();
+
+    // Repair only discovery metadata and retry the identical registration.
+    fixture.metadata.authorizationEndpoint = `${fixture.server.url.origin}/authorize`;
+    const retry = await fixture.register();
+    expect({ first: first.status, tenants: afterFirst, retry: retry.status }).toEqual({
+      first: 500,
+      tenants: before,
+      retry: 201,
+    });
+    expect(await fixture.list()).toHaveLength(2);
   } finally {
     fixture.server.stop(true);
   }
