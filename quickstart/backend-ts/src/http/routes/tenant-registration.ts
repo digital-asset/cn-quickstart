@@ -68,7 +68,9 @@ export function tenantRegistrationRoutes(
           tenants.flatMap((tenant) => tenant.users.map((name) => name.toLowerCase())),
         );
         for (const user of users) {
-          if (!user.trim() || names.has(user.toLowerCase())) {
+          if (user !== user.trim())
+            return problem(400, 'Usernames must not have leading or trailing whitespace');
+          if (!user || names.has(user.toLowerCase())) {
             console.error('Tenant registration failed: empty or duplicate local username');
             return problem(500, 'Internal Server Error');
           }

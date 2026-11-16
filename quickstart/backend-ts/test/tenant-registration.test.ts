@@ -153,3 +153,38 @@ test('Deleting an external tenant revokes every session even after re-registrati
   for (const cookie of sessions) expect((await user(cookie)).status).toBe(401);
   expect((await user(await login('alice'))).status).toBe(200);
 });
+
+test.each([' Bob', 'Bob ', ' Bob '])(
+  'Rejects surrounding whitespace in username "%s"',
+  async (username) => {
+    const { login, register, list } = setup();
+    const admin = await login('app-provider');
+    const tenant = { tenantId: 'AppUser', partyId: 'customer::123' };
+    const before = await (await list(admin)).json();
+
+    // One invalid username must reject the whole registration, including Alice.
+    const first = await register(admin, { ...tenant, users: ['Alice', username] });
+    expect(first.status).toBe(400);
+    expect(await (await list(admin)).json()).toEqual(before);
+    expect(await login('Alice')).toBe('');
+
+    const retry = await register(admin, { ...tenant, users: ['Alice', 'Bob'] });
+    expect(retry.status).toBe(201);
+    expect(await login('Bob')).not.toBe('');
+  },
+);
+
+test('An internal space is part of a single shared-secret username', async () => {
+  const { app, login, register, list } = setup();
+  const admin = await login('app-provider');
+  const tenant = { tenantId: 'AppUser', partyId: 'customer::123', users: ['Bob Smith'] };
+  expect((await register(admin, tenant)).status).toBe(201);
+  expect(await (await list(admin)).json()).toContainEqual(expect.objectContaining(tenant));
+
+  const cookie = await login('Bob Smith');
+  const user = await app.handle(new Request('http://localhost/user', { headers: { cookie } }));
+  expect(user.status).toBe(200);
+  expect(await user.json()).toMatchObject({ name: 'Bob Smith the user', party: tenant.partyId });
+  expect(await login('Bob')).toBe('');
+  expect(await login('Smith')).toBe('');
+});
