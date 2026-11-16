@@ -113,7 +113,11 @@ export function oidcRoutes(
           }
           const session = sessions.read(sessionId);
           if (!session) return 401;
-          if (session.registration.tenant.issuerUrl !== options.issuer.href) return 403;
+          if (
+            session.registration.tenant.issuerUrl !== options.issuer.href ||
+            session.party !== provider.partyId
+          )
+            return 403;
           if (
             request.method !== 'GET' &&
             request.method !== 'HEAD' &&

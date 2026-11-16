@@ -1,10 +1,10 @@
-import { expect, test } from 'bun:test';
+import { afterAll, describe, expect, test } from 'bun:test';
 import { createHash, generateKeyPairSync, sign } from 'node:crypto';
 import { createApp } from '../src/app';
 import { readApplicationConfig } from '../src/config/application';
 import { appDependencies } from './fixtures/dependencies';
 
-test('Verified OIDC callbacks open single-use login flows with tenant-specific permissions', async () => {
+describe('OIDC callbacks and tenant permissions', () => {
   const trusted = generateKeyPairSync('rsa', { modulusLength: 2048 });
   const other = generateKeyPairSync('rsa', { modulusLength: 2048 });
   const publicKey = {
@@ -12,7 +12,10 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
     kid: 'provider',
     alg: 'RS256',
   };
-  const codes = new Map<string, { nonce: string; challenge: string; wrongKey: boolean }>();
+  const codes = new Map<
+    string,
+    { nonce: string; challenge: string; wrongKey: boolean; sharedIssuerClient?: boolean }
+  >();
   let exchanges = 0;
   let tokenEndpointUnavailable = false;
   let advertiseLogout = false;
@@ -26,8 +29,6 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
       const { origin, pathname } = new URL(request.url);
       const external = pathname.startsWith('/customer/');
       const issuer = external ? `${origin}/customer` : origin;
-      const clientId = external ? 'another-client' : 'browser';
-      const registrationId = external ? 'AppUser-another-client' : 'AppProvider';
       if (pathname === new URL(`${issuer}/.well-known/openid-configuration`).pathname)
         return Response.json({
           issuer,
@@ -46,6 +47,10 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
       const code = form.get('code') ?? '';
       const grant = codes.get(code);
       codes.delete(code);
+      // A second browser client may use the same issuer and token endpoint as AppProvider.
+      const customerClient = external || grant?.sharedIssuerClient;
+      const clientId = customerClient ? 'another-client' : 'browser';
+      const registrationId = customerClient ? 'AppUser-another-client' : 'AppProvider';
       if (
         !grant ||
         form.get('client_id') !== clientId ||
@@ -84,17 +89,19 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
       });
     },
   });
-  try {
-    for (const scenario of [
-      'success',
-      'profile',
-      'state',
-      'nonce',
-      'signature',
-      'pkce',
-      'missing-cookie',
-      'provider-unavailable',
-    ]) {
+  afterAll(() => server.stop(true));
+  for (const scenario of [
+    'success',
+    'profile',
+    'shared-issuer',
+    'state',
+    'nonce',
+    'signature',
+    'pkce',
+    'missing-cookie',
+    'provider-unavailable',
+  ]) {
+    test(scenario, async () => {
       tokenEndpointUnavailable = scenario === 'provider-unavailable';
       advertiseLogout = scenario === 'success';
       const application = readApplicationConfig({
@@ -127,7 +134,7 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
         .getSetCookie()
         .find((header) => header.startsWith('JSESSIONID='))
         ?.split(';')[0];
-      if (scenario === 'success' || scenario === 'profile') {
+      if (['success', 'profile', 'shared-issuer'].includes(scenario)) {
         expect(response.headers.get('location')).toBe('/');
         expect(session).toBeTruthy();
         const providerIdToken = issuedIdToken;
@@ -146,19 +153,20 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
         // The browser session grants admin access, but cannot rescue an invalid bearer.
         const path = '/admin/tenant-registrations';
         const listed = await get(path, session);
-        expect(listed.status).toBe(200);
+        expect(listed.status).toBe(scenario === 'profile' ? 403 : 200);
         expect(listed.headers.get('cache-control')).toBe('no-store');
-        expect(await listed.json()).toEqual([
-          {
-            tenantId: 'AppProvider',
-            partyId: 'configured-party',
-            internal: true,
-            clientId: 'browser',
-            issuerUrl: server.url.href,
-            walletUrl: null,
-            users: null,
-          },
-        ]);
+        if (scenario !== 'profile')
+          expect(await listed.json()).toEqual([
+            {
+              tenantId: 'AppProvider',
+              partyId: 'configured-party',
+              internal: true,
+              clientId: 'browser',
+              issuerUrl: server.url.href,
+              walletUrl: null,
+              users: null,
+            },
+          ]);
         const denied = await app.handle(
           new Request(`http://internal${path}`, {
             headers: { cookie: session ?? '', authorization: 'Bearer invalid' },
@@ -186,28 +194,35 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
           );
         const cookies = `${session}; ${csrfCookie}`;
         /** Registers a tenant using the browser cookies and optional CSRF header. */
-        const register = (csrf?: string) =>
+        const customerIssuer =
+          scenario === 'shared-issuer' ? server.url.origin : `${server.url.origin}/customer`;
+        const register = (
+          csrf?: string,
+          cookie = cookies,
+          tenantId = 'AppUser',
+          clientId = 'another-client',
+        ) =>
           app.handle(
             new Request('http://internal/admin/tenant-registrations', {
               method: 'POST',
               headers: {
-                cookie: cookies,
+                cookie,
                 'content-type': 'application/json',
                 ...(csrf ? { 'X-XSRF-TOKEN': csrf } : {}),
               },
               body: JSON.stringify({
-                tenantId: 'AppUser',
+                tenantId,
                 partyId: 'customer',
-                clientId: 'another-client',
-                issuerUrl: `${server.url.origin}/customer`,
+                clientId,
+                issuerUrl: customerIssuer,
                 walletUrl: 'https://customer-wallet.example',
               }),
             }),
           );
         expect((await register()).status).toBe(403);
         expect((await register('wrong')).status).toBe(403);
-        expect((await register(token)).status).toBe(201);
-        if (scenario === 'success') {
+        expect((await register(token)).status).toBe(scenario === 'profile' ? 403 : 201);
+        if (scenario !== 'profile') {
           const links = await (await get('/login-links')).json();
           const path = '/oauth2/authorization/AppUser-another-client';
           expect(links).toContainEqual({ name: 'AppUser', url: path });
@@ -215,13 +230,14 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
           async function startCustomer() {
             const start = await get(path);
             const url = new URL(start.headers.get('location') ?? '');
-            expect(url.origin + url.pathname).toBe(`${server.url.origin}/customer/authorize`);
+            expect(url.origin + url.pathname).toBe(`${customerIssuer}/authorize`);
             expect(url.searchParams.get('client_id')).toBe('another-client');
             const code = crypto.randomUUID();
             codes.set(code, {
               nonce: url.searchParams.get('nonce') ?? '',
               challenge: url.searchParams.get('code_challenge') ?? '',
               wrongKey: false,
+              sharedIssuerClient: scenario === 'shared-issuer',
             });
             return {
               cookie: (start.headers.get('set-cookie') ?? '').split(';')[0],
@@ -249,10 +265,12 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
             name: 'Alice',
             party: 'customer',
             walletUrl: 'https://customer-wallet.example',
-            isAdmin: false,
-            roles: ['AppUser', 'customer'],
+            isAdmin: scenario === 'shared-issuer',
+            roles:
+              scenario === 'shared-issuer'
+                ? ['ROLE_ADMIN', 'AppUser', 'customer']
+                : ['AppUser', 'customer'],
           });
-          expect((await get('/admin/tenant-registrations', browserCookies)).status).toBe(403);
           const customerCsrf = done.headers
             .getSetCookie()
             .find((h) => h.startsWith('XSRF-TOKEN='))
@@ -274,7 +292,19 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
               }),
             );
           }
-          expect((await remove(browserCookies, customerCsrf)).status).toBe(403);
+          expect(customerCsrf).toBeTruthy();
+          // With a valid session and CSRF token, the customer's party still cannot administer tenants.
+          const listStatus = (await get('/admin/tenant-registrations', browserCookies)).status;
+          const createStatus = (
+            await register(customerCsrf, browserCookies, 'NewTenant', 'new-client')
+          ).status;
+          const deleteStatus = (await remove(browserCookies, customerCsrf)).status;
+          expect({ listStatus, createStatus, deleteStatus }).toEqual({
+            listStatus: 403,
+            createStatus: 403,
+            deleteStatus: 403,
+          });
+          if (scenario === 'shared-issuer') return;
           expect((await remove(cookies)).status).toBe(403);
           expect((await remove(cookies, 'wrong')).status).toBe(403);
           const second = await finish(await startCustomer());
@@ -372,8 +402,6 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
         expect((await get(callback, cookie)).headers.get('location')).toBe('/login?error');
         expect(exchanges).toBe(count);
       }
-    }
-  } finally {
-    server.stop(true);
+    });
   }
 });
