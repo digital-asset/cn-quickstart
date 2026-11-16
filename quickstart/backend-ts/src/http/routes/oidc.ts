@@ -4,33 +4,42 @@ import { createAdminBearerVerifier } from '../../auth/admin-bearer';
 import { Sessions } from '../../auth/sessions';
 import type { ApplicationConfig } from '../../config/application';
 
-import { oidcTenantRoutes } from './oidc-tenants';
+import { initialRegistrations, type OidcRegistration, oidcTenantRoutes } from './oidc-tenants';
 
 const loginLifetimeSeconds = 300;
 
-/** Registers the AppProvider login, callback, and session-backed user endpoints. */
+/** Registers tenant login, callback, and session-backed user endpoints. */
 export function oidcRoutes(
   provider: ApplicationConfig['appProvider'],
   options: NonNullable<ApplicationConfig['oidc']>,
 ) {
-  const registrationId = provider.tenantId;
+  const registrations = initialRegistrations(provider, options);
+  // Keep the verified tenant with the session so /user and logout use the same registration.
   const sessions = new Sessions<{
     name: string | null;
     party: string;
     csrf: string;
     idToken: string;
+    registration: OidcRegistration;
+    config: oidc.Configuration;
   }>();
   const cookieOptions = {
     path: '/',
     sameSite: 'lax',
     secure: options.publicOrigin.startsWith('https:'),
   } as const;
-  const callbackPath = `/login/oauth2/code/${registrationId}`;
-  const loginPath = `/oauth2/authorization/${registrationId}`;
-  const redirectUri = new URL(callbackPath, options.publicOrigin).href;
+  // Bind each pending callback to the registration and redirect URI that started the login.
   const attempts = new Map<
     string,
-    { state: string; nonce: string; verifier: string; expires: number }
+    {
+      state: string;
+      nonce: string;
+      verifier: string;
+      expires: number;
+      registration: OidcRegistration;
+      config: oidc.Configuration;
+      redirectUri: string;
+    }
   >();
   let configuration: Promise<oidc.Configuration> | undefined;
 
@@ -59,9 +68,10 @@ export function oidcRoutes(
   return new Elysia({ name: 'oidc' })
     .use(
       oidcTenantRoutes(
-        provider,
-        options,
+        registrations,
+        options.allowHttp,
         discoverClient,
+        /** Authorizes an explicit AppProvider bearer or an admin session with CSRF on POST. */
         async (request, sessionId, csrfCookie) => {
           const authorization = request.headers.get('authorization');
           if (authorization !== null) {
@@ -71,6 +81,7 @@ export function oidcRoutes(
           }
           const session = sessions.read(sessionId);
           if (!session) return 401;
+          if (session.registration.tenant.issuerUrl !== options.issuer.href) return 403;
           if (
             request.method === 'POST' &&
             (session.csrf !== csrfCookie || session.csrf !== request.headers.get('x-xsrf-token'))
@@ -80,56 +91,81 @@ export function oidcRoutes(
         },
       ),
     )
-    .get('/login-links', () => [{ name: registrationId, url: loginPath }], {
-      response: t.Array(t.Object({ name: t.String(), url: t.String() })),
-      detail: { operationId: 'listLinks', tags: ['Auth'] },
-    })
-    .get(loginPath, async ({ cookie: { OIDC_LOGIN }, redirect, set, status }) => {
-      try {
-        const config = await discover();
-        // Only the PKCE challenge travels in the redirect. The verifier stays here for the code exchange.
-        const verifier = oidc.randomPKCECodeVerifier();
-        const state = oidc.randomState();
-        const nonce = oidc.randomNonce();
-        const url = oidc.buildAuthorizationUrl(config, {
-          response_type: 'code',
-          scope: 'openid',
-          redirect_uri: redirectUri,
-          state,
-          nonce,
-          code_challenge: await oidc.calculatePKCECodeChallenge(verifier),
-          code_challenge_method: 'S256',
-        });
-        // The callback cookie holds an opaque ID for this pending attempt, which expires after five minutes.
-        const id = crypto.randomUUID();
-        attempts.set(id, {
-          state,
-          nonce,
-          verifier,
-          expires: Date.now() + loginLifetimeSeconds * 1000,
-        });
-        setTimeout(() => attempts.delete(id), loginLifetimeSeconds * 1000).unref();
-        OIDC_LOGIN.set({
-          value: id,
-          httpOnly: true,
-          secure: options.publicOrigin.startsWith('https:'),
-          sameSite: 'lax',
-          path: '/login/oauth2/code',
-          maxAge: loginLifetimeSeconds,
-        });
-        set.headers['cache-control'] = 'no-store';
-        return redirect(url.href, 302);
-      } catch (error) {
-        console.error(
-          'OIDC authorization could not start',
-          error instanceof Error ? error.name : 'unknown error',
-        );
-        return status(500, { message: 'Internal Server Error' });
-      }
-    })
     .get(
-      callbackPath,
-      async ({ request, cookie: { OIDC_LOGIN, JSESSIONID, 'XSRF-TOKEN': xsrf }, redirect }) => {
+      '/login-links',
+      () =>
+        Array.from(registrations, ([id, { tenant }]) => ({
+          name: tenant.tenantId,
+          url: `/oauth2/authorization/${encodeURIComponent(id)}`,
+        })),
+      {
+        response: t.Array(t.Object({ name: t.String(), url: t.String() })),
+        detail: { operationId: 'listLinks', tags: ['Auth'] },
+      },
+    )
+    .get(
+      '/oauth2/authorization/:registrationId',
+      async ({ params: { registrationId }, cookie: { OIDC_LOGIN }, redirect, set, status }) => {
+        try {
+          const registration = registrations.get(registrationId);
+          if (!registration) return status(404, null);
+          const config = registration.config ?? (await discover());
+          const redirectUri = new URL(
+            `/login/oauth2/code/${encodeURIComponent(registrationId)}`,
+            options.publicOrigin,
+          ).href;
+          // Only the PKCE challenge travels in the redirect. The verifier stays here for the code exchange.
+          const verifier = oidc.randomPKCECodeVerifier();
+          const state = oidc.randomState();
+          const nonce = oidc.randomNonce();
+          const url = oidc.buildAuthorizationUrl(config, {
+            response_type: 'code',
+            scope: 'openid',
+            redirect_uri: redirectUri,
+            state,
+            nonce,
+            code_challenge: await oidc.calculatePKCECodeChallenge(verifier),
+            code_challenge_method: 'S256',
+          });
+          // The callback cookie holds an opaque ID for this pending attempt, which expires after five minutes.
+          const id = crypto.randomUUID();
+          attempts.set(id, {
+            registration,
+            config,
+            redirectUri,
+            state,
+            nonce,
+            verifier,
+            expires: Date.now() + loginLifetimeSeconds * 1000,
+          });
+          setTimeout(() => attempts.delete(id), loginLifetimeSeconds * 1000).unref();
+          OIDC_LOGIN.set({
+            value: id,
+            httpOnly: true,
+            secure: options.publicOrigin.startsWith('https:'),
+            sameSite: 'lax',
+            path: '/login/oauth2/code',
+            maxAge: loginLifetimeSeconds,
+          });
+          set.headers['cache-control'] = 'no-store';
+          return redirect(url.href, 302);
+        } catch (error) {
+          console.error(
+            'OIDC authorization could not start',
+            error instanceof Error ? error.name : 'unknown error',
+          );
+          return status(500, { message: 'Internal Server Error' });
+        }
+      },
+    )
+    .get(
+      '/login/oauth2/code/:registrationId',
+      async ({
+        params: { registrationId },
+        request,
+        cookie: { OIDC_LOGIN, JSESSIONID, 'XSRF-TOKEN': xsrf },
+        redirect,
+      }) => {
         const id = OIDC_LOGIN.value;
         const attempt = typeof id === 'string' ? attempts.get(id) : undefined;
         if (typeof id === 'string') attempts.delete(id);
@@ -141,14 +177,18 @@ export function oidcRoutes(
           sameSite: 'lax',
           secure: options.publicOrigin.startsWith('https:'),
         });
-        if (!attempt || attempt.expires <= Date.now() || !configuration)
+        if (
+          !attempt ||
+          attempt.expires <= Date.now() ||
+          registrations.get(registrationId) !== attempt.registration
+        )
           return redirect('/login?error', 302);
 
         // Consume the attempt before the exchange so concurrent callbacks cannot reuse it.
-        const url = new URL(redirectUri);
+        const url = new URL(attempt.redirectUri);
         url.search = new URL(request.url).search;
         try {
-          const tokens = await oidc.authorizationCodeGrant(await configuration, url, {
+          const tokens = await oidc.authorizationCodeGrant(attempt.config, url, {
             expectedState: attempt.state,
             expectedNonce: attempt.nonce,
             pkceCodeVerifier: attempt.verifier,
@@ -159,7 +199,7 @@ export function oidcRoutes(
           const party =
             options.testProfile && typeof claims.party_id === 'string'
               ? claims.party_id
-              : provider.partyId;
+              : attempt.registration.tenant.partyId;
           // The frontend echoes the readable cookie in X-XSRF-TOKEN on logout.
           const csrf = crypto.randomUUID();
           const session = sessions.open(
@@ -168,6 +208,8 @@ export function oidcRoutes(
               party,
               csrf,
               idToken: tokens.id_token,
+              registration: attempt.registration,
+              config: attempt.config,
             },
             JSESSIONID.value,
           );
@@ -188,12 +230,14 @@ export function oidcRoutes(
       ({ cookie: { JSESSIONID }, status }) => {
         const user = sessions.read(JSESSIONID.value);
         if (!user) return status(401, null);
+        const tenant = user.registration.tenant;
+        const isAdmin = tenant.issuerUrl === options.issuer.href;
         return {
           name: user.name,
           party: user.party,
-          roles: ['ROLE_ADMIN', registrationId, user.party],
-          isAdmin: true,
-          walletUrl: null,
+          roles: [...(isAdmin ? ['ROLE_ADMIN'] : []), tenant.tenantId, user.party],
+          isAdmin,
+          walletUrl: tenant.walletUrl,
         };
       },
       { detail: { operationId: 'getAuthenticatedUser', tags: ['Auth'] } },
@@ -209,7 +253,7 @@ export function oidcRoutes(
         sessions.invalidate(JSESSIONID.value);
         JSESSIONID.set({ ...cookieOptions, value: '', httpOnly: true, maxAge: 0 });
         xsrf.set({ ...cookieOptions, value: '', httpOnly: false, maxAge: 0 });
-        const config = await configuration;
+        const config = session.config;
         if (!config?.serverMetadata().end_session_endpoint) return redirect('/', 302);
         return redirect(
           oidc.buildEndSessionUrl(config, { id_token_hint: session.idToken }).href,

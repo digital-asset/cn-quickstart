@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import * as oidc from 'openid-client';
-import { oidcTenantRoutes } from '../src/http/routes/oidc-tenants';
+import { initialRegistrations, oidcTenantRoutes } from '../src/http/routes/oidc-tenants';
 
 const endpoint = 'http://localhost/admin/tenant-registrations';
 
@@ -25,7 +25,7 @@ function setup(allowHttp: boolean) {
       });
     },
   });
-  const app = oidcTenantRoutes(
+  const registrations = initialRegistrations(
     { tenantId: 'AppProvider', partyId: 'provider', internal: true },
     {
       issuer: new URL('https://provider.example'),
@@ -34,6 +34,10 @@ function setup(allowHttp: boolean) {
       testProfile: false,
       allowHttp,
     },
+  );
+  const app = oidcTenantRoutes(
+    registrations,
+    allowHttp,
     // Let the test transport reach localhost so a missing route-level check is observable.
     (issuer, clientId) =>
       oidc.discovery(issuer, clientId, undefined, oidc.None(), {

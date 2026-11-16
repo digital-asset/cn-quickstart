@@ -126,6 +126,14 @@ test('An administrative bearer must be signed by the configured issuer and valid
     const entries = await (await list({ authorization })).json();
     expect(entries).toHaveLength(2);
     expect(entries).toContainEqual(expected);
+
+    // Both pairs generate the same login registration ID: customer-web-client.
+    expect(
+      (await register({ ...tenant, tenantId: 'customer-web', clientId: 'client' })).status,
+    ).toBe(201);
+    const collision = await register({ ...tenant, tenantId: 'customer', clientId: 'web-client' });
+    expect(collision.status).toBe(409);
+    expect(await collision.json()).toEqual({ message: 'RegistrationId already exists' });
   } finally {
     server.stop(true);
   }

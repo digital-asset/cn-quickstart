@@ -4,7 +4,7 @@ import { createApp } from '../src/app';
 import { readApplicationConfig } from '../src/config/application';
 import { appDependencies } from './fixtures/dependencies';
 
-test('Only a verified, single-use AppProvider callback opens an admin session', async () => {
+test('Verified OIDC callbacks open single-use login flows with tenant-specific permissions', async () => {
   const trusted = generateKeyPairSync('rsa', { modulusLength: 2048 });
   const other = generateKeyPairSync('rsa', { modulusLength: 2048 });
   const publicKey = {
@@ -22,25 +22,30 @@ test('Only a verified, single-use AppProvider callback opens an admin session', 
     /** Serves discovery, signing keys, and the token exchange for the test provider. */
     async fetch(request) {
       const { origin, pathname } = new URL(request.url);
-      if (pathname === '/.well-known/openid-configuration')
+      const external = pathname.startsWith('/customer/');
+      const issuer = external ? `${origin}/customer` : origin;
+      const clientId = external ? 'another-client' : 'browser';
+      const registrationId = external ? 'AppUser-another-client' : 'AppProvider';
+      if (pathname === new URL(`${issuer}/.well-known/openid-configuration`).pathname)
         return Response.json({
-          issuer: origin,
-          authorization_endpoint: `${origin}/authorize`,
-          token_endpoint: `${origin}/token`,
-          ...(advertiseLogout ? { end_session_endpoint: `${origin}/end-session` } : {}),
+          issuer,
+          authorization_endpoint: `${issuer}/authorize`,
+          token_endpoint: `${issuer}/token`,
+          ...(advertiseLogout ? { end_session_endpoint: `${issuer}/end-session` } : {}),
           jwks_uri: `${origin}/keys`,
         });
       if (pathname === '/keys') return Response.json({ keys: [publicKey] });
-      if (pathname !== '/token') return new Response(null, { status: 404 });
-      exchanges++;
+      if (pathname !== (external ? '/customer/token' : '/token'))
+        return new Response(null, { status: 404 });
+      if (!external) exchanges++;
       const form = new URLSearchParams(await request.text());
       const code = form.get('code') ?? '';
       const grant = codes.get(code);
       codes.delete(code);
       if (
         !grant ||
-        form.get('client_id') !== 'browser' ||
-        form.get('redirect_uri') !== 'https://app.example/login/oauth2/code/AppProvider' ||
+        form.get('client_id') !== clientId ||
+        form.get('redirect_uri') !== `https://app.example/login/oauth2/code/${registrationId}` ||
         createHash('sha256')
           .update(form.get('code_verifier') ?? '')
           .digest('base64url') !== grant.challenge
@@ -50,8 +55,8 @@ test('Only a verified, single-use AppProvider callback opens an admin session', 
       const payload = [
         { alg: 'RS256', kid: 'provider' },
         {
-          iss: origin,
-          aud: 'browser',
+          iss: issuer,
+          aud: clientId,
           sub: 'alice',
           name: 'Alice',
           iat: now,
@@ -119,6 +124,7 @@ test('Only a verified, single-use AppProvider callback opens an admin session', 
       if (scenario === 'success' || scenario === 'profile') {
         expect(response.headers.get('location')).toBe('/');
         expect(session).toBeTruthy();
+        const providerIdToken = issuedIdToken;
         const party = scenario === 'profile' ? 'test-party' : 'configured-party';
         const user = await get('/user', session);
         expect(user.status).toBe(200);
@@ -185,13 +191,72 @@ test('Only a verified, single-use AppProvider callback opens an admin session', 
                 tenantId: 'AppUser',
                 partyId: 'customer',
                 clientId: 'another-client',
-                issuerUrl: server.url.origin,
+                issuerUrl: `${server.url.origin}/customer`,
+                walletUrl: 'https://customer-wallet.example',
               }),
             }),
           );
         expect((await register()).status).toBe(403);
         expect((await register('wrong')).status).toBe(403);
         expect((await register(token)).status).toBe(201);
+        if (scenario === 'success') {
+          const links = await (await get('/login-links')).json();
+          const path = '/oauth2/authorization/AppUser-another-client';
+          expect(links).toContainEqual({ name: 'AppUser', url: path });
+          /** Starts a fresh AppUser login and issues a code bound to its PKCE challenge. */
+          async function startCustomer() {
+            const start = await get(path);
+            const url = new URL(start.headers.get('location') ?? '');
+            expect(url.origin + url.pathname).toBe(`${server.url.origin}/customer/authorize`);
+            expect(url.searchParams.get('client_id')).toBe('another-client');
+            const code = crypto.randomUUID();
+            codes.set(code, {
+              nonce: url.searchParams.get('nonce') ?? '',
+              challenge: url.searchParams.get('code_challenge') ?? '',
+              wrongKey: false,
+            });
+            return {
+              cookie: (start.headers.get('set-cookie') ?? '').split(';')[0],
+              query: new URLSearchParams({ code, state: url.searchParams.get('state') ?? '' }),
+            };
+          }
+          // A customer attempt cannot complete on the provider's callback.
+          const mixed = await startCustomer();
+          expect(
+            (await get(`/login/oauth2/code/AppProvider?${mixed.query}`, mixed.cookie)).headers.get(
+              'location',
+            ),
+          ).toBe('/login?error');
+          const customer = await startCustomer();
+          const done = await get(
+            `/login/oauth2/code/AppUser-another-client?${customer.query}`,
+            customer.cookie,
+          );
+          expect(done.headers.get('location')).toBe('/');
+          const browserCookies = done.headers
+            .getSetCookie()
+            .map((h) => h.split(';')[0])
+            .join('; ');
+          expect(await (await get('/user', browserCookies)).json()).toEqual({
+            name: 'Alice',
+            party: 'customer',
+            walletUrl: 'https://customer-wallet.example',
+            isAdmin: false,
+            roles: ['AppUser', 'customer'],
+          });
+          expect((await get('/admin/tenant-registrations', browserCookies)).status).toBe(403);
+          const customerCsrf = done.headers
+            .getSetCookie()
+            .find((h) => h.startsWith('XSRF-TOKEN='))
+            ?.split(';')[0]
+            .slice('XSRF-TOKEN='.length);
+          const ended = await logout(browserCookies, customerCsrf);
+          expect(new URL(ended.headers.get('location') ?? '').pathname).toBe(
+            '/customer/end-session',
+          );
+          expect((await get('/user', browserCookies)).status).toBe(401);
+        }
+
         for (const denied of [
           await logout(cookies),
           await logout(cookies, 'incorrect'),
@@ -207,7 +272,7 @@ test('Only a verified, single-use AppProvider callback opens an admin session', 
         if (advertiseLogout) {
           const target = new URL(ended.headers.get('location') ?? '');
           expect(target.origin + target.pathname).toBe(`${server.url.origin}/end-session`);
-          expect(target.searchParams.get('id_token_hint')).toBe(issuedIdToken);
+          expect(target.searchParams.get('id_token_hint')).toBe(providerIdToken);
           expect(target.searchParams.has('post_logout_redirect_uri')).toBe(false);
         } else expect(ended.headers.get('location')).toBe('/');
         for (const name of ['JSESSIONID', 'XSRF-TOKEN']) {

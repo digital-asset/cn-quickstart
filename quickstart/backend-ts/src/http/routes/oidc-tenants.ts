@@ -10,10 +10,46 @@ function problem(status: number, message: string) {
   );
 }
 
-/** Lists configured OIDC clients and publishes new registrations after successful discovery. */
-export function oidcTenantRoutes(
+/** Associates the tenant details returned by the admin API with its browser login client. */
+export type OidcRegistration = {
+  tenant: {
+    tenantId: string;
+    partyId: string;
+    internal: boolean;
+    walletUrl: string | null;
+    users: null;
+    clientId: string;
+    issuerUrl: string;
+  };
+  /** Discovered at registration for external tenants. AppProvider uses lazy discovery instead. */
+  config?: Configuration;
+};
+
+/** Seeds the browser registrations with the built-in AppProvider client. */
+export function initialRegistrations(
   provider: ApplicationConfig['appProvider'],
   options: NonNullable<ApplicationConfig['oidc']>,
+) {
+  return new Map<string, OidcRegistration>([
+    [
+      provider.tenantId,
+      {
+        tenant: {
+          ...provider,
+          walletUrl: null,
+          users: null,
+          clientId: options.clientId,
+          issuerUrl: options.issuer.href,
+        },
+      },
+    ],
+  ]);
+}
+
+/** Lists configured OIDC clients and publishes new registrations after successful discovery. */
+export function oidcTenantRoutes(
+  registrations: Map<string, OidcRegistration>,
+  allowHttp: boolean,
   discover: (issuer: URL, clientId: string) => Promise<Configuration>,
   authorize: (
     request: Request,
@@ -21,29 +57,14 @@ export function oidcTenantRoutes(
     csrfCookie: unknown,
   ) => Promise<200 | 401 | 403>,
 ) {
-  const registrations = new Map([
-    [
-      provider.tenantId as string,
-      {
-        tenantId: provider.tenantId as string,
-        partyId: provider.partyId,
-        internal: true,
-        walletUrl: null as string | null,
-        users: null,
-        clientId: options.clientId,
-        issuerUrl: options.issuer.href,
-      },
-    ],
-  ]);
   /** Match Java's unique tenant ID, issuer/client pair, and generated registration ID. */
-  function conflict(tenantId: string, clientId: string, issuerUrl: string) {
-    if (registrations.has(tenantId)) return problem(409, 'TenantId already exists');
-    for (const entry of registrations.values()) {
+  function conflict(tenantId: string, clientId: string, issuerUrl: string, registrationId: string) {
+    for (const { tenant: entry } of registrations.values()) {
+      if (entry.tenantId === tenantId) return problem(409, 'TenantId already exists');
       if (entry.clientId === clientId && entry.issuerUrl === issuerUrl)
         return problem(409, 'ClientId-IssuerUrl combination already exists');
-      if (!entry.internal && `${entry.tenantId}-${entry.clientId}` === `${tenantId}-${clientId}`)
-        return problem(409, 'RegistrationId already exists');
     }
+    if (registrations.has(registrationId)) return problem(409, 'RegistrationId already exists');
   }
   return new Elysia({ name: 'oidc-tenants', prefix: '/admin/tenant-registrations' })
     .onTransform(async ({ request, cookie, set }) => {
@@ -60,7 +81,7 @@ export function oidcTenantRoutes(
       );
       return problem(500, 'Internal Server Error');
     })
-    .get('', () => Array.from(registrations.values()), {
+    .get('', () => Array.from(registrations.values(), (entry) => entry.tenant), {
       detail: { operationId: 'listTenantRegistrations', tags: ['Admin'] },
     })
     .post(
@@ -78,7 +99,7 @@ export function oidcTenantRoutes(
           issuer.password ||
           issuer.search ||
           issuer.hash ||
-          !(issuer.protocol === 'https:' || (options.allowHttp && issuer.protocol === 'http:'))
+          !(issuer.protocol === 'https:' || (allowHttp && issuer.protocol === 'http:'))
         )
           return problem(400, 'Invalid issuer URL');
         if (
@@ -86,7 +107,8 @@ export function oidcTenantRoutes(
           (!URL.canParse(walletUrl, 'https://localhost') || /\s|%(?![\da-f]{2})/i.test(walletUrl))
         )
           return problem(400, 'Invalid wallet URL');
-        const duplicate = conflict(tenantId, clientId, issuer.href);
+        const registrationId = `${tenantId}-${clientId}`;
+        const duplicate = conflict(tenantId, clientId, issuer.href, registrationId);
         if (duplicate) return duplicate;
         const config = await discover(issuer, clientId);
         if (
@@ -96,7 +118,7 @@ export function oidcTenantRoutes(
         )
           throw new Error('Incomplete OIDC discovery metadata');
         // Another request may have registered the same tenant while discovery was in flight.
-        const raced = conflict(tenantId, clientId, issuer.href);
+        const raced = conflict(tenantId, clientId, issuer.href, registrationId);
         if (raced) return raced;
         const entry = {
           tenantId,
@@ -107,7 +129,7 @@ export function oidcTenantRoutes(
           internal: false,
           users: null,
         };
-        registrations.set(tenantId, entry);
+        registrations.set(registrationId, { tenant: entry, config });
         return status(201, { ...entry, users: users ?? null });
       },
       {
