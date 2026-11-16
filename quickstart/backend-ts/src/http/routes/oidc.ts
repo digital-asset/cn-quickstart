@@ -8,6 +8,35 @@ import { initialRegistrations, type OidcRegistration, oidcTenantRoutes } from '.
 
 const loginLifetimeSeconds = 300;
 
+/** Recognizes rejected authorization attempts; transport, configuration and server failures fall through. */
+function isLoginRejection(error: unknown): boolean {
+  if (error instanceof oidc.ResponseBodyError)
+    return error.status < 500 && error.error === 'invalid_grant';
+  if (error instanceof oidc.AuthorizationResponseError)
+    return [
+      'access_denied',
+      'login_required',
+      'interaction_required',
+      'consent_required',
+      'account_selection_required',
+    ].includes(error.error);
+  if (!(error instanceof oidc.ClientError)) return false;
+  if (error.code === 'OAUTH_INVALID_RESPONSE') {
+    // The library uses this code for both callback validation and malformed provider responses.
+    const context = error.cause instanceof Error ? error.cause.cause : undefined;
+    return (
+      !!context &&
+      typeof context === 'object' &&
+      ('parameters' in context || 'signature' in context)
+    );
+  }
+  return [
+    'OAUTH_JWT_CLAIM_COMPARISON_FAILED',
+    'OAUTH_JWT_TIMESTAMP_CHECK_FAILED',
+    'OAUTH_KEY_SELECTION_FAILED',
+  ].includes(error.code ?? '');
+}
+
 /** Registers tenant login, callback, and session-backed user endpoints. */
 export function oidcRoutes(
   provider: ApplicationConfig['appProvider'],
@@ -173,6 +202,7 @@ export function oidcRoutes(
         request,
         cookie: { OIDC_LOGIN, JSESSIONID, 'XSRF-TOKEN': xsrf },
         redirect,
+        status,
       }) => {
         const id = OIDC_LOGIN.value;
         const attempt = typeof id === 'string' ? attempts.get(id) : undefined;
@@ -228,11 +258,24 @@ export function oidcRoutes(
           xsrf.set({ ...cookieOptions, value: csrf, httpOnly: false });
           return redirect('/', 302);
         } catch (error) {
-          console.warn(
-            'OIDC callback rejected',
-            error instanceof Error ? error.name : 'unknown error',
-          );
-          return redirect('/login?error', 302);
+          if (isLoginRejection(error)) return redirect('/login?error', 302);
+          // Record only the library code and upstream status; error bodies may contain credentials.
+          const upstream =
+            error instanceof oidc.ResponseBodyError
+              ? error.status
+              : error instanceof Error && error.cause instanceof Response
+                ? error.cause.status
+                : undefined;
+          console.error('OIDC callback failed', {
+            code:
+              error instanceof oidc.ClientError
+                ? error.code
+                : error instanceof Error
+                  ? error.name
+                  : 'unknown',
+            upstream,
+          });
+          return status(500, { message: 'Internal Server Error' });
         }
       },
     )

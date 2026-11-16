@@ -14,6 +14,7 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
   };
   const codes = new Map<string, { nonce: string; challenge: string; wrongKey: boolean }>();
   let exchanges = 0;
+  let tokenEndpointUnavailable = false;
   let advertiseLogout = false;
   let issuedIdToken = '';
   let pauseExchange: (() => Promise<void>) | undefined;
@@ -39,6 +40,7 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
       if (pathname !== (external ? '/customer/token' : '/token'))
         return new Response(null, { status: 404 });
       if (!external) exchanges++;
+      if (tokenEndpointUnavailable) return new Response('provider diagnostics', { status: 503 });
       if (external && pauseExchange) await pauseExchange();
       const form = new URLSearchParams(await request.text());
       const code = form.get('code') ?? '';
@@ -91,7 +93,9 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
       'signature',
       'pkce',
       'missing-cookie',
+      'provider-unavailable',
     ]) {
+      tokenEndpointUnavailable = scenario === 'provider-unavailable';
       advertiseLogout = scenario === 'success';
       const application = readApplicationConfig({
         AUTH_MODE: 'oauth2',
@@ -118,7 +122,7 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
       const callback = `/login/oauth2/code/AppProvider?${new URLSearchParams({ code, state: scenario === 'state' ? 'wrong' : (params.get('state') ?? '') })}`;
       const before = exchanges;
       const response = await get(callback, scenario === 'missing-cookie' ? '' : cookie);
-      expect(response.status).toBe(302);
+      expect(response.status).toBe(tokenEndpointUnavailable ? 500 : 302);
       const session = response.headers
         .getSetCookie()
         .find((header) => header.startsWith('JSESSIONID='))
@@ -352,7 +356,10 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
         }
         expect((await get('/user', session)).status).toBe(401);
       } else {
-        expect(response.headers.get('location')).toBe('/login?error');
+        if (tokenEndpointUnavailable) {
+          expect(response.headers.has('location')).toBe(false);
+          expect(await response.json()).toEqual({ message: 'Internal Server Error' });
+        } else expect(response.headers.get('location')).toBe('/login?error');
         expect(session).toBeUndefined();
         expect((await get('/user', cookie)).status).toBe(401);
       }
