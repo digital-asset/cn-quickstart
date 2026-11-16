@@ -44,6 +44,7 @@ function setup(allowHttp: boolean) {
         execute: [oidc.allowInsecureRequests],
       }),
     async () => 200,
+    () => {},
   );
   const payload = {
     tenantId: 'AppUser',

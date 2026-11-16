@@ -134,6 +134,26 @@ test('An administrative bearer must be signed by the configured issuer and valid
     const collision = await register({ ...tenant, tenantId: 'customer', clientId: 'web-client' });
     expect(collision.status).toBe(409);
     expect(await collision.json()).toEqual({ message: 'RegistrationId already exists' });
+    /** Deletes by tenant ID, as an administrative API client would. */
+    const remove = (id: string, headers: Record<string, string>) =>
+      app.handle(
+        new Request(`http://localhost/admin/tenant-registrations/${id}`, {
+          method: 'DELETE',
+          headers,
+        }),
+      );
+    expect((await remove('AppUser', {})).status).toBe(401);
+    expect((await remove('AppProvider', { authorization })).status).toBe(403);
+    const deleted = await remove('AppUser', { authorization });
+    expect(deleted.status).toBe(204);
+    expect(await deleted.text()).toBe('');
+    const missing = await remove('AppUser', { authorization });
+    expect(missing.status).toBe(404);
+    expect(await missing.json()).toEqual({ message: 'No tenant found for tenantId = AppUser.' });
+    const remaining = await (await list({ authorization })).json();
+    expect(remaining).toHaveLength(2);
+    expect(remaining).toContainEqual(expect.objectContaining({ tenantId: 'customer-web' }));
+    expect(remaining).toContainEqual(expect.objectContaining({ tenantId: 'AppProvider' }));
   } finally {
     server.stop(true);
   }

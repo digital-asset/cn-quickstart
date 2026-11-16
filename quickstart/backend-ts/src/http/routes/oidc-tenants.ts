@@ -46,7 +46,7 @@ export function initialRegistrations(
   ]);
 }
 
-/** Lists configured OIDC clients and publishes new registrations after successful discovery. */
+/** Manages OIDC registrations and revokes local access when a tenant is removed. */
 export function oidcTenantRoutes(
   registrations: Map<string, OidcRegistration>,
   allowHttp: boolean,
@@ -56,6 +56,7 @@ export function oidcTenantRoutes(
     sessionId: unknown,
     csrfCookie: unknown,
   ) => Promise<200 | 401 | 403>,
+  revoke: (registration: OidcRegistration) => void,
 ) {
   /** Match Java's unique tenant ID, issuer/client pair, and generated registration ID. */
   function conflict(tenantId: string, clientId: string, issuerUrl: string, registrationId: string) {
@@ -84,6 +85,20 @@ export function oidcTenantRoutes(
     .get('', () => Array.from(registrations.values(), (entry) => entry.tenant), {
       detail: { operationId: 'listTenantRegistrations', tags: ['Admin'] },
     })
+    .delete(
+      '/:tenantId',
+      ({ params: { tenantId } }) => {
+        for (const [id, registration] of registrations) {
+          if (registration.tenant.tenantId !== tenantId) continue;
+          if (registration.tenant.internal) return problem(403, 'Cannot delete an internal tenant');
+          registrations.delete(id);
+          revoke(registration);
+          return new Response(null, { status: 204 });
+        }
+        return problem(404, `No tenant found for tenantId = ${tenantId}.`);
+      },
+      { detail: { operationId: 'deleteTenantRegistration', tags: ['Admin'] } },
+    )
     .post(
       '',
       async ({ body, status }) => {

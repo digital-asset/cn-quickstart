@@ -71,7 +71,7 @@ export function oidcRoutes(
         registrations,
         options.allowHttp,
         discoverClient,
-        /** Authorizes an explicit AppProvider bearer or an admin session with CSRF on POST. */
+        /** Authorizes an explicit AppProvider bearer or an admin session with CSRF on mutations. */
         async (request, sessionId, csrfCookie) => {
           const authorization = request.headers.get('authorization');
           if (authorization !== null) {
@@ -83,11 +83,19 @@ export function oidcRoutes(
           if (!session) return 401;
           if (session.registration.tenant.issuerUrl !== options.issuer.href) return 403;
           if (
-            request.method === 'POST' &&
+            request.method !== 'GET' &&
+            request.method !== 'HEAD' &&
             (session.csrf !== csrfCookie || session.csrf !== request.headers.get('x-xsrf-token'))
           )
             return 403;
           return 200;
+        },
+        /** Revokes sessions and unfinished browser logins belonging to this registration. */
+        (registration) => {
+          sessions.revokeWhere((session) => session.registration === registration);
+          for (const [id, attempt] of attempts) {
+            if (attempt.registration === registration) attempts.delete(id);
+          }
         },
       ),
     )
@@ -194,6 +202,9 @@ export function oidcRoutes(
             pkceCodeVerifier: attempt.verifier,
             idTokenExpected: true,
           });
+          // Deletion can complete while the provider is exchanging the code or verifying its signature.
+          if (registrations.get(registrationId) !== attempt.registration)
+            return redirect('/login?error', 302);
           const claims = tokens.claims();
           if (!claims || !tokens.id_token) return redirect('/login?error', 302);
           const party =

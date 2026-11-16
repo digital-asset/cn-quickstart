@@ -16,6 +16,7 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
   let exchanges = 0;
   let advertiseLogout = false;
   let issuedIdToken = '';
+  let pauseExchange: (() => Promise<void>) | undefined;
   const server = Bun.serve({
     hostname: '127.0.0.1',
     port: 0,
@@ -38,6 +39,7 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
       if (pathname !== (external ? '/customer/token' : '/token'))
         return new Response(null, { status: 404 });
       if (!external) exchanges++;
+      if (external && pauseExchange) await pauseExchange();
       const form = new URLSearchParams(await request.text());
       const code = form.get('code') ?? '';
       const grant = codes.get(code);
@@ -250,11 +252,79 @@ test('Verified OIDC callbacks open single-use login flows with tenant-specific p
             .find((h) => h.startsWith('XSRF-TOKEN='))
             ?.split(';')[0]
             .slice('XSRF-TOKEN='.length);
-          const ended = await logout(browserCookies, customerCsrf);
+          /** Returns the response to a customer callback with its original attempt cookie. */
+          function finish(attempt: Awaited<ReturnType<typeof startCustomer>>) {
+            return get(
+              `/login/oauth2/code/AppUser-another-client?${attempt.query}`,
+              attempt.cookie,
+            );
+          }
+          /** Sends the browser's delete request with its own session and optional CSRF header. */
+          function remove(cookie: string, csrf?: string) {
+            return app.handle(
+              new Request('http://internal/admin/tenant-registrations/AppUser', {
+                method: 'DELETE',
+                headers: { cookie, ...(csrf ? { 'X-XSRF-TOKEN': csrf } : {}) },
+              }),
+            );
+          }
+          expect((await remove(browserCookies, customerCsrf)).status).toBe(403);
+          expect((await remove(cookies)).status).toBe(403);
+          expect((await remove(cookies, 'wrong')).status).toBe(403);
+          const second = await finish(await startCustomer());
+          expect(second.headers.get('location')).toBe('/');
+          const secondCookie =
+            second.headers
+              .getSetCookie()
+              .find((h) => h.startsWith('JSESSIONID='))
+              ?.split(';')[0] ?? '';
+          expect((await get('/user', secondCookie)).status).toBe(200);
+          const pending = await startCustomer();
+          const started = Promise.withResolvers<void>();
+          const resume = Promise.withResolvers<void>();
+          pauseExchange = async () => {
+            started.resolve();
+            await resume.promise;
+          };
+          const inFlight = finish(await startCustomer());
+          try {
+            await started.promise;
+            expect((await remove(cookies, token)).status).toBe(204);
+            expect(await (await get('/login-links')).json()).toEqual([
+              { name: 'AppProvider', url: '/oauth2/authorization/AppProvider' },
+            ]);
+            expect((await get(path)).status).toBe(404);
+            expect((await register(token)).status).toBe(201);
+          } finally {
+            pauseExchange = undefined;
+            resume.resolve();
+          }
+          // A new registration with the same ID must not revive either callback or session.
+          for (const rejected of [await inFlight, await finish(pending)]) {
+            expect(rejected.headers.get('location')).toBe('/login?error');
+            expect(rejected.headers.getSetCookie().some((h) => h.startsWith('JSESSIONID='))).toBe(
+              false,
+            );
+          }
+          for (const stale of [browserCookies, secondCookie])
+            expect((await get('/user', stale)).status).toBe(401);
+          const fresh = await finish(await startCustomer());
+          expect(fresh.headers.get('location')).toBe('/');
+          const freshCookies = fresh.headers
+            .getSetCookie()
+            .map((h) => h.split(';')[0])
+            .join('; ');
+          expect((await get('/user', freshCookies)).status).toBe(200);
+          const freshCsrf = fresh.headers
+            .getSetCookie()
+            .find((h) => h.startsWith('XSRF-TOKEN='))
+            ?.split(';')[0]
+            .slice('XSRF-TOKEN='.length);
+          const ended = await logout(freshCookies, freshCsrf);
           expect(new URL(ended.headers.get('location') ?? '').pathname).toBe(
             '/customer/end-session',
           );
-          expect((await get('/user', browserCookies)).status).toBe(401);
+          expect((await get('/user', freshCookies)).status).toBe(401);
         }
 
         for (const denied of [
