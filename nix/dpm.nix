@@ -45,6 +45,7 @@ pkgs.stdenv.mkDerivation {
     # damlc ide expects script-service.jar inside its own resources directory,
     # but dpm installs it as a separate daml-script component. SDK component
     # versions may differ from the SDK release version (e.g. damlc 3.6.2 for SDK 3.6.3).
+
     script_jar=$(echo $out/cache/components/daml-script/*/script-service.jar | awk '{print $1}')
     if [ -z "$script_jar" ] || [ ! -f "$script_jar" ]; then
       echo "script-service.jar not found under daml-script components" >&2
