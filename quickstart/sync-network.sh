@@ -90,7 +90,7 @@ done
 ENV_FILE="./.env"
 if [ -f "$ENV_FILE" ]; then
   sed -i -E "s/^(DAML_RUNTIME_VERSION=).*$/\1$DPM_SDK_VERSION/" "$ENV_FILE"
-  sed -i -E "s/^(IMAGE_TAG=).*$/\1$SPLICE_VERSION/" "$ENV_FILE"
+  sed -i -E "s/^(SPLICE_VERSION=).*$/\1$SPLICE_VERSION/" "$ENV_FILE"
   echo "  $ENV_FILE"
 fi
 

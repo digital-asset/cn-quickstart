@@ -20,12 +20,12 @@ object Deps {
     }
 
     object transcode {
-        val version get() = "3.5.8"
+        val version get() = "3.6.3"
 
-        // The codegen plugin and its runtime have no stable 3.5.x release; only snapshots.
+        // The codegen plugin and its runtime have no stable 3.6.x release; only snapshots.
         // Their POMs pin Daml LF snapshots that were never published to Maven Central, so
         // :daml forces those transitives to $version. Keep both on the same snapshot.
-        val codegenVersion get() = "3.5.0-snapshot.20260428.170.1007.v02f2a2a"
+        val codegenVersion get() = "3.6.0-snapshot.20261106.1.100.v45c1ec8"
 
         val plugin get() = "com.daml.codegen-java-daml3:com.daml.codegen-java-daml3.gradle.plugin:$codegenVersion"
         val codegenJavaRuntime get() = "com.daml:transcode-codegen-java-runtime_3:$codegenVersion"
