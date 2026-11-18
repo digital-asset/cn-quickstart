@@ -9,7 +9,6 @@ let
     nodejs_20
     typescript
   ] ++ (if ci then [ # these packages should only be installed on CI
-    circleci-cli
     docutils
     poetry
     python3

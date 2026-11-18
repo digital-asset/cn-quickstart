@@ -1,0 +1,153 @@
+# Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: 0BSD
+
+# One required check: "CI / All checks", the display name of the `ci-ok` job.
+# It fails when any job it needs failed or was cancelled. A skipped job
+# counts as success.
+#
+# Job steps live in .github/actions, grouped by category. This file keeps
+# the triggers, the path filters, and the runner settings.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A pull request shares one group, so a new commit cancels the run still
+# going and only the latest commit is checked. A push to main, and a manual
+# run, uses the commit SHA: every commit is checked, and a later commit
+# leaves the earlier run alone. A shared group would drop queued main runs
+# even with cancel-in-progress set to false.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('ci-{0}', github.ref) || format('ci-{0}', github.sha) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Fork pull requests receive a read-only token, so they cannot publish
+  # check runs. Same-repository pull requests, pushes and manual runs are
+  # not forks. There is no registry login in this workflow; a later one
+  # that needs secrets must be skipped when this is true.
+  IS_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name }}
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      daml: ${{ steps.resolve.outputs.daml }}
+      docs: ${{ steps.resolve.outputs.docs }}
+      frontend: ${{ steps.resolve.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        if: github.event_name == 'pull_request'
+        with:
+          token: ${{ github.token }}
+          filters: |
+            daml:
+              - 'quickstart/daml/**'
+              - '.github/actions/daml/**'
+              - '.github/actions/setup/install-dpm/**'
+              - '.github/workflows/ci.yml'
+            docs:
+              - 'sdk/**'
+              - '.github/actions/docs/**'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'quickstart/frontend/**'
+              - '.github/actions/frontend/**'
+              - '.github/workflows/ci.yml'
+      - id: resolve
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DAML: ${{ steps.filter.outputs.daml }}
+          DOCS: ${{ steps.filter.outputs.docs }}
+          FRONTEND: ${{ steps.filter.outputs.frontend }}
+        run: |
+          if [ "${EVENT_NAME}" != "pull_request" ]; then
+            {
+              echo "daml=true"
+              echo "docs=true"
+              echo "frontend=true"
+            } >> "${GITHUB_OUTPUT}"
+          else
+            {
+              echo "daml=${DAML}"
+              echo "docs=${DOCS}"
+              echo "frontend=${FRONTEND}"
+            } >> "${GITHUB_OUTPUT}"
+          fi
+
+  daml:
+    name: Daml tests
+    needs: [changes]
+    if: needs.changes.outputs.daml == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/daml/test
+
+  docs:
+    name: Docs preview
+    needs: [changes]
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/docs/preview
+
+  frontend-build:
+    name: Frontend build
+    needs: [changes]
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/frontend/build
+
+  integration-test:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      checks: write
+    env:
+      COMPOSE_ANSI: never
+      COMPOSE_PROGRESS: plain
+      DEBIAN_FRONTEND: noninteractive
+      NEEDRESTART_MODE: a
+      PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/integration/test
+        with:
+          is-fork-pr: ${{ env.IS_FORK_PR }}
+
+  ci-ok:
+    name: All checks
+    needs: [changes, daml, docs, frontend-build, integration-test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report results
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: printf '%s\n' "$NEEDS"
+      - name: Require every job to succeed or be skipped
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1

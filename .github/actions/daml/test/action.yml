@@ -1,0 +1,24 @@
+# Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: 0BSD
+
+name: Daml test
+description: >-
+  Installs dpm and JDK 21, then builds and tests the Daml packages through
+  Gradle (`make test-daml`).
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/setup/install-dpm
+    - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache: gradle
+        cache-dependency-path: |
+          quickstart/**/*.gradle*
+          quickstart/**/*.gradle.kts
+          quickstart/**/gradle-wrapper.properties
+    - shell: bash
+      working-directory: quickstart
+      run: make test-daml

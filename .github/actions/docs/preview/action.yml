@@ -1,0 +1,25 @@
+# Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: 0BSD
+
+name: Docs preview
+description: >-
+  Installs Python 3.11 and Poetry, restores sdk/.venv, and renders the
+  Sphinx preview.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      with:
+        python-version: '3.11'
+    - name: Install Poetry
+      shell: bash
+      run: python -m pip install --disable-pip-version-check poetry==2.5.1
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: sdk/.venv
+        key: venv-py3.11-${{ runner.os }}-${{ hashFiles('sdk/poetry.lock', 'sdk/pyproject.toml', 'sdk/Makefile') }}
+    - name: Render preview
+      shell: bash
+      working-directory: sdk
+      run: make render-preview
