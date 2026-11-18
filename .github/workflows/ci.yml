@@ -121,7 +121,9 @@ jobs:
 
   integration-test:
     name: Integration tests
-    runs-on: ubuntu-latest
+    # ubuntu-latest is Ubuntu 26.04. Playwright 1.59.1 has no Chromium
+    # build for that release. 24.04 is the image CircleCI used.
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     permissions:
       contents: read
