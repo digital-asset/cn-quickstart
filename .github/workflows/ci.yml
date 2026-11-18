@@ -66,7 +66,7 @@ jobs:
               - '.github/workflows/ci.yml'
             frontend:
               - 'quickstart/frontend/**'
-              - '.github/actions/frontend/**'
+              - '.github/actions/frontend-build/**'
               - '.github/workflows/ci.yml'
       - id: resolve
         env:
@@ -117,7 +117,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/frontend/build
+      - uses: ./.github/actions/frontend-build
 
   integration-test:
     name: Integration tests
