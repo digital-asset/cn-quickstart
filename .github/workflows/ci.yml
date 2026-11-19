@@ -57,6 +57,14 @@ jobs:
           filters: |
             daml:
               - 'quickstart/daml/**'
+              - 'quickstart/Makefile'
+              - 'quickstart/build.gradle.kts'
+              - 'quickstart/settings.gradle.kts'
+              - 'quickstart/gradle.properties'
+              - 'quickstart/gradlew'
+              - 'quickstart/gradlew.bat'
+              - 'quickstart/gradle/**'
+              - 'quickstart/buildSrc/**'
               - '.github/actions/daml/**'
               - '.github/actions/setup/install-dpm/**'
               - '.github/workflows/ci.yml'
