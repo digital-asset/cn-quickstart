@@ -10,6 +10,7 @@ runs:
   using: composite
   steps:
     - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      id: python
       with:
         python-version: '3.11'
     - name: Install Poetry
@@ -18,7 +19,7 @@ runs:
     - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: sdk/.venv
-        key: venv-py3.11-${{ runner.os }}-${{ hashFiles('sdk/poetry.lock', 'sdk/pyproject.toml', 'sdk/Makefile') }}
+        key: venv-py${{ steps.python.outputs.python-version }}-${{ runner.os }}-${{ hashFiles('sdk/poetry.lock', 'sdk/pyproject.toml', 'sdk/Makefile') }}
     - name: Render preview
       shell: bash
       working-directory: sdk

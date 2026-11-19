@@ -16,11 +16,12 @@ VALE_ALERT_LEVEL ?= error
 ###############################################################################
 
 .PHONY: poetry-install
-poetry-install: .venv
 poetry-install: ## use poetry to install python modules
-
-.venv:
-	poetry install --no-root
+	if [ -x .venv/bin/python ] && .venv/bin/python -c 'import sys' >/dev/null 2>&1; then \
+		exit 0; \
+	fi; \
+	rm -rf .venv; \
+	poetry install --no-root; \
 	poetry debug info
 
 .PHONY: clean-venv
