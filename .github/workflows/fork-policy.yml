@@ -44,7 +44,7 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          files="$(gh api --paginate "repos/${REPO}/pulls/${PR}/files" --jq '.[].filename')"
+          files="$(gh api --paginate "repos/${REPO}/pulls/${PR}/files" --jq '.[] | .filename, (.previous_filename // empty)' | awk 'NF && !seen[$0]++')"
           pattern='^(\.github/|(.*/)?(package-lock\.json|poetry\.lock|pyproject\.toml|flake\.lock|gradle/libs\.versions\.toml|gradle-wrapper\.properties)$|.*\.gradle\.kts$)'
           flagged="$(printf '%s\n' "${files}" | grep -E "${pattern}" || true)"
           if [ -z "${flagged}" ]; then
@@ -74,7 +74,7 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-          files="$(gh api --paginate "repos/${REPO}/pulls/${PR}/files" --jq '.[].filename')"
+          files="$(gh api --paginate "repos/${REPO}/pulls/${PR}/files" --jq '.[] | .filename, (.previous_filename // empty)' | awk 'NF && !seen[$0]++')"
           pattern='^(\.github/|(.*/)?(package-lock\.json|poetry\.lock|pyproject\.toml|flake\.lock|gradle/libs\.versions\.toml|gradle-wrapper\.properties)$|.*\.gradle\.kts$)'
           flagged="$(printf '%s\n' "${files}" | grep -E "${pattern}" || true)"
           marker='<!-- fork-policy -->'
