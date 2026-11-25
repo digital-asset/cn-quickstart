@@ -1,0 +1,13 @@
+# Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: 0BSD
+
+name: Install dpm
+description: >-
+  Installs dpm 3.6.3 for the rest of the job and exports DPM_HOME,
+  DPM_SDK_VERSION, and PATH. The install is removed when the job ends.
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: bash "${GITHUB_ACTION_PATH}/install-dpm.sh"

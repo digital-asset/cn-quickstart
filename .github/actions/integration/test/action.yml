@@ -1,0 +1,93 @@
+# Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: 0BSD
+
+name: Integration test
+description: >-
+  Boots LocalNet and runs the Playwright licensing suite. Uploads the
+  Playwright report on every run, and Compose logs when a step fails.
+  The JUnit check run is skipped for fork pull requests, because that
+  token cannot write checks. There is no registry login.
+
+inputs:
+  is-fork-pr:
+    description: >-
+      True when this is a pull request from a fork. Skips steps that need
+      a token with write access, including the JUnit check run.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Free disk space
+      shell: bash
+      run: |
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+        df -h /
+    - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+      with:
+        distribution: temurin
+        java-version: '21'
+        cache: gradle
+        cache-dependency-path: |
+          quickstart/**/*.gradle*
+          quickstart/**/*.gradle.kts
+          quickstart/**/gradle-wrapper.properties
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: '20'
+        cache: npm
+        cache-dependency-path: |
+          quickstart/frontend/package-lock.json
+          quickstart/integration-test/package-lock.json
+    - uses: ./.github/actions/setup/install-dpm
+    - name: Configure Quickstart
+      shell: bash
+      working-directory: quickstart
+      run: make ci-create-env-local
+    - name: Install Playwright
+      shell: bash
+      working-directory: quickstart
+      run: make ci-install-playwright
+    - name: Build
+      shell: bash
+      working-directory: quickstart
+      run: make build
+    - name: Start
+      shell: bash
+      working-directory: quickstart
+      run: make start
+    - name: Integration test
+      shell: bash
+      working-directory: quickstart
+      run: make integration-test
+    - name: Capture compose logs
+      if: failure()
+      shell: bash
+      working-directory: quickstart
+      run: make logs > "${RUNNER_TEMP}/compose-logs.txt" || true
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      if: failure()
+      with:
+        name: compose-logs
+        path: ${{ runner.temp }}/compose-logs.txt
+        if-no-files-found: ignore
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      if: always()
+      with:
+        name: playwright-report
+        path: quickstart/integration-test/playwright-report/
+        if-no-files-found: ignore
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      if: always()
+      with:
+        name: playwright-results
+        path: |
+          quickstart/integration-test/test-results/
+          quickstart/integration-test/results.xml
+        if-no-files-found: ignore
+    - uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
+      if: always() && inputs.is-fork-pr != 'true' && hashFiles('quickstart/integration-test/results.xml') != ''
+      with:
+        name: Integration tests
+        path: quickstart/integration-test/results.xml
+        reporter: java-junit

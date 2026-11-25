@@ -1,0 +1,21 @@
+# Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: 0BSD
+
+name: Frontend build
+description: >-
+  Installs the frontend dependencies with npm ci and builds the Vite bundle.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: '20'
+        cache: npm
+        cache-dependency-path: quickstart/frontend/package-lock.json
+    - shell: bash
+      working-directory: quickstart/frontend
+      run: npm ci
+    - shell: bash
+      working-directory: quickstart/frontend
+      run: npm run build

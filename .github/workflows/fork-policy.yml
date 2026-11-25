@@ -1,0 +1,112 @@
+# Copyright (c) 2026, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: 0BSD
+
+# Flags workflow and lockfile edits for review. Neither job fails for those
+# edits, and neither is a required check.
+#
+# The pull_request job lints the workflow files in the pull request. For a
+# fork, it also annotates sensitive paths.
+#
+# The pull_request_target job does the same file check through the API and
+# posts the list as a pull request comment. It must not check out the head:
+# pull_request_target runs with the base repository token.
+
+name: Fork policy
+
+on:
+  pull_request:
+  pull_request_target:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fork-policy-${{ github.event_name }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  actionlint:
+    name: Actionlint
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Lint workflow files
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+      - name: Flag workflow and lockfile changes from a fork
+        if: github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          files="$(gh api --paginate "repos/${REPO}/pulls/${PR}/files" --jq '.[] | .filename, (.previous_filename // empty)' | awk 'NF && !seen[$0]++')"
+          pattern='^(\.github/|(.*/)?(package-lock\.json|poetry\.lock|pyproject\.toml|flake\.lock|gradle/libs\.versions\.toml|gradle-wrapper\.properties)$|.*\.gradle\.kts$)'
+          flagged="$(printf '%s\n' "${files}" | grep -E "${pattern}" || true)"
+          if [ -z "${flagged}" ]; then
+            exit 0
+          fi
+          while IFS= read -r file; do
+            [ -z "${file}" ] && continue
+            if [[ "${file}" != *[,:]* ]]; then
+              echo "::warning file=${file},title=Fork review::Workflow or lockfile change from a fork needs a maintainer review."
+            else
+              echo "::warning title=Fork review::${file} needs a maintainer review."
+            fi
+          done <<< "${flagged}"
+
+  flag-sensitive-files:
+    name: Flag sensitive files
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      # Do not check out the pull request. The file list comes from the API.
+      - name: Comment on workflow and lockfile changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          files="$(gh api --paginate "repos/${REPO}/pulls/${PR}/files" --jq '.[] | .filename, (.previous_filename // empty)' | awk 'NF && !seen[$0]++')"
+          pattern='^(\.github/|(.*/)?(package-lock\.json|poetry\.lock|pyproject\.toml|flake\.lock|gradle/libs\.versions\.toml|gradle-wrapper\.properties)$|.*\.gradle\.kts$)'
+          flagged="$(printf '%s\n' "${files}" | grep -E "${pattern}" || true)"
+          marker='<!-- fork-policy -->'
+          # One id per page. Keep the first without closing the API stream early.
+          comment_ids="$(gh api --paginate "repos/${REPO}/issues/${PR}/comments" \
+            --jq "[.[] | select(.user.login == \"github-actions[bot]\") | select(.body | contains(\"${marker}\")) | .id] | .[0] // empty")"
+          comment_id="$(printf '%s\n' "${comment_ids}" | awk 'NF { print; exit }')"
+
+          if [ -z "${flagged}" ]; then
+            if [ -n "${comment_id}" ]; then
+              gh api -X PATCH "repos/${REPO}/issues/comments/${comment_id}" \
+                -f body="$(printf '%s\n' "${marker}" "" "The earlier workflow or lockfile changes are no longer in this pull request.")"
+            fi
+            exit 0
+          fi
+
+          body_file="${RUNNER_TEMP}/fork-policy-comment.md"
+          {
+            printf '%s\n\n' "${marker}"
+            echo "### Workflow and lockfile changes"
+            echo
+            echo "This pull request changes GitHub Actions files or dependency lockfiles. A maintainer should review them. This check does not fail the pull request."
+            echo
+            echo '```text'
+            printf '%s\n' "${flagged}"
+            echo '```'
+          } > "${body_file}"
+
+          if [ -n "${comment_id}" ]; then
+            gh api -X PATCH "repos/${REPO}/issues/comments/${comment_id}" \
+              -f body="$(cat "${body_file}")"
+          else
+            gh api -X POST "repos/${REPO}/issues/${PR}/comments" \
+              -f body="$(cat "${body_file}")"
+          fi
