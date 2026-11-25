@@ -1,8 +1,5 @@
 # Canton Network application quickstart
 
-**Note**: On July 2, 2025, the quickstart underwent an architectural change and no longer connects to DevNet.
-This update may require a `make clean-all` to remove old data and then a `make build`.
-
 This project provides scaffolding to develop a Canton Network (CN) application for the Global Synchronizer.
 We intend that you clone the repository and incrementally update the solution to match your business operations.
 You don't need a license to run it: Canton, Daml and Splice are open source, and all of this project's features work without a Daml Enterprise license.
