@@ -51,7 +51,7 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |vb|
     vb.cpus = cpus
     vb.memory = memory * 1024
-    vb.customize ["storagectl", :id, "--name", "VirtIO Controller", "--hostiocache", "on"]
+    #vb.customize ["storagectl", :id, "--name", "VirtIO Controller", "--hostiocache", "on"]
   end
 
   config.vm.provision "shell", name: "system", upload_path: "/tmp/vagrant-shell-system", reset: true do |s|
